@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "outDir": "./build/",
+    "alwaysStrict": true,
+    "jsx": "react",
+    "jsxFactory": "h",
+    "module": "esnext",
+    "pretty": true,
+    "sourceMap": true,
+    "strict": true,
+    "target": "esnext"
+  }
+}
