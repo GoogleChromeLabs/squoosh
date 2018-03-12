@@ -25,13 +25,11 @@ function getDistance(a?: Point, b?: Point): number {
 }
 
 function getMidpoint(a?: Point, b?: Point): Point {
-  if (!a && !b) throw new Error("Must provide at least one point");
+  const eitherPoint = a || b;
+  if (!eitherPoint) throw new Error("Must provide at least one point");
 
   // If only one of a/b is defined
-  if (!(a && b)) {
-    // TypeScript isn't smart enough to know that one of these must be a Point
-    return (a || b) as Point;
-  }
+  if (!(a && b)) return eitherPoint;
 
   return {
     x: (a.x + b.x) / 2,
