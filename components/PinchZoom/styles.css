@@ -1,4 +1,5 @@
 pinch-zoom {
   display: block;
   overflow: hidden;
+  touch-action: none;
 }
