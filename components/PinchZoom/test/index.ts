@@ -1,3 +1,4 @@
+import '@webcomponents/custom-elements';
 import '../index';
 import './style.css';
 import carImgSrc from './car.svg';

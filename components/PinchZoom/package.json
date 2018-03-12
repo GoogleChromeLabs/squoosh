@@ -24,5 +24,8 @@
     "plugins": [
       "typescript"
     ]
+  },
+  "dependencies": {
+    "@webcomponents/custom-elements": "^1.0.8"
   }
 }

@@ -5,12 +5,13 @@ interface Point {
   y: number
 }
 
-interface PointWithId extends Point {
+interface Pointer extends Point {
   // Either the touch/pointer ID, or -1 for mouse event
-  id: number
+  id: number,
+  fromPointerEvent: boolean
 }
 
-type UpToTwoPoints = [PointWithId | undefined, PointWithId | undefined];
+type UpToTwoPoints = [Pointer | undefined, Pointer | undefined];
 
 function getDistance(a?: Point, b?: Point): number {
   if (!a && !b) throw new Error("Must provide at least one point");
@@ -38,6 +39,24 @@ function getMidpoint(a?: Point, b?: Point): Point {
   };
 }
 
+function createPointer(point: Touch | MouseEvent): Pointer {
+  const pointer: Pointer = {
+    x: point.clientX,
+    y: point.clientY,
+    id: -1,
+    fromPointerEvent: false
+  };
+
+  if (self.Touch && point instanceof Touch) {
+    pointer.id = point.identifier;
+  }
+  else if (self.PointerEvent && point instanceof PointerEvent) {
+    pointer.id = point.pointerId;
+    pointer.fromPointerEvent = true;
+  }
+  return pointer;
+}
+
 let cachedSvg: SVGSVGElement;
 
 // I'd rather use DOMMatrix here, but the browser support isn't good enough.
@@ -56,29 +75,37 @@ export default class PinchZoom extends HTMLElement {
   // support yet.
   private _positioningEl?: HTMLElement;
   // Current transform.
-  private _x = 10;
-  private _y = 10;
-  private _scale = 10;
+  private _x = 0;
+  private _y = 0;
+  private _scale = 1;
   // The pointers (mouse & touch) that we're observing.
   // We only track two points at most.
   private _activePoints: UpToTwoPoints = [undefined, undefined];
   // Next pointer positions.
   private _pointUpdates: UpToTwoPoints = [undefined, undefined];
-  private _mouseUpListener = (event: MouseEvent) => this._mouseEnd(event);
-  private _mouseMoveListener = (event: MouseEvent) => this._mouseMove(event);
+  private _pointerUpListener = (event: MouseEvent) => this._pointerEnd(event);
+  private _pointerMoveListener = (event: MouseEvent) => this._pointerMove(event);
 
   constructor () {
     super();
 
-    // Watch for children changes
+    // Watch for children changes.
+    // Note this won't fire for initial contents,
+    // so _stageElChange is also called in connectedCallback.
     new MutationObserver(() => this._stageElChange())
       .observe(this, { childList: true });
 
-    // Set up the events
-    this.addEventListener('mousedown', event => this._mouseStart(event));
-    this.addEventListener('touchstart', event => this._touchStart(event));
-    this.addEventListener('touchmove', event => this._touchMove(event));
-    this.addEventListener('touchend', event => this._touchEnd(event));
+    // Set up the events, favouring pointer events.
+    // Some move/up listeners are added later.
+    if (self.PointerEvent) {
+      this.addEventListener('pointerdown', event => this._pointerStart(event));
+    }
+    else {
+      this.addEventListener('mousedown', event => this._pointerStart(event));
+      this.addEventListener('touchstart', event => this._touchStart(event));
+      this.addEventListener('touchmove', event => this._touchMove(event));
+      this.addEventListener('touchend', event => this._touchEnd(event));
+    }
   }
 
   connectedCallback() {
@@ -120,32 +147,37 @@ export default class PinchZoom extends HTMLElement {
     // Combine next points with previous points
     const currentPoints = this._pointUpdates.map((p, i) => p || this._activePoints[i]) as UpToTwoPoints;
     const thisRect = this.getBoundingClientRect();
-    const prevDistance = getDistance(...this._activePoints);
-    const newDistance = getDistance(...currentPoints);
+
+    // For calculating panning movement
     const prevMidpoint = getMidpoint(...this._activePoints);
     const newMidpoint = getMidpoint(...currentPoints);
+
+    // Midpoint within the element
+    const originX = prevMidpoint.x - thisRect.left;
+    const originY = prevMidpoint.y - thisRect.top;
+
+    // Calculate the desired change in scale
+    const prevDistance = getDistance(...this._activePoints);
+    const newDistance = getDistance(...currentPoints);
     const scaleDiff = prevDistance ? newDistance / prevDistance : 1;
 
     const matrix = createMatrix()
+      // Translate according to panning
       .translate(newMidpoint.x - prevMidpoint.x, newMidpoint.y - prevMidpoint.y)
-      .translate((prevMidpoint.x - thisRect.left), (prevMidpoint.y - thisRect.top))
+      // Scale about the origin (between the user's fingers)
+      .translate(originX, originY)
       .scale(scaleDiff)
-      .translate(-(prevMidpoint.x - thisRect.left), -(prevMidpoint.y - thisRect.top))
+      .translate(-originX, -originY)
+      // Apply current transform
       .translate(this._x, this._y)
-      .scale(this._scale)
-      ;
+      .scale(this._scale);
 
+    // Convert the transform into basic translate & scale.
     this._x = matrix.e;
     this._y = matrix.f;
     this._scale = matrix.a;
 
     this._applyTransform();
-    /*
-    this._x += (newMidpoint.x - prevMidpoint.x);
-    this._y += (newMidpoint.y - prevMidpoint.y);
-    this._scale *= scaleDiff;
-    */
-
 
     this._activePoints = currentPoints;
     this._pointUpdates = [undefined, undefined];
@@ -156,79 +188,114 @@ export default class PinchZoom extends HTMLElement {
     this._positioningEl.style.transform = `translate(${this._x}px, ${this._y}px) scale(${this._scale})`;
   }
 
-  private _mouseStart(event: MouseEvent) {
-    if (event.which !== 1) return;
-    if (!this._pointStart({ x: event.clientX, y: event.clientY, id: -1 })) return;
-
-    event.preventDefault();
-    window.addEventListener('mouseup', this._mouseUpListener);
-    window.addEventListener('mousemove', this._mouseMoveListener);
-  }
-
-  private _touchStart(event: TouchEvent) {
-    for (const touch of Array.from(event.changedTouches)) {
-      if (this._pointStart({ x: touch.clientX, y: touch.clientY, id: touch.identifier })) {
-        event.preventDefault();
-      }
-    }
-  }
-
   /**
    * Observe a point. Returns false if we're already listening to two points.
    */
-  private _pointStart(point: PointWithId): boolean {
+  private _addPointer(point: Touch | MouseEvent): boolean {
     const emptyPointIndex = this._activePoints.indexOf(undefined);
 
     // Bail if we're already tracking two points.
     if (emptyPointIndex === -1) return false;
-    this._pointUpdates[emptyPointIndex] = this._activePoints[emptyPointIndex] = point;
+
+    this._activePoints[emptyPointIndex] = createPointer(point);
+
     return true;
   }
 
-  private _mouseMove(event: MouseEvent) {
-    const pointIndex = this._activePoints.findIndex(p => !!(p && p.id === -1));
-    if (pointIndex === -1) return;
+  /**
+   * Update a point. Returns false if we're not observing this point.
+   */
+  private _updatePointer(point: Touch | MouseEvent): boolean {
+    const pointer = createPointer(point);
+    const pointIndex = this._activePoints.findIndex(p => !!(p && p.id === pointer.id));
+    if (pointIndex === -1) return false;
+    this._pointUpdates[pointIndex] = pointer;
+    return true;
+  }
 
-    this._pointUpdates[pointIndex] = {x: event.clientX, y: event.clientY, id: -1};
+  /**
+   * Stop observing a point. Returns false if we're not already observing this point.
+   */
+  private _removePointer(point: Touch | MouseEvent): boolean {
+    const { id } = createPointer(point);
+    const pointIndex = this._activePoints.findIndex(p => !!(p && p.id === id));
+    if (pointIndex === -1) return false;
+    this._activePoints[pointIndex] = undefined;
+    return true;
+  }
+
+  private _pointerStart(event: MouseEvent) {
+    if (event.button !== 0) return;
+    if (!this._addPointer(event)) return;
+
+    event.preventDefault();
+
+    if (self.PointerEvent && event instanceof PointerEvent) {
+      this.setPointerCapture(event.pointerId);
+      this.addEventListener('pointerup', this._pointerUpListener);
+      this.addEventListener('pointermove', this._pointerMoveListener);
+    }
+    else {
+      window.addEventListener('mouseup', this._pointerUpListener);
+      window.addEventListener('mousemove', this._pointerMoveListener);
+    }
+  }
+
+  private _touchStart(event: TouchEvent) {
+    for (const touch of Array.from(event.changedTouches)) {
+      if (this._addPointer(touch)) event.preventDefault();
+    }
+  }
+
+  private _pointerMove(event: MouseEvent) {
     // I wish we were debouncing this to requestAnimationFrame,
     // but we can't since Safari & Edge schedule it incorrectly.
-    this._update();
+    if (this._updatePointer(event)) this._update();
   }
 
   private _touchMove(event: TouchEvent) {
     let shouldUpdate = false;
 
     for (const touch of Array.from(event.changedTouches)) {
-      const pointIndex = this._activePoints.findIndex(p => !!(p && p.id === touch.identifier));
-      if (pointIndex === -1) continue;
-      shouldUpdate = true;
-      this._pointUpdates[pointIndex] = { x: touch.clientX, y: touch.clientY, id: touch.identifier };
+      if (this._updatePointer(touch)) shouldUpdate = true;
     }
 
     if (shouldUpdate) this._update();
   }
 
-  private _mouseEnd(event: MouseEvent) {
-    const pointIndex = this._activePoints.findIndex(p => !!(p && p.id === -1));
-    if (pointIndex === -1) return;
+  private _pointerEnd(event: MouseEvent) {
+    this._removePointer(event);
 
-    this._activePoints[pointIndex] = undefined;
-
-    window.removeEventListener('mouseup', this._mouseUpListener);
-    window.removeEventListener('mousemove', this._mouseMoveListener);
+    if (self.PointerEvent && event instanceof PointerEvent) {
+      // Only remove the listeners if all active pointer events are gone.
+      const hasActivePointerEvents = this._activePoints.some(p => !!(p && p.fromPointerEvent));
+      if (!hasActivePointerEvents) {
+        this.removeEventListener('pointerup', this._pointerUpListener);
+        this.removeEventListener('pointermove', this._pointerMoveListener);
+      }
+    }
+    else {
+      window.removeEventListener('mouseup', this._pointerUpListener);
+      window.removeEventListener('mousemove', this._pointerMoveListener);
+    }
   }
 
   private _touchEnd(event: TouchEvent) {
     for (const touch of Array.from(event.changedTouches)) {
-      const pointIndex = this._activePoints.findIndex(p => !!(p && p.id === touch.identifier));
-      if (pointIndex === -1) continue;
-      this._activePoints[pointIndex] = undefined;
+      this._removePointer(touch);
     }
   }
 }
 
 customElements.define('pinch-zoom', PinchZoom);
 
+// TODO:
+// MVP
+//   Prototype two side by side, where one updates the other
+//   Event on change
+//   Make it work on touch
+// Others…
+// Zoom on mouse wheel
 // Initial scale & pos - attributes
 // Go to new scale pos, animate to new scale pos
 // On change event
