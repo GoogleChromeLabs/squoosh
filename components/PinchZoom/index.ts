@@ -110,6 +110,28 @@ export default class PinchZoom extends HTMLElement {
     this._stageElChange();
   }
 
+  get x() {
+    return this._x;
+  }
+
+  get y() {
+    return this._y;
+  }
+
+  get scale() {
+    return this._scale;
+  }
+
+  /**
+   * Update the stage with a given scale/x/y.
+   */
+  setTransform(scale: number, x: number, y: number) {
+    this._x = x;
+    this._y = y;
+    this._scale = scale;
+    this._applyTransform();
+  }
+
   /**
    * Called when the direct children of this element change.
    * Until we have have shadow dom support across the board, we
@@ -133,6 +155,7 @@ export default class PinchZoom extends HTMLElement {
 
     this._positioningEl = el;
     el.style.transformOrigin = '0 0';
+    el.style.willChange = 'transform';
 
     if (this.children.length > 1) {
       console.warn('<pinch-zoom> must not have more than one child.');
@@ -171,11 +194,16 @@ export default class PinchZoom extends HTMLElement {
       .scale(this._scale);
 
     // Convert the transform into basic translate & scale.
-    this._x = matrix.e;
-    this._y = matrix.f;
-    this._scale = matrix.a;
+    if (this._x !== matrix.e || this._y !== matrix.f || this._scale !== matrix.a) {
+      this._x = matrix.e;
+      this._y = matrix.f;
+      this._scale = matrix.a;
 
-    this._applyTransform();
+      this._applyTransform();
+
+      const event = new Event('change', { bubbles: true });
+      this.dispatchEvent(event);
+    }
 
     this._activePoints = currentPoints;
     this._pointUpdates = [undefined, undefined];
@@ -288,11 +316,6 @@ export default class PinchZoom extends HTMLElement {
 customElements.define('pinch-zoom', PinchZoom);
 
 // TODO:
-// MVP
-//   Prototype two side by side, where one updates the other
-//   Event on change
-//   Make it work on touch
-// Others…
 // Zoom on mouse wheel
 // Initial scale & pos - attributes
 // Go to new scale pos, animate to new scale pos
