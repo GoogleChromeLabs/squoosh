@@ -3,6 +3,7 @@ import { updater, toggle, When } from '../../lib/util';
 import Fab from '../fab';
 import Header from '../header';
 // import Drawer from 'async!../drawer';
+const Drawer = require('async!../drawer').default;
 import Home from '../home';
 import * as style from './style.scss';
 
@@ -81,6 +82,9 @@ export default class App extends Component<Props, State> {
 
 	render({ url }, { showDrawer, showFab, files }) {
 		if (showDrawer) this.enableDrawer = true;
+
+		if (showFab===true) showFab = files.length>0;
+
 		return (
 			<div id="app" class={style.app}>
 				<Fab showing={showFab} />
@@ -88,11 +92,9 @@ export default class App extends Component<Props, State> {
 				<Header toggleDrawer={this.toggleDrawer} loadFile={this.loadFile} />
 				
 				{/* Avoid loading & rendering the drawer until the first time it is shown. */}
-				{/*
 				<When value={showDrawer}>
 					<Drawer showing={showDrawer} openDrawer={this.openDrawer} closeDrawer={this.closeDrawer} />
 				</When>
-				*/}
 
 				{/*
 					Note: this is normally where a <Router> with auto code-splitting goes.

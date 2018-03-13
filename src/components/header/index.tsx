@@ -1,11 +1,28 @@
 import { h, Component } from 'preact';
 import Toolbar from 'preact-material-components/Toolbar';
 import cx from 'classnames';
-import style from './style';
+import * as style from './style.scss';
 
-export default class Header extends Component {
+type Props = {
+	toggleDrawer?(),
+	showHeader?(),
+	showFab?(),
+	loadFile?(File)
+};
+
+type State = {
+
+};
+
+export default class Header extends Component<Props, State> {
+	input: HTMLInputElement;
+
 	setInputRef = c => {
 		this.input = c;
+	};
+
+	upload = () => {
+		this.input.click();
 	};
 
 	handleFiles = () => {
@@ -13,18 +30,6 @@ export default class Header extends Component {
 		if (files.length) {
 			this.props.loadFile(files[0]);
 		}
-	};
-
-	upload = () => {
-		// let input = document.createElement('input');
-		// input.type = 'file';
-		// // input.multiple = true;
-		// document.body.appendChild(input);
-		// input.addEventListener('change', e => {
-
-		// });
-		// input.click();
-		this.input.click();
 	};
 
 	render({ toggleDrawer, showHeader, showFab }) {

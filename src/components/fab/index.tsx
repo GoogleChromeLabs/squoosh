@@ -3,20 +3,31 @@ import Icon from 'preact-material-components/Icon';
 import 'preact-material-components/Icon/style.css';
 import Fab from 'preact-material-components/Fab';
 import RadialProgress from 'material-radial-progress';
-import style from './style';
+import * as style from './style.scss';
 
-export default class AppFab extends Component {
+type Props = {
+	showing: boolean
+};
+type State = {
+	loading: boolean
+};
+
+export default class AppFab extends Component<Props, State> {
+	state: State = {
+		loading: false
+	};
+
 	handleClick = () => {
 		console.log('TODO: Save the file to disk.');
 		this.setState({ loading: true });
 		setTimeout( () => {
 			this.setState({ loading: false });
-		}, 100000);
+		}, 1000);
 	};
 
-	render({}, { loading }) {
+	render({ showing }, { loading }) {
 		return (
-			<Fab ripple secondary class={style.fab} onClick={this.handleClick}>
+			<Fab ripple secondary exited={showing===false} class={style.fab} onClick={this.handleClick}>
 				{ loading ? (
 					<RadialProgress primary class={style.progress} />
 				) : (
