@@ -1,0 +1,12 @@
+{
+	"compileOnSave": false,
+	"compilerOptions": {
+		"target": "es2017",
+		"module": "esnext",
+		"moduleResolution": "node",
+		"sourceMap": true,
+		"jsx": "react",
+		"jsxFactory": "h",
+		"allowJs": true
+	}
+}

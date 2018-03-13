@@ -13,6 +13,6 @@ if (typeof window!=='undefined') {
 				e.preventDefault();
 				return false;
 			}
-		} while (target = target.parentNode);
+		} while ((target = target.parentNode));
 	});
 }

@@ -7,4 +7,14 @@
 
 .home {
 	padding: 20px;
+	opacity: 0;
+}
+
+.active {
+	animation: fadeIn 2s forwards ease 1;
+}
+
+@keyframes fadeIn {
+	from { opacity: 0; }
+	to { opacity: 1; }
 }

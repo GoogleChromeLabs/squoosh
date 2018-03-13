@@ -1,4 +1,4 @@
-import { Component } from 'preact';
+import { h, Component } from 'preact';
 import Icon from 'preact-material-components/Icon';
 import 'preact-material-components/Icon/style.css';
 import Fab from 'preact-material-components/Fab';
@@ -20,7 +20,7 @@ export default class AppFab extends Component {
 				{ loading ? (
 					<RadialProgress primary class={style.progress} />
 				) : (
-					<Icon autosize>file_download</Icon>
+					<Icon>file_download</Icon>
 				) }
 			</Fab>
 		);
