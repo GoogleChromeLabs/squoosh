@@ -1,12 +1,37 @@
+let fs = require('fs');
 let path = require('path');
 let webpack = require('webpack');
 // let ExtractTextPlugin = require('extract-text-webpack-plugin');
+let CleanWebpackPlugin = require('clean-webpack-plugin');
+let ProgressBarPlugin = require('progress-bar-webpack-plugin');
 let MiniCssExtractPlugin = require('mini-css-extract-plugin');
 let HtmlWebpackPlugin = require('html-webpack-plugin');
 let PreloadWebpackPlugin = require('preload-webpack-plugin');
 let ReplacePlugin = require('webpack-plugin-replace');
 let CopyPlugin = require('copy-webpack-plugin');
 let WatchTimestampsPlugin = require('./config/watch-timestamps-plugin');
+let BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+
+let oldWrite = process.stderr.write;
+process.stderr.write = chunk => {
+	if (String(chunk).indexOf('DeprecationWarning:')!==-1) return;
+	return oldWrite.call(process.stderr, chunk);
+};
+
+function parseJson(text, fallback) {
+	try {
+		return JSON.parse(text);
+	}
+	catch (e) { }
+	return fallback || {};
+}
+
+function readFile(filename) {
+	try {
+		return fs.readFileSync(filename);
+	}
+	catch (e) {}
+}
 
 module.exports = function(_, env) {
 	let isProd = env.mode === 'production';
@@ -16,9 +41,11 @@ module.exports = function(_, env) {
 		path.join(__dirname, 'src/routes')
 	];
 
-	let babelRc = JSON.parse(require('fs').readFileSync('.babelrc'));
+	let babelRc = parseJson(readFile('.babelrc'));
 	babelRc.babelrc = false;
-	babelRc.presets[0][1].modules = isProd ? false : 'commonjs';
+	if (isProd) babelRc.presets[0][1].modules = false;
+
+	let manifest = parseJson(readFile('./src/manifest.json'));
 
 	return {
 		mode: env.mode || 'development',
@@ -34,7 +61,8 @@ module.exports = function(_, env) {
 			extensions: ['.ts', '.tsx', '.js', '.jsx', '.scss', '.css'],
 			alias: {
 				'app-entry-point': path.join(__dirname, 'src/index'),
-				style: path.join(__dirname, 'src/style')
+				style: path.join(__dirname, 'src/style'),
+				preact$: path.join(__dirname, 'node_modules/preact/dist/preact.js')
 			}
 		},
 		resolveLoader: {
@@ -125,6 +153,14 @@ module.exports = function(_, env) {
 			]
 		},
 		plugins: [
+			new ProgressBarPlugin({
+				format: '\u001b[90m\u001b[44mBuild\u001b[49m\u001b[39m [:bar] \u001b[32m\u001b[1m:percent\u001b[22m\u001b[39m (:elapseds) \u001b[2m:msg\u001b[22m',
+				renderThrottle: 100,
+				summary: false,
+				clear: true
+			}),
+
+			isProd && new CleanWebpackPlugin(['build']),
 			isProd && new webpack.optimize.SplitChunksPlugin({}),
 			isProd && new MiniCssExtractPlugin({}),
 			// new ExtractTextPlugin({
@@ -150,7 +186,7 @@ module.exports = function(_, env) {
 					removeStyleLinkTypeAttributes: true,
 					removeComments: true
 				},
-				manifest: require('./src/manifest.json'),
+				manifest,
 
 				/** @todo Finish implementing prerendering similar to that of Preact CLI. */
 				prerender() {
@@ -162,6 +198,9 @@ module.exports = function(_, env) {
 				compile: true
 			}),
 			isProd && new PreloadWebpackPlugin(),
+			new webpack.DefinePlugin({
+				process: '{}'
+			}),
 			isProd && new ReplacePlugin({
 				include: /babel-helper$/,
 				patterns: [{
@@ -172,8 +211,24 @@ module.exports = function(_, env) {
 			new CopyPlugin([
 				{ from: 'src/manifest.json', to: 'manifest.json' },
 				{ from: 'src/assets', to: 'assets' }
-			])
+			]),
+
+			isProd && new BundleAnalyzerPlugin({
+				analyzerMode: 'static',
+				defaultSizes: 'gzip',
+				openAnalyzer: false
+			})
 		].filter(Boolean),
+
+		node: {
+			console: false,
+			global: true,
+			process: false,
+			__filename: 'mock',
+			__dirname: 'mock',
+			Buffer: false,
+			setImmediate: false
+		},
 
 		devServer: {
 			contentBase: path.join(__dirname, 'src'),
@@ -181,7 +236,6 @@ module.exports = function(_, env) {
 			hot: true,
 			historyApiFallback: true,
 			noInfo: true,
-			progress: true,
 			// quiet: true,
 			clientLogLevel: 'none',
 			stats: 'minimal',
