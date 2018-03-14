@@ -5,6 +5,7 @@ import './style.css';
 import carImgSrc from './car.svg';
 
 document.body.innerHTML = `
+  <h1>Side by side</h1>
   <div class="side-by-side">
     <pinch-zoom class="left">
       <div>
@@ -25,9 +26,19 @@ document.body.innerHTML = `
       </div>
     </pinch-zoom>
   </div>
+  <h1>Single</h1>
+  <pinch-zoom>
+    <div>
+      <div class="container">
+        <h1>Hello world</h1>
+        <button>Test</button>
+        <img src="${carImgSrc}">
+      </div>
+    </div>
+  </pinch-zoom>
 `;
 
-const pinchZooms = Array.from(document.querySelectorAll('pinch-zoom')) as [PinchZoom, PinchZoom];
+const pinchZooms = Array.from(document.querySelectorAll('.side-by-side pinch-zoom')) as [PinchZoom, PinchZoom];
 const sideBySide = document.querySelector('.side-by-side') as HTMLDivElement;
 
 if (!sideBySide) throw Error(`Can't find element`);
@@ -45,9 +56,10 @@ for (const eventType of ['pointerdown', 'touchstart', 'touchend', 'touchmove', '
   sideBySide.addEventListener(eventType, event => {
     if (retargetedEvents.has(event)) return;
     event.stopImmediatePropagation();
-    const clonedEvent = new event.constructor(event.type, event);
+    const clonedEvent = new (event.constructor as any)(event.type, event);
     event.preventDefault();
     retargetedEvents.add(clonedEvent);
     pinchZooms[0].dispatchEvent(clonedEvent);
   }, { capture: true });
 }
+
