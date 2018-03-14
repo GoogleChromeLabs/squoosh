@@ -25,6 +25,15 @@ export class Pointer {
   }
 }
 
+
+function fixupInstance(instance: any, Type: Function): typeof instance {
+  if (!(instance instanceof Type)) {
+    instance.__proto__ = Type.prototype;
+  }
+  return instance;
+}
+
+
 export class TrackDragEvent extends Event {
   constructor(
     type: string,
@@ -33,6 +42,7 @@ export class TrackDragEvent extends Event {
     readonly currentPointers: Pointer[]
   ) {
     super(type);
+    return fixupInstance(this, TrackDragEvent);
   }
 
   preventDefault() {
@@ -61,6 +71,7 @@ export class TrackDragStartEvent extends TrackDragEvent {
     readonly pointer: Pointer
   ) {
     super('track-drag-start', relatedEvent, startPointers, currentPointers);
+    return fixupInstance(this, TrackDragStartEvent);
   }
 
   trackPointer() {
@@ -80,6 +91,7 @@ export class TrackDragMoveEvent extends TrackDragEvent {
     readonly previousPointers: Pointer[]
   ) {
     super('track-drag-move', relatedEvent, startPointers, currentPointers);
+    return fixupInstance(this, TrackDragMoveEvent);
   }
 }
 
@@ -91,6 +103,7 @@ export class TrackDragEndEvent extends TrackDragEvent {
     readonly pointer: Pointer
   ) {
     super('track-drag-end', relatedEvent, startPointers, currentPointers);
+    return fixupInstance(this, TrackDragEndEvent);
   }
 }
 
@@ -208,7 +221,7 @@ export function trackDragging(element: HTMLElement) {
     }
   };
 
-  if (self.PointerEvent && false) {
+  if (self.PointerEvent) {
     element.addEventListener('pointerdown', pointerStart);
   }
   else {
