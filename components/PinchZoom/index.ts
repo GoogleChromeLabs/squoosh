@@ -1,5 +1,5 @@
 import "./styles.css";
-import { trackDragging, TrackDragStartEvent, TrackDragMoveEvent, Pointer } from "../../utils/trackDragging";
+import { PointerTracker, Pointer } from "../../utils/trackDragging";
 
 interface Point {
   clientX: number;
@@ -51,10 +51,18 @@ export default class PinchZoom extends HTMLElement {
     new MutationObserver(() => this._stageElChange())
       .observe(this, { childList: true });
 
-    trackDragging(this);
-
-    this.addEventListener('track-drag-start', event => this._trackDragStart(event as TrackDragStartEvent));
-    this.addEventListener('track-drag-move', event => this._trackDragMove(event as TrackDragMoveEvent));
+    // Watch for pointers
+    const pointerTracker: PointerTracker = new PointerTracker(this, {
+      start: (pointer, event) => {
+        // We only want to track 2 pointers at most
+        if (pointerTracker.currentPointers.length === 2) return false;
+        event.preventDefault();
+        return true;
+      },
+      move: previousPointers => {
+        this._update(previousPointers, pointerTracker.currentPointers);
+      }
+    });
   }
 
   connectedCallback() {
@@ -159,16 +167,6 @@ export default class PinchZoom extends HTMLElement {
   private _applyTransform() {
     if (!this._positioningEl) return;
     this._positioningEl.style.transform = `translate(${this._x}px, ${this._y}px) scale(${this._scale})`;
-  }
-
-  private _trackDragStart(event: TrackDragStartEvent) {
-    if (event.currentPointers.length === 2) return;
-    event.trackPointer();
-    event.preventDefault();
-  }
-
-  private _trackDragMove(event: TrackDragMoveEvent) {
-    this._update(event.previousPointers, event.currentPointers);
   }
 }
 
