@@ -37,11 +37,12 @@ type EndCallback = ((pointer: Pointer, event: TouchEvent | PointerEvent | MouseE
 interface PointerTrackerCallbacks {
   /**
    * Called when a pointer is pressed/touched within the element.
-   * Return true if you want to monitor the movement of this pointer
-   * until it's released.
    *
    * @param pointer The new pointer.
+   * This pointer isn't included in this.currentPointers or this.startPointers yet.
    * @param event The event related to this pointer.
+   *
+   * @returns Whether you want to track this pointer as it moves.
    */
   start?: StartCallback,
   /**
