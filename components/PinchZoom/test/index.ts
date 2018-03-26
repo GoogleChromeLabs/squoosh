@@ -1,5 +1,4 @@
 import '@webcomponents/custom-elements';
-import '../index';
 import PinchZoom from '../index';
 import './style.css';
 import carImgSrc from './car.svg';
@@ -62,4 +61,3 @@ for (const eventType of ['pointerdown', 'touchstart', 'touchend', 'touchmove', '
     pinchZooms[0].dispatchEvent(clonedEvent);
   }, { capture: true });
 }
-

@@ -1,17 +1,17 @@
-import "./styles.css";
-import { PointerTracker, Pointer } from "../../utils/trackDragging";
+import './styles.css';
+import { PointerTracker, Pointer } from '../../utils/trackDragging';
 
 interface Point {
   clientX: number;
   clientY: number;
 }
 
-function getDistance(a: Point, b?: Point): number {
+function getDistance (a: Point, b?: Point): number {
   if (!b) return 0;
   return Math.sqrt((b.clientX - a.clientX) ** 2 + (b.clientY - a.clientY) ** 2);
 }
 
-function getMidpoint(a: Point, b?: Point): Point {
+function getMidpoint (a: Point, b?: Point): Point {
   if (!b) return a;
 
   return {
@@ -24,7 +24,7 @@ let cachedSvg: SVGSVGElement;
 
 // I'd rather use DOMMatrix here, but the browser support isn't good enough.
 // Given that, better to use something everything supports.
-function createMatrix(): SVGMatrix {
+function createMatrix (): SVGMatrix {
   if (!cachedSvg) {
     cachedSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   }
@@ -65,26 +65,26 @@ export default class PinchZoom extends HTMLElement {
     });
   }
 
-  connectedCallback() {
+  connectedCallback () {
     this._stageElChange();
   }
 
-  get x() {
+  get x () {
     return this._x;
   }
 
-  get y() {
+  get y () {
     return this._y;
   }
 
-  get scale() {
+  get scale () {
     return this._scale;
   }
 
   /**
    * Update the stage with a given scale/x/y.
    */
-  setTransform(scale: number, x: number, y: number) {
+  setTransform (scale: number, x: number, y: number) {
     this._x = x;
     this._y = y;
     this._scale = scale;
@@ -97,10 +97,10 @@ export default class PinchZoom extends HTMLElement {
    * require a single element to be the child of <pinch-zoom>, and
    * that's the element we pan/scale.
    */
-  private _stageElChange() {
+  private _stageElChange () {
     this._positioningEl = undefined;
 
-    if (this.children.length == 0) {
+    if (this.children.length === 0) {
       console.warn('There should be at least one child in <pinch-zoom>.');
       return;
     }
@@ -123,7 +123,7 @@ export default class PinchZoom extends HTMLElement {
     this._applyTransform();
   }
 
-  private _update(previousPointers: Pointer[], currentPointers: Pointer[]) {
+  private _update (previousPointers: Pointer[], currentPointers: Pointer[]) {
     // Combine next points with previous points
     const thisRect = this.getBoundingClientRect();
 
@@ -164,7 +164,7 @@ export default class PinchZoom extends HTMLElement {
     }
   }
 
-  private _applyTransform() {
+  private _applyTransform () {
     if (!this._positioningEl) return;
     this._positioningEl.style.transform = `translate(${this._x}px, ${this._y}px) scale(${this._scale})`;
   }
@@ -179,7 +179,6 @@ customElements.define('pinch-zoom', PinchZoom);
 // Go to new scale pos, animate to new scale pos
 // On change event
 // scale & x & y props
-// Test multiple instances
 // Lock to bounds attr
 // Exclude selector
 // Anchor point for resize

@@ -10,12 +10,14 @@
   "license": "ISC",
   "devDependencies": {
     "css-loader": "^0.28.10",
+    "del-cli": "^1.1.0",
     "file-loader": "^1.1.11",
+    "html-webpack-plugin": "^3.0.6",
     "style-loader": "^0.20.2",
     "ts-loader": "^4.0.1",
+    "tslint": "^5.9.1",
+    "tslint-config-semistandard": "^7.0.0",
     "typescript": "^2.7.2",
-    "del-cli": "^1.1.0",
-    "html-webpack-plugin": "^3.0.6",
     "webpack": "^4.1.1",
     "webpack-cli": "^2.0.10"
   },
