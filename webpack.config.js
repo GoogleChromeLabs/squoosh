@@ -1,18 +1,18 @@
-let fs = require('fs');
-let path = require('path');
-let webpack = require('webpack');
+const fs = require('fs');
+const path = require('path');
+const webpack = require('webpack');
 // let ExtractTextPlugin = require('extract-text-webpack-plugin');
 let CleanWebpackPlugin = require('clean-webpack-plugin');
-let ProgressBarPlugin = require('progress-bar-webpack-plugin');
-let MiniCssExtractPlugin = require('mini-css-extract-plugin');
-let HtmlWebpackPlugin = require('html-webpack-plugin');
-let PreloadWebpackPlugin = require('preload-webpack-plugin');
-let ReplacePlugin = require('webpack-plugin-replace');
-let CopyPlugin = require('copy-webpack-plugin');
-let WatchTimestampsPlugin = require('./config/watch-timestamps-plugin');
-let BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+const ProgressBarPlugin = require('progress-bar-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const PreloadWebpackPlugin = require('preload-webpack-plugin');
+const ReplacePlugin = require('webpack-plugin-replace');
+const CopyPlugin = require('copy-webpack-plugin');
+const WatchTimestampsPlugin = require('./config/watch-timestamps-plugin');
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
-let oldWrite = process.stderr.write;
+const oldWrite = process.stderr.write;
 process.stderr.write = chunk => {
 	if (String(chunk).indexOf('DeprecationWarning:')!==-1) return;
 	return oldWrite.call(process.stderr, chunk);
@@ -34,9 +34,9 @@ function readFile(filename) {
 }
 
 module.exports = function(_, env) {
-	let isProd = env.mode === 'production';
-	let nodeModules = path.join(__dirname, 'node_modules');
-	let componentStyleDirs = [
+	const isProd = env.mode === 'production';
+	const nodeModules = path.join(__dirname, 'node_modules');
+	const componentStyleDirs = [
 		path.join(__dirname, 'src/components'),
 		path.join(__dirname, 'src/routes')
 	];
