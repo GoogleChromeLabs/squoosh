@@ -14,8 +14,8 @@ module.exports = class WatchTimestampsPlugin {
 
 	apply(compiler) {
 		compiler.plugin('watch-run', (watch, callback) => {
-			let patterns = this.patterns;
-			let timestamps = watch.fileTimestamps || watch.compiler.fileTimestamps;
+			const patterns = this.patterns;
+			const timestamps = watch.fileTimestamps;
 
 			Object.keys(timestamps).forEach(filepath => {
 				if (patterns.some(pat => pat instanceof RegExp ? pat.test(filepath) : filepath.indexOf(pat) === 0)) {
