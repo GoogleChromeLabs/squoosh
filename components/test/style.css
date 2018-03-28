@@ -21,7 +21,7 @@
   background-size: 20px 20px;
 }
 
-.side-by-side {
+/*.side-by-side {
   display: grid;
   grid-template-areas: 'fill';
 }
@@ -38,4 +38,4 @@ pinch-zoom {
 .right {
   -webkit-clip-path: inset(0 0 0 50%);
   clip-path: inset(0 0 0 50%);
-}
+}*/

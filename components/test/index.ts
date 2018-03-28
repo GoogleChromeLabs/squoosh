@@ -1,12 +1,14 @@
 import '@webcomponents/custom-elements';
-import PinchZoom from '../index';
+import PinchZoom from '../PinchZoom/index';
 import './style.css';
 import carImgSrc from './car.svg';
+import TwoUp from '../TwoUp/index';
+import '../TwoUp/index';
 
 document.body.innerHTML = `
   <h1>Side by side</h1>
-  <div class="side-by-side">
-    <pinch-zoom class="left">
+  <two-up>
+    <pinch-zoom>
       <div>
         <div class="container">
           <h1>Hello world</h1>
@@ -15,7 +17,7 @@ document.body.innerHTML = `
         </div>
       </div>
     </pinch-zoom>
-    <pinch-zoom class="right">
+    <pinch-zoom>
       <div>
         <div class="container container-right">
           <h1>Foo bar</h1>
@@ -24,7 +26,7 @@ document.body.innerHTML = `
         </div>
       </div>
     </pinch-zoom>
-  </div>
+  </two-up>
   <h1>Single</h1>
   <pinch-zoom>
     <div>
@@ -37,18 +39,17 @@ document.body.innerHTML = `
   </pinch-zoom>
 `;
 
-const pinchZooms = Array.from(document.querySelectorAll('.side-by-side pinch-zoom')) as [PinchZoom, PinchZoom];
-const sideBySide = document.querySelector('.side-by-side') as HTMLDivElement;
+const twoUp = document.querySelector('two-up') as TwoUp;
+const pinchZooms = Array.from(twoUp.querySelectorAll('pinch-zoom')) as [PinchZoom, PinchZoom];
 
-if (!sideBySide) throw Error(`Can't find element`);
-
-sideBySide.addEventListener('change', event => {
+twoUp.addEventListener('change', event => {
   const thisPinchZoom = event.target as PinchZoom;
   const otherPinchZoom = pinchZooms.find(p => p !== thisPinchZoom) as PinchZoom;
 
   otherPinchZoom.setTransform(thisPinchZoom.scale, thisPinchZoom.x, thisPinchZoom.y);
 });
 
+/*
 const retargetedEvents = new WeakSet();
 
 for (const eventType of ['pointerdown', 'touchstart', 'touchend', 'touchmove', 'mousedown']) {
@@ -61,3 +62,4 @@ for (const eventType of ['pointerdown', 'touchstart', 'touchend', 'touchmove', '
     pinchZooms[0].dispatchEvent(clonedEvent);
   }, { capture: true });
 }
+*/

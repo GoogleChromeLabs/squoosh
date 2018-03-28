@@ -1,0 +1,39 @@
+two-up {
+  display: grid;
+  --split-point: 0;
+}
+
+two-up > * {
+  grid-area: 1/1;
+}
+
+.two-up-handle {
+  touch-action: none;
+  position: relative;
+  width: 10px;
+  background: red;
+  transform: translateX(var(--split-point)) translateX(-50%);
+}
+
+.two-up-handle::after {
+  content: '';
+  display: block;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 40px;
+  background: red;
+  border-radius: 20px;
+}
+
+two-up > :nth-child(1):not(.two-up-handle) {
+  -webkit-clip-path: inset(0 calc(100% - var(--split-point)) 0 0);
+  clip-path: inset(0 calc(100% - var(--split-point)) 0 0);
+}
+
+two-up > :nth-child(2):not(.two-up-handle) {
+  -webkit-clip-path: inset(0 0 0 var(--split-point));
+  clip-path: inset(0 0 0 var(--split-point));
+}
