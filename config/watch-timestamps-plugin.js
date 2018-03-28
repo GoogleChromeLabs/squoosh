@@ -17,13 +17,13 @@ module.exports = class WatchTimestampsPlugin {
 			const patterns = this.patterns;
 			const timestamps = watch.fileTimestamps;
 
-			Object.keys(timestamps).forEach(filepath => {
+			for (const filepath of timestamps) {
 				if (patterns.some(pat => pat instanceof RegExp ? pat.test(filepath) : filepath.indexOf(pat) === 0)) {
 					let time = fs.statSync(filepath).mtime;
 					if (timestamps instanceof Map) timestamps.set(filepath, time);
 					else timestamps[filepath] = time;
 				}
-			});
+			}
 			callback();
 		});
 	}
