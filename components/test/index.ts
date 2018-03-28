@@ -50,11 +50,13 @@ twoUp.addEventListener('change', event => {
   otherPinchZoom.setTransform(thisPinchZoom.scale, thisPinchZoom.x, thisPinchZoom.y);
 });
 
-/*
+
 const retargetedEvents = new WeakSet();
 
 for (const eventType of ['pointerdown', 'touchstart', 'touchend', 'touchmove', 'mousedown']) {
-  sideBySide.addEventListener(eventType, event => {
+  twoUp.addEventListener(eventType, event => {
+    const targetEl = event.target as HTMLElement;
+    if (targetEl.closest('.two-up-handle')) return;
     if (retargetedEvents.has(event)) return;
     event.stopImmediatePropagation();
     const clonedEvent = new (event.constructor as any)(event.type, event);
@@ -63,4 +65,4 @@ for (const eventType of ['pointerdown', 'touchstart', 'touchend', 'touchmove', '
     pinchZooms[0].dispatchEvent(clonedEvent);
   }, { capture: true });
 }
-*/
+
