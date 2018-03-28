@@ -13,6 +13,7 @@ two-up > * {
   width: 10px;
   background: red;
   transform: translateX(var(--split-point)) translateX(-50%);
+  will-change: transform;
 }
 
 .two-up-handle::after {
