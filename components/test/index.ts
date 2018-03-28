@@ -5,8 +5,11 @@ import './style.css';
 import carImgSrc from './car.svg';
 import TwoUp from '../TwoUp/index';
 import '../TwoUp/index';
+import '../MultiPanel/index';
 
 document.body.innerHTML = `
+  <h1>Multi panel</h1>
+  <multi-panel>TODO</multi-panel>
   <h1>Side by side</h1>
   <two-up>
     <pinch-zoom>
@@ -50,7 +53,6 @@ twoUp.addEventListener('change', event => {
   otherPinchZoom.setTransform(thisPinchZoom.scale, thisPinchZoom.x, thisPinchZoom.y);
 });
 
-
 const retargetedEvents = new WeakSet();
 
 for (const eventType of ['pointerdown', 'touchstart', 'touchend', 'touchmove', 'mousedown']) {
@@ -65,4 +67,3 @@ for (const eventType of ['pointerdown', 'touchstart', 'touchend', 'touchmove', '
     pinchZooms[0].dispatchEvent(clonedEvent);
   }, { capture: true });
 }
-
