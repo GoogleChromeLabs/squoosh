@@ -12,19 +12,8 @@ const CopyPlugin = require('copy-webpack-plugin');
 const WatchTimestampsPlugin = require('./config/watch-timestamps-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
-function parseJson(text, fallback) {
-	try {
-		return JSON.parse(text);
-	}
-	catch (e) { }
-	return fallback || {};
-}
-
-function readFile(filename) {
-	try {
-		return fs.readFileSync(filename);
-	}
-	catch (e) {}
+function readJson(filename) {
+	return JSON.parse(fs.readFileSync(filename));
 }
 
 module.exports = function(_, env) {
@@ -34,11 +23,6 @@ module.exports = function(_, env) {
 		path.join(__dirname, 'src/components'),
 		path.join(__dirname, 'src/routes')
 	];
-
-	let babelRc = parseJson(readFile('.babelrc'));
-	babelRc.babelrc = false;
-
-	let manifest = parseJson(readFile('./src/manifest.json'));
 
 	return {
 		mode: env.mode || 'development',
@@ -75,7 +59,7 @@ module.exports = function(_, env) {
 				{
 					test: /\.(tsx?|jsx?)$/,
 					loader: 'babel-loader',
-					options: babelRc
+					options: Object.assign(readJson('.babelrc'), { babelrc: false })
 				},
 				{
 					test: /\.(scss|sass)$/,
@@ -179,7 +163,7 @@ module.exports = function(_, env) {
 					removeStyleLinkTypeAttributes: true,
 					removeComments: true
 				},
-				manifest,
+				manifest: readJson('./src/manifest.json'),
 
 				/** @todo Finish implementing prerendering similar to that of Preact CLI. */
 				prerender() {
