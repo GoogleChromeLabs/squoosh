@@ -25,7 +25,7 @@ module.exports = function(_, env) {
 	];
 
 	return {
-		mode: env.mode || 'development',
+		mode: isProd ? 'production' : 'development',
 		entry: path.join(__dirname, 'config/client-boot.js'),
 		// entry: './src/index',
 		output: {
