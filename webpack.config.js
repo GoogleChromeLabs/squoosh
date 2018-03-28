@@ -12,12 +12,6 @@ const CopyPlugin = require('copy-webpack-plugin');
 const WatchTimestampsPlugin = require('./config/watch-timestamps-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
-const oldWrite = process.stderr.write;
-process.stderr.write = chunk => {
-	if (String(chunk).indexOf('DeprecationWarning:')!==-1) return;
-	return oldWrite.call(process.stderr, chunk);
-};
-
 function parseJson(text, fallback) {
 	try {
 		return JSON.parse(text);
