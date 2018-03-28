@@ -43,7 +43,6 @@ module.exports = function(_, env) {
 
 	let babelRc = parseJson(readFile('.babelrc'));
 	babelRc.babelrc = false;
-	if (isProd) babelRc.presets[0][1].modules = false;
 
 	let manifest = parseJson(readFile('./src/manifest.json'));
 

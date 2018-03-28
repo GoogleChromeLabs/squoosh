@@ -5,7 +5,7 @@
 			{
 				"loose": true,
 				"uglify": true,
-				"modules": "commonjs",
+				"modules": false,
 				"targets": {
 					"browsers": "last 2 versions"
 				},
