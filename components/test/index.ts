@@ -1,5 +1,6 @@
 import '@webcomponents/custom-elements';
 import PinchZoom from '../PinchZoom/index';
+import '../PinchZoom/index';
 import './style.css';
 import carImgSrc from './car.svg';
 import TwoUp from '../TwoUp/index';
