@@ -1,5 +1,12 @@
 const fs = require('fs');
 
+/** A Webpack plugin to refresh file mtime values from disk before compiling.
+ *  This is used in order to account for SCSS-generated .d.ts files written
+ *  as part of compilation so they trigger only a single recompile per write.
+ *
+ *  All credit for the technique and implementation goes to @reiv. See:
+ *  https://github.com/Jimdo/typings-for-css-modules-loader/issues/48#issuecomment-347036461
+ */
 module.exports = class WatchTimestampsPlugin {
 	constructor(patterns) {
 		this.patterns = patterns;
