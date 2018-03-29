@@ -10,6 +10,10 @@ two-up > * {
   grid-area: 1/1;
 }
 
+two-up[legacy-clip-compat] > :not(.two-up-handle) {
+  position: absolute;
+}
+
 .two-up-handle {
   touch-action: none;
   position: relative;
@@ -32,22 +36,26 @@ two-up > * {
   border-radius: 20px;
 }
 
-two-up:not([legacy-clip-compat]) > :nth-child(1):not(.two-up-handle) {
+two-up > :nth-child(1):not(.two-up-handle) {
   -webkit-clip-path: inset(0 calc(100% - var(--split-point)) 0 0);
   clip-path: inset(0 calc(100% - var(--split-point)) 0 0);
 }
 
-two-up:not([legacy-clip-compat]) > :nth-child(2):not(.two-up-handle) {
+two-up > :nth-child(2):not(.two-up-handle) {
   -webkit-clip-path: inset(0 0 0 var(--split-point));
   clip-path: inset(0 0 0 var(--split-point));
 }
 
-two-up[legacy-clip-compat] > :nth-child(1):not(.two-up-handle) {
-  position: absolute;
-  clip: rect(auto var(--split-point) auto auto);
-}
+/*
+  Even in legacy-clip-compat, prefer clip-path if it's supported.
+  It performs way better in Safari.
+ */
+@supports not ((clip-path: inset(0 0 0 var(--split-point))) or (-webkit-clip-path: inset(0 0 0 var(--split-point)))) {
+  two-up[legacy-clip-compat] > :nth-child(1):not(.two-up-handle) {
+    clip: rect(auto var(--split-point) auto auto);
+  }
 
-two-up[legacy-clip-compat] > :nth-child(2):not(.two-up-handle) {
-  position: absolute;
-  clip: rect(auto auto auto var(--split-point));
+  two-up[legacy-clip-compat] > :nth-child(2):not(.two-up-handle) {
+    clip: rect(auto auto auto var(--split-point));
+  }
 }
