@@ -38,8 +38,7 @@ module.exports = function(_, env) {
 			extensions: ['.ts', '.tsx', '.js', '.jsx', '.scss', '.css'],
 			alias: {
 				'app-entry-point': path.join(__dirname, 'src/index'),
-				style: path.join(__dirname, 'src/style'),
-				preact$: path.join(__dirname, 'node_modules/preact/dist/preact.js')
+				style: path.join(__dirname, 'src/style')
 			}
 		},
 		resolveLoader: {
