@@ -211,7 +211,7 @@ module.exports = function(_, env) {
 				navigateFallback: '/',
 				navigateFallbackBlacklist: [/\.[a-z0-9]+$/i]
 			})
-		].filter(Boolean),
+		].filter(Boolean), // Filter out any falsey plugin array entries.
 
 		// Turn off various NodeJS environment polyfills Webpack adds to bundles.
 		// They're supposed to be added only when used, but the heuristic is loose
