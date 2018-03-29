@@ -94,7 +94,7 @@ export default class App extends Component<Props, State> {
   render({ url }: Props, { showDrawer, showFab, files }: State) {
     if (showDrawer) this.enableDrawer = true;
 
-    if (showFab === true) showFab = files.length > 0;
+    if (showFab) showFab = files.length > 0;
 
     return (
       <div id="app" class={style.app}>
