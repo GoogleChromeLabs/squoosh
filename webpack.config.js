@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const webpack = require('webpack');
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+const ForkTsCheckerNotifierWebpackPlugin = require('fork-ts-checker-notifier-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const ProgressBarPlugin = require('progress-bar-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
@@ -54,6 +56,10 @@ module.exports = function(_, env) {
 					loader: 'ts-loader',
 					// Don't transpile anything in node_modules:
 					exclude: nodeModules,
+          options: {
+            // Offload type checking to ForkTsCheckerWebpackPlugin for better performance:
+            transpileOnly: true
+          }
 				},
 				{
 					test: /\.(tsx?|jsx?)$/,
@@ -112,6 +118,15 @@ module.exports = function(_, env) {
 			]
 		},
 		plugins: [
+      // Runs tslint & type checking in a worker pool
+      new ForkTsCheckerWebpackPlugin({
+        tslint: true,
+        // wait for type chec
+        async: !isProd,
+        formatter: 'codeframe'
+      }),
+      new ForkTsCheckerNotifierWebpackPlugin({ excludeWarnings: true }),
+
 			// Pretty progressbar showing build progress:
 			new ProgressBarPlugin({
 				format: '\u001b[90m\u001b[44mBuild\u001b[49m\u001b[39m [:bar] \u001b[32m\u001b[1m:percent\u001b[22m\u001b[39m (:elapseds) \u001b[2m:msg\u001b[22m',

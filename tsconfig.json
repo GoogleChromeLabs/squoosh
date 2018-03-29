@@ -1,16 +1,16 @@
 {
-	"compileOnSave": false,
-	"compilerOptions": {
-		"target": "es2017",
-		"module": "esnext",
-		"moduleResolution": "node",
-		"sourceMap": true,
-		"jsx": "react",
-		"jsxFactory": "h",
-		"allowJs": true,
-		"baseUrl": ".",
-		"paths": {
-			"async!*": ["*"]
-		}
-	}
+  "compileOnSave": false,
+  "compilerOptions": {
+    "strict": true,
+    "target": "es2017",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "experimentalDecorators": true,
+    "noUnusedLocals": true,
+    "sourceMap": true,
+    "jsx": "react",
+    "jsxFactory": "h",
+    "allowJs": false,
+    "baseUrl": "."
+  }
 }

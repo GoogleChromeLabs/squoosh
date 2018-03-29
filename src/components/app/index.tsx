@@ -1,5 +1,5 @@
 import { h, Component } from 'preact';
-import { updater, toggle, When } from '../../lib/util';
+import { When, bind } from '../../lib/util';
 import Fab from '../fab';
 import Header from '../header';
 // import Drawer from 'async!../drawer';
@@ -8,105 +8,113 @@ import Home from '../home';
 import * as style from './style.scss';
 
 type Props = {
-	url?: String
-}
+  url?: string
+};
 
-type FileObj = {
-	id: any,
-	data: any,
-	error: Error | DOMError | String,
-	file: File,
-	loading: Boolean
+export type FileObj = {
+  id: number,
+  data?: string,
+  error?: Error | DOMError | String,
+  file: File,
+  loading: boolean
 };
 
 type State = {
-	showDrawer: Boolean,
-	showFab: Boolean,
-	files: FileObj[]
+  showDrawer: boolean,
+  showFab: boolean,
+  files: FileObj[]
 };
 
 let counter = 0;
 
 export default class App extends Component<Props, State> {
-	state: State = {
-		showDrawer: false,
-		showFab: true,
-		files: []
-	};
+  state: State = {
+    showDrawer: false,
+    showFab: true,
+    files: []
+  };
 
-	loadFile = (file: File) => {
-		let fileObj = {
-			id: ++counter,
-			file,
-			error: null,
-			loading: true,
-			data: null
-		};
+  enableDrawer = false;
 
-		this.setState({
-			files: [fileObj]
-		});
+  @bind
+  openDrawer() {
+    this.setState({ showDrawer: true });
+  }
+  @bind
+  closeDrawer() {
+    this.setState({ showDrawer: false });
+  }
+  @bind
+  toggleDrawer() {
+    this.setState({ showDrawer: !this.state.showDrawer });
+  }
 
-		let fr = new FileReader();
-		// fr.readAsArrayBuffer();
-		fr.onerror = () => {
-			let files = this.state.files.slice();
-			files.splice(0, files.indexOf(fileObj), {
-				...fileObj,
-				error: fr.error,
-				loading: false
-			});
-			this.setState({ files });
-		};
-		fr.onloadend = () => {
-			let files = this.state.files.slice();
-			files.splice(0, files.indexOf(fileObj), {
-				...fileObj,
-				data: fr.result,
-				loading: false
-			});
-			this.setState({ files });
-		};
-		fr.readAsDataURL(file);
-	};
+  @bind
+  openFab() {
+    this.setState({ showFab: true });
+  }
+  @bind
+  closeFab() {
+    this.setState({ showFab: false });
+  }
+  @bind
+  toggleFab() {
+    this.setState({ showFab: !this.state.showFab });
+  }
 
-	enableDrawer = false;
+  @bind
+  loadFile(file: File) {
+    let fileObj: FileObj = {
+      id: ++counter,
+      file,
+      error: undefined,
+      loading: true,
+      data: undefined
+    };
 
-	openDrawer = updater(this, 'showDrawer', true);
-	closeDrawer = updater(this, 'showDrawer', false);
-	toggleDrawer = updater(this, 'showDrawer', toggle);
+    this.setState({
+      files: [fileObj]
+    });
 
-	openFab = updater(this, 'showFab', true);
-	closeFab = updater(this, 'showFab', false);
-	toggleFab = updater(this, 'showFab', toggle);
+    let done = () => {
+      let files = this.state.files.slice();
+      files[files.indexOf(fileObj)] = Object.assign({}, fileObj, {
+        error: fr.error,
+        loading: false,
+        data: fr.result
+      });
+      this.setState({ files });
+    };
 
-	render({ url }, { showDrawer, showFab, files }) {
-		if (showDrawer) this.enableDrawer = true;
+    let fr = new FileReader();
+    fr.onerror = fr.onloadend = done;
+    fr.readAsDataURL(file);
+  }
 
-		if (showFab===true) showFab = files.length>0;
+  render({ url }: Props, { showDrawer, showFab, files }: State) {
+    if (showDrawer) this.enableDrawer = true;
 
-		return (
-			<div id="app" class={style.app}>
-				<Fab showing={showFab} />
+    if (showFab === true) showFab = files.length > 0;
 
-				<Header toggleDrawer={this.toggleDrawer} loadFile={this.loadFile} />
-				
-				{/* Avoid loading & rendering the drawer until the first time it is shown. */}
-				<When value={showDrawer}>
-					<Drawer showing={showDrawer} openDrawer={this.openDrawer} closeDrawer={this.closeDrawer} />
-				</When>
+    return (
+      <div id="app" class={style.app}>
+        <Fab showing={showFab} />
 
-				{/*
-					Note: this is normally where a <Router> with auto code-splitting goes.
-					Since we don't seem to need one (yet?), it's omitted.
-				*/}
-				<div class={style.content}>
-					<Home files={files} />
-				</div>
+        <Header class={style.header} toggleDrawer={this.toggleDrawer} loadFile={this.loadFile} />
 
-				{/* This ends up in the body when prerendered, which makes it load async. */}
-				<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
-			</div>
-		);
-	}
+        {/* Avoid loading & rendering the drawer until the first time it is shown. */}
+        <When value={showDrawer}>
+          <Drawer showing={showDrawer} openDrawer={this.openDrawer} closeDrawer={this.closeDrawer} />
+        </When>
+
+        {/*
+          Note: this is normally where a <Router> with auto code-splitting goes.
+          Since we don't seem to need one (yet?), it's omitted.
+        */}
+        <div class={style.content}>
+          <Home files={files} />
+        </div>
+      </div>
+    );
+  }
 }
