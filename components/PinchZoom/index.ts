@@ -60,9 +60,11 @@ export default class PinchZoom extends HTMLElement {
         return true;
       },
       move: previousPointers => {
-        this._update(previousPointers, pointerTracker.currentPointers);
+        this._onPointerMove(previousPointers, pointerTracker.currentPointers);
       }
     });
+
+    this.addEventListener('wheel', event => this._onWheel(event));
   }
 
   connectedCallback () {
@@ -84,11 +86,33 @@ export default class PinchZoom extends HTMLElement {
   /**
    * Update the stage with a given scale/x/y.
    */
-  setTransform (scale: number, x: number, y: number) {
+  setTransform (scale: number = this._scale, x: number = this._x, y: number = this._y, {
+    allowChangeEvent = false
+  }: {
+    /**
+     * Fire a 'change' event if values are different to current values
+     */
+    allowChangeEvent?: boolean
+  } = {}) {
+    // Bail if there's no change
+    if (
+      scale === this._scale &&
+      x === this._x &&
+      y === this._y
+    ) return;
+
     this._x = x;
     this._y = y;
     this._scale = scale;
-    this._applyTransform();
+
+    this.style.setProperty('--x', this._x + 'px');
+    this.style.setProperty('--y', this._y + 'px');
+    this.style.setProperty('--scale', this._scale + '');
+
+    if (allowChangeEvent) {
+      const event = new Event('change', { bubbles: true });
+      this.dispatchEvent(event);
+    }
   }
 
   /**
@@ -118,10 +142,27 @@ export default class PinchZoom extends HTMLElement {
       console.warn('<pinch-zoom> must not have more than one child.');
     }
 
-    this._applyTransform();
+    this.setTransform();
   }
 
-  private _update (previousPointers: Pointer[], currentPointers: Pointer[]) {
+  private _onWheel (event: WheelEvent) {
+    event.preventDefault();
+
+    const thisRect = this.getBoundingClientRect();
+    const { deltaY, ctrlKey } = event;
+
+    // ctrlKey is true when pinch-zooming on a trackpad.
+    const divisor = ctrlKey ? 100 : 300;
+    const scaleDiff = -deltaY / divisor + 1;
+
+    this._applyChange({
+      scaleDiff,
+      originX: event.clientX - thisRect.left,
+      originY: event.clientY - thisRect.top
+    });
+  }
+
+  private _onPointerMove (previousPointers: Pointer[], currentPointers: Pointer[]) {
     // Combine next points with previous points
     const thisRect = this.getBoundingClientRect();
 
@@ -138,10 +179,31 @@ export default class PinchZoom extends HTMLElement {
     const newDistance = getDistance(currentPointers[0], currentPointers[1]);
     const scaleDiff = prevDistance ? newDistance / prevDistance : 1;
 
+    this._applyChange({
+      originX, originY, scaleDiff,
+      panX: newMidpoint.clientX - prevMidpoint.clientX,
+      panY: newMidpoint.clientY - prevMidpoint.clientY
+    });
+  }
+
+  /** Transform the view & fire a change event */
+  private _applyChange ({
+    panX = 0,
+    panY = 0,
+    scaleDiff = 1,
+    originX = 0,
+    originY = 0
+  }: {
+    panX?: number,
+    panY?: number,
+    scaleDiff?: number,
+    originX?: number,
+    originY?: number
+  } = {}) {
     const matrix = createMatrix()
       // Translate according to panning
-      .translate(newMidpoint.clientX - prevMidpoint.clientX, newMidpoint.clientY - prevMidpoint.clientY)
-      // Scale about the origin (between the user's fingers)
+      .translate(panX, panY)
+      // Scale about the origin
       .translate(originX, originY)
       .scale(scaleDiff)
       .translate(-originX, -originY)
@@ -150,29 +212,13 @@ export default class PinchZoom extends HTMLElement {
       .scale(this._scale);
 
     // Convert the transform into basic translate & scale.
-    if (this._x !== matrix.e || this._y !== matrix.f || this._scale !== matrix.a) {
-      this._x = matrix.e;
-      this._y = matrix.f;
-      this._scale = matrix.a;
-
-      this._applyTransform();
-
-      const event = new Event('change', { bubbles: true });
-      this.dispatchEvent(event);
-    }
-  }
-
-  private _applyTransform () {
-    this.style.setProperty('--x', this._x + 'px');
-    this.style.setProperty('--y', this._y + 'px');
-    this.style.setProperty('--scale', this._scale + '');
+    this.setTransform(matrix.a, matrix.e, matrix.f, { allowChangeEvent: true });
   }
 }
 
 customElements.define('pinch-zoom', PinchZoom);
 
 // TODO:
-// Zoom on mouse wheel
 // scale by method, which takes a scaleDiff and a center
 // Initial scale & pos - attributes
 // Go to new scale pos, animate to new scale pos
