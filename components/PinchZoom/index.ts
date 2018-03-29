@@ -6,6 +6,21 @@ interface Point {
   clientY: number;
 }
 
+interface ApplyChangeOpts {
+  panX?: number;
+  panY?: number;
+  scaleDiff?: number;
+  originX?: number;
+  originY?: number;
+}
+
+interface SetTransformOpts {
+  /**
+   * Fire a 'change' event if values are different to current values
+   */
+  allowChangeEvent?: boolean;
+}
+
 function getDistance (a: Point, b?: Point): number {
   if (!b) return 0;
   return Math.sqrt((b.clientX - a.clientX) ** 2 + (b.clientY - a.clientY) ** 2);
@@ -40,11 +55,9 @@ export default class PinchZoom extends HTMLElement {
   // The element that we'll transform.
   // Ideally this would be shadow DOM, but we don't have the browser
   // support yet.
-  private _positioningEl?: HTMLElement;
+  private _positioningEl?: Element;
   // Current transform.
-  private _x = 0;
-  private _y = 0;
-  private _scale = 1;
+  private _transform: SVGMatrix = createMatrix();
 
   constructor () {
     super();
@@ -79,42 +92,37 @@ export default class PinchZoom extends HTMLElement {
   }
 
   get x () {
-    return this._x;
+    return this._transform.e;
   }
 
   get y () {
-    return this._y;
+    return this._transform.f;
   }
 
   get scale () {
-    return this._scale;
+    return this._transform.a;
   }
 
   /**
    * Update the stage with a given scale/x/y.
    */
-  setTransform (scale: number = this._scale, x: number = this._x, y: number = this._y, {
-    allowChangeEvent = false
-  }: {
-    /**
-     * Fire a 'change' event if values are different to current values
-     */
-    allowChangeEvent?: boolean
-  } = {}) {
+  setTransform (scale: number = this.scale, x: number = this.x, y: number = this.y, opts: SetTransformOpts = {}) {
+    const { allowChangeEvent = false } = opts;
+
     // Bail if there's no change
     if (
-      scale === this._scale &&
-      x === this._x &&
-      y === this._y
+      scale === this.scale &&
+      x === this.x &&
+      y === this.y
     ) return;
 
-    this._x = x;
-    this._y = y;
-    this._scale = scale;
+    this._transform.e = x;
+    this._transform.f = y;
+    this._transform.b = this._transform.a = scale;
 
-    this.style.setProperty('--x', this._x + 'px');
-    this.style.setProperty('--y', this._y + 'px');
-    this.style.setProperty('--scale', this._scale + '');
+    this.style.setProperty('--x', this.x + 'px');
+    this.style.setProperty('--y', this.y + 'px');
+    this.style.setProperty('--scale', this.scale + '');
 
     if (allowChangeEvent) {
       const event = new Event('change', { bubbles: true });
@@ -136,14 +144,7 @@ export default class PinchZoom extends HTMLElement {
       return;
     }
 
-    const el = this.children[0];
-
-    if (!(el instanceof HTMLElement)) {
-      console.warn('The first child of <pinch-zoom> must be an HTMLElement.');
-      return;
-    }
-
-    this._positioningEl = el;
+    this._positioningEl = this.children[0];
 
     if (this.children.length > 1) {
       console.warn('<pinch-zoom> must not have more than one child.');
@@ -166,7 +167,7 @@ export default class PinchZoom extends HTMLElement {
 
     // ctrlKey is true when pinch-zooming on a trackpad.
     const divisor = ctrlKey ? 100 : 300;
-    const scaleDiff = -deltaY / divisor + 1;
+    const scaleDiff = 1 - deltaY / divisor;
 
     this._applyChange({
       scaleDiff,
@@ -200,19 +201,13 @@ export default class PinchZoom extends HTMLElement {
   }
 
   /** Transform the view & fire a change event */
-  private _applyChange ({
-    panX = 0,
-    panY = 0,
-    scaleDiff = 1,
-    originX = 0,
-    originY = 0
-  }: {
-    panX?: number,
-    panY?: number,
-    scaleDiff?: number,
-    originX?: number,
-    originY?: number
-  } = {}) {
+  private _applyChange (opts: ApplyChangeOpts = {}) {
+    const {
+      panX = 0, panY = 0,
+      originX = 0, originY = 0,
+      scaleDiff = 1
+    } = opts;
+
     if (!this._positioningEl) return;
     const thisBounds = this.getBoundingClientRect();
     const positioningElBounds = this._positioningEl.getBoundingClientRect();
@@ -233,12 +228,13 @@ export default class PinchZoom extends HTMLElement {
       .scale(scaleDiff)
       .translate(-originX, -originY);
 
-    // Calculate the final position & clamp to bounds.
+    // Calculate the final position
     topLeft = topLeft.matrixTransform(matrix);
     bottomRight = bottomRight.matrixTransform(matrix);
     let xCorrection = 0;
     let yCorrection = 0;
 
+    // Ensure _positioningEl can't move beyond out-of-bounds.
     // Correct for x
     if (topLeft.x > thisBounds.width) {
       xCorrection = thisBounds.width - topLeft.x;
@@ -253,7 +249,7 @@ export default class PinchZoom extends HTMLElement {
       yCorrection = -bottomRight.y;
     }
 
-    // If _positioningEl is out-of-bounds, apply a correction.
+    // Apply any correction.
     if (xCorrection || yCorrection) {
       matrix = createMatrix()
         .translate(xCorrection, yCorrection)
@@ -261,7 +257,7 @@ export default class PinchZoom extends HTMLElement {
     }
 
     // Apply current transform.
-    matrix = matrix.translate(this._x, this._y).scale(this._scale);
+    matrix = matrix.multiply(this._transform);
 
     // Convert the transform into basic translate & scale.
     this.setTransform(matrix.a, matrix.e, matrix.f, { allowChangeEvent: true });

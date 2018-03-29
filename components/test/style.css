@@ -26,8 +26,10 @@ two-up {
 }
 
 two-up > pinch-zoom {
+  top: 0;
   left: 0;
   right: 0;
+  bottom: 0;
 }
 
 /*.side-by-side {

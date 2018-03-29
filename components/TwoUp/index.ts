@@ -12,7 +12,7 @@ export default class TwoUp extends HTMLElement {
 
   private readonly _handle = document.createElement('div');
   /**
-   * The position of the split.
+   * The position of the split in pixels.
    */
   private _position = 0;
   /**

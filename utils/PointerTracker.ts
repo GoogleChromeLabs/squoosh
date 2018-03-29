@@ -88,11 +88,13 @@ export class PointerTracker {
    * @param element Element to monitor.
    * @param callbacks
    */
-  constructor (private _element: HTMLElement, {
-    start = () => true,
-    move = noop,
-    end = noop
-  }: PointerTrackerCallbacks) {
+  constructor (private _element: HTMLElement, callbacks: PointerTrackerCallbacks) {
+    const {
+      start = () => true,
+      move = noop,
+      end = noop
+    } = callbacks;
+
     this._startCallback = start;
     this._moveCallback = move;
     this._endCallback = end;
