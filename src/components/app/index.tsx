@@ -76,19 +76,18 @@ export default class App extends Component<Props, State> {
       files: [fileObj]
     });
 
-    let done = () => {
-      let files = this.state.files.slice();
-      files[files.indexOf(fileObj)] = Object.assign({}, fileObj, {
-        error: fr.error,
-        loading: false,
-        data: fr.result
+    new Response(file).text()
+      .then(data => ({ data }))
+      .catch(error => ({ error }))
+      .then(state => {
+        console.log(state);
+        let files = this.state.files.slice();
+        files[files.indexOf(fileObj)] = Object.assign({}, fileObj, {
+          loading: false,
+          ...state
+        });
+        this.setState({ files });
       });
-      this.setState({ files });
-    };
-
-    let fr = new FileReader();
-    fr.onerror = fr.onloadend = done;
-    fr.readAsDataURL(file);
   }
 
   render({ url }: Props, { showDrawer, showFab, files }: State) {
