@@ -7,7 +7,7 @@ import { bind } from '../../lib/util';
 type Props = {
   'class'?: string,
   showHeader?: boolean,
-  toggleDrawer?(): void,
+  onToggleDrawer?(): void,
   showFab?(): void,
   loadFile(f: File): void
 };
@@ -35,7 +35,7 @@ export default class Header extends Component<Props, State> {
     }
   }
 
-  render({ class: c, toggleDrawer, showHeader = false, showFab }: Props) {
+  render({ class: c, onToggleDrawer, showHeader = false, showFab }: Props) {
     return (
       <Toolbar fixed class={cx(c, style.toolbar, 'inert', !showHeader && style.minimal)}>
         <Toolbar.Row>
@@ -43,7 +43,7 @@ export default class Header extends Component<Props, State> {
             <Toolbar.Icon title="Upload" ripple onClick={this.upload}>file_upload</Toolbar.Icon>
           </Toolbar.Title>
           <Toolbar.Section align-end>
-            <Toolbar.Icon ripple onClick={toggleDrawer}>menu</Toolbar.Icon>
+            <Toolbar.Icon ripple onClick={onToggleDrawer}>menu</Toolbar.Icon>
           </Toolbar.Section>
         </Toolbar.Row>
         <input class={style.fileInput} ref={this.setInputRef} type="file" onChange={this.handleFiles} />

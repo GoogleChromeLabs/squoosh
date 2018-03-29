@@ -99,7 +99,7 @@ export default class App extends Component<Props, State> {
       <div id="app" class={style.app}>
         <Fab showing={showFab} />
 
-        <Header class={style.header} toggleDrawer={this.toggleDrawer} loadFile={this.loadFile} />
+        <Header class={style.header} onToggleDrawer={this.toggleDrawer} loadFile={this.loadFile} />
 
         {/* Avoid loading & rendering the drawer until the first time it is shown. */}
         <When value={showDrawer}>
