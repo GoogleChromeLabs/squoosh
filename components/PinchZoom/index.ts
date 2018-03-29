@@ -233,48 +233,16 @@ export default class PinchZoom extends HTMLElement {
     let xCorrection = 0;
     let yCorrection = 0;
 
-    // If x bounds are neither covering nor containing.
-    if (
-      (topLeft.x > 0 && bottomRight.x > width) ||
-      (topLeft.x < 0 && bottomRight.x < width)
-    ) {
-      // If x bounds are larger than container.
-      if (bottomRight.x - topLeft.x > width) {
-        if (bottomRight.x > width) {
-          xCorrection = -topLeft.x;
-        } else {
-          xCorrection = width - bottomRight.x;
-        }
-      // Else x bounds are smaller than container.
-      } else {
-        if (bottomRight.x > width) {
-          xCorrection = width - bottomRight.x;
-        } else {
-          xCorrection = -topLeft.x;
-        }
-      }
+    if (topLeft.x > width) {
+      xCorrection = width - topLeft.x;
+    } else if (bottomRight.x < 0) {
+      xCorrection = -bottomRight.x;
     }
 
-    // If y bounds are neither covering nor containing.
-    if (
-      (topLeft.y > 0 && bottomRight.y > height) ||
-      (topLeft.y < 0 && bottomRight.y < height)
-    ) {
-      // If y bounds are larger than container.
-      if (bottomRight.y - topLeft.y > height) {
-        if (bottomRight.y > height) {
-          yCorrection = -topLeft.y;
-        } else {
-          yCorrection = height - bottomRight.y;
-        }
-        // Else y bounds are smaller than container.
-      } else {
-        if (bottomRight.y > height) {
-          yCorrection = height - bottomRight.y;
-        } else {
-          yCorrection = -topLeft.y;
-        }
-      }
+    if (topLeft.y > height) {
+      yCorrection = height - topLeft.y;
+    } else if (bottomRight.y < 0) {
+      yCorrection = -bottomRight.y;
     }
 
     // If the stage is out-of-bounds, apply a correction.
