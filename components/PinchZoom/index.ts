@@ -20,16 +20,20 @@ function getMidpoint (a: Point, b?: Point): Point {
   };
 }
 
+// I'd rather use DOMMatrix/DOMPoint here, but the browser support isn't good enough.
+// Given that, better to use something everything supports.
 let cachedSvg: SVGSVGElement;
 
-// I'd rather use DOMMatrix here, but the browser support isn't good enough.
-// Given that, better to use something everything supports.
-function createMatrix (): SVGMatrix {
-  if (!cachedSvg) {
-    cachedSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  }
+function getSVG (): SVGSVGElement {
+  return cachedSvg || (cachedSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'));
+}
 
-  return cachedSvg.createSVGMatrix();
+function createMatrix (): SVGMatrix {
+  return getSVG().createSVGMatrix();
+}
+
+function createPoint (): SVGPoint {
+  return getSVG().createSVGPoint();
 }
 
 export default class PinchZoom extends HTMLElement {
@@ -200,7 +204,13 @@ export default class PinchZoom extends HTMLElement {
     originX?: number,
     originY?: number
   } = {}) {
-    const matrix = createMatrix()
+    const { width, height } = this.getBoundingClientRect();
+    let topLeft = createPoint();
+    let bottomRight = createPoint();
+    bottomRight.x = width;
+    bottomRight.y = height;
+
+    let matrix = createMatrix()
       // Translate according to panning
       .translate(panX, panY)
       // Scale about the origin
@@ -211,6 +221,63 @@ export default class PinchZoom extends HTMLElement {
       .translate(this._x, this._y)
       .scale(this._scale);
 
+    // Clamp to bounds…
+    topLeft = topLeft.matrixTransform(matrix);
+    bottomRight = bottomRight.matrixTransform(matrix);
+    let xCorrection = 0;
+    let yCorrection = 0;
+
+    // If x bounds are neither covering nor containing.
+    if (
+      (topLeft.x > 0 && bottomRight.x > width) ||
+      (topLeft.x < 0 && bottomRight.x < width)
+    ) {
+      // If x bounds are larger than container.
+      if (bottomRight.x - topLeft.x > width) {
+        if (bottomRight.x > width) {
+          xCorrection = -topLeft.x;
+        } else {
+          xCorrection = width - bottomRight.x;
+        }
+      // Else x bounds are smaller than container.
+      } else {
+        if (bottomRight.x > width) {
+          xCorrection = width - bottomRight.x;
+        } else {
+          xCorrection = -topLeft.x;
+        }
+      }
+    }
+
+    // If y bounds are neither covering nor containing.
+    if (
+      (topLeft.y > 0 && bottomRight.y > height) ||
+      (topLeft.y < 0 && bottomRight.y < height)
+    ) {
+      // If y bounds are larger than container.
+      if (bottomRight.y - topLeft.y > height) {
+        if (bottomRight.y > height) {
+          yCorrection = -topLeft.y;
+        } else {
+          yCorrection = height - bottomRight.y;
+        }
+        // Else y bounds are smaller than container.
+      } else {
+        if (bottomRight.y > height) {
+          yCorrection = height - bottomRight.y;
+        } else {
+          yCorrection = -topLeft.y;
+        }
+      }
+    }
+
+    // If the stage is out-of-bounds, apply a correction.
+    if (xCorrection || yCorrection) {
+      matrix = createMatrix()
+        .translate(xCorrection, yCorrection)
+        .multiply(matrix);
+    }
+
     // Convert the transform into basic translate & scale.
     this.setTransform(matrix.a, matrix.e, matrix.f, { allowChangeEvent: true });
   }
@@ -220,10 +287,8 @@ customElements.define('pinch-zoom', PinchZoom);
 
 // TODO:
 // scale by method, which takes a scaleDiff and a center
-// Initial scale & pos - attributes
 // Go to new scale pos, animate to new scale pos
 // On change event
 // scale & x & y props
-// Lock to bounds attr
 // Exclude selector
 // Anchor point for resize
