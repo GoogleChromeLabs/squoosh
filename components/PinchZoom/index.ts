@@ -1,5 +1,5 @@
 import './styles.css';
-import { PointerTracker, Pointer } from '../../utils/trackDragging';
+import { PointerTracker, Pointer } from '../../utils/PointerTracker';
 
 interface Point {
   clientX: number;
@@ -59,8 +59,11 @@ export default class PinchZoom extends HTMLElement {
     const pointerTracker: PointerTracker = new PointerTracker(this, {
       start: (pointer, event) => {
         // We only want to track 2 pointers at most
-        if (pointerTracker.currentPointers.length === 2) return false;
+        if (pointerTracker.currentPointers.length === 2 || !this._positioningEl) return false;
         event.preventDefault();
+
+        // Record current state
+        pointerTracker.resetStartPointers();
         return true;
       },
       move: previousPointers => {
@@ -236,19 +239,21 @@ export default class PinchZoom extends HTMLElement {
     let xCorrection = 0;
     let yCorrection = 0;
 
+    // Correct for x
     if (topLeft.x > thisBounds.width) {
       xCorrection = thisBounds.width - topLeft.x;
     } else if (bottomRight.x < 0) {
       xCorrection = -bottomRight.x;
     }
 
+    // Correct for y
     if (topLeft.y > thisBounds.height) {
       yCorrection = thisBounds.height - topLeft.y;
     } else if (bottomRight.y < 0) {
       yCorrection = -bottomRight.y;
     }
 
-    // If the stage is out-of-bounds, apply a correction.
+    // If _positioningEl is out-of-bounds, apply a correction.
     if (xCorrection || yCorrection) {
       matrix = createMatrix()
         .translate(xCorrection, yCorrection)

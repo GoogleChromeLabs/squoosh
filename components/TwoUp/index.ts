@@ -1,5 +1,5 @@
 import './styles.css';
-import { PointerTracker, Pointer } from '../../utils/trackDragging';
+import { PointerTracker, Pointer } from '../../utils/PointerTracker';
 
 /**
  * A split view that the user can adjust. The first child becomes
