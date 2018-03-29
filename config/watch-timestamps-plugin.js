@@ -8,23 +8,23 @@ const fs = require('fs');
  *  https://github.com/Jimdo/typings-for-css-modules-loader/issues/48#issuecomment-347036461
  */
 module.exports = class WatchTimestampsPlugin {
-	constructor(patterns) {
-		this.patterns = patterns;
-	}
+  constructor(patterns) {
+    this.patterns = patterns;
+  }
 
-	apply(compiler) {
-		compiler.plugin('watch-run', (watch, callback) => {
-			const patterns = this.patterns;
-			const timestamps = watch.fileTimestamps;
+  apply(compiler) {
+    compiler.plugin('watch-run', (watch, callback) => {
+      const patterns = this.patterns;
+      const timestamps = watch.fileTimestamps;
 
-			for (const filepath of timestamps) {
-				if (patterns.some(pat => pat instanceof RegExp ? pat.test(filepath) : filepath.indexOf(pat) === 0)) {
-					let time = fs.statSync(filepath).mtime;
-					if (timestamps instanceof Map) timestamps.set(filepath, time);
-					else timestamps[filepath] = time;
-				}
-			}
-			callback();
-		});
-	}
+      for (const filepath of timestamps) {
+        if (patterns.some(pat => pat instanceof RegExp ? pat.test(filepath) : filepath.indexOf(pat) === 0)) {
+          let time = fs.statSync(filepath).mtime;
+          if (timestamps instanceof Map) timestamps.set(filepath, time);
+          else timestamps[filepath] = time;
+        }
+      }
+      callback();
+    });
+  }
 };

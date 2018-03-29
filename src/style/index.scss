@@ -1,26 +1,27 @@
 // @import './material-icons.scss';
 // @import 'material-components-web/material-components-web';
 @import './reset.scss';
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 
 html, body {
-	height: 100%;
-	width: 100%;
-	padding: 0;
-	margin: 0;
-	overflow: hidden;
-	overscroll-behavior: none;
+  height: 100%;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 html {
-	background: #FAFAFA;
-	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", Helvetica, Arial, sans-serif;
-	font-weight: 400;
-	color: #444;
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
+  background: #FAFAFA;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 400;
+  color: #444;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .mdc-theme--dark {
-	background-color: #333;
-	color: #fff;
+  background-color: #333;
+  color: #fff;
 }

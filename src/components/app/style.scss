@@ -1,21 +1,25 @@
 @import '~style/helpers.scss';
 
 .app {
-	position: absolute;
-	top: $toolbar-height;
-	left: 0;
-	width: 100%;
-	bottom: 0;
-	contain: size layout style;
-	overflow: auto;
-	-webkit-overflow-scrolling: touch;
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  top: 0;
+  left: 0;
+  width: 100%;
+  bottom: 0;
+  overflow: hidden;
+  z-index: 1;
 
-	> .content {
-		position: absolute;
-		left: 0;
-		top: 0;
-		width: 100%;
-		height: 100%;
-		overflow: visible;
-	}
+  .header {
+    flex: 0 0 auto;
+    position: relative;
+  }
+
+  .content {
+    flex: 1 1 auto;
+    contain: size layout style;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
