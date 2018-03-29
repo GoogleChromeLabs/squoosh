@@ -89,3 +89,6 @@ export default class TwoUp extends HTMLElement {
 }
 
 customElements.define('two-up', TwoUp);
+
+// TODO:
+// Use range for a11y?

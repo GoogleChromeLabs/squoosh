@@ -113,8 +113,6 @@ export default class PinchZoom extends HTMLElement {
     }
 
     this._positioningEl = el;
-    el.style.transformOrigin = '0 0';
-    el.style.willChange = 'transform';
 
     if (this.children.length > 1) {
       console.warn('<pinch-zoom> must not have more than one child.');
@@ -165,8 +163,9 @@ export default class PinchZoom extends HTMLElement {
   }
 
   private _applyTransform () {
-    if (!this._positioningEl) return;
-    this._positioningEl.style.transform = `translate(${this._x}px, ${this._y}px) scale(${this._scale})`;
+    this.style.setProperty('--x', this._x + 'px');
+    this.style.setProperty('--y', this._y + 'px');
+    this.style.setProperty('--scale', this._scale + '');
   }
 }
 
