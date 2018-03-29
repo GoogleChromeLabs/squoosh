@@ -153,7 +153,13 @@ export default class PinchZoom extends HTMLElement {
     event.preventDefault();
 
     const thisRect = this.getBoundingClientRect();
-    const { deltaY, ctrlKey } = event;
+    let { deltaY } = event;
+    const { ctrlKey, deltaMode } = event;
+
+    if (deltaMode === 1) { // 1 is "lines", 0 is "pixels"
+      // Firefox uses "lines" for some types of mouse
+      deltaY *= 15;
+    }
 
     // ctrlKey is true when pinch-zooming on a trackpad.
     const divisor = ctrlKey ? 100 : 300;
