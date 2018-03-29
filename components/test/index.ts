@@ -11,7 +11,7 @@ document.body.innerHTML = `
   <h1>Multi panel</h1>
   <multi-panel>TODO</multi-panel>
   <h1>Side by side</h1>
-  <two-up>
+  <two-up legacy-clip-compat>
     <pinch-zoom>
       <div>
         <div class="container">

@@ -21,6 +21,15 @@
   background-size: 20px 20px;
 }
 
+two-up {
+  height: 340px;
+}
+
+two-up > pinch-zoom {
+  left: 0;
+  right: 0;
+}
+
 /*.side-by-side {
   display: grid;
   grid-template-areas: 'fill';

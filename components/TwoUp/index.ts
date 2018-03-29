@@ -1,11 +1,15 @@
 import './styles.css';
 import { PointerTracker, Pointer } from '../../utils/PointerTracker';
 
+const legacyClipCompat = 'legacy-clip-compat';
+
 /**
  * A split view that the user can adjust. The first child becomes
  * the left-hand side, and the second child becomes the right-hand side.
  */
 export default class TwoUp extends HTMLElement {
+  static get observedAttributes () { return [legacyClipCompat]; }
+
   private readonly _handle = document.createElement('div');
   /**
    * The position of the split.
@@ -58,6 +62,22 @@ export default class TwoUp extends HTMLElement {
         this._setPosition();
       });
       this._everConnected = true;
+    }
+  }
+
+  /**
+   * If true, this element works in browsers that don't support clip-path (Edge).
+   * However, this means you'll have to set the height of this element manually.
+   */
+  get noClipPathCompat () {
+    return this.hasAttribute(legacyClipCompat);
+  }
+
+  set noClipPathCompat (val: boolean) {
+    if (val) {
+      this.setAttribute(legacyClipCompat, '');
+    } else {
+      this.removeAttribute(legacyClipCompat);
     }
   }
 

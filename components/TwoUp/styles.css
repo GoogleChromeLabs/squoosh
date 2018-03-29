@@ -1,9 +1,12 @@
 two-up {
   display: grid;
+  position: relative;
   --split-point: 0;
 }
 
 two-up > * {
+  /* Overlay all children on top of each other, and let
+  two-up's layout contain all of them. */
   grid-area: 1/1;
 }
 
@@ -29,12 +32,22 @@ two-up > * {
   border-radius: 20px;
 }
 
-two-up > :nth-child(1):not(.two-up-handle) {
+two-up:not([legacy-clip-compat]) > :nth-child(1):not(.two-up-handle) {
   -webkit-clip-path: inset(0 calc(100% - var(--split-point)) 0 0);
   clip-path: inset(0 calc(100% - var(--split-point)) 0 0);
 }
 
-two-up > :nth-child(2):not(.two-up-handle) {
+two-up:not([legacy-clip-compat]) > :nth-child(2):not(.two-up-handle) {
   -webkit-clip-path: inset(0 0 0 var(--split-point));
   clip-path: inset(0 0 0 var(--split-point));
+}
+
+two-up[legacy-clip-compat] > :nth-child(1):not(.two-up-handle) {
+  position: absolute;
+  clip: rect(auto var(--split-point) auto auto);
+}
+
+two-up[legacy-clip-compat] > :nth-child(2):not(.two-up-handle) {
+  position: absolute;
+  clip: rect(auto auto auto var(--split-point));
 }
