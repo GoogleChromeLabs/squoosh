@@ -210,37 +210,40 @@ export default class PinchZoom extends HTMLElement {
     originX?: number,
     originY?: number
   } = {}) {
-    const { width, height } = this.getBoundingClientRect();
+    if (!this._positioningEl) return;
+    const thisBounds = this.getBoundingClientRect();
+    const positioningElBounds = this._positioningEl.getBoundingClientRect();
+
+    // Create points for _positioningEl.
     let topLeft = createPoint();
+    topLeft.x = positioningElBounds.left - thisBounds.left;
+    topLeft.y = positioningElBounds.top - thisBounds.top;
     let bottomRight = createPoint();
-    bottomRight.x = width;
-    bottomRight.y = height;
+    bottomRight.x = positioningElBounds.width + topLeft.x;
+    bottomRight.y = positioningElBounds.height + topLeft.y;
 
     let matrix = createMatrix()
-      // Translate according to panning
+      // Translate according to panning.
       .translate(panX, panY)
-      // Scale about the origin
+      // Scale about the origin.
       .translate(originX, originY)
       .scale(scaleDiff)
-      .translate(-originX, -originY)
-      // Apply current transform
-      .translate(this._x, this._y)
-      .scale(this._scale);
+      .translate(-originX, -originY);
 
-    // Clamp to bounds…
+    // Calculate the final position & clamp to bounds.
     topLeft = topLeft.matrixTransform(matrix);
     bottomRight = bottomRight.matrixTransform(matrix);
     let xCorrection = 0;
     let yCorrection = 0;
 
-    if (topLeft.x > width) {
-      xCorrection = width - topLeft.x;
+    if (topLeft.x > thisBounds.width) {
+      xCorrection = thisBounds.width - topLeft.x;
     } else if (bottomRight.x < 0) {
       xCorrection = -bottomRight.x;
     }
 
-    if (topLeft.y > height) {
-      yCorrection = height - topLeft.y;
+    if (topLeft.y > thisBounds.height) {
+      yCorrection = thisBounds.height - topLeft.y;
     } else if (bottomRight.y < 0) {
       yCorrection = -bottomRight.y;
     }
@@ -251,6 +254,9 @@ export default class PinchZoom extends HTMLElement {
         .translate(xCorrection, yCorrection)
         .multiply(matrix);
     }
+
+    // Apply current transform.
+    matrix = matrix.translate(this._x, this._y).scale(this._scale);
 
     // Convert the transform into basic translate & scale.
     this.setTransform(matrix.a, matrix.e, matrix.f, { allowChangeEvent: true });
