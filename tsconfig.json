@@ -1,5 +1,8 @@
 {
   "compileOnSave": false,
+  "files": [
+    "src/**/*.{ts,tsx}"
+  ],
   "compilerOptions": {
     "strict": true,
     "target": "es2017",
