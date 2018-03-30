@@ -14,6 +14,7 @@ type Props = {
 export type FileObj = {
   id: number,
   data?: string,
+  uri?: string,
   error?: Error | DOMError | String,
   file: File,
   loading: boolean
@@ -25,7 +26,7 @@ type State = {
   files: FileObj[]
 };
 
-let counter = 0;
+let idCounter = 0;
 
 export default class App extends Component<Props, State> {
   state: State = {
@@ -76,7 +77,7 @@ export default class App extends Component<Props, State> {
   @bind
   loadFile(file: File) {
     let fileObj: FileObj = {
-      id: ++counter,
+      id: ++idCounter,
       file,
       error: undefined,
       loading: true,
@@ -87,11 +88,16 @@ export default class App extends Component<Props, State> {
       files: [fileObj]
     });
 
-    new Response(file).text()
-      .then(data => ({ data }))
+    Promise.all([
+      new Response(file).text(),
+      new Response(file).blob()
+    ])
+      .then(([data, blob]) => ({
+        data,
+        uri: URL.createObjectURL(blob)
+      }))
       .catch(error => ({ error }))
       .then(state => {
-        console.log(state);
         let files = this.state.files.slice();
         files[files.indexOf(fileObj)] = Object.assign({}, fileObj, {
           loading: false,

@@ -28,7 +28,7 @@ export default class Home extends Component<Props, State> {
     return (
       <div class={style.home + ' ' + (active ? style.active : '')}>
         { files && files[0] && (
-          <img src={files[0].data} />
+          <img src={files[0].uri} style="width:100%;" />
         ) }
       </div>
     );
