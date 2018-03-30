@@ -1,6 +1,6 @@
 declare const __webpack_public_path__: string;
 
-interface NodeModule {
+declare interface NodeModule {
   hot: any;
 }
 
