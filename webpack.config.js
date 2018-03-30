@@ -1,8 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 const webpack = require('webpack');
-const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
-const ForkTsCheckerNotifierWebpackPlugin = require('fork-ts-checker-notifier-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const ProgressBarPlugin = require('progress-bar-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
@@ -29,6 +27,7 @@ module.exports = function(_, env) {
   return {
     mode: isProd ? 'production' : 'development',
     entry: './src/index',
+    devtool: isProd ? 'source-map' : 'inline-source-map',
     output: {
       filename: isProd ? '[name].[chunkhash:5].js' : '[name].js',
       chunkFilename: '[name].chunk.[chunkhash:5].js',
@@ -51,18 +50,17 @@ module.exports = function(_, env) {
       rules: [
         {
           test: /\.tsx?$/,
+          exclude: nodeModules,
           // Ensure typescript is compiled prior to Babel running:
           enforce: 'pre',
-          loader: 'ts-loader',
-          // Don't transpile anything in node_modules:
-          exclude: nodeModules,
-          options: {
-            // Offload type checking to ForkTsCheckerWebpackPlugin for better performance:
-            transpileOnly: true
-          }
+          use: [
+            // pluck the sourcemap back out so Babel creates a composed one:
+            'source-map-loader',
+            'ts-loader'
+          ]
         },
         {
-          test: /\.(tsx?|jsx?)$/,
+          test: /\.(ts|js)x?$/,
           loader: 'babel-loader',
           // Don't respect any Babel RC files found on the filesystem:
           options: Object.assign(readJson('.babelrc'), { babelrc: false })
@@ -118,18 +116,9 @@ module.exports = function(_, env) {
       ]
     },
     plugins: [
-      // Runs tslint & type checking in a worker pool
-      new ForkTsCheckerWebpackPlugin({
-        tslint: true,
-        // wait for type chec
-        async: !isProd,
-        formatter: 'codeframe'
-      }),
-      new ForkTsCheckerNotifierWebpackPlugin({ excludeWarnings: true }),
-
       // Pretty progressbar showing build progress:
       new ProgressBarPlugin({
-        format: '\u001b[90m\u001b[44mBuild\u001b[49m\u001b[39m [:bar] \u001b[32m\u001b[1m:percent\u001b[22m\u001b[39m (:elapseds) \u001b[2m:msg\u001b[22m',
+        format: '\u001b[90m\u001b[44mBuild\u001b[49m\u001b[39m [:bar] \u001b[32m\u001b[1m:percent\u001b[22m\u001b[39m (:elapseds) \u001b[2m:msg\u001b[22m\r',
         renderThrottle: 100,
         summary: false,
         clear: true
@@ -249,8 +238,7 @@ module.exports = function(_, env) {
     devServer: {
       // Any unmatched request paths will serve static files from src/*:
       contentBase: path.join(__dirname, 'src'),
-      inline: true,
-      hot: true,
+      compress: true,
       // Request paths not ending in a file extension serve index.html:
       historyApiFallback: true,
       // Don't output server address info to console on startup:

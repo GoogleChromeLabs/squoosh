@@ -13,7 +13,7 @@ module.exports = class WatchTimestampsPlugin {
   }
 
   apply(compiler) {
-    compiler.plugin('watch-run', (watch, callback) => {
+    compiler.hooks.watchRun.tapAsync('watch-timestamps-plugin', (watch, callback) => {
       const patterns = this.patterns;
       const timestamps = watch.fileTimestamps;
 
