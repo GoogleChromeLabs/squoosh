@@ -39,11 +39,11 @@ export function bind(target: any, propertyKey: string, descriptor: PropertyDescr
     // define an instance property pointing to the bound function.
     // This effectively "caches" the bound prototype method as an instance property.
     get() {
-      let boundFunction = descriptor.value.bind(this);
+      let bound = descriptor.value.bind(this);
       Object.defineProperty(this, propertyKey, {
-        value: boundFunction
+        value: bound
       });
-      return boundFunction;
+      return bound;
     }
   };
 }
