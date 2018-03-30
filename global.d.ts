@@ -6,7 +6,7 @@ interface NodeModule {
 
 declare namespace JSX {
   interface Element { }
-  interface IntrinsicElements { div: any; }
+  interface IntrinsicElements { }
 }
 
 declare module 'preact-i18n';
