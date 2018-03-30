@@ -36,6 +36,17 @@ export default class App extends Component<Props, State> {
 
   enableDrawer = false;
 
+  constructor() {
+    super();
+    // In development, persist application state across hot reloads:
+    if (process.env.NODE_ENV === 'development') {
+      this.setState(window.STATE);
+      this.componentDidUpdate = () => {
+        window.STATE = this.state;
+      };
+    }
+  }
+
   @bind
   openDrawer() {
     this.setState({ showDrawer: true });

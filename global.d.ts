@@ -4,6 +4,10 @@ declare interface NodeModule {
   hot: any;
 }
 
+declare interface Window {
+  STATE: any
+}
+
 declare namespace JSX {
   interface Element { }
   interface IntrinsicElements { }
