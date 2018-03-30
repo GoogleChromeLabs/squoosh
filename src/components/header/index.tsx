@@ -35,7 +35,7 @@ export default class Header extends Component<Props, State> {
     }
   }
 
-  render({ class: c, onToggleDrawer, showHeader = false, showFab }: Props) {
+  render({ class: c, onToggleDrawer, showHeader = true, showFab }: Props) {
     return (
       <Toolbar fixed class={cx(c, style.toolbar, 'inert', !showHeader && style.minimal)}>
         <Toolbar.Row>
