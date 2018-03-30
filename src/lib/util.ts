@@ -34,6 +34,16 @@ export class When extends Component<WhenProps, WhenState> {
  * f() instanceof C;    // true
  */
 export function bind(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-  descriptor.value = descriptor.value.bind(target);
-  return descriptor;
+  return {
+    // the first time the prototype property is accessed for an instance,
+    // define an instance property pointing to the bound function.
+    // This effectively "caches" the bound prototype method as an instance property.
+    get() {
+      let boundFunction = descriptor.value.bind(this);
+      Object.defineProperty(this, propertyKey, {
+        value: boundFunction
+      });
+      return boundFunction;
+    }
+  };
 }
