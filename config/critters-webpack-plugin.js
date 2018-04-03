@@ -39,40 +39,17 @@ module.exports = class CrittersWebpackPlugin {
         const document = parse5.parse(htmlPluginData.html, PARSE5_OPTS);
         makeDomInteractive(document);
 
+        let externalStylesProcessed = Promise.resolve();
+
         // `external:false` skips processing of external sheets
-        const externalSheets = this.options.external===false ? [] : document.querySelectorAll('link[rel="stylesheet"]');
+        if (this.options.external!==false) {
+          const externalSheets = document.querySelectorAll('link[rel="stylesheet"]');
+          externalStylesProcessed = Promise.all(externalSheets.map(
+            link => this.embedLinkedStylesheet(link, compilation, outputPath)
+          ));
+        }
 
-        Promise.all(externalSheets.map(link => {
-          const href = link.getAttribute('href');
-
-          // skip network resources
-          if (href.match(/^(https?:)?\/\//)) return Promise.resolve();
-
-          // path on disk
-          const filename = path.resolve(outputPath, href.replace(/^\//, ''));
-
-          // try to find a matching asset by filename in webpack's output (not yet written to disk)
-          const asset = compilation.assets[path.relative(outputPath, filename).replace(/^\.\//, '')];
-
-          // wait for a disk read if we had to go to disk
-          const promise = asset ? Promise.resolve(asset.source()) : readFile(filename);
-          return promise.then(sheet => {
-            // the reduced critical CSS gets injected into a new <style> tag
-            const style = document.createElement('style');
-            style.appendChild(document.createTextNode(sheet));
-            link.parentNode.insertBefore(style, link.nextSibling);
-
-            // drop a reference to the original URL onto the tag (used for reporting to console later)
-            style.$$name = href;
-
-            // the `async` option changes any critical'd <link rel="stylesheet"> tags to async-loaded equivalents
-            if (this.options.async) {
-              link.setAttribute('rel', 'preload');
-              link.setAttribute('as', 'style');
-              link.setAttribute('onload', "this.rel='stylesheet'");
-            }
-          });
-        }))
+        externalStylesProcessed
           .then(() => {
             // go through all the style tags in the document and reduce them to only critical CSS
             const styles = document.$match.byTag('style');
@@ -89,8 +66,44 @@ module.exports = class CrittersWebpackPlugin {
     });
   }
 
-  processStyle(style, document) {
-    let done = Promise.resolve();
+  /** Inline the target stylesheet referred to by a <link rel="stylesheet"> (assuming it passes `options.filter`) */
+  embedLinkedStylesheet(link, compilation, outputPath) {
+    const href = link.getAttribute('href');
+    const document = link.ownerDocument;
+
+    // skip filtered resources, or network resources if no filter is provided
+    if (this.urlFilter ? this.urlFilter(href) : href.match(/^(https?:)?\/\//)) return Promise.resolve();
+
+    // path on disk
+    const filename = path.resolve(outputPath, href.replace(/^\//, ''));
+
+    // try to find a matching asset by filename in webpack's output (not yet written to disk)
+    const asset = compilation.assets[path.relative(outputPath, filename).replace(/^\.\//, '')];
+
+    // wait for a disk read if we had to go to disk
+    const promise = asset ? Promise.resolve(asset.source()) : readFile(filename, 'utf8');
+    return promise.then(sheet => {
+    // the reduced critical CSS gets injected into a new <style> tag
+      const style = document.createElement('style');
+      style.appendChild(document.createTextNode(sheet));
+      link.parentNode.insertBefore(style, link.nextSibling);
+
+      // drop a reference to the original URL onto the tag (used for reporting to console later)
+      style.$$name = href;
+
+      // the `async` option changes any critical'd <link rel="stylesheet"> tags to async-loaded equivalents
+      if (this.options.async) {
+        link.setAttribute('rel', 'preload');
+        link.setAttribute('as', 'style');
+        link.setAttribute('onload', "this.rel='stylesheet'");
+      }
+    });
+  }
+
+  /** Parse the stylesheet within a <style> element, then reduce it to contain only rules used by the document. */
+  processStyle(style) {
+    const done = Promise.resolve();
+    const document = style.ownerDocument;
 
     // basically `.textContent`
     let sheet = style.childNodes.length>0 && style.childNodes.map( node => node.nodeValue ).join('\n');
