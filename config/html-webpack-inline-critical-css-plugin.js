@@ -1,7 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-// const jsdom = require('jsdom');
-// const cssTree = require('css-tree');
 const parse5 = require('parse5');
 const nwmatcher = require('nwmatcher');
 const css = require('css');
@@ -102,7 +100,6 @@ module.exports = class HtmlWebpackInlineCriticalCssPlugin {
         let scratch = document.$$scratchElement = document.createElement('div');
         let elementProto = Object.getPrototypeOf(scratch);
         defineProperties(elementProto, ElementExtensions);
-        // Object.assign(elementProto, ElementExtensions);
         elementProto.ownerDocument = document;
 
         document.$match = nwmatcher({ document });
@@ -112,8 +109,6 @@ module.exports = class HtmlWebpackInlineCriticalCssPlugin {
           USE_HTML5: false
         });
 
-        // const head = document.$match.byTag('head');
-
         let externalSheets;
         externalSheets = document.querySelectorAll('link[rel="stylesheet"]');
 
@@ -121,14 +116,12 @@ module.exports = class HtmlWebpackInlineCriticalCssPlugin {
           const href = link.getAttribute('href');
           if (href.match(/^(https?:)?\/\//)) return Promise.resolve();
           const filename = path.resolve(outputPath, href.replace(/^\//, ''));
-          // console.log('>>>> '+ filename);
           let asset = compilation.assets[path.relative(outputPath, filename).replace(/^\.\//, '')];
           let promise = asset ? Promise.resolve(asset.source()) : readFile(filename);
           return promise.then(function (sheet) {
             const style = document.createElement('style');
             style.$$name = href;
             style.appendChild(document.createTextNode(sheet));
-            // head.appendChild(style);
             link.parentNode.appendChild(style);  // @TODO insertBefore
           });
         }))
@@ -145,24 +138,6 @@ module.exports = class HtmlWebpackInlineCriticalCssPlugin {
           .catch(function (err) {
             callback(err);
           });
-
-        // for (let i = 0; i < styles.length; i++) {
-        //   this.processStyle(styles[i], document);
-        // }
-
-        // const html = parse5.serialize(document);
-        // return { html };
-
-        /*
-        const dom = new jsdom.JSDOM(htmlPluginData.html);
-        const styles = dom.window.document.querySelectorAll('style');
-        for (let i=0; i<styles.length; i++) {
-          this.processStyle(styles[i]);
-        }
-        // this.processDom(dom.window.document);
-        let html = dom.serialize();
-        return { html };
-        */
       });
     });
   }
@@ -171,25 +146,6 @@ module.exports = class HtmlWebpackInlineCriticalCssPlugin {
     let done = Promise.resolve();
     let sheet = style.childNodes.length>0 && style.childNodes.map(getNodeValue).join('\n');
     if (!sheet) return done;
-
-    // let ast = cssTree.parse(sheet, {
-    //   positions: false,
-    //   // parseRulePrelude: false,
-    //   // parseAtrulePrelude: false,
-    //   parseValue: false
-    // });
-    // cssTree.walk(ast, {
-    //   visit: 'Rule',
-    //   enter(node, item, list) {
-    //     console.log(this);
-    //     if (node.prelude && node.prelude.type === 'SelectorList' && document.querySelector(cssTree.generate(node.prelude)) == null) {
-    //       list.remove(item);
-    //     }
-    //     // if (node.type === 'Selector') {
-    //     // }
-    //   }
-    // });
-    // sheet = cssTree.generate(ast);
 
     let ast = css.parse(sheet);
 
@@ -247,95 +203,6 @@ module.exports = class HtmlWebpackInlineCriticalCssPlugin {
       const name = style.$$name;
       console.log('\u001b[32mInlined CSS Size' + (name ? (' ('+name+')') : '') + ': ' + (sheet.length / 1000).toPrecision(2) + 'kb (' + ((before.length - sheet.length) / before.length * 100 | 0) + '% of original ' + (before.length / 1000).toPrecision(2) + 'kb)\u001b[39m');
     });
-
-    /*
-    console.dir(style);
-    if (style.sheet == null) return;
-
-    const document = style.ownerDocument;
-
-    // function serializeStyle(styleDeclaration) {
-    //   let str = '';
-    //   for (let i=0; i<styleDeclaration.length; i++) {
-    //     if (i!==0) str += ' ';
-    //     str += styleDeclaration[i];
-    //     str += ':';
-    //     str += styleDeclaration.getPropertyValue(styleDeclaration[i]);
-    //     str += ';';
-    //   }
-    //   return str;
-    // }
-
-    function selectorExists(selector) {
-      return document.querySelector(selector)!=null;
-    }
-
-    function processRule(out, rule) {
-      let str = '',
-        hasRules = false,
-        key = rule.keyText,
-        sel = rule.selectorText,
-        media = rule.conditionText;
-
-      if (key != null) {
-        str += key + '{';
-      }
-      else if (sel != null) {
-        if (!selectorExists(sel)) return out;
-        str += sel + '{';
-      }
-      else if (media != null) {
-        if (!document.defaultView.matchMedia(media).matches) return out;
-        str += media + '{';
-      }
-
-      if (rule.cssRules != null && rule.cssRules.length) {
-        let innerRules = rule.cssRules.reduce(processRule, '');
-        if (innerRules.length !== 0) {
-          hasRules = true;
-          str += innerRules;
-        }
-      }
-
-      if (rule.style != null && rule.style.length) {
-        hasRules = true;
-        str += rule.style.cssText;
-      }
-
-      if (hasRules) {
-        str += '}';
-        out += str;
-      }
-      return out;
-
-      // let str = '';
-      // switch (rule.type) {
-      // case 1:
-      //   str = sel + '{' + serializeStyle(rule.style) + '}';
-      //   break;
-      // case 4:
-      //   str = rule.conditionText + '{' +  + '}';
-      //   break;
-      // case 7:
-      //   str = rule.cssText.replace(/\s*\{[\s\S]*$/g);
-      //   break;
-      // }
-      // out += str;
-      // return out;
-    }
-
-    let processedStyles = [].slice.call(style.sheet.cssRules).reduce(processRule, '');
-
-    if (processedStyles) {
-      let c;
-      while ((c = style.lastChild)) style.removeChild(c);
-      style.appendChild(document.createTextNode(processedStyles));
-    }
-    else {
-      style.parentNode.removeChild(style);
-    }
-
-    */
   }
 };
 
@@ -344,26 +211,9 @@ function visit(node, fn) {
   if (node.stylesheet) return visit(node.stylesheet, fn);
 
   node.rules.forEach(function (rule) {
-    // @media etc
     if (rule.rules) {
       visit(rule, fn);
-      // fn(rule);
-      // return;
     }
-
-    // keyframes
-    // if (rule.keyframes) {
-    //   rule.keyframes.forEach( keyframe => {
-    //     if (keyframe.type == 'keyframe') {
-    //       fn(keyframe, rule);
-    //     }
-    //   });
-    //   return;
-    // }
-
-    // @charset, @import etc
-    // if (!rule.declarations && !rule.keyframes) return;
-
     fn(rule);
   });
 }
