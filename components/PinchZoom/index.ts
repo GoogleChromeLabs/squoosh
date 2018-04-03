@@ -15,6 +15,9 @@ interface ApplyChangeOpts {
 }
 
 interface SetTransformOpts {
+  scale?: number;
+  x?: number;
+  y?: number;
   /**
    * Fire a 'change' event if values are different to current values
    */
@@ -106,8 +109,16 @@ export default class PinchZoom extends HTMLElement {
   /**
    * Update the stage with a given scale/x/y.
    */
-  setTransform (scale: number = this.scale, x: number = this.x, y: number = this.y, opts: SetTransformOpts = {}) {
-    const { allowChangeEvent = false } = opts;
+  setTransform (opts: SetTransformOpts = {}) {
+    const {
+      scale = this.scale,
+      allowChangeEvent = false
+    } = opts;
+
+    let {
+      x = this.x,
+      y = this.y
+    } = opts;
 
     // If we don't have an element to position, just set the value as given.
     // We'll check bounds later.
@@ -278,7 +289,12 @@ export default class PinchZoom extends HTMLElement {
       .multiply(this._transform);
 
     // Convert the transform into basic translate & scale.
-    this.setTransform(matrix.a, matrix.e, matrix.f, { allowChangeEvent: true });
+    this.setTransform({
+      scale: matrix.a,
+      x: matrix.e,
+      y: matrix.f,
+      allowChangeEvent: true
+    });
   }
 }
 

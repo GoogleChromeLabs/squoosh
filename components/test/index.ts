@@ -50,7 +50,11 @@ twoUp.addEventListener('change', event => {
   const thisPinchZoom = event.target as PinchZoom;
   const otherPinchZoom = pinchZooms.find(p => p !== thisPinchZoom) as PinchZoom;
 
-  otherPinchZoom.setTransform(thisPinchZoom.scale, thisPinchZoom.x, thisPinchZoom.y);
+  otherPinchZoom.setTransform({
+    scale: thisPinchZoom.scale,
+    x: thisPinchZoom.x,
+    y: thisPinchZoom.y
+  });
 });
 
 const retargetedEvents = new WeakSet();
