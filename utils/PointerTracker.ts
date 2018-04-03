@@ -1,3 +1,5 @@
+const enum Button { Left }
+
 export class Pointer {
   /** x offset from the top of the document */
   pageX: number;
@@ -138,8 +140,7 @@ export class PointerTracker {
    * pointer events.
    */
   private _pointerStart (event: PointerEvent | MouseEvent) {
-    // Only interested in left-button presses.
-    if (event.button !== 0) return;
+    if (event.button !== Button.Left) return;
     if (!this._triggerPointerStart(new Pointer(event), event)) return;
 
     // Add listeners for additional events.
@@ -170,7 +171,7 @@ export class PointerTracker {
    */
   private _move (event: PointerEvent | MouseEvent | TouchEvent) {
     const previousPointers = this.currentPointers.slice();
-    const changedPointers = ('changedTouches' in event) ?
+    const changedPointers = ('changedTouches' in event) ? // Shortcut for 'is touch event'.
       Array.from(event.changedTouches).map(t => new Pointer(t)) :
       [new Pointer(event)];
 
