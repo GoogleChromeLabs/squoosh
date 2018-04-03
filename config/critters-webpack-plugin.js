@@ -21,7 +21,7 @@ const PARSE5_OPTS = {
  *  @param {Object} options
  *  @param {Boolean} [options.external=true]  Fetch and inline critical styles from external stylesheets
  *  @param {Boolean} [options.async=false]    Convert critical-inlined external stylesheets to load asynchronously (via link rel="preload")
- *  @param {Boolean} [options.minify=false]   Minify resulting critical CSS using cssnano (note: this often doesn't result in further size reduction)
+ *  @param {Boolean} [options.compress=true]  Compress resulting critical CSS
  */
 module.exports = class CrittersWebpackPlugin {
   constructor(options) {
@@ -132,15 +132,7 @@ module.exports = class CrittersWebpackPlugin {
       }
     });
 
-    sheet = css.stringify(ast, { compress: true });
-
-    // Adding the `minify:true` option runs the resulting critical CSS through cssnano.
-    if (this.options.minify) {
-      const cssnano = require('cssnano');
-      done = cssnano.process(sheet, {}, { preset: 'default' }).then((result) => {
-        sheet = result.css;
-      });
-    }
+    sheet = css.stringify(ast, { compress: this.options.compress!==false });
 
     return done.then(() => {
       // If all rules were removed, get rid of the style element entirely
