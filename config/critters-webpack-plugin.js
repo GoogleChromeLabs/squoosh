@@ -1,9 +1,12 @@
 const fs = require('fs');
+const { promisify } = require('util');
 const path = require('path');
 const parse5 = require('parse5');
 const nwmatcher = require('nwmatcher');
 const css = require('css');
 const prettyBytes = require('pretty-bytes');
+
+const readFile = promisify(fs.readFile);
 
 const treeAdapter = parse5.treeAdapters.htmlparser2;
 
@@ -161,46 +164,36 @@ module.exports = class CrittersWebpackPlugin {
 };
 
 
-/** Predicate for non-comment CSS AST nodes */
-function notComment(rule) {
-  return rule.type !== 'comment';
-}
-
-
-/** Recursively walk all rules in a stylesheet. */
+/** Recursively walk all rules in a stylesheet.
+ *  The iterator can explicitly return `false` to remove the current node.
+ */
 function visit(node, fn) {
   if (node.stylesheet) return visit(node.stylesheet, fn);
 
-  node.rules.forEach((rule) => {
+  node.rules = node.rules.filter(rule => {
     if (rule.rules) {
       visit(rule, fn);
     }
-    fn(rule);
+    return fn(rule)!==false;
   });
 }
 
 
-/** Promisified fs.readRile */
-function readFile(file) {
-  return new Promise(((resolve, reject) => {
-    fs.readFile(file, 'utf8', (err, contents) => {
-      if (err) reject(err);
-      else resolve(contents);
-    });
-  }));
-}
-
 /** Enhance an htmlparser2-style DOM with basic manipulation methods. */
 function makeDomInteractive(document) {
   defineProperties(document, DocumentExtensions);
-  document.documentElement = document.childNodes[document.childNodes.length - 1];
+  // Find the first <html> element within the document
+  document.documentElement = document.childNodes.filter( child => String(child.tagName).toLowerCase()==='html' )[0];
 
+  // Extend Element.prototype with DOM manipulation methods.
+  //   Note: document.$$scratchElement is also used by createTextNode()
   const scratch = document.$$scratchElement = document.createElement('div');
   const elementProto = Object.getPrototypeOf(scratch);
   defineProperties(elementProto, ElementExtensions);
   elementProto.ownerDocument = document;
 
-  // nwmatcher is a selector engine that happens to work with Parse5's htmlparser2 DOM (they form the base of jsdom)
+  // nwmatcher is a selector engine that happens to work with Parse5's htmlparser2 DOM (they form the base of jsdom).
+  // It is exposed to the document so that it can be used within Element.prototype methods.
   document.$match = nwmatcher({ document });
   document.$match.configure({
     CACHING: false,
