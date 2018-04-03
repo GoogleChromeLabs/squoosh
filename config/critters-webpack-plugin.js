@@ -235,7 +235,7 @@ function getElementsByTagName(tagName) {
 const ElementExtensions = {
   nodeName: {
     get() {
-      return this.tagName;
+      return this.tagName.toUpperCase();
     }
   },
   insertBefore(child, referenceNode) {
@@ -279,7 +279,12 @@ const DocumentExtensions = {
   // nwmatcher requires that it at least report a correct nodeType of DOCUMENT_NODE.
   nodeType: {
     get() {
-      return 11;
+      return 9;
+    }
+  },
+  nodeName: {
+    get() {
+      return '#document';
     }
   },
   createElement(name) {
@@ -295,10 +300,10 @@ const DocumentExtensions = {
     return node;
   },
   querySelector(sel) {
-    return this.$match.first(sel);
+    return this.$match.first(sel, this.documentElement);
   },
   querySelectorAll(sel) {
-    return this.$match.select(sel);
+    return this.$match.select(sel, this.documentElement);
   },
   getElementsByTagName,
   // nwmatcher uses inexistence of `document.addEventListener` to detect IE:
