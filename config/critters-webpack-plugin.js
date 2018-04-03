@@ -26,6 +26,10 @@ const PARSE5_OPTS = {
 module.exports = class CrittersWebpackPlugin {
   constructor(options) {
     this.options = options || {};
+    this.urlFilter = this.options.filter;
+    if (this.urlFilter instanceof RegExp) {
+      this.urlFilter = this.urlFilter.test.bind(this.urlFilter);
+    }
   }
 
   /** Invoked by Webpack during plugin initialization */
