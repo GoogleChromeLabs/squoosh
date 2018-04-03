@@ -5,94 +5,20 @@ const nwmatcher = require('nwmatcher');
 const css = require('css');
 const prettyBytes = require('pretty-bytes');
 
-const treeUtils = parse5.treeAdapters.htmlparser2;
+const treeAdapter = parse5.treeAdapters.htmlparser2;
 
 const PLUGIN_NAME = 'critters-webpack-plugin';
 
 const PARSE5_OPTS = {
-  treeAdapter: treeUtils
-};
-
-function defineProperties(obj, properties) {
-  for (const i in properties) {
-    const value = properties[i];
-    Object.defineProperty(obj, i, typeof value === 'function' ? { value: value } : value);
-  }
-}
-
-const ElementExtensions = {
-  nodeName: {
-    get: function() {
-      return this.tagName;
-    }
-  },
-  insertBefore: function (child, referenceNode) {
-    if (!referenceNode) return this.appendChild(child);
-    treeUtils.insertBefore(this, child, referenceNode);
-    return child;
-  },
-  appendChild: function (child) {
-    treeUtils.appendChild(this, child);
-    return child;
-  },
-  removeChild: function (child) {
-    treeUtils.detachNode(child);
-  },
-  setAttribute: function (name, value) {
-    if (this.attribs == null) this.attribs = {};
-    if (value == null) value = '';
-    this.attribs[name] = value;
-  },
-  removeAttribute: function(name) {
-    if (this.attribs != null) {
-      delete this.attribs[name];
-    }
-  },
-  getAttribute: function (name) {
-    return this.attribs != null && this.attribs[name];
-  },
-  hasAttribute: function (name) {
-    return this.attribs != null && this.attribs[name] != null;
-  },
-  getAttributeNode: function (name) {
-    const value = this.getAttribute(name);
-    if (value!=null) return { specified: true, value: value };
-  },
-  getElementsByTagName: getElementsByTagName
-};
-
-const DocumentExtensions = {
-  nodeType: {
-    get: function () {
-      return 11;
-    }
-  },
-  createElement: function (name) {
-    return treeUtils.createElement(name, null, []);
-  },
-  createTextNode: function (text) {
-    const scratch = this.$$scratchElement;
-    treeUtils.insertText(scratch, text);
-    const node = scratch.lastChild;
-    treeUtils.detachNode(node);
-    return node;
-  },
-  querySelector: function (sel) {
-    return this.$match.first(sel);
-  },
-  querySelectorAll: function (sel) {
-    return this.$match.select(sel);
-  },
-  getElementsByTagName: getElementsByTagName,
-  // https://github.com/dperini/nwmatcher/blob/3edb471e12ce7f7d46dc1606c7f659ff45675a29/src/nwmatcher.js#L353
-  addEventListener: Object
+  treeAdapter
 };
 
 /** Critters: Webpack Plugin Edition!
  *  @class
  *  @param {Object} options
  *  @param {Boolean} [options.external=true]  Fetch and inline critical styles from external stylesheets
- *  @param {Boolean} [options.async=true]     If `false`, only already-inline stylesheets will be reduced to critical rules.
+ *  @param {Boolean} [options.async=false]    Convert critical-inlined external stylesheets to load asynchronously (via link rel="preload")
+ *  @param {Boolean} [options.minify=false]   Minify resulting critical CSS using cssnano
  */
 module.exports = class CrittersWebpackPlugin {
   constructor(options) {
@@ -100,59 +26,60 @@ module.exports = class CrittersWebpackPlugin {
   }
 
   apply(compiler) {
-    const self = this;
     const outputPath = compiler.options.output.path;
-    compiler.hooks.compilation.tap(PLUGIN_NAME, function (compilation) {
-      compilation.hooks.htmlWebpackPluginAfterHtmlProcessing.tapAsync(PLUGIN_NAME, function (htmlPluginData, callback) {
+
+    // hook into the compiler to get a Compilation instance...
+    compiler.hooks.compilation.tap(PLUGIN_NAME, compilation => {
+      // ... which is how we get an "after" hook into html-webpack-plugin's HTML generation.
+      compilation.hooks.htmlWebpackPluginAfterHtmlProcessing.tapAsync(PLUGIN_NAME, (htmlPluginData, callback) => {
+        // Parse the generated HTML in a DOM we can mutate
         const document = parse5.parse(htmlPluginData.html, PARSE5_OPTS);
+        makeDomInteractive(document);
 
-        defineProperties(document, DocumentExtensions);
-        document.documentElement = document.childNodes[document.childNodes.length - 1];
+        // `external:false` skips processing of external sheets
+        const externalSheets = this.options.external===false ? [] : document.querySelectorAll('link[rel="stylesheet"]');
 
-        const scratch = document.$$scratchElement = document.createElement('div');
-        const elementProto = Object.getPrototypeOf(scratch);
-        defineProperties(elementProto, ElementExtensions);
-        elementProto.ownerDocument = document;
-
-        document.$match = nwmatcher({ document });
-        document.$match.configure({
-          CACHING: false,
-          USE_QSAPI: false,
-          USE_HTML5: false
-        });
-
-        const externalSheets = document.querySelectorAll('link[rel="stylesheet"]');
-
-        Promise.all(externalSheets.map(function(link) {
-          if (self.options.external===false) return;
+        Promise.all(externalSheets.map(link => {
           const href = link.getAttribute('href');
+
+          // skip network resources
           if (href.match(/^(https?:)?\/\//)) return Promise.resolve();
+
+          // path on disk
           const filename = path.resolve(outputPath, href.replace(/^\//, ''));
+
+          // try to find a matching asset by filename in webpack's output (not yet written to disk)
           const asset = compilation.assets[path.relative(outputPath, filename).replace(/^\.\//, '')];
+
+          // wait for a disk read if we had to go to disk
           const promise = asset ? Promise.resolve(asset.source()) : readFile(filename);
-          return promise.then(function (sheet) {
+          return promise.then(sheet => {
+            // the reduced critical CSS gets injected into a new <style> tag
             const style = document.createElement('style');
-            style.$$name = href;
             style.appendChild(document.createTextNode(sheet));
             link.parentNode.insertBefore(style, link.nextSibling);
-            if (self.options.async) {
+
+            // drop a reference to the original URL onto the tag (used for reporting to console later)
+            style.$$name = href;
+
+            // the `async` option changes any critical'd <link rel="stylesheet"> tags to async-loaded equivalents
+            if (this.options.async) {
               link.setAttribute('rel', 'preload');
               link.setAttribute('as', 'style');
               link.setAttribute('onload', "this.rel='stylesheet'");
             }
           });
         }))
-          .then(function() {
+          .then(() => {
+            // go through all the style tags in the document and reduce them to only critical CSS
             const styles = document.$match.byTag('style');
-            return Promise.all(styles.map(function (style) {
-              return self.processStyle(style, document);
-            }));
+            return Promise.all(styles.map(style => this.processStyle(style, document)));
           })
-          .then(function () {
+          .then(() => {
             const html = parse5.serialize(document, PARSE5_OPTS);
             callback(null, { html });
           })
-          .catch(function (err) {
+          .catch((err) => {
             callback(err);
           });
       });
@@ -161,16 +88,22 @@ module.exports = class CrittersWebpackPlugin {
 
   processStyle(style, document) {
     let done = Promise.resolve();
-    let sheet = style.childNodes.length>0 && style.childNodes.map(getNodeValue).join('\n');
+
+    // basically `.textContent`
+    let sheet = style.childNodes.length>0 && style.childNodes.map( node => node.nodeValue ).join('\n');
+
+    // store a reference to the previous serialized stylesheet for reporting stats
+    const before = sheet;
+
+    // Skip empty stylesheets
     if (!sheet) return done;
 
     const ast = css.parse(sheet);
 
-    const before = sheet;
-
-    visit(ast, function (rule) {
+    // Walk all CSS rules, transforming unused rules to comments (which get removed)
+    visit(ast, (rule) => {
       if (rule.type==='rule') {
-        rule.selectors = rule.selectors.filter(function (sel) {
+        rule.selectors = rule.selectors.filter((sel) => {
           // Remove unknown pseudos as they break nwmatcher
           sel = sel.replace(/::?(?:[a-z-]+)([.[#~&^:*]|\s|\n|$)/gi, '$1');
           return document.querySelector(sel, document) != null;
@@ -198,25 +131,28 @@ module.exports = class CrittersWebpackPlugin {
 
     sheet = css.stringify(ast, { compress: true });
 
-    if (this.options.minimize || this.options.compress || this.options.minify) {
+    // Adding the `minify:true` option runs the resulting critical CSS through cssnano.
+    if (this.options.minify) {
       const cssnano = require('cssnano');
-      done = cssnano.process(sheet, {}, { preset: 'default' }).then(function (result) {
+      done = cssnano.process(sheet, {}, { preset: 'default' }).then((result) => {
         sheet = result.css;
       });
     }
 
-    return done.then(function () {
+    return done.then(() => {
+      // If all rules were removed, get rid of the style element entirely
       if (sheet.trim().length===0) {
-        // all rules were removed, get rid of the style element entirely
         sheet.parentNode.removeChild(sheet);
       }
       else {
-        // replace the stylesheet inline
+        // replace the inline stylesheet with its critical'd counterpart
         while (style.lastChild) {
           style.removeChild(style.lastChild);
         }
         style.appendChild(document.createTextNode(sheet));
       }
+
+      // output some stats
       const name = style.$$name ? style.$$name.replace(/^\//, '') : 'inline CSS';
       const percent = (before.length - sheet.length) / before.length * 100 | 0;
       console.log('\u001b[32mCritters: inlined ' + prettyBytes(sheet.length) + ' (' + percent + '% of original ' + prettyBytes(before.length) + ') of ' + name + '.\u001b[39m');
@@ -225,10 +161,17 @@ module.exports = class CrittersWebpackPlugin {
 };
 
 
+/** Predicate for non-comment CSS AST nodes */
+function notComment(rule) {
+  return rule.type !== 'comment';
+}
+
+
+/** Recursively walk all rules in a stylesheet. */
 function visit(node, fn) {
   if (node.stylesheet) return visit(node.stylesheet, fn);
 
-  node.rules.forEach(function (rule) {
+  node.rules.forEach((rule) => {
     if (rule.rules) {
       visit(rule, fn);
     }
@@ -237,21 +180,40 @@ function visit(node, fn) {
 }
 
 
+/** Promisified fs.readRile */
 function readFile(file) {
-  return new Promise(function (resolve, reject) {
-    fs.readFile(file, 'utf8', function (err, contents) {
+  return new Promise(((resolve, reject) => {
+    fs.readFile(file, 'utf8', (err, contents) => {
       if (err) reject(err);
       else resolve(contents);
     });
+  }));
+}
+
+/** Enhance an htmlparser2-style DOM with basic manipulation methods. */
+function makeDomInteractive(document) {
+  defineProperties(document, DocumentExtensions);
+  document.documentElement = document.childNodes[document.childNodes.length - 1];
+
+  const scratch = document.$$scratchElement = document.createElement('div');
+  const elementProto = Object.getPrototypeOf(scratch);
+  defineProperties(elementProto, ElementExtensions);
+  elementProto.ownerDocument = document;
+
+  // nwmatcher is a selector engine that happens to work with Parse5's htmlparser2 DOM (they form the base of jsdom)
+  document.$match = nwmatcher({ document });
+  document.$match.configure({
+    CACHING: false,
+    USE_QSAPI: false,
+    USE_HTML5: false
   });
 }
 
-function getNodeValue(node) {
-  return node.nodeValue;
-}
-
-function notComment(rule) {
-  return rule.type !== 'comment';
+function defineProperties(obj, properties) {
+  for (const i in properties) {
+    const value = properties[i];
+    Object.defineProperty(obj, i, typeof value === 'function' ? { value } : value);
+  }
 }
 
 function getElementsByTagName(tagName) {
@@ -272,3 +234,71 @@ function getElementsByTagName(tagName) {
   }
   return matches;
 }
+
+const ElementExtensions = {
+  nodeName: {
+    get() {
+      return this.tagName;
+    }
+  },
+  insertBefore(child, referenceNode) {
+    if (!referenceNode) return this.appendChild(child);
+    treeAdapter.insertBefore(this, child, referenceNode);
+    return child;
+  },
+  appendChild(child) {
+    treeAdapter.appendChild(this, child);
+    return child;
+  },
+  removeChild(child) {
+    treeAdapter.detachNode(child);
+  },
+  setAttribute(name, value) {
+    if (this.attribs == null) this.attribs = {};
+    if (value == null) value = '';
+    this.attribs[name] = value;
+  },
+  removeAttribute(name) {
+    if (this.attribs != null) {
+      delete this.attribs[name];
+    }
+  },
+  getAttribute(name) {
+    return this.attribs != null && this.attribs[name];
+  },
+  hasAttribute(name) {
+    return this.attribs != null && this.attribs[name] != null;
+  },
+  getAttributeNode(name) {
+    const value = this.getAttribute(name);
+    if (value != null) return { specified: true, value };
+  },
+  getElementsByTagName
+};
+
+const DocumentExtensions = {
+  nodeType: {
+    get() {
+      return 11;
+    }
+  },
+  createElement(name) {
+    return treeAdapter.createElement(name, null, []);
+  },
+  createTextNode(text) {
+    const scratch = this.$$scratchElement;
+    treeAdapter.insertText(scratch, text);
+    const node = scratch.lastChild;
+    treeAdapter.detachNode(node);
+    return node;
+  },
+  querySelector(sel) {
+    return this.$match.first(sel);
+  },
+  querySelectorAll(sel) {
+    return this.$match.select(sel);
+  },
+  getElementsByTagName,
+  // https://github.com/dperini/nwmatcher/blob/3edb471e12ce7f7d46dc1606c7f659ff45675a29/src/nwmatcher.js#L353
+  addEventListener: Object
+};
