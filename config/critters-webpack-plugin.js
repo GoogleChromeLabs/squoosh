@@ -212,22 +212,14 @@ function defineProperties(obj, properties) {
 
 /** {document,Element}.getElementsByTagName() is the only traversal method required by nwmatcher. */
 function getElementsByTagName(tagName) {
-  const stack = [this];
-  const matches = [];
-  const isWildCard = tagName === '*';
-  const tagNameUpper = tagName.toUpperCase();
-  while (stack.length !== 0) {
-    const el = stack.pop();
-    let child = el.lastChild;
-    while (child) {
-      if (child.nodeType === 1) stack.push(child);
-      child = child.previousSibling;
-    }
-    if (isWildCard || (el.tagName != null && (el.tagName === tagNameUpper || el.tagName.toUpperCase() === tagNameUpper))) {
-      matches.push(el);
-    }
-  }
-  return matches;
+  // Only return Element/Document nodes
+  if (this.nodeType!==1 && this.nodeType!==9 || this.type==='directive') return [];
+  return Array.prototype.concat.apply(
+    // Add current element if it matches tag
+    (tagName === '*' || (this.tagName && (this.tagName == tagName || this.nodeName === tagName.toUpperCase()))) ? [this] : [],
+    // Check children recursively
+    this.children.map(child => getElementsByTagName.call(child, tagName))
+  );
 }
 
 
