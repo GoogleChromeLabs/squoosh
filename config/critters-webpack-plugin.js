@@ -18,7 +18,7 @@ const PARSE5_OPTS = {
  *  @param {Object} options
  *  @param {Boolean} [options.external=true]  Fetch and inline critical styles from external stylesheets
  *  @param {Boolean} [options.async=false]    Convert critical-inlined external stylesheets to load asynchronously (via link rel="preload")
- *  @param {Boolean} [options.minify=false]   Minify resulting critical CSS using cssnano
+ *  @param {Boolean} [options.minify=false]   Minify resulting critical CSS using cssnano (note: this often doesn't result in further size reduction)
  */
 module.exports = class CrittersWebpackPlugin {
   constructor(options) {
