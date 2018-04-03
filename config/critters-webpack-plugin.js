@@ -126,25 +126,14 @@ module.exports = class CrittersWebpackPlugin {
           sel = sel.replace(/::?(?:[a-z-]+)([.[#~&^:*]|\s|\n|$)/gi, '$1');
           return document.querySelector(sel, document) != null;
         });
-        // If there are no matched selectors, replace the rule with a comment.
+        // If there are no matched selectors, remove the rule:
         if (rule.selectors.length===0) {
-          rule.type = 'comment';
-          rule.comment = '';
-          delete rule.selectors;
-          delete rule.declarations;
+          return false;
         }
       }
 
-      if (rule.rules) {
-        // Filter out comments
-        rule.rules = rule.rules.filter(notComment);
-        // If there are no remaining rules, replace the parent rule with a comment.
-        if (rule.rules.length===0) {
-          rule.type = 'comment';
-          rule.comment = '';
-          delete rule.rules;
-        }
-      }
+      // If there are no remaining rules, remove the whole rule.
+      return !rule.rules || rule.rules.length!==0;
     });
 
     sheet = css.stringify(ast, { compress: this.options.compress!==false });
