@@ -28,6 +28,7 @@ module.exports = class CrittersWebpackPlugin {
     this.options = options || {};
   }
 
+  /** Invoked by Webpack during plugin initialization */
   apply(compiler) {
     const outputPath = compiler.options.output.path;
 
@@ -52,16 +53,15 @@ module.exports = class CrittersWebpackPlugin {
         externalStylesProcessed
           .then(() => {
             // go through all the style tags in the document and reduce them to only critical CSS
-            const styles = document.$match.byTag('style');
+            const styles = document.querySelectorAll('style');
             return Promise.all(styles.map(style => this.processStyle(style, document)));
           })
           .then(() => {
+            // serialize the document back to HTML and we're done
             const html = parse5.serialize(document, PARSE5_OPTS);
             callback(null, { html });
           })
-          .catch((err) => {
-            callback(err);
-          });
+          .catch(callback);
       });
     });
   }
@@ -117,10 +117,12 @@ module.exports = class CrittersWebpackPlugin {
     const ast = css.parse(sheet);
 
     // Walk all CSS rules, transforming unused rules to comments (which get removed)
-    visit(ast, (rule) => {
+    visit(ast, rule => {
       if (rule.type==='rule') {
-        rule.selectors = rule.selectors.filter((sel) => {
-          // Remove unknown pseudos as they break nwmatcher
+        // Filter the selector list down to only those matche
+        rule.selectors = rule.selectors.filter(sel => {
+          // Strip pseudo-elements and pseudo-classes, since we only care that their associated elements exist.
+          // This means any selector for a pseudo-element or having a pseudo-class will be inlined if the rest of the selector matches.
           sel = sel.replace(/::?(?:[a-z-]+)([.[#~&^:*]|\s|\n|$)/gi, '$1');
           return document.querySelector(sel, document) != null;
         });
@@ -207,6 +209,7 @@ function makeDomInteractive(document) {
   });
 }
 
+/** Essentially Object.defineProperties() except any functions are assigned as values rather than descriptors. */
 function defineProperties(obj, properties) {
   for (const i in properties) {
     const value = properties[i];
@@ -214,6 +217,7 @@ function defineProperties(obj, properties) {
   }
 }
 
+/** {document,Element}.getElementsByTagName() is the only traversal method required by nwmatcher. */
 function getElementsByTagName(tagName) {
   const stack = [this];
   const matches = [];
@@ -233,6 +237,8 @@ function getElementsByTagName(tagName) {
   return matches;
 }
 
+
+/** Methods and descriptors to mix into Element.prototype */
 const ElementExtensions = {
   nodeName: {
     get() {
@@ -274,7 +280,10 @@ const ElementExtensions = {
   getElementsByTagName
 };
 
+/** Methods and descriptors to mix into the global document instance */
 const DocumentExtensions = {
+  // document is just an Element in htmlparser2, giving it a nodeType of ELEMENT_NODE.
+  // nwmatcher requires that it at least report a correct nodeType of DOCUMENT_NODE.
   nodeType: {
     get() {
       return 11;
@@ -284,6 +293,8 @@ const DocumentExtensions = {
     return treeAdapter.createElement(name, null, []);
   },
   createTextNode(text) {
+    // there is no dedicated createTextNode equivalent in htmlparser2's DOM, so
+    // we have to insert Text and then remove and return the resulting Text node.
     const scratch = this.$$scratchElement;
     treeAdapter.insertText(scratch, text);
     const node = scratch.lastChild;
@@ -297,6 +308,7 @@ const DocumentExtensions = {
     return this.$match.select(sel);
   },
   getElementsByTagName,
+  // nwmatcher uses inexistence of `document.addEventListener` to detect IE:
   // https://github.com/dperini/nwmatcher/blob/3edb471e12ce7f7d46dc1606c7f659ff45675a29/src/nwmatcher.js#L353
   addEventListener: Object
 };
