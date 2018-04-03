@@ -153,7 +153,7 @@ module.exports = class HtmlWebpackInlineCriticalCssPlugin {
     visit(ast, function (rule) {
       if (rule.type==='rule') {
         rule.selectors = rule.selectors.filter(function (sel) {
-          if (sel.match(/:(hover|focus|active)([.[#~&^:*]|\s|\n|$)/)) return false;
+          // Remove unknown pseudos as they break nwmatcher
           sel = sel.replace(/::?(?:[a-z-]+)([.[#~&^:*]|\s|\n|$)/gi, '$1');
           return document.querySelector(sel, document) != null;
         });
