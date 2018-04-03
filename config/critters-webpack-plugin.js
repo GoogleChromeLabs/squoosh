@@ -3,10 +3,11 @@ const path = require('path');
 const parse5 = require('parse5');
 const nwmatcher = require('nwmatcher');
 const css = require('css');
+const prettyBytes = require('pretty-bytes');
 
 const treeUtils = parse5.treeAdapters.htmlparser2;
 
-const PLUGIN_NAME = 'html-webpack-inline-critical-css-plugin';
+const PLUGIN_NAME = 'critters-webpack-plugin';
 
 const PARSE5_OPTS = {
   treeAdapter: treeUtils
@@ -24,6 +25,11 @@ const ElementExtensions = {
     get: function() {
       return this.tagName;
     }
+  },
+  insertBefore: function (child, referenceNode) {
+    if (!referenceNode) return this.appendChild(child);
+    treeUtils.insertBefore(this, child, referenceNode);
+    return child;
   },
   appendChild: function (child) {
     treeUtils.appendChild(this, child);
@@ -82,7 +88,13 @@ const DocumentExtensions = {
   addEventListener: Object
 };
 
-module.exports = class HtmlWebpackInlineCriticalCssPlugin {
+/** Critters: Webpack Plugin Edition!
+ *  @class
+ *  @param {Object} options
+ *  @param {Boolean} [options.external=true]  Fetch and inline critical styles from external stylesheets
+ *  @param {Boolean} [options.async=true]     If `false`, only already-inline stylesheets will be reduced to critical rules.
+ */
+module.exports = class CrittersWebpackPlugin {
   constructor(options) {
     this.options = options || {};
   }
@@ -112,6 +124,7 @@ module.exports = class HtmlWebpackInlineCriticalCssPlugin {
         const externalSheets = document.querySelectorAll('link[rel="stylesheet"]');
 
         Promise.all(externalSheets.map(function(link) {
+          if (self.options.external===false) return;
           const href = link.getAttribute('href');
           if (href.match(/^(https?:)?\/\//)) return Promise.resolve();
           const filename = path.resolve(outputPath, href.replace(/^\//, ''));
@@ -121,7 +134,12 @@ module.exports = class HtmlWebpackInlineCriticalCssPlugin {
             const style = document.createElement('style');
             style.$$name = href;
             style.appendChild(document.createTextNode(sheet));
-            link.parentNode.appendChild(style);  // @TODO insertBefore
+            link.parentNode.insertBefore(style, link.nextSibling);
+            if (self.options.async) {
+              link.setAttribute('rel', 'preload');
+              link.setAttribute('as', 'style');
+              link.setAttribute('onload', "this.rel='stylesheet'");
+            }
           });
         }))
           .then(function() {
@@ -199,8 +217,9 @@ module.exports = class HtmlWebpackInlineCriticalCssPlugin {
         }
         style.appendChild(document.createTextNode(sheet));
       }
-      const name = style.$$name;
-      console.log('\u001b[32mInlined CSS Size' + (name ? (' ('+name+')') : '') + ': ' + (sheet.length / 1000).toPrecision(2) + 'kb (' + ((before.length - sheet.length) / before.length * 100 | 0) + '% of original ' + (before.length / 1000).toPrecision(2) + 'kb)\u001b[39m');
+      const name = style.$$name ? style.$$name.replace(/^\//, '') : 'inline CSS';
+      const percent = (before.length - sheet.length) / before.length * 100 | 0;
+      console.log('\u001b[32mCritters: inlined ' + prettyBytes(sheet.length) + ' (' + percent + '% of original ' + prettyBytes(before.length) + ') of ' + name + '.\u001b[39m');
     });
   }
 };
