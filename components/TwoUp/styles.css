@@ -1,0 +1,61 @@
+two-up {
+  display: grid;
+  position: relative;
+  --split-point: 0;
+}
+
+two-up > * {
+  /* Overlay all children on top of each other, and let
+  two-up's layout contain all of them. */
+  grid-area: 1/1;
+}
+
+two-up[legacy-clip-compat] > :not(.two-up-handle) {
+  position: absolute;
+}
+
+.two-up-handle {
+  touch-action: none;
+  position: relative;
+  width: 10px;
+  background: red;
+  transform: translateX(var(--split-point)) translateX(-50%);
+  will-change: transform;
+}
+
+.two-up-handle::after {
+  content: '';
+  display: block;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 40px;
+  background: red;
+  border-radius: 20px;
+}
+
+two-up > :nth-child(1):not(.two-up-handle) {
+  -webkit-clip-path: inset(0 calc(100% - var(--split-point)) 0 0);
+  clip-path: inset(0 calc(100% - var(--split-point)) 0 0);
+}
+
+two-up > :nth-child(2):not(.two-up-handle) {
+  -webkit-clip-path: inset(0 0 0 var(--split-point));
+  clip-path: inset(0 0 0 var(--split-point));
+}
+
+/*
+  Even in legacy-clip-compat, prefer clip-path if it's supported.
+  It performs way better in Safari.
+ */
+@supports not ((clip-path: inset(0 0 0 var(--split-point))) or (-webkit-clip-path: inset(0 0 0 var(--split-point)))) {
+  two-up[legacy-clip-compat] > :nth-child(1):not(.two-up-handle) {
+    clip: rect(auto var(--split-point) auto auto);
+  }
+
+  two-up[legacy-clip-compat] > :nth-child(2):not(.two-up-handle) {
+    clip: rect(auto auto auto var(--split-point));
+  }
+}
