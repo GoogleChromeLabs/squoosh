@@ -109,7 +109,65 @@ export default class PinchZoom extends HTMLElement {
   setTransform (scale: number = this.scale, x: number = this.x, y: number = this.y, opts: SetTransformOpts = {}) {
     const { allowChangeEvent = false } = opts;
 
-    // Bail if there's no change
+    // If we don't have an element to position, just set the value as given.
+    // We'll check bounds later.
+    if (!this._positioningEl) {
+      this._updateTransform(scale, x, y, allowChangeEvent);
+      return;
+    }
+
+    // Get current layout
+    const thisBounds = this.getBoundingClientRect();
+    const positioningElBounds = this._positioningEl.getBoundingClientRect();
+
+    // Not displayed. May be disconnected or display:none.
+    // Just take the values, and we'll check bounds later.
+    if (!thisBounds.width || !thisBounds.height) {
+      this._updateTransform(scale, x, y, allowChangeEvent);
+      return;
+    }
+
+    // Create points for _positioningEl.
+    let topLeft = createPoint();
+    topLeft.x = positioningElBounds.left - thisBounds.left;
+    topLeft.y = positioningElBounds.top - thisBounds.top;
+    let bottomRight = createPoint();
+    bottomRight.x = positioningElBounds.width + topLeft.x;
+    bottomRight.y = positioningElBounds.height + topLeft.y;
+
+    // Calculate the intended position of _positioningEl.
+    let matrix = createMatrix()
+      .translate(x, y)
+      .scale(scale)
+      // Undo current transform
+      .multiply(this._transform.inverse());
+
+    topLeft = topLeft.matrixTransform(matrix);
+    bottomRight = bottomRight.matrixTransform(matrix);
+
+    // Ensure _positioningEl can't move beyond out-of-bounds.
+    // Correct for x
+    if (topLeft.x > thisBounds.width) {
+      x += thisBounds.width - topLeft.x;
+    } else if (bottomRight.x < 0) {
+      x += -bottomRight.x;
+    }
+
+    // Correct for y
+    if (topLeft.y > thisBounds.height) {
+      y += thisBounds.height - topLeft.y;
+    } else if (bottomRight.y < 0) {
+      y += -bottomRight.y;
+    }
+
+    this._updateTransform(scale, x, y, allowChangeEvent);
+  }
+
+  /**
+   * Update transform values without checking bounds. This is only called in setTransform.
+   */
+  _updateTransform (scale: number, x: number, y: number, allowChangeEvent: boolean) {
+    // Return if there's no change
     if (
       scale === this.scale &&
       x === this.x &&
@@ -118,7 +176,7 @@ export default class PinchZoom extends HTMLElement {
 
     this._transform.e = x;
     this._transform.f = y;
-    this._transform.b = this._transform.a = scale;
+    this._transform.d = this._transform.a = scale;
 
     this.style.setProperty('--x', this.x + 'px');
     this.style.setProperty('--y', this.y + 'px');
@@ -150,6 +208,7 @@ export default class PinchZoom extends HTMLElement {
       console.warn('<pinch-zoom> must not have more than one child.');
     }
 
+    // Do a bounds check
     this.setTransform();
   }
 
@@ -208,56 +267,15 @@ export default class PinchZoom extends HTMLElement {
       scaleDiff = 1
     } = opts;
 
-    if (!this._positioningEl) return;
-    const thisBounds = this.getBoundingClientRect();
-    const positioningElBounds = this._positioningEl.getBoundingClientRect();
-
-    // Create points for _positioningEl.
-    let topLeft = createPoint();
-    topLeft.x = positioningElBounds.left - thisBounds.left;
-    topLeft.y = positioningElBounds.top - thisBounds.top;
-    let bottomRight = createPoint();
-    bottomRight.x = positioningElBounds.width + topLeft.x;
-    bottomRight.y = positioningElBounds.height + topLeft.y;
-
-    let matrix = createMatrix()
+    const matrix = createMatrix()
       // Translate according to panning.
       .translate(panX, panY)
       // Scale about the origin.
       .translate(originX, originY)
       .scale(scaleDiff)
-      .translate(-originX, -originY);
-
-    // Calculate the final position
-    topLeft = topLeft.matrixTransform(matrix);
-    bottomRight = bottomRight.matrixTransform(matrix);
-    let xCorrection = 0;
-    let yCorrection = 0;
-
-    // Ensure _positioningEl can't move beyond out-of-bounds.
-    // Correct for x
-    if (topLeft.x > thisBounds.width) {
-      xCorrection = thisBounds.width - topLeft.x;
-    } else if (bottomRight.x < 0) {
-      xCorrection = -bottomRight.x;
-    }
-
-    // Correct for y
-    if (topLeft.y > thisBounds.height) {
-      yCorrection = thisBounds.height - topLeft.y;
-    } else if (bottomRight.y < 0) {
-      yCorrection = -bottomRight.y;
-    }
-
-    // Apply any correction.
-    if (xCorrection || yCorrection) {
-      matrix = createMatrix()
-        .translate(xCorrection, yCorrection)
-        .multiply(matrix);
-    }
-
-    // Apply current transform.
-    matrix = matrix.multiply(this._transform);
+      .translate(-originX, -originY)
+      // Apply current transform.
+      .multiply(this._transform);
 
     // Convert the transform into basic translate & scale.
     this.setTransform(matrix.a, matrix.e, matrix.f, { allowChangeEvent: true });
