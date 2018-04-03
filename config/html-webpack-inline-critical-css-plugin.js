@@ -13,8 +13,8 @@ const PARSE5_OPTS = {
 };
 
 function defineProperties(obj, properties) {
-  for (let i in properties) {
-    let value = properties[i];
+  for (const i in properties) {
+    const value = properties[i];
     Object.defineProperty(obj, i, typeof value === 'function' ? { value: value } : value);
   }
 }
@@ -65,9 +65,9 @@ const DocumentExtensions = {
     return treeUtils.createElement(name, null, []);
   },
   createTextNode: function (text) {
-    let scratch = this.$$scratchElement;
+    const scratch = this.$$scratchElement;
     treeUtils.insertText(scratch, text);
-    let node = scratch.lastChild;
+    const node = scratch.lastChild;
     treeUtils.detachNode(node);
     return node;
   },
@@ -97,8 +97,8 @@ module.exports = class HtmlWebpackInlineCriticalCssPlugin {
         defineProperties(document, DocumentExtensions);
         document.documentElement = document.childNodes[document.childNodes.length - 1];
 
-        let scratch = document.$$scratchElement = document.createElement('div');
-        let elementProto = Object.getPrototypeOf(scratch);
+        const scratch = document.$$scratchElement = document.createElement('div');
+        const elementProto = Object.getPrototypeOf(scratch);
         defineProperties(elementProto, ElementExtensions);
         elementProto.ownerDocument = document;
 
@@ -109,15 +109,14 @@ module.exports = class HtmlWebpackInlineCriticalCssPlugin {
           USE_HTML5: false
         });
 
-        let externalSheets;
-        externalSheets = document.querySelectorAll('link[rel="stylesheet"]');
+        const externalSheets = document.querySelectorAll('link[rel="stylesheet"]');
 
         Promise.all(externalSheets.map(function(link) {
           const href = link.getAttribute('href');
           if (href.match(/^(https?:)?\/\//)) return Promise.resolve();
           const filename = path.resolve(outputPath, href.replace(/^\//, ''));
-          let asset = compilation.assets[path.relative(outputPath, filename).replace(/^\.\//, '')];
-          let promise = asset ? Promise.resolve(asset.source()) : readFile(filename);
+          const asset = compilation.assets[path.relative(outputPath, filename).replace(/^\.\//, '')];
+          const promise = asset ? Promise.resolve(asset.source()) : readFile(filename);
           return promise.then(function (sheet) {
             const style = document.createElement('style');
             style.$$name = href;
@@ -147,9 +146,9 @@ module.exports = class HtmlWebpackInlineCriticalCssPlugin {
     let sheet = style.childNodes.length>0 && style.childNodes.map(getNodeValue).join('\n');
     if (!sheet) return done;
 
-    let ast = css.parse(sheet);
+    const ast = css.parse(sheet);
 
-    let before = sheet;
+    const before = sheet;
 
     visit(ast, function (rule) {
       if (rule.type==='rule') {
@@ -237,12 +236,12 @@ function notComment(rule) {
 }
 
 function getElementsByTagName(tagName) {
-  let stack = [this];
-  let matches = [];
-  let isWildCard = tagName === '*';
-  let tagNameUpper = tagName.toUpperCase();
+  const stack = [this];
+  const matches = [];
+  const isWildCard = tagName === '*';
+  const tagNameUpper = tagName.toUpperCase();
   while (stack.length !== 0) {
-    let el = stack.pop();
+    const el = stack.pop();
     let child = el.lastChild;
     while (child) {
       if (child.nodeType === 1) stack.push(child);
