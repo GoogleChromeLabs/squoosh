@@ -24,7 +24,7 @@ const PARSE5_OPTS = {
  *  @param {Boolean} [options.compress=true]  Compress resulting critical CSS
  */
 module.exports = class CrittersWebpackPlugin {
-  constructor(options) {
+  constructor (options) {
     this.options = options || {};
     this.urlFilter = this.options.filter;
     if (this.urlFilter instanceof RegExp) {
@@ -33,7 +33,7 @@ module.exports = class CrittersWebpackPlugin {
   }
 
   /** Invoked by Webpack during plugin initialization */
-  apply(compiler) {
+  apply (compiler) {
     const outputPath = compiler.options.output.path;
 
     // hook into the compiler to get a Compilation instance...
@@ -47,7 +47,7 @@ module.exports = class CrittersWebpackPlugin {
         let externalStylesProcessed = Promise.resolve();
 
         // `external:false` skips processing of external sheets
-        if (this.options.external!==false) {
+        if (this.options.external !== false) {
           const externalSheets = document.querySelectorAll('link[rel="stylesheet"]');
           externalStylesProcessed = Promise.all(externalSheets.map(
             link => this.embedLinkedStylesheet(link, compilation, outputPath)
@@ -71,7 +71,7 @@ module.exports = class CrittersWebpackPlugin {
   }
 
   /** Inline the target stylesheet referred to by a <link rel="stylesheet"> (assuming it passes `options.filter`) */
-  embedLinkedStylesheet(link, compilation, outputPath) {
+  embedLinkedStylesheet (link, compilation, outputPath) {
     const href = link.getAttribute('href');
     const document = link.ownerDocument;
 
@@ -105,12 +105,12 @@ module.exports = class CrittersWebpackPlugin {
   }
 
   /** Parse the stylesheet within a <style> element, then reduce it to contain only rules used by the document. */
-  processStyle(style) {
+  processStyle (style) {
     const done = Promise.resolve();
     const document = style.ownerDocument;
 
     // basically `.textContent`
-    let sheet = style.childNodes.length>0 && style.childNodes.map( node => node.nodeValue ).join('\n');
+    let sheet = style.childNodes.length > 0 && style.childNodes.map(node => node.nodeValue).join('\n');
 
     // store a reference to the previous serialized stylesheet for reporting stats
     const before = sheet;
@@ -122,7 +122,7 @@ module.exports = class CrittersWebpackPlugin {
 
     // Walk all CSS rules, transforming unused rules to comments (which get removed)
     visit(ast, rule => {
-      if (rule.type==='rule') {
+      if (rule.type === 'rule') {
         // Filter the selector list down to only those matche
         rule.selectors = rule.selectors.filter(sel => {
           // Strip pseudo-elements and pseudo-classes, since we only care that their associated elements exist.
@@ -131,23 +131,22 @@ module.exports = class CrittersWebpackPlugin {
           return document.querySelector(sel, document) != null;
         });
         // If there are no matched selectors, remove the rule:
-        if (rule.selectors.length===0) {
+        if (rule.selectors.length === 0) {
           return false;
         }
       }
 
       // If there are no remaining rules, remove the whole rule.
-      return !rule.rules || rule.rules.length!==0;
+      return !rule.rules || rule.rules.length !== 0;
     });
 
-    sheet = css.stringify(ast, { compress: this.options.compress!==false });
+    sheet = css.stringify(ast, { compress: this.options.compress !== false });
 
     return done.then(() => {
       // If all rules were removed, get rid of the style element entirely
-      if (sheet.trim().length===0) {
+      if (sheet.trim().length === 0) {
         sheet.parentNode.removeChild(sheet);
-      }
-      else {
+      } else {
         // replace the inline stylesheet with its critical'd counterpart
         while (style.lastChild) {
           style.removeChild(style.lastChild);
@@ -163,27 +162,25 @@ module.exports = class CrittersWebpackPlugin {
   }
 };
 
-
 /** Recursively walk all rules in a stylesheet.
  *  The iterator can explicitly return `false` to remove the current node.
  */
-function visit(node, fn) {
+function visit (node, fn) {
   if (node.stylesheet) return visit(node.stylesheet, fn);
 
   node.rules = node.rules.filter(rule => {
     if (rule.rules) {
       visit(rule, fn);
     }
-    return fn(rule)!==false;
+    return fn(rule) !== false;
   });
 }
 
-
 /** Enhance an htmlparser2-style DOM with basic manipulation methods. */
-function makeDomInteractive(document) {
+function makeDomInteractive (document) {
   defineProperties(document, DocumentExtensions);
   // Find the first <html> element within the document
-  document.documentElement = document.childNodes.filter( child => String(child.tagName).toLowerCase()==='html' )[0];
+  // document.documentElement = document.childNodes.filter( child => String(child.tagName).toLowerCase()==='html' )[0];
 
   // Extend Element.prototype with DOM manipulation methods.
   //   Note: document.$$scratchElement is also used by createTextNode()
@@ -203,62 +200,64 @@ function makeDomInteractive(document) {
 }
 
 /** Essentially Object.defineProperties() except any functions are assigned as values rather than descriptors. */
-function defineProperties(obj, properties) {
+function defineProperties (obj, properties) {
   for (const i in properties) {
     const value = properties[i];
     Object.defineProperty(obj, i, typeof value === 'function' ? { value } : value);
   }
 }
 
-/** {document,Element}.getElementsByTagName() is the only traversal method required by nwmatcher. */
-function getElementsByTagName(tagName) {
+/** {document,Element}.getElementsByTagName() is the only traversal method required by nwmatcher.
+ *    Note: if perf issues arise, 2 faster but more verbose implementations are benchmarked here:
+ *    https://esbench.com/bench/5ac3b647f2949800a0f619e1
+ */
+function getElementsByTagName (tagName) {
   // Only return Element/Document nodes
-  if (this.nodeType!==1 && this.nodeType!==9 || this.type==='directive') return [];
+  if ((this.nodeType !== 1 && this.nodeType !== 9) || this.type === 'directive') return [];
   return Array.prototype.concat.apply(
     // Add current element if it matches tag
-    (tagName === '*' || (this.tagName && (this.tagName == tagName || this.nodeName === tagName.toUpperCase()))) ? [this] : [],
+    (tagName === '*' || (this.tagName && (this.tagName === tagName || this.nodeName === tagName.toUpperCase()))) ? [this] : [],
     // Check children recursively
     this.children.map(child => getElementsByTagName.call(child, tagName))
   );
 }
 
-
 /** Methods and descriptors to mix into Element.prototype */
 const ElementExtensions = {
   nodeName: {
-    get() {
+    get () {
       return this.tagName.toUpperCase();
     }
   },
-  insertBefore(child, referenceNode) {
+  insertBefore (child, referenceNode) {
     if (!referenceNode) return this.appendChild(child);
     treeAdapter.insertBefore(this, child, referenceNode);
     return child;
   },
-  appendChild(child) {
+  appendChild (child) {
     treeAdapter.appendChild(this, child);
     return child;
   },
-  removeChild(child) {
+  removeChild (child) {
     treeAdapter.detachNode(child);
   },
-  setAttribute(name, value) {
+  setAttribute (name, value) {
     if (this.attribs == null) this.attribs = {};
     if (value == null) value = '';
     this.attribs[name] = value;
   },
-  removeAttribute(name) {
+  removeAttribute (name) {
     if (this.attribs != null) {
       delete this.attribs[name];
     }
   },
-  getAttribute(name) {
+  getAttribute (name) {
     return this.attribs != null && this.attribs[name];
   },
-  hasAttribute(name) {
+  hasAttribute (name) {
     return this.attribs != null && this.attribs[name] != null;
   },
-  getAttributeNode(name) {
+  getAttributeNode (name) {
     const value = this.getAttribute(name);
     if (value != null) return { specified: true, value };
   },
@@ -270,19 +269,30 @@ const DocumentExtensions = {
   // document is just an Element in htmlparser2, giving it a nodeType of ELEMENT_NODE.
   // nwmatcher requires that it at least report a correct nodeType of DOCUMENT_NODE.
   nodeType: {
-    get() {
+    get () {
       return 9;
     }
   },
   nodeName: {
-    get() {
+    get () {
       return '#document';
     }
   },
-  createElement(name) {
+  documentElement: {
+    get () {
+      // Find the first <html> element within the document
+      return this.childNodes.filter(child => String(child.tagName).toLowerCase() === 'html')[0];
+    }
+  },
+  body: {
+    get () {
+      return this.querySelector('body');
+    }
+  },
+  createElement (name) {
     return treeAdapter.createElement(name, null, []);
   },
-  createTextNode(text) {
+  createTextNode (text) {
     // there is no dedicated createTextNode equivalent in htmlparser2's DOM, so
     // we have to insert Text and then remove and return the resulting Text node.
     const scratch = this.$$scratchElement;
@@ -291,10 +301,10 @@ const DocumentExtensions = {
     treeAdapter.detachNode(node);
     return node;
   },
-  querySelector(sel) {
+  querySelector (sel) {
     return this.$match.first(sel, this.documentElement);
   },
-  querySelectorAll(sel) {
+  querySelectorAll (sel) {
     return this.$match.select(sel, this.documentElement);
   },
   getElementsByTagName,
