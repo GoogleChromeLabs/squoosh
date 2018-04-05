@@ -177,8 +177,10 @@ module.exports = function(_, env) {
       isProd && new PreloadWebpackPlugin(),
 
       isProd && new CrittersPlugin({
-        // convert critical'd <link rel="stylesheet"> to <link rel="preload" as="style" onload="this.rel='stylesheet'">
-        async: true
+        // convert critical'd <link rel="stylesheet"> to <link rel="preload" as="style">:
+        async: true,
+        // copy original <link rel="stylesheet"> to the end of <body>:
+        preload: true
       }),
 
       // Inline constants during build, so they can be folded by UglifyJS.

@@ -20,7 +20,8 @@ const PARSE5_OPTS = {
  *  @class
  *  @param {Object} options
  *  @param {Boolean} [options.external=true]  Fetch and inline critical styles from external stylesheets
- *  @param {Boolean} [options.async=false]    Convert critical-inlined external stylesheets to load asynchronously (via link rel="preload")
+ *  @param {Boolean} [options.async=false]    Convert critical-inlined external stylesheets to load asynchronously (via link rel="preload" - see https://filamentgroup.com/lab/async-css.html)
+ *  @param {Boolean} [options.preload=false]  (requires `async` option) Append a new <link rel="stylesheet"> into <body> instead of swapping the preload's rel attribute
  *  @param {Boolean} [options.compress=true]  Compress resulting critical CSS
  */
 module.exports = class CrittersWebpackPlugin {
@@ -99,7 +100,14 @@ module.exports = class CrittersWebpackPlugin {
       if (this.options.async) {
         link.setAttribute('rel', 'preload');
         link.setAttribute('as', 'style');
-        link.setAttribute('onload', "this.rel='stylesheet'");
+        if (this.options.preload) {
+          const bodyLink = document.createElement('link');
+          bodyLink.setAttribute('rel', 'stylesheet');
+          bodyLink.setAttribute('href', href);
+          document.body.appendChild(bodyLink);
+        } else {
+          link.setAttribute('onload', "this.rel='stylesheet'");
+        }
       }
     });
   }
