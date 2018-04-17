@@ -6,6 +6,7 @@ const ProgressBarPlugin = require('progress-bar-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const HtmlPlugin = require('html-webpack-plugin');
+const ScriptExtHtmlPlugin = require('script-ext-html-webpack-plugin');
 const PreloadPlugin = require('preload-webpack-plugin');
 const ReplacePlugin = require('webpack-plugin-replace');
 const CopyPlugin = require('copy-webpack-plugin');
@@ -179,6 +180,10 @@ module.exports = function (_, env) {
         manifest: readJson('./src/manifest.json'),
         inject: true,
         compile: true
+      }),
+
+      new ScriptExtHtmlPlugin({
+        defaultAttribute: 'async'
       }),
 
       // Inject <link rel="preload"> for resources
