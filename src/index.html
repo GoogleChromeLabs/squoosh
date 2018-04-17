@@ -1,16 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8">
-		<title>Squoosh</title>
-		<meta name="viewport" content="width=device-width,initial-scale=1">
-		<meta name="mobile-web-app-capable" content="yes">
-		<meta name="apple-mobile-web-app-capable" content="yes">
-		<meta name="theme-color" content="#673ab8">
-		<link rel="manifest" href="/manifest.json">
-	</head>
-	<body>
-		<div id="app" prerender></div>
-		<!-- <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" /> -->
-	</body>
+  <head>
+    <meta charset="utf-8">
+    <title>Squoosh</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#673ab8">
+    <link rel="manifest" href="/manifest.json">
+  </head>
+  <body>
+    <div id="app" prerender></div>
+    <script>
+      (function(style){
+        style.rel='stylesheet'
+        style.href='https://fonts.googleapis.com/icon?family=Material+Icons'
+        document.head.appendChild(style)
+      })(document.createElement('link'));
+    </script>
+    <!-- <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" /> -->
+  </body>
 </html>

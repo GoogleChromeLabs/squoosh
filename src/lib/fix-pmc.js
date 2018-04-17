@@ -3,17 +3,17 @@ import { options } from 'preact';
 const classNameDescriptor = {
   enumerable: false,
   configurable: true,
-  get() {
+  get () {
     return this.class;
   },
-  set(value) {
+  set (value) {
     this.class = value;
   }
 };
 
-let old = options.vnode;
+const old = options.vnode;
 options.vnode = vnode => {
-  let a = vnode.attributes;
+  const a = vnode.attributes;
   if (a != null) {
     if ('className' in a) {
       a.class = a.className;

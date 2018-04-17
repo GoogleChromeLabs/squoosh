@@ -9,6 +9,7 @@ const PreloadWebpackPlugin = require('preload-webpack-plugin');
 const ReplacePlugin = require('webpack-plugin-replace');
 const CopyPlugin = require('copy-webpack-plugin');
 const WorkboxPlugin = require('workbox-webpack-plugin');
+const CrittersPlugin = require('./config/critters-webpack-plugin');
 const WatchTimestampsPlugin = require('./config/watch-timestamps-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
@@ -174,6 +175,13 @@ module.exports = function(_, env) {
 
       // Inject <link rel="preload"> for resources
       isProd && new PreloadWebpackPlugin(),
+
+      isProd && new CrittersPlugin({
+        // convert critical'd <link rel="stylesheet"> to <link rel="preload" as="style">:
+        async: true,
+        // copy original <link rel="stylesheet"> to the end of <body>:
+        preload: true
+      }),
 
       // Inline constants during build, so they can be folded by UglifyJS.
       new webpack.DefinePlugin({
