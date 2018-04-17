@@ -7,14 +7,15 @@
 
 .home {
   padding: 20px;
-  opacity: 0;
 }
 
-.active {
-  animation: fadeIn 2s forwards ease 1;
+.image {
+  width: 100%;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.content {
+  max-width: 600px;
+  margin: 50px auto 0;
+  font-size: 120%;
+  text-align: center;
 }
