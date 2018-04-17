@@ -4,8 +4,9 @@ const webpack = require('webpack');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const ProgressBarPlugin = require('progress-bar-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const PreloadWebpackPlugin = require('preload-webpack-plugin');
+const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
+const HtmlPlugin = require('html-webpack-plugin');
+const PreloadPlugin = require('preload-webpack-plugin');
 const ReplacePlugin = require('webpack-plugin-replace');
 const CopyPlugin = require('copy-webpack-plugin');
 const WorkboxPlugin = require('workbox-webpack-plugin');
@@ -126,7 +127,7 @@ module.exports = function(_, env) {
       }),
 
       // Remove old files before outputting a production build:
-      isProd && new CleanWebpackPlugin([
+      isProd && new CleanPlugin([
         'assets',
         '**/*.{css,js,json,html}'
       ], {
@@ -145,6 +146,13 @@ module.exports = function(_, env) {
       // See also: https://twitter.com/wsokra/status/970253245733113856
       isProd && new MiniCssExtractPlugin({
         chunkFilename: '[name].chunk.[contenthash:5].css'
+      }),
+
+      new OptimizeCssAssetsPlugin({
+        cssProcessorOptions: {
+          zindex: false,
+          discardComments: { removeAll: true }
+        }
       }),
 
       // These plugins fix infinite loop in typings-for-css-modules-loader.
@@ -177,10 +185,16 @@ module.exports = function(_, env) {
       isProd && new PreloadWebpackPlugin(),
 
       isProd && new CrittersPlugin({
+        // Don't inline fonts into critical CSS, but do preload them:
+        preloadFonts: true,
         // convert critical'd <link rel="stylesheet"> to <link rel="preload" as="style">:
         async: true,
-        // copy original <link rel="stylesheet"> to the end of <body>:
-        preload: true
+        // Use media hack to load async (<link media="only x" onload="this.media='all'">):
+        media: true
+        // // use a $loadcss async CSS loading shim (DOM insertion to head)
+        // preload: 'js'
+        // // copy original <link rel="stylesheet"> to the end of <body>:
+        // preload: true
       }),
 
       // Inline constants during build, so they can be folded by UglifyJS.
