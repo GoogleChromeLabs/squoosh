@@ -1,0 +1,33 @@
+{
+	"presets": [
+		[
+			"env",
+			{
+				"loose": true,
+				"uglify": true,
+				"modules": false,
+				"targets": {
+					"browsers": "last 2 versions"
+				},
+				"exclude": [
+					"transform-regenerator",
+					"transform-es2015-typeof-symbol"
+				]
+			}
+		]
+	],
+	"plugins": [
+		"syntax-dynamic-import",
+		"transform-decorators-legacy",
+		"transform-class-properties",
+		"transform-object-rest-spread",
+		"transform-react-constant-elements",
+		"transform-react-remove-prop-types",
+		[
+			"transform-react-jsx",
+			{
+				"pragma": "h"
+			}
+		]
+	]
+}

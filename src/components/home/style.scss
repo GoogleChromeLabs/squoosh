@@ -1,0 +1,20 @@
+@import '~style/helpers.scss';
+
+// :global {
+//   @import '~preact-material-components/Button/mdc-button.scss';
+//   // @import '~preact-material-components/Switch/mdc-switch.scss';
+// }
+
+.home {
+  padding: 20px;
+  opacity: 0;
+}
+
+.active {
+  animation: fadeIn 2s forwards ease 1;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
