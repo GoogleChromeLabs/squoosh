@@ -4,7 +4,7 @@
 			"env",
 			{
 				"loose": true,
-				"uglify": true,
+				"uglify": false,
 				"modules": false,
 				"targets": {
 					"browsers": "last 2 versions"
@@ -17,10 +17,8 @@
 		]
 	],
 	"plugins": [
-		"syntax-dynamic-import",
 		"transform-decorators-legacy",
 		"transform-class-properties",
-		"transform-object-rest-spread",
 		"transform-react-constant-elements",
 		"transform-react-remove-prop-types",
 		[
