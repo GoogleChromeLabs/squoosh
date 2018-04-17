@@ -31,6 +31,7 @@ module.exports = function (_, env) {
     mode: isProd ? 'production' : 'development',
     entry: './src/index',
     devtool: isProd ? 'source-map' : 'inline-source-map',
+    stats: 'minimal',
     output: {
       filename: isProd ? '[name].[chunkhash:5].js' : '[name].js',
       chunkFilename: '[name].chunk.[chunkhash:5].js',
