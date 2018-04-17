@@ -241,6 +241,12 @@ module.exports = function (_, env) {
         swDest: 'sw.js',
         clientsClaim: true,
         skipWaiting: true,
+        exclude: [
+          'report.html',
+          'manifest.json',
+          /(report\.html|manifest\.json|\.precache-manifest\..*\.json)$/,
+          /\.(?:map|pem|DS_Store)$/
+        ],
         // allow for offline client-side routing:
         navigateFallback: '/',
         navigateFallbackBlacklist: [/\.[a-z0-9]+$/i]
