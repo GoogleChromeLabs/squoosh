@@ -40,13 +40,13 @@ export default class Header extends Component<Props, State> {
       <Toolbar fixed class={cx(c, style.toolbar, 'inert', !showHeader && style.minimal)}>
         <Toolbar.Row>
           <Toolbar.Title class={style.title}>
-            <Toolbar.Icon title="Upload" ripple onClick={this.upload}>file_upload</Toolbar.Icon>
+            <Toolbar.Icon title="Upload" ripple onClick={this.upload} id="uploadIcon">file_upload</Toolbar.Icon>
           </Toolbar.Title>
           <Toolbar.Section align-end>
             <Toolbar.Icon ripple onClick={onToggleDrawer}>menu</Toolbar.Icon>
           </Toolbar.Section>
         </Toolbar.Row>
-        <input class={style.fileInput} ref={this.setInputRef} type="file" onChange={this.handleFiles} />
+        <input class={style.fileInput} ref={this.setInputRef} type="file" onChange={this.handleFiles} aria-labelledby="uploadIcon" />
       </Toolbar>
     );
   }
