@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const webpack = require('webpack');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
+const CleanPlugin = require('clean-webpack-plugin');
 const ProgressBarPlugin = require('progress-bar-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
@@ -14,11 +14,11 @@ const CrittersPlugin = require('./config/critters-webpack-plugin');
 const WatchTimestampsPlugin = require('./config/watch-timestamps-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
-function readJson(filename) {
+function readJson (filename) {
   return JSON.parse(fs.readFileSync(filename));
 }
 
-module.exports = function(_, env) {
+module.exports = function (_, env) {
   const isProd = env.mode === 'production';
   const nodeModules = path.join(__dirname, 'node_modules');
   const componentStyleDirs = [
@@ -129,9 +129,10 @@ module.exports = function(_, env) {
       // Remove old files before outputting a production build:
       isProd && new CleanPlugin([
         'assets',
-        '**/*.{css,js,json,html}'
+        '**/*.{css,js,json,html,map}'
       ], {
         root: path.join(__dirname, 'build'),
+        verbose: false,
         beforeEmit: true
       }),
 
@@ -181,7 +182,9 @@ module.exports = function(_, env) {
       }),
 
       // Inject <link rel="preload"> for resources
-      isProd && new PreloadWebpackPlugin(),
+      isProd && new PreloadPlugin({
+        include: 'initial'
+      }),
 
       isProd && new CrittersPlugin({
         // Don't inline fonts into critical CSS, but do preload them:
