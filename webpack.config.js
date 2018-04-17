@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const webpack = require('webpack');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const ProgressBarPlugin = require('progress-bar-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
@@ -50,23 +51,6 @@ module.exports = function(_, env) {
     module: {
       rules: [
         {
-          test: /\.tsx?$/,
-          exclude: nodeModules,
-          // Ensure typescript is compiled prior to Babel running:
-          enforce: 'pre',
-          use: [
-            // pluck the sourcemap back out so Babel creates a composed one:
-            'source-map-loader',
-            'ts-loader'
-          ]
-        },
-        {
-          test: /\.(ts|js)x?$/,
-          loader: 'babel-loader',
-          // Don't respect any Babel RC files found on the filesystem:
-          options: Object.assign(readJson('.babelrc'), { babelrc: false })
-        },
-        {
           test: /\.(scss|sass)$/,
           loader: 'sass-loader',
           // SCSS gets preprocessed, then treated like any other CSS:
@@ -113,6 +97,17 @@ module.exports = function(_, env) {
               }
             }
           ]
+        },
+        {
+          test: /\.tsx?$/,
+          exclude: nodeModules,
+          loader: 'ts-loader'
+        },
+        {
+          test: /\.jsx?$/,
+          loader: 'babel-loader',
+          // Don't respect any Babel RC files found on the filesystem:
+          options: Object.assign(readJson('.babelrc'), { babelrc: false })
         }
       ]
     },
@@ -224,6 +219,28 @@ module.exports = function(_, env) {
         navigateFallbackBlacklist: [/\.[a-z0-9]+$/i]
       })
     ].filter(Boolean), // Filter out any falsey plugin array entries.
+
+    optimization: {
+      minimizer: [
+        new UglifyJsPlugin({
+          sourceMap: isProd,
+          extractComments: {
+            file: 'build/licenses.txt'
+          },
+          uglifyOptions: {
+            compress: {
+              inline: 1
+            },
+            mangle: {
+              safari10: true
+            },
+            output: {
+              safari10: true
+            }
+          }
+        })
+      ]
+    },
 
     // Turn off various NodeJS environment polyfills Webpack adds to bundles.
     // They're supposed to be added only when used, but the heuristic is loose
