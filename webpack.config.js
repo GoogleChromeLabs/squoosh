@@ -165,15 +165,14 @@ module.exports = function(_, env) {
       ]),
 
       // For now we're not doing SSR.
-      new HtmlWebpackPlugin({
+      new HtmlPlugin({
         filename: path.join(__dirname, 'build/index.html'),
-        template: '!!ejs-loader!src/index.html',
-        // template: '!!'+path.join(__dirname, 'config/prerender-loader')+'!src/index.html',
+        template: '!' + path.join(__dirname, 'config/prerender-loader') + '?string' + (isProd ? '' : '&disabled') + '!src/index.html',
         minify: isProd && {
           collapseWhitespace: true,
           removeScriptTypeAttributes: true,
-          removeRedundantAttributes: true,
           removeStyleLinkTypeAttributes: true,
+          removeRedundantAttributes: true,
           removeComments: true
         },
         manifest: readJson('./src/manifest.json'),
