@@ -1,27 +1,5 @@
 {
-  "presets": [
-    [
-      "env",
-      {
-        "loose": true,
-        "uglify": false,
-        "modules": false,
-        "targets": {
-          "browsers": [
-            "last 2 versions",
-            "not android>0",
-            "not ie>0"
-          ]
-        },
-        "exclude": [
-          "transform-regenerator",
-          "transform-es2015-typeof-symbol"
-        ]
-      }
-    ]
-  ],
   "plugins": [
-    "transform-decorators-legacy",
     "transform-class-properties",
     "transform-react-constant-elements",
     "transform-react-remove-prop-types",
