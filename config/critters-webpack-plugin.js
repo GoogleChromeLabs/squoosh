@@ -1,12 +1,8 @@
-const fs = require('fs');
-const { promisify } = require('util');
 const path = require('path');
 const parse5 = require('parse5');
 const nwmatcher = require('nwmatcher');
 const css = require('css');
 const prettyBytes = require('pretty-bytes');
-
-const readFile = promisify(fs.readFile);
 
 const treeAdapter = parse5.treeAdapters.htmlparser2;
 
@@ -19,10 +15,13 @@ const PARSE5_OPTS = {
 /** Critters: Webpack Plugin Edition!
  *  @class
  *  @param {Object} options
- *  @param {Boolean} [options.external=true]  Fetch and inline critical styles from external stylesheets
- *  @param {Boolean} [options.async=false]    Convert critical-inlined external stylesheets to load asynchronously (via link rel="preload" - see https://filamentgroup.com/lab/async-css.html)
- *  @param {Boolean} [options.preload=false]  (requires `async` option) Append a new <link rel="stylesheet"> into <body> instead of swapping the preload's rel attribute
- *  @param {Boolean} [options.compress=true]  Compress resulting critical CSS
+ *  @param {Boolean} [options.external=true]    Fetch and inline critical styles from external stylesheets
+ *  @param {Boolean} [options.async=false]      Convert critical-inlined external stylesheets to load asynchronously (via link rel="preload" - see https://filamentgroup.com/lab/async-css.html)
+ *  @param {Boolean} [options.preload=false]    (requires `async` option) Append a new <link rel="stylesheet"> into <body> instead of swapping the preload's rel attribute
+ *  @param {Boolean} [options.fonts]            If `true`, keeps critical `@font-face` rules and preloads them. If `false`, removes the rules and does not preload the fonts
+ *  @param {Boolean} [options.preloadFonts=false]   Preloads critical fonts (even those removed by `{fonts:false}`)
+ *  @param {Boolean} [options.removeFonts=false]    Remove all fonts (even critical ones)
+ *  @param {Boolean} [options.compress=true]        Compress resulting critical CSS
  */
 module.exports = class CrittersWebpackPlugin {
   constructor (options) {
@@ -35,44 +34,54 @@ module.exports = class CrittersWebpackPlugin {
 
   /** Invoked by Webpack during plugin initialization */
   apply (compiler) {
-    const outputPath = compiler.options.output.path;
-
     // hook into the compiler to get a Compilation instance...
     compiler.hooks.compilation.tap(PLUGIN_NAME, compilation => {
       // ... which is how we get an "after" hook into html-webpack-plugin's HTML generation.
       compilation.hooks.htmlWebpackPluginAfterHtmlProcessing.tapAsync(PLUGIN_NAME, (htmlPluginData, callback) => {
-        // Parse the generated HTML in a DOM we can mutate
-        const document = parse5.parse(htmlPluginData.html, PARSE5_OPTS);
-        makeDomInteractive(document);
-
-        let externalStylesProcessed = Promise.resolve();
-
-        // `external:false` skips processing of external sheets
-        if (this.options.external !== false) {
-          const externalSheets = document.querySelectorAll('link[rel="stylesheet"]');
-          externalStylesProcessed = Promise.all(externalSheets.map(
-            link => this.embedLinkedStylesheet(link, compilation, outputPath)
-          ));
-        }
-
-        externalStylesProcessed
-          .then(() => {
-            // go through all the style tags in the document and reduce them to only critical CSS
-            const styles = document.querySelectorAll('style');
-            return Promise.all(styles.map(style => this.processStyle(style, document)));
-          })
-          .then(() => {
-            // serialize the document back to HTML and we're done
-            const html = parse5.serialize(document, PARSE5_OPTS);
-            callback(null, { html });
-          })
+        this.process(compiler, compilation, htmlPluginData)
+          .then(result => { callback(null, result); })
           .catch(callback);
       });
     });
   }
 
+  readFile (filename, encoding) {
+    return new Promise((resolve, reject) => {
+      this.fs.readFile(filename, encoding, (err, data) => {
+        if (err) reject(err);
+        else resolve(data);
+      });
+    });
+  }
+
+  async process (compiler, compilation, htmlPluginData) {
+    const outputPath = compiler.options.output.path;
+
+    // Parse the generated HTML in a DOM we can mutate
+    const document = parse5.parse(htmlPluginData.html, PARSE5_OPTS);
+    makeDomInteractive(document);
+
+    // `external:false` skips processing of external sheets
+    if (this.options.external !== false) {
+      const externalSheets = document.querySelectorAll('link[rel="stylesheet"]');
+      await Promise.all(externalSheets.map(
+        link => this.embedLinkedStylesheet(link, compilation, outputPath)
+      ));
+    }
+
+    // go through all the style tags in the document and reduce them to only critical CSS
+    const styles = document.querySelectorAll('style');
+    await Promise.all(styles.map(
+      style => this.processStyle(style, document)
+    ));
+
+    // serialize the document back to HTML and we're done
+    const html = parse5.serialize(document, PARSE5_OPTS);
+    return { html };
+  }
+
   /** Inline the target stylesheet referred to by a <link rel="stylesheet"> (assuming it passes `options.filter`) */
-  embedLinkedStylesheet (link, compilation, outputPath) {
+  async embedLinkedStylesheet (link, compilation, outputPath) {
     const href = link.getAttribute('href');
     const document = link.ownerDocument;
 
@@ -85,37 +94,59 @@ module.exports = class CrittersWebpackPlugin {
     // try to find a matching asset by filename in webpack's output (not yet written to disk)
     const asset = compilation.assets[path.relative(outputPath, filename).replace(/^\.\//, '')];
 
-    // wait for a disk read if we had to go to disk
-    const promise = asset ? Promise.resolve(asset.source()) : readFile(filename, 'utf8');
-    return promise.then(sheet => {
+    // CSS loader is only injected for the first sheet, then this becomes an empty string
+    let cssLoaderPreamble = `function $loadcss(u,l){(l=document.createElement('link')).rel='stylesheet';l.href=u;document.head.appendChild(l)}`;
+
+    const media = typeof this.options.media === 'string' ? this.options.media : 'all';
+
+    // { preload:'js', media:true }
+    // { preload:'js', media:'print' }
+    if (this.options.media) {
+      cssLoaderPreamble = cssLoaderPreamble.replace('l.href', "l.media='only x';l.onload=function(){l.media='" + media + "'};l.href");
+    }
+
+    // Attempt to read from assets, falling back to a disk read
+    const sheet = asset ? asset.source() : await this.readFile(filename, 'utf8');
+
     // the reduced critical CSS gets injected into a new <style> tag
-      const style = document.createElement('style');
-      style.appendChild(document.createTextNode(sheet));
-      link.parentNode.insertBefore(style, link.nextSibling);
+    const style = document.createElement('style');
+    style.appendChild(document.createTextNode(sheet));
+    link.parentNode.insertBefore(style, link.nextSibling);
 
-      // drop a reference to the original URL onto the tag (used for reporting to console later)
-      style.$$name = href;
+    // drop a reference to the original URL onto the tag (used for reporting to console later)
+    style.$$name = href;
 
-      // the `async` option changes any critical'd <link rel="stylesheet"> tags to async-loaded equivalents
-      if (this.options.async) {
-        link.setAttribute('rel', 'preload');
-        link.setAttribute('as', 'style');
-        if (this.options.preload) {
-          const bodyLink = document.createElement('link');
-          bodyLink.setAttribute('rel', 'stylesheet');
-          bodyLink.setAttribute('href', href);
-          document.body.appendChild(bodyLink);
-        } else {
-          link.setAttribute('onload', "this.rel='stylesheet'");
-        }
+    // the `async` option changes any critical'd <link rel="stylesheet"> tags to async-loaded equivalents
+    if (this.options.async) {
+      link.setAttribute('rel', 'preload');
+      link.setAttribute('as', 'style');
+      if (this.options.preload === 'js') {
+        const script = document.createElement('script');
+        script.appendChild(document.createTextNode(`${cssLoaderPreamble}$loadcss(${JSON.stringify(href)})`));
+        link.parentNode.insertBefore(script, link.nextSibling);
+        cssLoaderPreamble = '';
+      } else if (this.options.preload) {
+        const bodyLink = document.createElement('link');
+        bodyLink.setAttribute('rel', 'stylesheet');
+        bodyLink.setAttribute('href', href);
+        document.body.appendChild(bodyLink);
+      } else if (this.options.media) {
+        // @see https://github.com/filamentgroup/loadCSS/blob/af1106cfe0bf70147e22185afa7ead96c01dec48/src/loadCSS.js#L26
+        link.setAttribute('rel', 'stylesheet');
+        link.removeAttribute('as');
+        link.setAttribute('media', 'only x');
+        link.setAttribute('onload', "this.media='" + media + "'");
+      } else {
+        link.setAttribute('onload', "this.rel='stylesheet'");
       }
-    });
+    }
   }
 
   /** Parse the stylesheet within a <style> element, then reduce it to contain only rules used by the document. */
-  processStyle (style) {
-    const done = Promise.resolve();
+  async processStyle (style) {
+    const options = this.options;
     const document = style.ownerDocument;
+    const head = document.querySelector('head');
 
     // basically `.textContent`
     let sheet = style.childNodes.length > 0 && style.childNodes.map(node => node.nodeValue).join('\n');
@@ -124,9 +155,12 @@ module.exports = class CrittersWebpackPlugin {
     const before = sheet;
 
     // Skip empty stylesheets
-    if (!sheet) return done;
+    if (!sheet) return;
 
     const ast = css.parse(sheet);
+
+    // a string to search for font names (very loose)
+    let criticalFonts = '';
 
     // Walk all CSS rules, transforming unused rules to comments (which get removed)
     visit(ast, rule => {
@@ -142,31 +176,73 @@ module.exports = class CrittersWebpackPlugin {
         if (rule.selectors.length === 0) {
           return false;
         }
+
+        if (rule.declarations) {
+          for (let i = 0; i < rule.declarations.length; i++) {
+            const decl = rule.declarations[i];
+            if (decl.property.match(/\bfont\b/i)) {
+              criticalFonts += ' ' + decl.value;
+            }
+          }
+        }
       }
 
-      // If there are no remaining rules, remove the whole rule.
+      // keep font rules, they're handled in the second pass:
+      if (rule.type === 'font-face') return;
+
+      // If there are no remaining rules, remove the whole rule:
       return !rule.rules || rule.rules.length !== 0;
+    });
+
+    const preloadedFonts = [];
+    visit(ast, rule => {
+      // only process @font-face rules in the second pass
+      if (rule.type !== 'font-face') return;
+
+      let family, src;
+      for (let i = 0; i < rule.declarations.length; i++) {
+        const decl = rule.declarations[i];
+        if (decl.property === 'src') {
+          // @todo parse this properly and generate multiple preloads with type="font/woff2" etc
+          src = (decl.value.match(/url\s*\(\s*(['"]?)(.+?)\1\s*\)/) || [])[2];
+        } else if (decl.property === 'font-family') {
+          family = decl.value;
+        }
+      }
+
+      if (src && (options.fonts === true || options.preloadFonts) && preloadedFonts.indexOf(src) === -1) {
+        preloadedFonts.push(src);
+        const preload = document.createElement('link');
+        preload.setAttribute('rel', 'preload');
+        preload.setAttribute('as', 'font');
+        if (src.match(/:\/\//)) {
+          preload.setAttribute('crossorigin', 'anonymous');
+        }
+        preload.setAttribute('href', src.trim());
+        head.appendChild(preload);
+      }
+
+      // if we're missing info or the font is unused, remove the rule:
+      if (!family || !src || criticalFonts.indexOf(family) === -1 || !options.fonts || options.removeFonts) return false;
     });
 
     sheet = css.stringify(ast, { compress: this.options.compress !== false });
 
-    return done.then(() => {
-      // If all rules were removed, get rid of the style element entirely
-      if (sheet.trim().length === 0) {
-        sheet.parentNode.removeChild(sheet);
-      } else {
-        // replace the inline stylesheet with its critical'd counterpart
-        while (style.lastChild) {
-          style.removeChild(style.lastChild);
-        }
-        style.appendChild(document.createTextNode(sheet));
+    // If all rules were removed, get rid of the style element entirely
+    if (sheet.trim().length === 0) {
+      sheet.parentNode.removeChild(sheet);
+    } else {
+      // replace the inline stylesheet with its critical'd counterpart
+      while (style.lastChild) {
+        style.removeChild(style.lastChild);
       }
+      style.appendChild(document.createTextNode(sheet));
+    }
 
-      // output some stats
-      const name = style.$$name ? style.$$name.replace(/^\//, '') : 'inline CSS';
-      const percent = (before.length - sheet.length) / before.length * 100 | 0;
-      console.log('\u001b[32mCritters: inlined ' + prettyBytes(sheet.length) + ' (' + percent + '% of original ' + prettyBytes(before.length) + ') of ' + name + '.\u001b[39m');
-    });
+    // output some stats
+    const name = style.$$name ? style.$$name.replace(/^\//, '') : 'inline CSS';
+    const percent = sheet.length / before.length * 100 | 0;
+    console.log('\u001b[32mCritters: inlined ' + prettyBytes(sheet.length) + ' (' + percent + '% of original ' + prettyBytes(before.length) + ') of ' + name + '.\u001b[39m');
   }
 };
 
@@ -230,6 +306,15 @@ function getElementsByTagName (tagName) {
   );
 }
 
+const reflectedProperty = attributeName => ({
+  get () {
+    return this.getAttribute(attributeName);
+  },
+  set (value) {
+    this.setAttribute(attributeName, value);
+  }
+});
+
 /** Methods and descriptors to mix into Element.prototype */
 const ElementExtensions = {
   nodeName: {
@@ -237,6 +322,8 @@ const ElementExtensions = {
       return this.tagName.toUpperCase();
     }
   },
+  id: reflectedProperty('id'),
+  className: reflectedProperty('class'),
   insertBefore (child, referenceNode) {
     if (!referenceNode) return this.appendChild(child);
     treeAdapter.insertBefore(this, child, referenceNode);
