@@ -1,25 +1,3 @@
-@import '~style/helpers.scss';
-
-.app {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  top: 0;
-  left: 0;
-  width: 100%;
-  bottom: 0;
-  overflow: hidden;
-  z-index: 1;
-
-  .header {
-    flex: 0 0 auto;
-    position: relative;
-  }
-
-  .content {
-    flex: 1 1 auto;
-    contain: size layout style;
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
-  }
+.app h1 {
+  color: green;
 }

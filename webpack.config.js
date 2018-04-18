@@ -10,7 +10,6 @@ const ScriptExtHtmlPlugin = require('script-ext-html-webpack-plugin');
 const PreloadPlugin = require('preload-webpack-plugin');
 const ReplacePlugin = require('webpack-plugin-replace');
 const CopyPlugin = require('copy-webpack-plugin');
-const WorkboxPlugin = require('workbox-webpack-plugin');
 const CrittersPlugin = require('./config/critters-webpack-plugin');
 const WatchTimestampsPlugin = require('./config/watch-timestamps-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
@@ -23,8 +22,7 @@ module.exports = function (_, env) {
   const isProd = env.mode === 'production';
   const nodeModules = path.join(__dirname, 'node_modules');
   const componentStyleDirs = [
-    path.join(__dirname, 'src/components'),
-    path.join(__dirname, 'src/routes')
+    path.join(__dirname, 'src/components')
   ];
 
   return {
@@ -81,7 +79,7 @@ module.exports = function (_, env) {
         },
         {
           test: /\.(scss|sass|css)$/,
-          // Only enable CSS Modules within `src/{components,routes}/*`
+          // Only enable CSS Modules within `src/components/*`
           include: componentStyleDirs,
           use: [
             // In production, CSS is extracted to files on disk. In development, it's inlined into JS:
@@ -104,7 +102,7 @@ module.exports = function (_, env) {
         },
         {
           test: /\.(scss|sass|css)$/,
-          // Process non-modular CSS everywhere *except* `src/{components,routes}/*`
+          // Process non-modular CSS everywhere *except* `src/components/*`
           exclude: componentStyleDirs,
           use: [
             isProd ? MiniCssExtractPlugin.loader : 'style-loader',
@@ -234,22 +232,6 @@ module.exports = function (_, env) {
         analyzerMode: 'static',
         defaultSizes: 'gzip',
         openAnalyzer: false
-      }),
-
-      // Generate a ServiceWorker using Workbox.
-      isProd && new WorkboxPlugin.GenerateSW({
-        swDest: 'sw.js',
-        clientsClaim: true,
-        skipWaiting: true,
-        exclude: [
-          'report.html',
-          'manifest.json',
-          /(report\.html|manifest\.json|\.precache-manifest\..*\.json)$/,
-          /\.(?:map|pem|DS_Store)$/
-        ],
-        // allow for offline client-side routing:
-        navigateFallback: '/',
-        navigateFallbackBlacklist: [/\.[a-z0-9]+$/i]
       })
     ].filter(Boolean), // Filter out any falsey plugin array entries.
 
@@ -277,8 +259,6 @@ module.exports = function (_, env) {
       compress: true,
       // Request paths not ending in a file extension serve index.html:
       historyApiFallback: true,
-      // Don't output server address info to console on startup:
-      noInfo: true,
       // Suppress forwarding of Webpack logs to the browser console:
       clientLogLevel: 'none',
       // Supress the extensive stats normally printed after a dev build (since sizes are mostly useless):
