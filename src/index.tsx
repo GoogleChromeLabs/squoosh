@@ -20,9 +20,11 @@ if (process.env.NODE_ENV === 'development') {
       root = render(<App />, document.body, root);
     });
   });
-} else if ('serviceWorker' in navigator && location.protocol === 'https:') {
+} else if ('serviceWorker' in navigator) {
   addEventListener('load', () => {
-    navigator.serviceWorker.register(__webpack_public_path__ + 'sw.js');
+    setTimeout(() => {
+      navigator.serviceWorker.register(__webpack_public_path__ + 'sw.js');
+    }, 1000);
   });
 }
 

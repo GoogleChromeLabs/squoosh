@@ -148,6 +148,7 @@ module.exports = function (_, env) {
       // See: https://github.com/webpack-contrib/mini-css-extract-plugin
       // See also: https://twitter.com/wsokra/status/970253245733113856
       isProd && new MiniCssExtractPlugin({
+        filename: '[name].[contenthash:5].css',
         chunkFilename: '[name].chunk.[contenthash:5].css'
       }),
 
@@ -241,6 +242,7 @@ module.exports = function (_, env) {
         swDest: 'sw.js',
         clientsClaim: true,
         skipWaiting: true,
+        importWorkboxFrom: 'local',
         exclude: [
           'report.html',
           'manifest.json',
