@@ -18,9 +18,9 @@ export default class MultiPanel extends HTMLElement {
   connectedCallback () {
     this._childrenChange();
 
-    const children = Array.from(this.children);
-    for (let i = 0; i < children.length; i++){
-      const child = children[i]
+    const children : Element[] = Array.from(this.children);
+    for (let i : number = 0; i < children.length; i++){
+      const child : Element = children[i]
 
       if(i % 2 === 0){  
         // even index = heading element
@@ -56,7 +56,7 @@ export default class MultiPanel extends HTMLElement {
   
   // Click event handler
   _onClick(event) {
-    const heading = event.target;
+    const heading : Element = event.target;
     if (this._isHeading(heading)) {
       this._expand(heading);
     }
@@ -64,7 +64,7 @@ export default class MultiPanel extends HTMLElement {
 
   // KeyDown event handler
   _onKeyDown(event) {
-    const currentHeading = event.target;
+    const currentHeading : Element = event.target;
     
     // if clicke event is not on heading element, ignore
     if (!this._isHeading(currentHeading)) {
@@ -115,7 +115,7 @@ export default class MultiPanel extends HTMLElement {
     }
   }
 
-  _expand (heading:HTMLElement) {
+  _expand (heading : Element) {
     const content = heading.nextElementSibling;
     
     // heading elment should always have nextElementSibling (checked on _childrenChange)
@@ -144,7 +144,7 @@ export default class MultiPanel extends HTMLElement {
   }
 
   // called to check if an element passed is panel heading
-  _isHeading (heading:HTMLElement) {
+  _isHeading (heading : Element) {
     return heading.classList.contains('panel-heading');
   }
 
@@ -155,27 +155,27 @@ export default class MultiPanel extends HTMLElement {
 
   // returns headding that is before currently selected one.
   _prevHeading () {
-    const headings = this._allHeadings();
-    let newIdx = headings.findIndex(headings => headings === document.activeElement) - 1;
+    const headings : Element[] = this._allHeadings();
+    let newIdx : number = headings.findIndex(headings => headings === document.activeElement) - 1;
     return headings[(newIdx + headings.length) % headings.length];
   }
 
   // returns headding that is after currently selected one.
   _nextHeading () {
-    const headings = this._allHeadings();
-    let newIdx = headings.findIndex(heading => heading === document.activeElement) + 1;
+    const headings : Element[] = this._allHeadings();
+    let newIdx  : number = headings.findIndex(heading => heading === document.activeElement) + 1;
     return headings[newIdx % headings.length];
   }
 
   // returns first heading in multi-panel.
   _firstHeading () {
-    const headings = this._allHeadings();
+    const headings : Element[] = this._allHeadings();
     return headings[0];
   } 
 
   // returns last heading in multi-panel.
   _lastHeading () {
-    const headings = this._allHeadings();
+    const headings : Element[] = this._allHeadings();
     return headings[headings.length - 1];
   }   
 }
