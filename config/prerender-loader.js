@@ -1,6 +1,6 @@
 const jsdom = require('jsdom');
 const os = require('os');
-const util = require('util');
+// const util = require('util');
 const path = require('path');
 const loaderUtils = require('loader-utils');
 const LibraryTemplatePlugin = require('webpack/lib/LibraryTemplatePlugin');
@@ -15,6 +15,7 @@ const FILENAME = 'ssr-bundle.js';
 const PRERENDER_REG = /\{\{prerender(?::\s*([^}]+)\s*)?\}\}/;
 
 module.exports = function PrerenderLoader (content) {
+  // const { string, disabled, ...options } = getOptions()
   const options = loaderUtils.getOptions(this) || {};
   const outputFilter = options.as === 'string' || options.string ? stringToModule : String;
 
@@ -54,11 +55,13 @@ async function prerender (loaderContext, options, inject) {
   const context = parentCompiler.options.context || process.cwd();
   const entry = './' + ((options.entry && [].concat(options.entry).pop().trim()) || path.relative(context, parentCompiler.options.entry));
 
-  if (!inject && options.template) {
-    const loadModule = util.promisify(loaderContext.loadModule);
-    const source = await loadModule('!!raw-loader!' + path.resolve(context, options.template));
-    options.templateContent = source;
-  }
+  // undocumented option (to remove):
+  // !!prerender-loader?template=src/index.html!src/index.js
+  // if (!inject && options.template) {
+  //   const loadModule = util.promisify(loaderContext.loadModule);
+  //   const source = await loadModule('!!raw-loader!' + path.resolve(context, options.template));
+  //   options.templateContent = source;
+  // }
 
   const outputOptions = {
     // fix for plugins not using outputfilesystem
@@ -75,7 +78,8 @@ async function prerender (loaderContext, options, inject) {
 
   // Define PRERENDER to be true within the SSR bundle
   new DefinePlugin({
-    PRERENDER: 'true'
+    PRERENDER: 'true',
+    document: 'undefined' // if (typeof document==='undefined') {}
   }).apply(compiler);
 
   // ... then define PRERENDER to be false within the client bundle
@@ -116,7 +120,9 @@ async function prerender (loaderContext, options, inject) {
 
     const tpl = options.templateContent || '<!DOCTYPE html><html><head></head><body></body></html>';
     dom = new jsdom.JSDOM(tpl.replace(PRERENDER_REG, '<div id="PRERENDER_INJECT"></div>'), {
+      // don't track source locations for performance reasons
       includeNodeLocations: false,
+      // don't allow inline event handlers & script tag exec
       runScripts: 'outside-only'
     });
     const { window } = dom;
@@ -129,12 +135,14 @@ async function prerender (loaderContext, options, inject) {
     }
 
     // These are missing from JSDOM
-    window.requestAnimationFrame = setTimeout;
-    window.cancelAnimationFrame = clearTimeout;
+    let counter = 0;
+    window.requestAnimationFrame = () => ++counter;
+    window.cancelAnimationFrame = () => {};
 
     // Invoke the SSR bundle within the JSDOM document and grab the exported/returned result
     result = window.eval(output + '\nPRERENDER_RESULT') || result;
 
+    // @todo this seems pointless
     if (window.PRERENDER_RESULT != null) {
       result = window.PRERENDER_RESULT;
     }
