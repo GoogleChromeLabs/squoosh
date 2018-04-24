@@ -6,16 +6,6 @@ import './styles.css';
  * and odd index element becomes the expandable content.
  */
 export default class MultiPanel extends HTMLElement {
-  private KEYCODE = {
-    DOWN: 40,
-    LEFT: 37,
-    RIGHT: 39,
-    UP: 38,
-    HOME: 36,
-    END: 35,
-    ENTER:13,
-    SPACE:32
-  };
 
   constructor () {
     super();
@@ -86,27 +76,27 @@ export default class MultiPanel extends HTMLElement {
       return;
     }
     let newHeading;
-    switch (event.keyCode) {
-      case this.KEYCODE.LEFT:
-      case this.KEYCODE.UP:
+    switch (event.key) {
+      case 'ArrowLeft':
+      case 'ArrowUp':
         newHeading = this._prevHeading();
         break;
 
-      case this.KEYCODE.RIGHT:
-      case this.KEYCODE.DOWN:
+      case 'ArrowRight':
+      case 'ArrowDown':
         newHeading = this._nextHeading();
         break;
 
-      case this.KEYCODE.HOME:
+      case 'Home':
         newHeading = this._firstHeading();
         break;
 
-      case this.KEYCODE.END:
+      case 'End':
         newHeading = this._lastHeading();
         break;
 
-      case this.KEYCODE.ENTER:
-      case this.KEYCODE.SPACE:
+      case 'Enter':
+      case ' ':
         if (this._isHeading(document.activeElement)) {
             this._expand(document.activeElement);
         }
