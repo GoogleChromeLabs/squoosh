@@ -12,7 +12,6 @@ const PreloadPlugin = require('preload-webpack-plugin');
 const ReplacePlugin = require('webpack-plugin-replace');
 const CopyPlugin = require('copy-webpack-plugin');
 const WorkboxPlugin = require('workbox-webpack-plugin');
-const CrittersPlugin = require('./config/critters-webpack-plugin');
 const WatchTimestampsPlugin = require('./config/watch-timestamps-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
@@ -165,7 +164,7 @@ module.exports = function (_, env) {
       // For now we're not doing SSR.
       new HtmlPlugin({
         filename: path.join(__dirname, 'build/index.html'),
-        template: '!' + path.join(__dirname, 'config/prerender-loader') + '?string' + (isProd ? '' : '&disabled') + '!src/index.html',
+        template: 'src/index.html',
         minify: isProd && {
           collapseWhitespace: true,
           removeScriptTypeAttributes: true,
@@ -185,19 +184,6 @@ module.exports = function (_, env) {
       // Inject <link rel="preload"> for resources
       isProd && new PreloadPlugin({
         include: 'initial'
-      }),
-
-      isProd && new CrittersPlugin({
-        // Don't inline fonts into critical CSS, but do preload them:
-        preloadFonts: true,
-        // convert critical'd <link rel="stylesheet"> to <link rel="preload" as="style">:
-        async: true,
-        // Use media hack to load async (<link media="only x" onload="this.media='all'">):
-        media: true
-        // // use a $loadcss async CSS loading shim (DOM insertion to head)
-        // preload: 'js'
-        // // copy original <link rel="stylesheet"> to the end of <body>:
-        // preload: true
       }),
 
       // Inline constants during build, so they can be folded by UglifyJS.
