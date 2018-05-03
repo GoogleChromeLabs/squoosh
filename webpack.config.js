@@ -1,25 +1,25 @@
 const fs = require('fs');
 const path = require('path');
 const webpack = require('webpack');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
+const CleanPlugin = require('clean-webpack-plugin');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const ProgressBarPlugin = require('progress-bar-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const HtmlPlugin = require('html-webpack-plugin');
+const ScriptExtHtmlPlugin = require('script-ext-html-webpack-plugin');
 const PreloadPlugin = require('preload-webpack-plugin');
 const ReplacePlugin = require('webpack-plugin-replace');
 const CopyPlugin = require('copy-webpack-plugin');
 const WorkboxPlugin = require('workbox-webpack-plugin');
-const CrittersPlugin = require('./config/critters-webpack-plugin');
 const WatchTimestampsPlugin = require('./config/watch-timestamps-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
-function readJson(filename) {
+function readJson (filename) {
   return JSON.parse(fs.readFileSync(filename));
 }
 
-module.exports = function(_, env) {
+module.exports = function (_, env) {
   const isProd = env.mode === 'production';
   const nodeModules = path.join(__dirname, 'node_modules');
   const componentStyleDirs = [
@@ -31,6 +31,7 @@ module.exports = function(_, env) {
     mode: isProd ? 'production' : 'development',
     entry: './src/index',
     devtool: isProd ? 'source-map' : 'inline-source-map',
+    stats: 'minimal',
     output: {
       filename: isProd ? '[name].[chunkhash:5].js' : '[name].js',
       chunkFilename: '[name].chunk.[chunkhash:5].js',
@@ -124,9 +125,10 @@ module.exports = function(_, env) {
       // Remove old files before outputting a production build:
       isProd && new CleanPlugin([
         'assets',
-        '**/*.{css,js,json,html}'
+        '**/*.{css,js,json,html,map}'
       ], {
         root: path.join(__dirname, 'build'),
+        verbose: false,
         beforeEmit: true
       }),
 
@@ -160,15 +162,14 @@ module.exports = function(_, env) {
       ]),
 
       // For now we're not doing SSR.
-      new HtmlWebpackPlugin({
+      new HtmlPlugin({
         filename: path.join(__dirname, 'build/index.html'),
-        template: '!!ejs-loader!src/index.html',
-        // template: '!!'+path.join(__dirname, 'config/prerender-loader')+'!src/index.html',
+        template: 'src/index.html',
         minify: isProd && {
           collapseWhitespace: true,
           removeScriptTypeAttributes: true,
-          removeRedundantAttributes: true,
           removeStyleLinkTypeAttributes: true,
+          removeRedundantAttributes: true,
           removeComments: true
         },
         manifest: readJson('./src/manifest.json'),
@@ -176,20 +177,13 @@ module.exports = function(_, env) {
         compile: true
       }),
 
-      // Inject <link rel="preload"> for resources
-      isProd && new PreloadWebpackPlugin(),
+      new ScriptExtHtmlPlugin({
+        defaultAttribute: 'async'
+      }),
 
-      isProd && new CrittersPlugin({
-        // Don't inline fonts into critical CSS, but do preload them:
-        preloadFonts: true,
-        // convert critical'd <link rel="stylesheet"> to <link rel="preload" as="style">:
-        async: true,
-        // Use media hack to load async (<link media="only x" onload="this.media='all'">):
-        media: true
-        // // use a $loadcss async CSS loading shim (DOM insertion to head)
-        // preload: 'js'
-        // // copy original <link rel="stylesheet"> to the end of <body>:
-        // preload: true
+      // Inject <link rel="preload"> for resources
+      isProd && new PreloadPlugin({
+        include: 'initial'
       }),
 
       // Inline constants during build, so they can be folded by UglifyJS.
@@ -228,6 +222,12 @@ module.exports = function(_, env) {
         swDest: 'sw.js',
         clientsClaim: true,
         skipWaiting: true,
+        exclude: [
+          'report.html',
+          'manifest.json',
+          /(report\.html|manifest\.json|\.precache-manifest\..*\.json)$/,
+          /\.(?:map|pem|DS_Store)$/
+        ],
         // allow for offline client-side routing:
         navigateFallback: '/',
         navigateFallbackBlacklist: [/\.[a-z0-9]+$/i]

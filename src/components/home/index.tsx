@@ -26,9 +26,14 @@ export default class Home extends Component<Props, State> {
 
   render({ files }: Props, { active }: State) {
     return (
-      <div class={style.home + ' ' + (active ? style.active : '')}>
+      <div class={style.home}>
         { files && files[0] && (
-          <img src={files[0].uri} style="width:100%;" />
+          <img src={files[0].uri} class={style.image} />
+        ) || (
+          <div class={style.content}>
+            <h1>Squoosh</h1>
+            <p>Test home content</p>
+          </div>
         ) }
       </div>
     );

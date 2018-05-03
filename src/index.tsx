@@ -4,7 +4,7 @@ import './style';
 import App from './components/app';
 
 // Find the outermost Element in our server-rendered HTML structure.
-let root = document.querySelector('[prerender]') || undefined;
+let root = document.querySelector('#app') || undefined;
 
 // "attach" the client-side rendering to it, updating the DOM in-place instead of replacing:
 root = render(<App />, document.body, root);
@@ -26,7 +26,7 @@ if (process.env.NODE_ENV === 'development') {
   });
 }
 
-/** @todo SSR */
-// if (typeof module==='object') {
-//   module.exports = app;
+/** @todo Async SSR if we need it */
+// export default async () => {
+//   // render here, then resolve to a string of HTML (or null to serialize the document)
 // }
