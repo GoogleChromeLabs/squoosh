@@ -1,5 +1,6 @@
 import { h, Component } from 'preact';
 import './custom-els/PinchZoom';
+import * as style from './style.scss';
 
 type Props = {
   img: ImageBitmap
@@ -35,7 +36,7 @@ export default class App extends Component<Props, State> {
     return (
       <div>
         <pinch-zoom>
-          <canvas ref={c => this.canvas = c as HTMLCanvasElement} width={img.width} height={img.height} />
+          <canvas class={style.outputCanvas} ref={c => this.canvas = c as HTMLCanvasElement} width={img.width} height={img.height} />
         </pinch-zoom>
         <p>And that's all the app does so far!</p>
       </div>
