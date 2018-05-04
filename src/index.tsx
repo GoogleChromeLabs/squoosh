@@ -20,13 +20,4 @@ if (process.env.NODE_ENV === 'development') {
       root = render(<App />, document.body, root);
     });
   });
-} else if ('serviceWorker' in navigator && location.protocol === 'https:') {
-  addEventListener('load', () => {
-    navigator.serviceWorker.register(__webpack_public_path__ + 'sw.js');
-  });
 }
-
-/** @todo Async SSR if we need it */
-// export default async () => {
-//   // render here, then resolve to a string of HTML (or null to serialize the document)
-// }
