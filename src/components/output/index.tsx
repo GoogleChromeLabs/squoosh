@@ -1,7 +1,5 @@
 import { h, Component } from 'preact';
-// This isn't working.
-// https://github.com/GoogleChromeLabs/squoosh/issues/14
-import * as style from './style.scss';
+import './custom-els/PinchZoom';
 
 type Props = {
   img: ImageBitmap
@@ -36,7 +34,9 @@ export default class App extends Component<Props, State> {
   render({ img }: Props, { }: State) {
     return (
       <div>
-        <canvas ref={c => this.canvas = c as HTMLCanvasElement} width={img.width} height={img.height} />
+        <pinch-zoom>
+          <canvas ref={c => this.canvas = c as HTMLCanvasElement} width={img.width} height={img.height} />
+        </pinch-zoom>
         <p>And that's all the app does so far!</p>
       </div>
     );
