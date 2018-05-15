@@ -1,5 +1,4 @@
 declare const __webpack_public_path__: string;
-declare const PRERENDER: boolean;
 
 declare interface NodeModule {
   hot: any;

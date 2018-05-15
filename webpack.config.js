@@ -2,16 +2,14 @@ const fs = require('fs');
 const path = require('path');
 const webpack = require('webpack');
 const CleanPlugin = require('clean-webpack-plugin');
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const ProgressBarPlugin = require('progress-bar-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const HtmlPlugin = require('html-webpack-plugin');
 const ScriptExtHtmlPlugin = require('script-ext-html-webpack-plugin');
-const PreloadPlugin = require('preload-webpack-plugin');
 const ReplacePlugin = require('webpack-plugin-replace');
 const CopyPlugin = require('copy-webpack-plugin');
-const WorkboxPlugin = require('workbox-webpack-plugin');
-const CrittersPlugin = require('./config/critters-webpack-plugin');
 const WatchTimestampsPlugin = require('./config/watch-timestamps-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
@@ -23,8 +21,7 @@ module.exports = function (_, env) {
   const isProd = env.mode === 'production';
   const nodeModules = path.join(__dirname, 'node_modules');
   const componentStyleDirs = [
-    path.join(__dirname, 'src/components'),
-    path.join(__dirname, 'src/routes')
+    path.join(__dirname, 'src/components')
   ];
 
   return {
@@ -53,23 +50,6 @@ module.exports = function (_, env) {
     module: {
       rules: [
         {
-          test: /\.tsx?$/,
-          exclude: nodeModules,
-          // Ensure typescript is compiled prior to Babel running:
-          enforce: 'pre',
-          use: [
-            // pluck the sourcemap back out so Babel creates a composed one:
-            'source-map-loader',
-            'ts-loader'
-          ]
-        },
-        {
-          test: /\.(ts|js)x?$/,
-          loader: 'babel-loader',
-          // Don't respect any Babel RC files found on the filesystem:
-          options: Object.assign(readJson('.babelrc'), { babelrc: false })
-        },
-        {
           test: /\.(scss|sass)$/,
           loader: 'sass-loader',
           // SCSS gets preprocessed, then treated like any other CSS:
@@ -81,7 +61,7 @@ module.exports = function (_, env) {
         },
         {
           test: /\.(scss|sass|css)$/,
-          // Only enable CSS Modules within `src/{components,routes}/*`
+          // Only enable CSS Modules within `src/components/*`
           include: componentStyleDirs,
           use: [
             // In production, CSS is extracted to files on disk. In development, it's inlined into JS:
@@ -104,7 +84,7 @@ module.exports = function (_, env) {
         },
         {
           test: /\.(scss|sass|css)$/,
-          // Process non-modular CSS everywhere *except* `src/{components,routes}/*`
+          // Process non-modular CSS everywhere *except* `src/components/*`
           exclude: componentStyleDirs,
           use: [
             isProd ? MiniCssExtractPlugin.loader : 'style-loader',
@@ -116,6 +96,17 @@ module.exports = function (_, env) {
               }
             }
           ]
+        },
+        {
+          test: /\.tsx?$/,
+          exclude: nodeModules,
+          loader: 'ts-loader'
+        },
+        {
+          test: /\.jsx?$/,
+          loader: 'babel-loader',
+          // Don't respect any Babel RC files found on the filesystem:
+          options: Object.assign(readJson('.babelrc'), { babelrc: false })
         }
       ]
     },
@@ -171,7 +162,7 @@ module.exports = function (_, env) {
       // For now we're not doing SSR.
       new HtmlPlugin({
         filename: path.join(__dirname, 'build/index.html'),
-        template: '!' + path.join(__dirname, 'config/prerender-loader') + '?string' + (isProd ? '' : '&disabled') + '!src/index.html',
+        template: 'src/index.html',
         minify: isProd && {
           collapseWhitespace: true,
           removeScriptTypeAttributes: true,
@@ -186,24 +177,6 @@ module.exports = function (_, env) {
 
       new ScriptExtHtmlPlugin({
         defaultAttribute: 'async'
-      }),
-
-      // Inject <link rel="preload"> for resources
-      isProd && new PreloadPlugin({
-        include: 'initial'
-      }),
-
-      isProd && new CrittersPlugin({
-        // Don't inline fonts into critical CSS, but do preload them:
-        preloadFonts: true,
-        // convert critical'd <link rel="stylesheet"> to <link rel="preload" as="style">:
-        async: true,
-        // Use media hack to load async (<link media="only x" onload="this.media='all'">):
-        media: true
-        // // use a $loadcss async CSS loading shim (DOM insertion to head)
-        // preload: 'js'
-        // // copy original <link rel="stylesheet"> to the end of <body>:
-        // preload: true
       }),
 
       // Inline constants during build, so they can be folded by UglifyJS.
@@ -235,25 +208,30 @@ module.exports = function (_, env) {
         analyzerMode: 'static',
         defaultSizes: 'gzip',
         openAnalyzer: false
-      }),
-
-      // Generate a ServiceWorker using Workbox.
-      isProd && new WorkboxPlugin.GenerateSW({
-        swDest: 'sw.js',
-        clientsClaim: true,
-        skipWaiting: true,
-        importWorkboxFrom: 'local',
-        exclude: [
-          'report.html',
-          'manifest.json',
-          /(report\.html|manifest\.json|\.precache-manifest\..*\.json)$/,
-          /\.(?:map|pem|DS_Store)$/
-        ],
-        // allow for offline client-side routing:
-        navigateFallback: '/',
-        navigateFallbackBlacklist: [/\.[a-z0-9]+$/i]
       })
     ].filter(Boolean), // Filter out any falsey plugin array entries.
+
+    optimization: {
+      minimizer: [
+        new UglifyJsPlugin({
+          sourceMap: isProd,
+          extractComments: {
+            file: 'build/licenses.txt'
+          },
+          uglifyOptions: {
+            compress: {
+              inline: 1
+            },
+            mangle: {
+              safari10: true
+            },
+            output: {
+              safari10: true
+            }
+          }
+        })
+      ]
+    },
 
     // Turn off various NodeJS environment polyfills Webpack adds to bundles.
     // They're supposed to be added only when used, but the heuristic is loose
@@ -279,8 +257,6 @@ module.exports = function (_, env) {
       compress: true,
       // Request paths not ending in a file extension serve index.html:
       historyApiFallback: true,
-      // Don't output server address info to console on startup:
-      noInfo: true,
       // Suppress forwarding of Webpack logs to the browser console:
       clientLogLevel: 'none',
       // Supress the extensive stats normally printed after a dev build (since sizes are mostly useless):
