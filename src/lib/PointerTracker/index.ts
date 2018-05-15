@@ -1,3 +1,4 @@
+import { bind } from '../util';
 const enum Button { Left }
 
 export class Pointer {
@@ -101,13 +102,6 @@ export class PointerTracker {
     this._moveCallback = move;
     this._endCallback = end;
 
-    // Bind listener methods
-    this._pointerStart = this._pointerStart.bind(this);
-    this._touchStart = this._touchStart.bind(this);
-    this._move = this._move.bind(this);
-    this._pointerEnd = this._pointerEnd.bind(this);
-    this._touchEnd = this._touchEnd.bind(this);
-
     // Add listeners
     if (self.PointerEvent) {
       this._element.addEventListener('pointerdown', this._pointerStart);
@@ -139,6 +133,7 @@ export class PointerTracker {
    * @param event This will only be a MouseEvent if the browser doesn't support
    * pointer events.
    */
+  @bind
   private _pointerStart (event: PointerEvent | MouseEvent) {
     if (event.button !== Button.Left) return;
     if (!this._triggerPointerStart(new Pointer(event), event)) return;
@@ -159,6 +154,7 @@ export class PointerTracker {
    * Listener for touchstart. Bound to the class in the constructor.
    * Only used if the browser doesn't support pointer events.
    */
+  @bind
   private _touchStart (event: TouchEvent) {
     for (const touch of Array.from(event.changedTouches)) {
       this._triggerPointerStart(new Pointer(touch), event);
@@ -169,6 +165,7 @@ export class PointerTracker {
    * Listener for pointer/mouse/touch move events.
    * Bound to the class in the constructor.
    */
+  @bind
   private _move (event: PointerEvent | MouseEvent | TouchEvent) {
     const previousPointers = this.currentPointers.slice();
     const changedPointers = ('changedTouches' in event) ? // Shortcut for 'is touch event'.
@@ -195,6 +192,7 @@ export class PointerTracker {
    * @param pointer Pointer
    * @param event Related event
    */
+  @bind
   private _triggerPointerEnd (pointer: Pointer, event: PointerEvent | MouseEvent | TouchEvent): boolean {
     const index = this.currentPointers.findIndex(p => p.id === pointer.id);
     // Not a pointer we're interested in?
@@ -212,6 +210,7 @@ export class PointerTracker {
    * @param event This will only be a MouseEvent if the browser doesn't support
    * pointer events.
    */
+  @bind
   private _pointerEnd (event: PointerEvent | MouseEvent) {
     if (!this._triggerPointerEnd(new Pointer(event), event)) return;
 
@@ -229,6 +228,7 @@ export class PointerTracker {
    * Listener for touchend. Bound to the class in the constructor.
    * Only used if the browser doesn't support pointer events.
    */
+  @bind
   private _touchEnd (event: TouchEvent) {
     for (const touch of Array.from(event.changedTouches)) {
       this._triggerPointerEnd(new Pointer(touch), event);
