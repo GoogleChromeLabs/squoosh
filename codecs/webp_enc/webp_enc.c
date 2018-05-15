@@ -28,8 +28,8 @@ void encode(uint8_t* img_in, int width, int height, float quality) {
 }
 
 EMSCRIPTEN_KEEPALIVE
-void free_result(uint8_t* result) {
-  WebPFree(result);
+void free_result() {
+  WebPFree(result[0]);
 }
 
 EMSCRIPTEN_KEEPALIVE

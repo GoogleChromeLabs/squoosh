@@ -162,8 +162,8 @@ void encode(uint8_t* image_buffer, int image_width, int image_height, int qualit
 }
 
 EMSCRIPTEN_KEEPALIVE
-void free_result(uint8_t* result) {
-  free(result); // not sure if this is right with mozjpeg
+void free_result() {
+  free(result[0]); // not sure if this is right with mozjpeg
 }
 
 EMSCRIPTEN_KEEPALIVE
