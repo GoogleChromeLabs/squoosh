@@ -7,7 +7,7 @@
 
 EMSCRIPTEN_KEEPALIVE
 int version() {
-  return 0x030301; // Lol harcoded
+  return JPEG_LIB_VERSION;
 }
 
 EMSCRIPTEN_KEEPALIVE
