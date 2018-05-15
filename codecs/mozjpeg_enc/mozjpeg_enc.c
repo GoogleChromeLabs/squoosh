@@ -3,11 +3,29 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include <setjmp.h>
+#include <string.h>
 #include "jpeglib.h"
+#include "config.h"
+
+// MozJPEG doesn’t expose a numeric version, so I have to do some fun C macro hackery to turn it into a string. More details here: https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html
+#define xstr(s) str(s)
+#define str(s) #s
 
 EMSCRIPTEN_KEEPALIVE
 int version() {
-  return JPEG_LIB_VERSION;
+  char buffer[] = xstr(MOZJPEG_VERSION);
+  int version = 0;
+  int last_index = 0;
+  for(int i = 0; i < strlen(buffer); i++) {
+    if(buffer[i] == '.') {
+      buffer[i] = '\0';
+      version = version << 8 | atoi(&buffer[last_index]);
+      buffer[i] = '.';
+      last_index = i + 1;
+    }
+  }
+  version = version << 8 | atoi(&buffer[last_index]);
+  return version;
 }
 
 EMSCRIPTEN_KEEPALIVE
