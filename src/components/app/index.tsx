@@ -3,6 +3,8 @@ import { bind } from '../../lib/util';
 import * as style from './style.scss';
 import Output from '../output';
 
+import {MozJpegEncoder} from '../../lib/codec-wrappers/mozjpeg-enc';
+
 type Props = {};
 
 type State = {
@@ -29,7 +31,11 @@ export default class App extends Component<Props, State> {
     if (!fileInput.files || !fileInput.files[0]) return;
     // TODO: handle decode error
     const img = await createImageBitmap(fileInput.files[0]);
-    this.setState({ img });
+    const encoder = new MozJpegEncoder();
+    const compressedData = await encoder.encode(img);
+    const blob = new Blob([compressedData], {type: 'image/jpeg'});
+    const compressedImage = await createImageBitmap(blob);
+    this.setState({ img: compressedImage });
   }
 
   render({ }: Props, { img }: State) {

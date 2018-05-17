@@ -4,6 +4,8 @@
   "version": "0.0.0",
   "license": "apache-2.0",
   "scripts": {
+    "build:mozjpeg_enc": "cd codecs/mozjpeg_enc && npm run build",
+    "build:codecs": "npm run build:mozjpeg_enc",
     "start": "webpack serve --hot",
     "build": "webpack -p",
     "lint": "eslint src"
@@ -30,6 +32,7 @@
   ],
   "devDependencies": {
     "@types/node": "^9.4.7",
+    "@types/webassembly-js-api": "0.0.1",
     "babel-loader": "^7.1.4",
     "babel-plugin-jsx-pragmatic": "^1.0.2",
     "babel-plugin-syntax-dynamic-import": "^6.18.0",
@@ -52,6 +55,7 @@
     "eslint-plugin-promise": "^3.7.0",
     "eslint-plugin-react": "^7.7.0",
     "eslint-plugin-standard": "^3.0.1",
+    "exports-loader": "^0.7.0",
     "html-webpack-plugin": "^3.0.6",
     "if-env": "^1.0.4",
     "loader-utils": "^1.1.0",
