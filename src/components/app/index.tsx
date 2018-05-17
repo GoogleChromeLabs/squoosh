@@ -25,14 +25,28 @@ export default class App extends Component<Props, State> {
     }
   }
 
+  private async getImageData(bitmap: ImageBitmap): Promise<ImageData> {
+    // Make canvas same size as image
+    const canvas = document.createElement('canvas');
+    [canvas.width, canvas.height] = [bitmap.width, bitmap.height];
+    // Draw image onto canvas
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      throw new Error("Could not create canvas contex");
+    }
+    ctx.drawImage(bitmap, 0, 0);
+    return ctx.getImageData(0, 0, bitmap.width, bitmap.height);
+  }
+
   @bind
   async onFileChange(event: Event) {
     const fileInput = event.target as HTMLInputElement;
     if (!fileInput.files || !fileInput.files[0]) return;
     // TODO: handle decode error
-    const img = await createImageBitmap(fileInput.files[0]);
+    const bitmap = await createImageBitmap(fileInput.files[0]);
+    const data = await this.getImageData(bitmap);
     const encoder = new MozJpegEncoder();
-    const compressedData = await encoder.encode(img);
+    const compressedData = await encoder.encode(data);
     const blob = new Blob([compressedData], {type: 'image/jpeg'});
     const compressedImage = await createImageBitmap(blob);
     this.setState({ img: compressedImage });
@@ -53,3 +67,4 @@ export default class App extends Component<Props, State> {
     );
   }
 }
+
