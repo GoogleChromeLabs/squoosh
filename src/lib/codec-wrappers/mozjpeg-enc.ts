@@ -20,10 +20,9 @@ export class MozJpegEncoder implements Encoder {
   private api: Promise<ModuleAPI>;
   constructor() {
     this.emscriptenModule = new Promise(resolve => {
-      // TODO: See if I can just use m.then()?
       const m = mozjpeg_enc({
         // Just to be safe, don’t automatically invoke any wasm functions
-        // noInitialRun: false,
+        noInitialRun: false,
         locateFile(url: string): string {
           // Redirect the request for the wasm binary to whatever webpack gave us.
           if(url.endsWith('.wasm')) {
