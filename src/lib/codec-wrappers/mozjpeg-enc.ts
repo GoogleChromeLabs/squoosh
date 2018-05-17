@@ -19,6 +19,8 @@ export class MozJpegEncoder implements Encoder {
           return url;
         },
         onRuntimeInitialized() {
+          // This is a bug I discovered. To be filed.
+          delete (m as any).then;
           resolve(m);
         }
       });
@@ -26,8 +28,6 @@ export class MozJpegEncoder implements Encoder {
   }
 
   async encode(bitmap: ImageBitmap): Promise<ArrayBuffer> {
-    console.log('awaiting module');
-    debugger;
     const m = await this.emscriptenModule;
     console.log(m);
     return Promise.resolve(<ArrayBuffer>new Uint8Array([1,2,3]).buffer);
