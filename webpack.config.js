@@ -48,6 +48,18 @@ module.exports = function (_, env) {
       }
     },
     module: {
+      // This is needed to make webpack NOT process wasm files.
+      // See https://github.com/webpack/webpack/issues/6725
+      defaultRules: [
+        {
+          type: "javascript/auto",
+          resolve: {}
+        },
+        {
+          test: /\.json$/i,
+          type: "json"
+        },
+      ],
       rules: [
         {
           test: /\.(scss|sass)$/,
@@ -110,8 +122,12 @@ module.exports = function (_, env) {
         },
         {
           // All the codec files define a global with the same name as their file name. `exports-loader` attaches those to `module.exports`.
-          test: /\/codec\/.*\.js$/,
+          test: /\/codecs\/.*\.js$/,
           loader: 'exports-loader',
+        },
+        {
+          test: /\/codecs\/.*\.wasm$/,
+          loader: 'file-loader',
         }
       ]
     },
