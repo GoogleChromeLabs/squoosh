@@ -4,9 +4,20 @@ import mozjpeg_enc from '../../../codecs/mozjpeg_enc/mozjpeg_enc';
 // Using require() so TypeScript doesn’t complain about this not being a module.
 const wasmBinaryUrl = require('../../../codecs/mozjpeg_enc/mozjpeg_enc.wasm');
 
+// API exposed by wasm module. Details in the codec’s README.
+interface ModuleAPI {
+  version(): number;
+  create_buffer(width: number, height: number): number;
+  destroy_buffer(pointer: number): void;
+  encode(buffer: number, width: number, height: number, quality: number): void;
+  free_result(): void;
+  get_result_pointer(): number;
+  get_result_size(): number;
+}
+
 export class MozJpegEncoder implements Encoder {
   private emscriptenModule: Promise<EmscriptenWasm.Module>;
-  private api: any;
+  private api: Promise<ModuleAPI>;
   constructor() {
     this.emscriptenModule = new Promise(resolve => {
       // TODO: See if I can just use m.then()?
@@ -36,7 +47,7 @@ export class MozJpegEncoder implements Encoder {
         create_buffer: m.cwrap('create_buffer', 'number', ['number', 'number']),
         destroy_buffer: m.cwrap('destroy_buffer', '', ['number']),
         encode: m.cwrap('encode', '', ['number', 'number', 'number', 'number']),
-        free_result: m.cwrap('free_result', '', ['number']),
+        free_result: m.cwrap('free_result', '', []),
         get_result_pointer: m.cwrap('get_result_pointer', 'number', []),
         get_result_size: m.cwrap('get_result_size', 'number', []),
       };
@@ -54,7 +65,7 @@ export class MozJpegEncoder implements Encoder {
     const resultSize = api.get_result_size();
     const resultView = new Uint8Array(m.HEAP8.buffer, resultPointer, resultSize);
     const result = new Uint8Array(resultView);
-    api.free_result(resultPointer);
+    api.free_result();
     api.destroy_buffer(p);
 
     return result.buffer;
