@@ -22,9 +22,9 @@ export default class App extends Component<Props, State> {
 
   updateCanvases(img: ImageBitmap) {
     for (const [i, canvas] of [this.canvasLeft, this.canvasRight].entries()) {
-      if (!canvas) return;
+      if (!canvas) throw Error('Missing canvas');
       const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+      if (!ctx) throw Error('Expected 2d canvas context');
       if (i === 1) {
         // This is temporary, to show the images are different
         ctx.filter = 'hue-rotate(180deg)';
@@ -44,7 +44,7 @@ export default class App extends Component<Props, State> {
 
   @bind
   onPinchZoomLeftChange(event: Event) {
-    if (!this.pinchZoomRight || !this.pinchZoomLeft) return;
+    if (!this.pinchZoomRight || !this.pinchZoomLeft) throw Error('Missing pinch-zoom element');
     this.pinchZoomRight.setTransform({
       scale: this.pinchZoomLeft.scale,
       x: this.pinchZoomLeft.x,
@@ -63,7 +63,7 @@ export default class App extends Component<Props, State> {
   @bind
   onRetargetableEvent(event: Event) {
     const targetEl = event.target as HTMLElement;
-    if (!this.pinchZoomLeft) return;
+    if (!this.pinchZoomLeft) throw Error('Missing pinch-zoom element');
     // If the event is on the handle of the two-up, let it through.
     if (targetEl.closest('.' + twoUpHandle)) return;
     // If we've already retargeted this event, let it through.
@@ -72,6 +72,7 @@ export default class App extends Component<Props, State> {
     event.stopImmediatePropagation();
     event.preventDefault();
     // Clone the event & dispatch
+    // Some TypeScript trickery needed due to https://github.com/Microsoft/TypeScript/issues/3841
     const clonedEvent = new (event.constructor as typeof Event)(event.type, event);
     this.retargetedEvents.add(clonedEvent);
     this.pinchZoomLeft.dispatchEvent(clonedEvent);
