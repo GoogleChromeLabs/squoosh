@@ -24,3 +24,22 @@ export function bind(target: any, propertyKey: string, descriptor: PropertyDescr
     }
   };
 }
+
+/**
+ * Turns a given `ImageBitmap` into `ImageData`.
+ */
+export async function bitmapToImageData(bitmap: ImageBitmap): Promise<ImageData> {
+  // Make canvas same size as image
+  // TODO: Move this off-thread if possible with `OffscreenCanvas` or iFrames?
+  const canvas = document.createElement('canvas');
+  canvas.width = bitmap.width;
+  canvas.height = bitmap.height;
+  // Draw image onto canvas
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    throw new Error("Could not create canvas context");
+  }
+  ctx.drawImage(bitmap, 0, 0);
+  return ctx.getImageData(0, 0, bitmap.width, bitmap.height);
+}
+
