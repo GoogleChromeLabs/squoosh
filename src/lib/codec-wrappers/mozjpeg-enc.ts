@@ -31,7 +31,11 @@ export class MozJpegEncoder implements Encoder {
           return url;
         },
         onRuntimeInitialized() {
-          // This is a bug I discovered. To be filed.
+          // An Emscripten is a then-able that, for some reason, `then()`s itself,
+          // causing an infite loop when you wrap it in a real promise. Deleten the `then`
+          // prop solves this for now.
+          // See: https://github.com/kripken/emscripten/blob/incoming/src/postamble.js#L129
+          // TODO(surma@): File a bug with Emscripten on this.
           delete (m as any).then;
           resolve(m);
         }
