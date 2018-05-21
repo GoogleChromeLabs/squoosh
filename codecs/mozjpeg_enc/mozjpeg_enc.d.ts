@@ -1,1 +1,1 @@
-export default function(opts: {}): EmscriptenWasm.Module;
+export default function(opts: EmscriptenWasm.ModuleOpts): EmscriptenWasm.Module;
