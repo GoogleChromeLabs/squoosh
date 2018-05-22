@@ -107,10 +107,23 @@ module.exports = function (_, env) {
           loader: 'babel-loader',
           // Don't respect any Babel RC files found on the filesystem:
           options: Object.assign(readJson('.babelrc'), { babelrc: false })
+        },
+        {
+          // All the codec files define a global with the same name as their file name. `exports-loader` attaches those to `module.exports`.
+          test: /\/codecs\/.*\.js$/,
+          loader: 'exports-loader',
+        },
+        {
+          test: /\/codecs\/.*\.wasm$/,
+          // This is needed to make webpack NOT process wasm files.
+          // See https://github.com/webpack/webpack/issues/6725
+          type: 'javascript/auto',
+          loader: 'file-loader',
         }
-      ]
+      ],
     },
     plugins: [
+      new webpack.IgnorePlugin(/(fs)/, /\/codecs\//),
       // Pretty progressbar showing build progress:
       new ProgressBarPlugin({
         format: '\u001b[90m\u001b[44mBuild\u001b[49m\u001b[39m [:bar] \u001b[32m\u001b[1m:percent\u001b[22m\u001b[39m (:elapseds) \u001b[2m:msg\u001b[22m\r',
