@@ -7,6 +7,7 @@ import { bind } from '../../lib/util';
 import { twoUpHandle } from './custom-els/TwoUp/styles.css';
 
 type Props = {
+  sourceImg: ImageBitmap,
   img: ImageBitmap
 };
 
@@ -20,26 +21,30 @@ export default class App extends Component<Props, State> {
   pinchZoomRight?: PinchZoom;
   retargetedEvents = new WeakSet<Event>();
 
-  updateCanvases(img: ImageBitmap) {
-    for (const [i, canvas] of [this.canvasLeft, this.canvasRight].entries()) {
-      if (!canvas) throw Error('Missing canvas');
-      const ctx = canvas.getContext('2d');
-      if (!ctx) throw Error('Expected 2d canvas context');
-      if (i === 1) {
-        // This is temporary, to show the images are different
-        ctx.filter = 'hue-rotate(180deg)';
-      }
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0);
+  updateCanvas(canvas: HTMLCanvasElement, img?: ImageBitmap) {
+    let ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (img) ctx.drawImage(img, 0, 0);
+  }
+
+  updateCanvases(sourceImg?: ImageBitmap, img?: ImageBitmap) {
+    if (this.canvasLeft) {
+      this.updateCanvas(this.canvasLeft, sourceImg);
+    }
+    if (this.canvasRight) {
+      this.updateCanvas(this.canvasRight, img);
     }
   }
 
   componentDidMount() {
-    this.updateCanvases(this.props.img);
+    this.updateCanvases(this.props.sourceImg, this.props.img);
   }
 
-  componentDidUpdate({ img }: Props) {
-    if (img !== this.props.img) this.updateCanvases(this.props.img);
+  componentDidUpdate({ sourceImg, img }: Props) {
+    if (sourceImg !== this.props.sourceImg || img !== this.props.img) {
+      this.updateCanvases(this.props.sourceImg, this.props.img);
+    }
   }
 
   @bind
@@ -78,7 +83,7 @@ export default class App extends Component<Props, State> {
     this.pinchZoomLeft.dispatchEvent(clonedEvent);
   }
 
-  render({ img }: Props, { }: State) {
+  render({ sourceImg, img }: Props, { }: State) {
     return (
       <div>
         <two-up

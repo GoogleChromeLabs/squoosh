@@ -15,6 +15,10 @@ interface ModuleAPI {
   get_result_size(): number;
 }
 
+type EncodeOptions = {
+  quality?: number
+};
+
 export class MozJpegEncoder implements Encoder {
   private emscriptenModule: Promise<EmscriptenWasm.Module>;
   private api: Promise<ModuleAPI>;
@@ -57,13 +61,13 @@ export class MozJpegEncoder implements Encoder {
     })();
   }
 
-  async encode(data: ImageData): Promise<ArrayBuffer> {
+  async encode(data: ImageData, options: EncodeOptions): Promise<ArrayBuffer> {
     const m = await this.emscriptenModule;
     const api = await this.api;
 
     const p = api.create_buffer(data.width, data.height);
     m.HEAP8.set(data.data, p);
-    api.encode(p, data.width, data.height, 2);
+    api.encode(p, data.width, data.height, options.quality!=null ? options.quality : 7);
     const resultPointer = api.get_result_pointer();
     const resultSize = api.get_result_size();
     const resultView = new Uint8Array(m.HEAP8.buffer, resultPointer, resultSize);
