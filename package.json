@@ -85,7 +85,6 @@
     "classnames": "^2.2.5",
     "material-components-web": "^0.32.0",
     "material-radial-progress": "git+https://gist.github.com/02134901c77c5309924bfcf8b4435ebe.git",
-    "mozjpeg": "^6.0.0",
     "preact": "^8.2.7",
     "preact-i18n": "^1.2.0",
     "preact-material-components": "^1.3.7",
