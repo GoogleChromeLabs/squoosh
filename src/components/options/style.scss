@@ -1,0 +1,23 @@
+.options {
+    position: fixed;
+    right: 0;
+    top: 0;
+    width: 200px;
+    height: 100%;
+    background: #eee;
+    border-left: 1px solid #ccc;
+    overflow: auto;
+
+    label {
+        display: block;
+        padding: 5px;
+        font-weight: bold;
+        input {
+            vertical-align: middle;
+        }
+    }
+
+    pre {
+        font-size: 10px;
+    }
+}
