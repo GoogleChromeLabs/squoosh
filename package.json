@@ -9,7 +9,7 @@
     "start": "webpack serve --host 0.0.0.0 --hot",
     "build": "webpack -p",
     "lint": "eslint src",
-    "test": "mocha -R spec"
+    "test": "npm run build && mocha -R spec"
   },
   "eslintConfig": {
     "extends": [
