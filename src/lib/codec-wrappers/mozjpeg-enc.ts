@@ -57,7 +57,7 @@ export class MozJpegEncoder implements Encoder {
     })();
   }
 
-  async encode(data: ImageData): Promise<ArrayBuffer | SharedArrayBuffer> {
+  async encode(data: ImageData): Promise<ArrayBuffer> {
     const m = await this.emscriptenModule;
     const api = await this.api;
 
@@ -71,6 +71,7 @@ export class MozJpegEncoder implements Encoder {
     api.free_result();
     api.destroy_buffer(p);
 
-    return result.buffer;
+    // wasm can’t run on SharedArrayBuffers, so we hard-cast to ArrayBuffer.
+    return result.buffer as ArrayBuffer;
   }
 }
