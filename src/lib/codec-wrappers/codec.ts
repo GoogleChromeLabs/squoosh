@@ -1,5 +1,5 @@
 export interface Encoder {
-  encode(data: ImageData): Promise<ArrayBuffer | SharedArrayBuffer>;
+  encode(data: ImageData): Promise<ArrayBuffer>;
 }
 
 export interface Decoder {
