@@ -1,3 +1,21 @@
+@mixin fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  contain: strict;
+}
+
+.output {
+  @include fill;
+
+  > two-up {
+    @include fill;
+  }
+}
+
 .outputCanvas {
   image-rendering: pixelated;
 }

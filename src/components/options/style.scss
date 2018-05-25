@@ -1,17 +1,28 @@
 .options {
-    position: fixed;
-    right: 0;
-    top: 0;
-    width: 200px;
-    height: 100%;
-    background: #eee;
-    border-left: 1px solid #ccc;
+    width: 180px;
+    padding: 10px;
+    background: rgba(50,50,50,0.8);
+    border: 1px solid #222;
+    box-shadow: inset 0 0 1px #fff, 0 0 1px #fff;
+    border-radius: 3px;
+    color: #eee;
     overflow: auto;
+    z-index: 1;
+    transition: opacity 300ms ease;
+
+    &:not(:hover) {
+        opacity: .6;
+    }
 
     label {
         display: block;
         padding: 5px;
         font-weight: bold;
+
+        select {
+            margin-left: 5px;
+        }
+
         input {
             vertical-align: middle;
         }
