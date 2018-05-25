@@ -78,7 +78,6 @@ export default class Options extends Component<Props, State> {
 
         return (
             <div class={`${style.options}${c?(' '+c):''}`}>
-                {/* <h2>{name}</h2> */}
                 <label>
                     Mode:
                     <select value={type} onChange={this.setType}>
