@@ -5,6 +5,8 @@ html, body {
   width: 100%;
   padding: 0;
   margin: 0;
+  font: 14px/1.3 Roboto,'Helvetica Neue',arial,helvetica,sans-serif;
   overflow: hidden;
   overscroll-behavior: none;
+  contain: strict;
 }
