@@ -4,7 +4,7 @@ import * as style from './style.scss';
 import Output from '../output';
 import Options from '../options';
 
-// import { Encoder } from '../../lib/codec-wrappers/codec';
+import { Encoder } from '../../lib/codec-wrappers/codec';
 import { MozJpegEncoder } from '../../lib/codec-wrappers/mozjpeg-enc';
 
 export type ImageType = 'original' | 'jpeg';
@@ -12,7 +12,7 @@ export type ImageType = 'original' | 'jpeg';
 export type CodecOptions = any;
 
 type Encoders = {
-  [type: string]: any  // @todo Encoder
+  [type: string]: new () => Encoder
 };
 
 const EncoderNames = {
