@@ -18,7 +18,7 @@ type Encoders = {
 const EncoderNames = {
   original: 'Original Image',
   jpeg: (options: CodecOptions) => `JPEG ${options.quality || ''}`
-}
+};
 
 const AllEncoders: Encoders = {
   jpeg: MozJpegEncoder
@@ -68,7 +68,7 @@ export default class App extends Component<Props, State> {
 
   getEncoderName(type: ImageType, options: CodecOptions) {
     const name = EncoderNames[type];
-    if (typeof name==='function') return name(options);
+    if (typeof name === 'function') return name(options);
     return name;
   }
 
@@ -130,12 +130,12 @@ export default class App extends Component<Props, State> {
       this.updateCompressedImage(sourceData, leftType, leftOptions),
       this.updateCompressedImage(sourceData, rightType, rightOptions)
     ]);
-    if (this.compressCounter!==id) return;
+    if (this.compressCounter !== id) return;
     this.setState({ leftImg, rightImg, loading: false });
   }
 
-  async updateCompressedImage(sourceData: ImageData, type: ImageType, options: CodecOptions, retries=0) {
-    if (type==='original') {
+  async updateCompressedImage(sourceData: ImageData, type: ImageType, options: CodecOptions, retries= 0) {
+    if (type === 'original') {
       return this.state.sourceImg;
     }
     // @todo reuse here crashes
@@ -148,14 +148,14 @@ export default class App extends Component<Props, State> {
     //   return;
     // }
     const encoder = new AllEncoders[type]();
-  try {
+    try {
       const compressedData = await encoder.encode(sourceData, options);
-      const blob = new Blob([compressedData], {type: 'image/jpeg'});
+      const blob = new Blob([compressedData], { type: 'image/jpeg' });
       return await createImageBitmap(blob);
     } catch (err) {
       // console.log(`failed to encode ${type} (retries: ${retries}): ${err}`);
-      if (retries<5) {
-        await this.updateCompressedImage(sourceData, type, options, retries+1);
+      if (retries < 5) {
+        await this.updateCompressedImage(sourceData, type, options, retries + 1);
       }
     }
   }
@@ -189,9 +189,8 @@ export default class App extends Component<Props, State> {
           onTypeChange={this.setRightType}
           onOptionsChange={this.setRightOptions}
         />
-        {loading && <span style={{ position:'fixed', top:0, left:0 }}>Loading...</span>}
+        {loading && <span style={{ position: 'fixed', top: 0, left: 0 }}>Loading...</span>}
       </div>
     );
   }
 }
-
