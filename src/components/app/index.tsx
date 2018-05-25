@@ -4,22 +4,47 @@ import * as style from './style.scss';
 import Output from '../output';
 import Options from '../options';
 
-import {MozJpegEncoder} from '../../lib/codec-wrappers/mozjpeg-enc';
+// import { Encoder } from '../../lib/codec-wrappers/codec';
+import { MozJpegEncoder } from '../../lib/codec-wrappers/mozjpeg-enc';
+
+export type ImageType = 'original' | 'jpeg';
+
+export type CodecOptions = any;
+
+type Encoders = {
+  [type: string]: any  // @todo Encoder
+};
+
+const EncoderNames = {
+  original: 'Original Image',
+  jpeg: (options: CodecOptions) => `JPEG ${options.quality || ''}`
+}
+
+const AllEncoders: Encoders = {
+  jpeg: MozJpegEncoder
+};
 
 type Props = {};
 
 type State = {
   sourceImg?: ImageBitmap,
   sourceData?: ImageData,
-  img?: ImageBitmap,
+  leftImg?: ImageBitmap,
+  rightImg?: ImageBitmap,
   loading: boolean
-  options: any
+  leftType: ImageType,
+  rightType: ImageType,
+  leftOptions: CodecOptions,
+  rightOptions: CodecOptions
 };
 
 export default class App extends Component<Props, State> {
   state: State = {
     loading: false,
-    options: {}
+    leftType: 'original',
+    rightType: 'jpeg',
+    leftOptions: {},
+    rightOptions: {}
   };
 
   optionsUpdateTimer?: NodeJS.Timer | number | null;
@@ -28,9 +53,7 @@ export default class App extends Component<Props, State> {
 
   retries = 0;
 
-  encoders = {
-    jpeg: new MozJpegEncoder()
-  };
+  encoders: Encoders = {};
 
   constructor() {
     super();
@@ -43,20 +66,46 @@ export default class App extends Component<Props, State> {
     }
   }
 
+  getEncoderName(type: ImageType, options: CodecOptions) {
+    const name = EncoderNames[type];
+    if (typeof name==='function') return name(options);
+    return name;
+  }
+
   @bind
-  setOptions(options: any) {
-    this.setState({ options });
+  setLeftType(leftType: ImageType) {
+    this.setState({ leftType, leftOptions: {} });
+    this.optionsUpdated();
+  }
+
+  @bind
+  setRightType(rightType: ImageType) {
+    this.setState({ rightType, rightOptions: {} });
+    this.optionsUpdated();
+  }
+
+  @bind
+  setLeftOptions(leftOptions: any) {
+    this.setState({ leftOptions });
+    this.optionsUpdated();
+  }
+
+  @bind
+  setRightOptions(rightOptions: any) {
+    this.setState({ rightOptions });
+    this.optionsUpdated();
+  }
+
+  optionsUpdated() {
     if (!this.optionsUpdateTimer) {
-      this.optionsUpdateTimer = setTimeout(this.optionsUpdated, 500);
+      this.optionsUpdateTimer = setTimeout(this.commitOptionsUpdated, 500);
     }
   }
 
   @bind
-  optionsUpdated() {
+  commitOptionsUpdated() {
     this.optionsUpdateTimer = null;
-    if (this.state.sourceData) {
-      this.updateCompressedImage(this.state.sourceData);
-    }
+    this.updateImages();
   }
 
   @bind
@@ -65,43 +114,82 @@ export default class App extends Component<Props, State> {
     const fileInput = event.target as HTMLInputElement;
     if (!fileInput.files || !fileInput.files[0]) return;
     // TODO: handle decode error
-    const bitmap = await createImageBitmap(fileInput.files[0]);
+    const sourceImg = await createImageBitmap(fileInput.files[0]);
     // compute the corresponding ImageData once since it only changes when the file changes:
-    const sourceData = await bitmapToImageData(bitmap);
-    this.setState({ sourceImg: bitmap, sourceData, loading: false });
-    this.updateCompressedImage(sourceData);
+    const sourceData = await bitmapToImageData(sourceImg);
+    this.setState({ sourceImg, sourceData, loading: false });
+    this.updateImages();
   }
 
-  async updateCompressedImage(sourceData: ImageData) {
+  async updateImages() {
+    const { sourceData, leftType, rightType, leftOptions, rightOptions } = this.state;
+    if (!sourceData) return;
     const id = ++this.compressCounter;
     this.setState({ loading: true });
-    try {
-      const compressedData = await this.encoders.jpeg.encode(sourceData, this.state.options);
+    const [leftImg, rightImg] = await Promise.all([
+      this.updateCompressedImage(sourceData, leftType, leftOptions),
+      this.updateCompressedImage(sourceData, rightType, rightOptions)
+    ]);
+    if (this.compressCounter!==id) return;
+    this.setState({ leftImg, rightImg, loading: false });
+  }
+
+  async updateCompressedImage(sourceData: ImageData, type: ImageType, options: CodecOptions, retries=0) {
+    if (type==='original') {
+      return this.state.sourceImg;
+    }
+    // @todo reuse here crashes
+    // let encoder = this.encoders[type];
+    // if (!encoder) {
+    //   encoder = this.encoders[type] = new AllEncoders[type]();
+    // }
+    // if (!encoder) {
+    //   console.error(`Unknown encoder: ${type}`);
+    //   return;
+    // }
+    const encoder = new AllEncoders[type]();
+  try {
+      const compressedData = await encoder.encode(sourceData, options);
       const blob = new Blob([compressedData], {type: 'image/jpeg'});
-      const compressedImage = await createImageBitmap(blob);
-      // if another compression started, ignore this one
-      if (this.compressCounter!==id) return;
-      this.retries = 0;
-      this.setState({ img: compressedImage, loading: false });
+      return await createImageBitmap(blob);
     } catch (err) {
-      if (this.compressCounter===id && ++this.retries<10) {
-        this.updateCompressedImage(sourceData);
+      // console.log(`failed to encode ${type} (retries: ${retries}): ${err}`);
+      if (retries<5) {
+        await this.updateCompressedImage(sourceData, type, options, retries+1);
       }
     }
   }
 
-  render({ }: Props, { loading, options, sourceImg, img }: State) {
+  render({ }: Props, { loading, leftType, leftOptions, rightType, rightOptions, leftImg, rightImg }: State) {
     return (
       <div id="app" class={style.app}>
-        {sourceImg && img ? (
-          <Output sourceImg={sourceImg} img={img} />
+        {leftImg && rightImg ? (
+          <Output leftImg={leftImg} rightImg={rightImg} />
         ) : (
-          <div>
+          <div class={style.welcome}>
             <h1>Select an image</h1>
             <input type="file" onChange={this.onFileChange} />
           </div>
         )}
-        <Options options={options} onOptionsChange={this.setOptions} />
+        <span class={style.leftLabel}>{this.getEncoderName(leftType, leftOptions)}</span>
+        <span class={style.rightLabel}>{this.getEncoderName(rightType, rightOptions)}</span>
+        <Options
+          class={style.leftOptions}
+          name="Left"
+          type={leftType}
+          options={leftOptions}
+          onTypeChange={this.setLeftType}
+          onOptionsChange={this.setLeftOptions}
+        />
+        <Options
+          class={style.rightOptions}
+          name="Right"
+          type={rightType}
+          options={rightOptions}
+          onTypeChange={this.setRightType}
+          onOptionsChange={this.setRightOptions}
+        />
+        {loading && <span style={{ position:'fixed', top:0, left:0 }}>Loading...</span>}
       </div>
     );
   }
