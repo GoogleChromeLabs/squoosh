@@ -3,6 +3,10 @@
 - Source: <https://github.com/webmproject/libwebp>
 - Version: v0.6.1
 
+## Dependencies
+
+- Docker
+
 ## Example
 
 See `example.html`
