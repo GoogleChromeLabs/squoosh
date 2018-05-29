@@ -9,7 +9,7 @@
     "start": "webpack serve --host 0.0.0.0 --hot",
     "build": "webpack -p",
     "lint": "eslint src",
-    "test": "npm run build && mocha -R spec"
+    "test": "npm run build && mocha -R spec && karma start"
   },
   "eslintConfig": {
     "extends": [
@@ -32,6 +32,9 @@
     "build/*"
   ],
   "devDependencies": {
+    "@types/chai": "^4.1.3",
+    "@types/karma": "^1.7.3",
+    "@types/mocha": "^5.2.0",
     "@types/node": "^9.4.7",
     "@types/webassembly-js-api": "0.0.1",
     "babel-loader": "^7.1.4",
@@ -62,9 +65,15 @@
     "file-loader": "^1.1.11",
     "html-webpack-plugin": "^3.0.6",
     "if-env": "^1.0.4",
+    "karma": "^2.0.2",
+    "karma-babel-preprocessor": "^7.0.0",
+    "karma-chai": "^0.1.0",
+    "karma-chrome-launcher": "^2.2.0",
+    "karma-mocha": "^1.3.0",
+    "karma-typescript": "^3.0.12",
     "loader-utils": "^1.1.0",
     "mini-css-extract-plugin": "^0.3.0",
-    "mocha": "^5.1.1",
+    "mocha": "^5.2.0",
     "node-sass": "^4.7.2",
     "optimize-css-assets-webpack-plugin": "^4.0.0",
     "prettier": "^1.12.1",
