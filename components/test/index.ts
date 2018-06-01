@@ -9,7 +9,14 @@ import '../MultiPanel/index';
 
 document.body.innerHTML = `
   <h1>Multi panel</h1>
-  <multi-panel>TODO</multi-panel>
+  <multi-panel>
+    <div>Heading 1</div>
+    <div>panel content 1 panel content 1 panel content 1</div>
+    <div>Heading 2</div>
+    <div>panel content 2 panel content 2 panel content 2</div>
+    <div>Heading 3</div>
+    <div>panel content 3 panel content 3 panel content 3</div>
+  </multi-panel>
   <h1>Side by side</h1>
   <two-up legacy-clip-compat>
     <pinch-zoom>
