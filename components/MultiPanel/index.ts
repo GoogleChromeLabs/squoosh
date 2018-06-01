@@ -64,6 +64,7 @@ export default class MultiPanel extends HTMLElement {
 
       case 'Enter':
       case ' ':
+      case 'Spacebar':
         this._expand(this._getClosestHeading(document.activeElement));
         break;
 
