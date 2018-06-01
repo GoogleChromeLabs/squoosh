@@ -107,7 +107,6 @@ export default class MultiPanel extends HTMLElement {
   // children of multi-panel should always in even nuber (heading/content pair)
   // if children are odd numbers, add a div at the end to prevent potential error.
   _childrenChange () {
-    console.log('hihihihihi')
     if (this.children.length % 2 !== 0) {
       console.error('detected odd number of elements inside multi-panel, please make sure you have heading/content pair')
     }
