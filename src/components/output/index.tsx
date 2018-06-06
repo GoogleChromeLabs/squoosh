@@ -1,6 +1,5 @@
 import { h, Component } from 'preact';
 import PinchZoom from './custom-els/PinchZoom';
-import './custom-els/PinchZoom';
 import './custom-els/TwoUp';
 import * as style from './style.scss';
 import { bind } from '../../lib/util';

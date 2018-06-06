@@ -1,4 +1,4 @@
-@mixin fill {
+%fill {
   position: absolute;
   left: 0;
   top: 0;
@@ -9,10 +9,14 @@
 }
 
 .output {
-  @include fill;
+  @extend %fill;
 
   > two-up {
-    @include fill;
+    @extend %fill;
+
+    > pinch-zoom {
+      @extend %fill;
+    }
   }
 }
 

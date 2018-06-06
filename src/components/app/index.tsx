@@ -134,7 +134,7 @@ export default class App extends Component<Props, State> {
     this.setState({ leftImg, rightImg, loading: false });
   }
 
-  async updateCompressedImage(sourceData: ImageData, type: ImageType, options: CodecOptions, retries= 0) {
+  async updateCompressedImage(sourceData: ImageData, type: ImageType, options: CodecOptions, retries = 0) {
     if (type === 'original') {
       return this.state.sourceImg;
     }
@@ -166,11 +166,11 @@ export default class App extends Component<Props, State> {
         {leftImg && rightImg ? (
           <Output leftImg={leftImg} rightImg={rightImg} />
         ) : (
-          <div class={style.welcome}>
-            <h1>Select an image</h1>
-            <input type="file" onChange={this.onFileChange} />
-          </div>
-        )}
+            <div class={style.welcome}>
+              <h1>Select an image</h1>
+              <input type="file" onChange={this.onFileChange} />
+            </div>
+          )}
         <span class={style.leftLabel}>{this.getEncoderName(leftType, leftOptions)}</span>
         <span class={style.rightLabel}>{this.getEncoderName(rightType, rightOptions)}</span>
         <Options

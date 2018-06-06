@@ -8,7 +8,7 @@
     "build:codecs": "npm run build:mozjpeg_enc",
     "start": "webpack serve --host 0.0.0.0 --hot",
     "build": "webpack -p",
-    "lint": "eslint src"
+    "lint": "tslint --project . && eslint src"
   },
   "eslintConfig": {
     "extends": [
