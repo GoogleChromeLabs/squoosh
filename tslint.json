@@ -7,6 +7,7 @@
     "quotemark": [true, "single", "jsx-double", "avoid-escape"],
     "no-use-before-declare": false,
     "no-floating-promises": false,
+    "no-duplicate-imports": false,
     "space-before-function-paren": [true, false],
     "jsx-boolean-value": [true, "never"],
     "jsx-no-multiline-js": false,
