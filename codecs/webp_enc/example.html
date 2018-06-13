@@ -38,7 +38,7 @@
     api.free_result(resultPointer);
     api.destroy_buffer(p);
 
-    const blob = new Blob([result], {type: 'image/jpeg'});
+    const blob = new Blob([result], {type: 'image/webp'});
     const blobURL = URL.createObjectURL(blob);
     const img = document.createElement('img');
     img.src = blobURL;
