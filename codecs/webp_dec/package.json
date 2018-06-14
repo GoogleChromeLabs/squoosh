@@ -5,7 +5,7 @@
     "build": "docker run --rm -v $(pwd):/src trzeci/emscripten emcc -O3 -s WASM=1 -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"cwrap\"]' -s ALLOW_MEMORY_GROWTH=1 -s MODULARIZE=1 -s 'EXPORT_NAME=\"webp_dec\"' -I node_modules/libwebp -o ./webp_dec.js webp_dec.c node_modules/libwebp/src/{dec,dsp,demux,enc,mux,utils}/*.c"
   },
   "napa": {
-    "libwebp": "webmproject/libwebp#v0.6.1"
+    "libwebp": "webmproject/libwebp#v1.0.0"
   },
   "devDependencies": {
     "napa": "^3.0.0"
