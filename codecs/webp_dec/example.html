@@ -19,6 +19,7 @@
       get_result_width: Module.cwrap('get_result_width', 'number', []),
       get_result_height: Module.cwrap('get_result_height', 'number', []),
     };
+    console.log('Version:', api.version().toString(16));
     const image = await loadFile('../example.webp');
     const p = api.create_buffer(image.byteLength);
     Module.HEAP8.set(new Uint8Array(image), p);
