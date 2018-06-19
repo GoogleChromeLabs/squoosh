@@ -46,7 +46,7 @@ export default class App extends Component<Props, State> {
     loading: false,
     images: [
       { type: 'original', options: {}, loading: false, counter: 0 },
-      { type: 'MozJpeg', options: {}, loading: false, counter: 0 }
+      { type: 'MozJpeg', options: { quality: 7 }, loading: false, counter: 0 }
     ]
   };
 
