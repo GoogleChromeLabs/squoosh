@@ -108,11 +108,13 @@ export default class App extends Component<Props, State> {
     const { sourceData, images } = this.state;
     if (!sourceData) return;
     let image = images[index];
+    // Each time we trigger an async encode, the ID changes.
     const id = ++image.counter;
     image.loading = true;
     this.setState({ });
     let result = await this.updateCompressedImage(sourceData, image.type, image.options);
     image = this.state.images[index];
+    // If another encode has been intiated since we started, ignore this one.
     if (image.counter !== id) return;
     image.data = result;
     image.loading = false;
