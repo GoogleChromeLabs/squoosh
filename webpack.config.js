@@ -33,7 +33,8 @@ module.exports = function (_, env) {
       filename: isProd ? '[name].[chunkhash:5].js' : '[name].js',
       chunkFilename: '[name].chunk.[chunkhash:5].js',
       path: path.join(__dirname, 'build'),
-      publicPath: '/'
+      publicPath: '/',
+      globalObject: 'self'
     },
     resolve: {
       extensions: ['.ts', '.tsx', '.js', '.jsx', '.scss', '.css'],
@@ -96,6 +97,10 @@ module.exports = function (_, env) {
               }
             }
           ]
+        },
+        {
+          test: /\.worker.[tj]sx?$/,
+          loader: 'comlink-loader'
         },
         {
           test: /\.tsx?$/,
