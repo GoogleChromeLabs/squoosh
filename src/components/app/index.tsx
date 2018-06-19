@@ -5,22 +5,18 @@ import Output from '../output';
 import Options from '../options';
 
 import { Encoder } from '../../lib/codec-wrappers/codec';
-import { MozJpegEncoder } from '../../lib/codec-wrappers/mozjpeg-enc';
+import MozJpegEncoder from '../../lib/codec-wrappers/mozjpeg-enc.worker';
 
 export type ImageType = 'original' | 'jpeg';
 
 export type CodecOptions = any;
 
-type Encoders = {
-  [type: string]: new () => Encoder
-};
-
-const EncoderNames = {
+const ENCODER_NAMES = {
   original: 'Original Image',
-  jpeg: (options: CodecOptions) => `JPEG ${options.quality || ''}`
+  jpeg: 'JPEG'
 };
 
-const AllEncoders: Encoders = {
+const ENCODERS = {
   jpeg: MozJpegEncoder
 };
 
@@ -48,12 +44,6 @@ export default class App extends Component<Props, State> {
   };
 
   optionsUpdateTimer?: NodeJS.Timer | number | null;
-
-  compressCounter = 0;
-
-  retries = 0;
-
-  encoders: Encoders = {};
 
   constructor() {
     super();
@@ -134,30 +124,23 @@ export default class App extends Component<Props, State> {
     this.setState({ leftImg, rightImg, loading: false });
   }
 
-  async updateCompressedImage(sourceData: ImageData, type: ImageType, options: CodecOptions, retries = 0) {
-    if (type === 'original') {
-      return this.state.sourceImg;
-    }
-    // @todo reuse here crashes
-    // let encoder = this.encoders[type];
-    // if (!encoder) {
-    //   encoder = this.encoders[type] = new AllEncoders[type]();
-    // }
-    // if (!encoder) {
-    //   console.error(`Unknown encoder: ${type}`);
-    //   return;
-    // }
-    const encoder = new AllEncoders[type]();
+  async updateCompressedImage(sourceData: ImageData, type: ImageType, options: CodecOptions) {
     try {
+      const encoder = await new ENCODERS[type]() as Encoder;
       const compressedData = await encoder.encode(sourceData, options);
-      const blob = new Blob([compressedData], { type: 'image/jpeg' });
-      return await createImageBitmap(blob);
+      let imageData;
+      if (compressedData instanceof ArrayBuffer) {
+        imageData = new Blob([compressedData], { type: ENCODERS[type].mimeType || '' });
+      } else {
+        imageData = compressedData;
+      }
+      const result = await createImageBitmap(imageData);
+      return result;
     } catch (err) {
-      // console.log(`failed to encode ${type} (retries: ${retries}): ${err}`);
-      if (retries < 5) {
-        await this.updateCompressedImage(sourceData, type, options, retries + 1);
+      console.error(`Encoding error (type=${type}): ${err}`);
       }
     }
+
   }
 
   render({ }: Props, { loading, leftType, leftOptions, rightType, rightOptions, leftImg, rightImg }: State) {

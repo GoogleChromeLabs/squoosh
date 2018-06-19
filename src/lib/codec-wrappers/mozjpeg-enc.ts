@@ -1,4 +1,4 @@
-import {Encoder} from './codec';
+import { Encoder } from './codec';
 
 import mozjpeg_enc from '../../../codecs/mozjpeg_enc/mozjpeg_enc';
 // Using require() so TypeScript doesn’t complain about this not being a module.
@@ -19,9 +19,12 @@ type EncodeOptions = {
   quality?: number
 };
 
-export class MozJpegEncoder implements Encoder {
+export default class MozJpegEncoder implements Encoder {
+  static mimeType = 'image/jpeg';
+
   private emscriptenModule: Promise<EmscriptenWasm.Module>;
   private api: Promise<ModuleAPI>;
+
   constructor() {
     this.emscriptenModule = new Promise(resolve => {
       const m = mozjpeg_enc({
@@ -29,7 +32,7 @@ export class MozJpegEncoder implements Encoder {
         noInitialRun: false,
         locateFile(url: string): string {
           // Redirect the request for the wasm binary to whatever webpack gave us.
-          if(url.endsWith('.wasm')) {
+          if (url.endsWith('.wasm')) {
             return wasmBinaryUrl;
           }
           return url;
@@ -56,7 +59,7 @@ export class MozJpegEncoder implements Encoder {
         encode: m.cwrap('encode', '', ['number', 'number', 'number', 'number']),
         free_result: m.cwrap('free_result', '', []),
         get_result_pointer: m.cwrap('get_result_pointer', 'number', []),
-        get_result_size: m.cwrap('get_result_size', 'number', []),
+        get_result_size: m.cwrap('get_result_size', 'number', [])
       };
     })();
   }
@@ -67,7 +70,7 @@ export class MozJpegEncoder implements Encoder {
 
     const p = api.create_buffer(data.width, data.height);
     m.HEAP8.set(data.data, p);
-    api.encode(p, data.width, data.height, options.quality!=null ? options.quality : 7);
+    api.encode(p, data.width, data.height, options.quality != null ? options.quality : 7);
     const resultPointer = api.get_result_pointer();
     const resultSize = api.get_result_size();
     const resultView = new Uint8Array(m.HEAP8.buffer, resultPointer, resultSize);

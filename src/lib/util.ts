@@ -37,9 +37,8 @@ export async function bitmapToImageData(bitmap: ImageBitmap): Promise<ImageData>
   // Draw image onto canvas
   const ctx = canvas.getContext('2d');
   if (!ctx) {
-    throw new Error("Could not create canvas context");
+    throw new Error('Could not create canvas context');
   }
   ctx.drawImage(bitmap, 0, 0);
   return ctx.getImageData(0, 0, bitmap.width, bitmap.height);
 }
-
