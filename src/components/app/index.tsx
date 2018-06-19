@@ -8,18 +8,18 @@ import { Encoder } from '../../lib/codec-wrappers/codec';
 import IdentityEncoder from '../../lib/codec-wrappers/identity-enc';
 import MozJpegEncoder from '../../lib/codec-wrappers/mozjpeg-enc.worker';
 
-export type ImageType = 'original' | 'jpeg';
+export type ImageType = 'original' | 'MozJpeg';
 
 export type CodecOptions = any;
 
 const ENCODER_NAMES = {
   original: 'Original Image',
-  jpeg: 'JPEG'
+  MozJpeg: 'JPEG'
 };
 
 const ENCODERS = {
   original: IdentityEncoder,
-  jpeg: MozJpegEncoder
+  MozJpeg: MozJpegEncoder
 };
 
 type Image = {
@@ -46,7 +46,7 @@ export default class App extends Component<Props, State> {
     loading: false,
     images: [
       { type: 'original', options: {}, loading: false, counter: 0 },
-      { type: 'jpeg', options: {}, loading: false, counter: 0 }
+      { type: 'MozJpeg', options: {}, loading: false, counter: 0 }
     ]
   };
 
