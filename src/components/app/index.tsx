@@ -83,11 +83,11 @@ export default class App extends Component<Props, State> {
     for (let i = 0; i < images.length; i++) {
       if (sourceData !== prevState.sourceData || images[i] !== prevState.images[i]) {
         this.updateImage(i);
-  }
+      }
     }
     if (sourceImg !== prevState.sourceImg && prevState.sourceImg) {
       prevState.sourceImg.close();
-  }
+    }
   }
 
   @bind
@@ -99,7 +99,7 @@ export default class App extends Component<Props, State> {
     try {
       const sourceImg = await createImageBitmap(sourceFile);
     // compute the corresponding ImageData once since it only changes when the file changes:
-    const sourceData = await bitmapToImageData(sourceImg);
+      const sourceData = await bitmapToImageData(sourceImg);
       this.setState({ sourceFile, sourceImg, sourceData, error: undefined, loading: false });
     } catch (err) {
       this.setState({ error: 'IMAGE_INVALID', loading: false });
@@ -135,13 +135,13 @@ export default class App extends Component<Props, State> {
       return result;
     } catch (err) {
       console.error(`Encoding error (type=${type}): ${err}`);
-      }
     }
+  }
 
   render({ }: Props, { loading, error, images }: State) {
     for (let image of images) {
       if (image.loading) loading = true;
-  }
+    }
     const leftImg = images[0].data;
     const rightImg = images[1].data;
 
