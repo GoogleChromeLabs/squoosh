@@ -63,6 +63,9 @@
   },
   "dependencies": {
     "classnames": "^2.2.5",
+    "comlink": "^3.0.3",
+    "comlink-loader": "^1.0.0",
+    "immunize": "git+https://gist.github.com/9ee47f9a6122669b9a1b77587af04ff8.git",
     "material-components-web": "^0.32.0",
     "material-radial-progress": "git+https://gist.github.com/02134901c77c5309924bfcf8b4435ebe.git",
     "preact": "^8.2.7",
