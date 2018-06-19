@@ -50,8 +50,6 @@ export default class App extends Component<Props, State> {
     ]
   };
 
-  optionsUpdateTimer?: NodeJS.Timer | number | null;
-
   constructor() {
     super();
     // In development, persist application state across hot reloads:
@@ -98,7 +96,7 @@ export default class App extends Component<Props, State> {
     this.setState({ loading: true });
     try {
       const sourceImg = await createImageBitmap(sourceFile);
-    // compute the corresponding ImageData once since it only changes when the file changes:
+      // compute the corresponding ImageData once since it only changes when the file changes:
       const sourceData = await bitmapToImageData(sourceImg);
       this.setState({ sourceFile, sourceImg, sourceData, error: undefined, loading: false });
     } catch (err) {
@@ -127,12 +125,13 @@ export default class App extends Component<Props, State> {
       const compressedData = await encoder.encode(sourceData, options);
       let imageData;
       if (compressedData instanceof ArrayBuffer) {
-        imageData = new Blob([compressedData], { type: ENCODERS[type].mimeType || '' });
+        imageData = new Blob([compressedData], {
+          type: ENCODERS[type].mimeType || ''
+        });
       } else {
         imageData = compressedData;
       }
-      const result = await createImageBitmap(imageData);
-      return result;
+      return await createImageBitmap(imageData);
     } catch (err) {
       console.error(`Encoding error (type=${type}): ${err}`);
     }
@@ -150,23 +149,23 @@ export default class App extends Component<Props, State> {
         {(leftImg && rightImg) ? (
           <Output leftImg={leftImg} rightImg={rightImg} />
         ) : (
-            <div class={style.welcome}>
-              <h1>Select an image</h1>
-              <input type="file" onChange={this.onFileChange} />
-            </div>
-          )}
+          <div class={style.welcome}>
+            <h1>Select an image</h1>
+            <input type="file" onChange={this.onFileChange} />
+          </div>
+        )}
         {images.map((image, index: number) => (
           <span class={index ? style.rightLabel : style.leftLabel}>{ENCODER_NAMES[image.type]}</span>
         ))}
         {images.map((image, index: number) => (
-        <Options
+          <Options
             class={index ? style.rightOptions : style.leftOptions}
             name={index ? 'Right' : 'Left'}
             type={image.type}
             options={image.options}
             onTypeChange={this.setImageTypeAndOptions.bind(this, index)}
             onOptionsChange={this.setImageTypeAndOptions.bind(this, index, null)}
-        />
+          />
         ))}
         {loading && <span style={{ position: 'fixed', top: 0, left: 0 }}>Loading...</span>}
         {error && <span style={{ position: 'fixed', top: 0, left: 0 }}>Error: {error}</span>}
