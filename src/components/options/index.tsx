@@ -2,6 +2,7 @@ import { h, Component } from 'preact';
 import * as style from './style.scss';
 import { bind } from '../../lib/util';
 import { ImageType, CodecOptions } from '../app';
+import MozJpegEncoderOptions from '../../codecs/mozjpeg/options';
 
 const CodecConfigurations: {
   [type: string]: (props: ChildProps) => JSX.Element | null
@@ -9,28 +10,13 @@ const CodecConfigurations: {
   original: () => null
 };
 
+CodecConfigurations.MozJpeg = MozJpegEncoderOptions;
+
 type ChildProps = {
   options: CodecOptions,
   updateOption(e: Event): void,
   setOption(key: string, value: any): void
 };
-
-CodecConfigurations.jpeg = ({ options, updateOption }: ChildProps) => (
-  <div>
-    <label>
-      Quality:
-      <input
-        name="quality"
-        type="range"
-        min="1"
-        max="100"
-        step="1"
-        value={options.quality}
-        onInput={updateOption}
-      />
-    </label>
-  </div>
-);
 
 type Props = {
   name: string,
@@ -85,7 +71,7 @@ export default class Options extends Component<Props, State> {
           Mode:
           <select value={type} onChange={this.setType}>
             <option value="original">Original</option>
-            <option value="jpeg">JPEG</option>
+            <option value="MozJpeg">JPEG</option>
           </select>
         </label>
         {CodecOptionComponent && (

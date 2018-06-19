@@ -1,4 +1,4 @@
-import { Encoder } from './codec';
+import { Encoder } from '../codec';
 
 type EncodeOptions = {};
 

@@ -1,4 +1,4 @@
-import { Encoder } from './codec';
+import { Encoder } from '../codec';
 
 import mozjpeg_enc from '../../../codecs/mozjpeg_enc/mozjpeg_enc';
 // Using require() so TypeScript doesn’t complain about this not being a module.

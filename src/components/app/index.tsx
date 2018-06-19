@@ -4,9 +4,9 @@ import * as style from './style.scss';
 import Output from '../output';
 import Options from '../options';
 
-import { Encoder } from '../../lib/codec-wrappers/codec';
-import IdentityEncoder from '../../lib/codec-wrappers/identity-enc';
-import MozJpegEncoder from '../../lib/codec-wrappers/mozjpeg-enc.worker';
+import { Encoder } from '../../codecs/codec';
+import IdentityEncoder from '../../codecs/identity/encoder';
+import MozJpegEncoder from '../../codecs/mozjpeg/encoder.worker';
 
 export type ImageType = 'original' | 'MozJpeg';
 
