@@ -13,7 +13,7 @@ type Props = {
 
 type State = {};
 
-export default class App extends Component<Props, State> {
+export default class Output extends Component<Props, State> {
   state: State = {};
   canvasLeft?: HTMLCanvasElement;
   canvasRight?: HTMLCanvasElement;
@@ -23,7 +23,7 @@ export default class App extends Component<Props, State> {
 
   updateCanvas(canvas: HTMLCanvasElement, img?: ImageBitmap) {
     let ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) throw Error('Canvas not initialized');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     if (img) ctx.drawImage(img, 0, 0);
   }
