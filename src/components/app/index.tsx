@@ -5,6 +5,7 @@ import Output from '../output';
 import Options from '../options';
 
 import { Encoder } from '../../lib/codec-wrappers/codec';
+import IdentityEncoder from '../../lib/codec-wrappers/identity-enc';
 import MozJpegEncoder from '../../lib/codec-wrappers/mozjpeg-enc.worker';
 
 export type ImageType = 'original' | 'jpeg';
@@ -17,6 +18,7 @@ const ENCODER_NAMES = {
 };
 
 const ENCODERS = {
+  original: IdentityEncoder,
   jpeg: MozJpegEncoder
 };
 
