@@ -65,12 +65,16 @@ export default class MozJpegEncoder implements Encoder {
   }
 
   async encode(data: ImageData, options: EncodeOptions): Promise<ArrayBuffer> {
+    if (!options.quality) {
+      throw Error('MozJpeg: options.quality is required');
+    }
+
     const m = await this.emscriptenModule;
     const api = await this.api;
 
     const p = api.create_buffer(data.width, data.height);
     m.HEAP8.set(data.data, p);
-    api.encode(p, data.width, data.height, options.quality != null ? options.quality : 7);
+    api.encode(p, data.width, data.height, options.quality);
     const resultPointer = api.get_result_pointer();
     const resultSize = api.get_result_size();
     const resultView = new Uint8Array(m.HEAP8.buffer, resultPointer, resultSize);
