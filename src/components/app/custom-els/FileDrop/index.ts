@@ -1,14 +1,12 @@
 import './styles.css';
 
-
 /*
   <file-drop
     accepts='image/*'
+    onFileDrop='javascript: (ev) => console.log(ev.detail);'
   >
-  </file-drop>
-
-  Exposes: onDrop event.
-  
+   [everything in here is a drop target.]
+  </file-drop>  
 */
 export default class FileDrop extends HTMLElement {
 
