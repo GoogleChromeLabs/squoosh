@@ -3,6 +3,12 @@
 - Source: <https://github.com/mozilla/mozjpeg>
 - Version: v3.3.1
 
+## Dependencies
+
+- Docker
+- Automake
+- pkg-config
+
 ## Example
 
 See `example.html`
