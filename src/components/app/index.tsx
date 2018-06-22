@@ -3,6 +3,7 @@ import { bind, bitmapToImageData } from '../../lib/util';
 import * as style from './style.scss';
 import Output from '../output';
 import Options from '../options';
+import './custom-els/FileDrop';
 
 import { Encoder } from '../../codecs/codec';
 import IdentityEncoder from '../../codecs/identity/encoder';
@@ -104,6 +105,21 @@ export default class App extends Component<Props, State> {
     }
   }
 
+  @bind
+  async onFileDrop(event: CustomEvent) {
+    const sourceFile = event.detail as File;
+    if (!sourceFile) return;
+    this.setState({ loading: true });
+    try {
+      const sourceImg = await createImageBitmap(sourceFile);
+      // compute the corresponding ImageData once since it only changes when the file changes:
+      const sourceData = await bitmapToImageData(sourceImg);
+      this.setState({ sourceFile, sourceImg, sourceData, error: undefined, loading: false });
+    } catch (err) {
+      this.setState({ error: 'IMAGE_INVALID', loading: false });
+    }
+  }
+
   async updateImage(index: number) {
     const { sourceData, images } = this.state;
     if (!sourceData) return;
@@ -147,7 +163,9 @@ export default class App extends Component<Props, State> {
     const rightImg = images[1].data;
 
     return (
+      <file-drop accepts="image/*" onFileDrop={this.onFileDrop}>
       <div id="app" class={style.app}>
+        
         {(leftImg && rightImg) ? (
           <Output leftImg={leftImg} rightImg={rightImg} />
         ) : (
@@ -172,6 +190,7 @@ export default class App extends Component<Props, State> {
         {loading && <span style={{ position: 'fixed', top: 0, left: 0 }}>Loading...</span>}
         {error && <span style={{ position: 'fixed', top: 0, left: 0 }}>Error: {error}</span>}
       </div>
+      </file-drop>
     );
   }
 }

@@ -1,0 +1,7 @@
+file-drop {
+  display: block;
+  overflow: hidden;
+  touch-action: none;
+  height:100%;
+  width:100%;
+}
