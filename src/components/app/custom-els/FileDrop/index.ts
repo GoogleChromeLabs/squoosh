@@ -1,5 +1,79 @@
 import './styles.css';
 
+class DragState {
+
+  private element: FileDrop;
+  private hasDragData: boolean;
+
+  constructor(element: FileDrop) {
+    this.element = element;
+    this.hasDragData = false;
+  }
+
+  bindEvents() {
+    this.element.addEventListener('dragover', this.onDragOver.bind(this));
+    this.element.addEventListener('drop', this.onDrop.bind(this));
+    this.element.addEventListener('dragenter', this.onDragEnter.bind(this));
+  }
+
+  onDragEnter(e: DragEvent) {
+    console.log(e)
+    console.log(e.dataTransfer.items)
+    this.hasDragData = this.hasMatchingFile(e.dataTransfer.items, this.element.accepts);
+    return this.hasDragData;
+  }
+
+  onDragOver(e: DragEvent) {
+    if(!!this.hasDragData) {
+      e.preventDefault();
+      return false;
+    }
+    return true;
+  }
+
+  onDrop(e: DragEvent) {
+    console.log(e)
+    if(this.hasDragData) {
+      e.preventDefault();
+      let dragData = this.firstMatchingFile(e.dataTransfer.files, this.element.accepts);
+      
+      this.element.dispatchEvent(new CustomEvent('filedrop', { detail: dragData }));
+      this.hasDragData = false;
+    }
+  }
+
+  private convertMimeTypeToRegex(mimeType: string): string {
+    return mimeType.replace(/\*/, '[^/]+' ).replace(/\//g, '\\/');
+  }
+
+  private hasMatchingFile(list: DataTransferItemList, accept: string): boolean {
+    let mimeRegex = this.convertMimeTypeToRegex(accept);
+    let acceptsRegex = new RegExp(mimeRegex);
+
+    for(let i=0; i<list.length; i++) {
+      let item = list[i];
+      console.log(item, acceptsRegex.test(item.type))
+      if(item.kind === 'file' && acceptsRegex.test(item.type)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private firstMatchingFile(list: FileList, accept: string): File | undefined {
+    let mimeRegex = this.convertMimeTypeToRegex(accept);
+    let acceptsRegex = new RegExp(mimeRegex);
+
+    for(let i=0; i<list.length; i++) {
+      let file = list[i];
+      if(acceptsRegex.test(file.type)) {
+        return file;
+      }
+    }
+    return;
+  }
+}
+
 /*
   <file-drop
     accepts='image/*'
@@ -10,57 +84,17 @@ import './styles.css';
 */
 export default class FileDrop extends HTMLElement {
 
-  //
   private _accepts: string;
+  private _dragState: DragState;
 
   constructor() {
     super();
     this._accepts = '';
+    this._dragState = new DragState(this);
   }
 
   connectedCallback() {
-    this.addEventListener('dragstart', this.onDragStart);
-    this.addEventListener('dragover', this.onDragOver);
-    this.addEventListener('drop', this.onDrop);
-    this.addEventListener('dragenter', () => true);
-  }
-
-  private convertMimeTypeToRegex(mimeType: string) {
-    return mimeType.replace(/\*/, '[^/]+' );
-  }
-
-  private firstMatchingFile(list: FileList, accept: string) {
-    let mimeRegex = this.convertMimeTypeToRegex(accept);
-    let acceptsRegex = new RegExp(mimeRegex);
-    acceptsRegex.compile();
-
-    for(let i=0; i<list.length; i++) {
-      let file = list[i];
-      if(acceptsRegex.test(file.type)) {
-        return file;
-      }
-    }
-    return;
-  }
-
-  private onDragStart(e: DragEvent) {
-    e.preventDefault();
-    return true;
-  }
-
-  private onDragOver(e: DragEvent) {
-    e.preventDefault();
-  }
-
-  private onDrop(e: DragEvent) {
-    e.preventDefault();
-    let file = this.firstMatchingFile(e.dataTransfer.files, this._accepts);
-   
-    if(file !== undefined) {
-      e.preventDefault();
-      
-      this.dispatchEvent(new CustomEvent("filedrop", { detail: file }));
-    }
+    this._dragState.bindEvents();
   }
 
   get accepts () {
