@@ -7,8 +7,6 @@ file-drop {
 }
 
 .drop-active {
-  transition: opacity 200ms ease-in-out;
-  opicity: 0
 }
 
 .drop-valid {
