@@ -1,26 +1,48 @@
-import './styles.css';
+import * as styles from './styles.css';
 
 class DragState {
 
   private element: FileDrop;
   private hasDragData: boolean;
+  private dragNest: number;
 
   constructor(element: FileDrop) {
     this.element = element;
     this.hasDragData = false;
+    this.dragNest = 0;
   }
 
   bindEvents() {
     this.element.addEventListener('dragover', this.onDragOver.bind(this));
     this.element.addEventListener('drop', this.onDrop.bind(this));
     this.element.addEventListener('dragenter', this.onDragEnter.bind(this));
+    this.element.addEventListener('dragend', this.onDragEnd.bind(this));
+    this.element.addEventListener('dragleave', this.onDragLeave.bind(this));
   }
 
   onDragEnter(e: DragEvent) {
-    console.log(e)
-    console.log(e.dataTransfer.items)
-    this.hasDragData = this.hasMatchingFile(e.dataTransfer.items, this.element.accepts);
+    this.dragNest++;
+    if(this.hasDragData == false) {
+      this.hasDragData = this.hasMatchingFile(e.dataTransfer.items, this.element.accepts);
+      if(this.hasDragData) {
+        this.element.classList.add(styles.dropValid);
+      }
+      else {
+        this.element.classList.add(styles.dropInvalid);
+      }
+    }
     return this.hasDragData;
+  }
+
+  onDragLeave(e: DragEvent) {
+    this.dragNest--;
+    if(this.dragNest === 0) {
+      this.reset();
+    }
+  }
+
+  onDragEnd(e: DragEvent) {
+    this.reset();
   }
 
   onDragOver(e: DragEvent) {
@@ -32,14 +54,21 @@ class DragState {
   }
 
   onDrop(e: DragEvent) {
-    console.log(e)
     if(this.hasDragData) {
       e.preventDefault();
       let dragData = this.firstMatchingFile(e.dataTransfer.files, this.element.accepts);
       
       this.element.dispatchEvent(new CustomEvent('filedrop', { detail: dragData }));
-      this.hasDragData = false;
+      this.reset();
     }
+  }
+
+  private reset() {
+    this.hasDragData = false;
+    this.dragNest = 0;
+    this.element.classList.remove(styles.dropValid);
+    this.element.classList.remove(styles.dropInvalid);
+    this.element.classList.remove(styles.dropActive);
   }
 
   private convertMimeTypeToRegex(mimeType: string): string {
@@ -52,7 +81,6 @@ class DragState {
 
     for(let i=0; i<list.length; i++) {
       let item = list[i];
-      console.log(item, acceptsRegex.test(item.type))
       if(item.kind === 'file' && acceptsRegex.test(item.type)) {
         return true;
       }
@@ -78,6 +106,7 @@ class DragState {
   <file-drop
     accepts='image/*'
     onFileDrop='javascript: (ev) => console.log(ev.detail);'
+    class='drop-active drop-valid drop-invalid'
   >
    [everything in here is a drop target.]
   </file-drop>  

@@ -5,3 +5,20 @@ file-drop {
   height:100%;
   width:100%;
 }
+
+.drop-active {
+  transition: opacity 200ms ease-in-out;
+  opicity: 0
+}
+
+.drop-valid {
+  transition: opacity 200ms ease-in-out, background-color 200ms;
+  opacity: 0.5;
+  background-color:green;
+}
+
+.drop-invalid {
+  transition: opacity 200ms ease-in-out, background-color 200ms;
+  opacity: 0.5;
+  background-color:red;
+}
