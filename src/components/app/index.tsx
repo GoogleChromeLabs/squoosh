@@ -94,21 +94,17 @@ export default class App extends Component<Props, State> {
     const fileInput = event.target as HTMLInputElement;
     const sourceFile = fileInput.files && fileInput.files[0];
     if (!sourceFile) return;
-    this.setState({ loading: true });
-    try {
-      const sourceImg = await createImageBitmap(sourceFile);
-      // compute the corresponding ImageData once since it only changes when the file changes:
-      const sourceData = await bitmapToImageData(sourceImg);
-      this.setState({ sourceFile, sourceImg, sourceData, error: undefined, loading: false });
-    } catch (err) {
-      this.setState({ error: 'IMAGE_INVALID', loading: false });
-    }
+    await this.updateFile(sourceFile);
   }
 
   @bind
   async onFileDrop(event: CustomEvent) {
     const sourceFile = event.detail as File;
     if (!sourceFile) return;
+    await this.updateFile(sourceFile);
+  }
+
+  async updateFile(sourceFile: File) {
     this.setState({ loading: true });
     try {
       const sourceImg = await createImageBitmap(sourceFile);
