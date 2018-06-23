@@ -42,14 +42,18 @@ type State = {
   error?: string
 };
 
-export default class App extends Component<Props, State> {
-  state: State = {
+function initialState() : State {
+  return {
     loading: false,
     images: [
       { type: 'original', options: {}, loading: false, counter: 0 },
       { type: 'MozJpeg', options: { quality: 7 }, loading: false, counter: 0 }
     ]
   };
+}
+
+export default class App extends Component<Props, State> {
+  state: State = initialState();
 
   constructor() {
     super();
@@ -100,6 +104,8 @@ export default class App extends Component<Props, State> {
   @bind
   async onFileDrop(event: CustomEvent) {
     const sourceFile = event.detail as File;
+    this.setState(initialState());
+
     if (!sourceFile) return;
     await this.updateFile(sourceFile);
   }
