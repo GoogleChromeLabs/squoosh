@@ -18,6 +18,11 @@ const ENCODER_NAMES = {
   MozJpeg: 'JPEG'
 };
 
+const ENCODER_EXTENSION = {
+  original: '',
+  MozJpeg: 'jpeg'
+}
+
 const ENCODERS = {
   original: IdentityEncoder,
   MozJpeg: MozJpegEncoder
@@ -27,8 +32,15 @@ type Image = {
   type: ImageType,
   options: CodecOptions,
   data?: ImageBitmap,
+  dataUrl: string,
+  extension: string,
   counter: number,
   loading: boolean
+};
+
+type CompressedImage = {
+  data: ImageData | Blob;
+  type: string;
 };
 
 type Props = {};
@@ -46,8 +58,8 @@ function initialState() : State {
   return {
     loading: false,
     images: [
-      { type: 'original', options: {}, loading: false, counter: 0 },
-      { type: 'MozJpeg', options: { quality: 7 }, loading: false, counter: 0 }
+      { type: 'original', options: {}, loading: false, counter: 0, dataUrl:"", extension: '' },
+      { type: 'MozJpeg', options: { quality: 7 }, loading: false, counter: 0, dataUrl:"", extension: ENCODER_EXTENSION['MozJpeg'] }
     ]
   };
 }
@@ -85,6 +97,7 @@ export default class App extends Component<Props, State> {
     const { sourceImg, sourceData, images } = this.state;
     for (let i = 0; i < images.length; i++) {
       if (sourceData !== prevState.sourceData || images[i] !== prevState.images[i]) {
+        URL.revokeObjectURL(images[i].dataUrl);
         this.updateImage(i);
       }
     }
@@ -123,38 +136,55 @@ export default class App extends Component<Props, State> {
   }
 
   async updateImage(index: number) {
-    const { sourceData, images } = this.state;
+    const { sourceData, sourceFile, images } = this.state;
     if (!sourceData) return;
     let image = images[index];
     // Each time we trigger an async encode, the ID changes.
     const id = ++image.counter;
     image.loading = true;
     this.setState({ });
-    let result = await this.updateCompressedImage(sourceData, image.type, image.options);
+    if(image.type == 'original' && sourceFile) {
+      image.extension = sourceFile.name.split('.').pop() || "";;
+      // If we don't use this then image data is a bitmap from identity encoder.
+      image.dataUrl = URL.createObjectURL(new Blob([sourceFile]));
+    }
+    let compressedImage = await this.updateCompressedImage(sourceData, image.type, image.options);
+    let imageBitmap = await createImageBitmap(compressedImage.data);
     image = this.state.images[index];
     // If another encode has been intiated since we started, ignore this one.
     if (image.counter !== id) return;
-    image.data = result;
+    image.data = imageBitmap;
+    if(image.type != 'original') {
+      if(compressedImage.data instanceof Blob) {
+        image.dataUrl = URL.createObjectURL(compressedImage.data);
+      }
+      else{
+        image.dataUrl = URL.createObjectURL(new Blob([compressedImage.data.data]));
+      }
+    } 
     image.loading = false;
     this.setState({ });
   }
 
-  async updateCompressedImage(sourceData: ImageData, type: ImageType, options: CodecOptions) {
+  async updateCompressedImage(sourceData: ImageData, type: ImageType, options: CodecOptions): Promise<CompressedImage> {
+    let imageInfo: CompressedImage = {type: '', data: new Blob};
     try {
       const encoder = await new ENCODERS[type]() as Encoder;
       const compressedData = await encoder.encode(sourceData, options);
-      let imageData;
       if (compressedData instanceof ArrayBuffer) {
-        imageData = new Blob([compressedData], {
+        imageInfo.data = new Blob([compressedData], {
           type: ENCODERS[type].mimeType || ''
         });
-      } else {
-        imageData = compressedData;
+        imageInfo.type = ENCODERS[type].mimeType || ''
+      } 
+      else if (compressedData instanceof ImageData) {
+        imageInfo.data = compressedData;
+        imageInfo.type = ENCODERS[type].mimeType || ''
       }
-      return await createImageBitmap(imageData);
     } catch (err) {
       console.error(`Encoding error (type=${type}): ${err}`);
     }
+    return imageInfo;
   }
 
   render({ }: Props, { loading, error, images }: State) {
@@ -177,7 +207,12 @@ export default class App extends Component<Props, State> {
           </div>
         )}
         {images.map((image, index: number) => (
-          <span class={index ? style.rightLabel : style.leftLabel}>{ENCODER_NAMES[image.type]}</span>
+          <span class={index ? style.rightLabel : style.leftLabel}>
+            <span>{ENCODER_NAMES[image.type]}</span>
+            { (image.data !== undefined) ? (
+              (<a href={image.dataUrl} download={image.type +'.'+image.extension}> 🔻 </a>)
+            ) : ('')}
+          </span>
         ))}
         {images.map((image, index: number) => (
           <Options
