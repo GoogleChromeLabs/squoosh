@@ -8,28 +8,14 @@
     "build:codecs": "npm run build:mozjpeg_enc",
     "start": "webpack serve --host 0.0.0.0 --hot",
     "build": "webpack -p",
-    "lint": "eslint src"
+    "lint": "tslint -c tslint.json -t verbose 'src/**/*.{ts,js}'",
+    "lintfix": "tslint -c tslint.json -t verbose --fix 'src/**/*.{ts,js}'"
   },
-  "eslintConfig": {
-    "extends": [
-      "standard",
-      "standard-jsx"
-    ],
-    "rules": {
-      "indent": [
-        2,
-        2
-      ],
-      "semi": [
-        2,
-        "always"
-      ],
-      "prefer-const": 1
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run lint"
     }
   },
-  "eslintIgnore": [
-    "build/*"
-  ],
   "devDependencies": {
     "@types/node": "^9.4.7",
     "@types/webassembly-js-api": "0.0.1",
@@ -47,17 +33,10 @@
     "clean-webpack-plugin": "^0.1.19",
     "copy-webpack-plugin": "^4.5.1",
     "css-loader": "^0.28.11",
-    "eslint": "^4.18.2",
-    "eslint-config-standard": "^11.0.0",
-    "eslint-config-standard-jsx": "^5.0.0",
-    "eslint-plugin-import": "^2.10.0",
-    "eslint-plugin-node": "^6.0.1",
-    "eslint-plugin-promise": "^3.7.0",
-    "eslint-plugin-react": "^7.7.0",
-    "eslint-plugin-standard": "^3.0.1",
     "exports-loader": "^0.7.0",
     "file-loader": "^1.1.11",
     "html-webpack-plugin": "^3.0.6",
+    "husky": "^1.0.0-rc.9",
     "if-env": "^1.0.4",
     "loader-utils": "^1.1.0",
     "mini-css-extract-plugin": "^0.3.0",
@@ -70,7 +49,8 @@
     "source-map-loader": "^0.2.3",
     "style-loader": "^0.20.3",
     "ts-loader": "^4.0.1",
-    "tslint": "^5.9.1",
+    "tslint": "^5.10.0",
+    "tslint-config-airbnb": "^5.9.2",
     "tslint-config-semistandard": "^7.0.0",
     "tslint-react": "^3.5.1",
     "typescript": "^2.7.2",

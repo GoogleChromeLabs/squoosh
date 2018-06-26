@@ -11,6 +11,6 @@ interface Window {
 
 declare namespace JSX {
   interface IntrinsicElements {
-    "two-up": HTMLAttributes
+    'two-up': HTMLAttributes;
   }
 }

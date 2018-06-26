@@ -24,17 +24,17 @@ interface SetTransformOpts {
   allowChangeEvent?: boolean;
 }
 
-function getDistance (a: Point, b?: Point): number {
+function getDistance(a: Point, b?: Point): number {
   if (!b) return 0;
   return Math.sqrt((b.clientX - a.clientX) ** 2 + (b.clientY - a.clientY) ** 2);
 }
 
-function getMidpoint (a: Point, b?: Point): Point {
+function getMidpoint(a: Point, b?: Point): Point {
   if (!b) return a;
 
   return {
     clientX: (a.clientX + b.clientX) / 2,
-    clientY: (a.clientY + b.clientY) / 2
+    clientY: (a.clientY + b.clientY) / 2,
   };
 }
 
@@ -42,15 +42,15 @@ function getMidpoint (a: Point, b?: Point): Point {
 // Given that, better to use something everything supports.
 let cachedSvg: SVGSVGElement;
 
-function getSVG (): SVGSVGElement {
+function getSVG(): SVGSVGElement {
   return cachedSvg || (cachedSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'));
 }
 
-function createMatrix (): SVGMatrix {
+function createMatrix(): SVGMatrix {
   return getSVG().createSVGMatrix();
 }
 
-function createPoint (): SVGPoint {
+function createPoint(): SVGPoint {
   return getSVG().createSVGPoint();
 }
 
@@ -79,9 +79,9 @@ export default class PinchZoom extends HTMLElement {
         event.preventDefault();
         return true;
       },
-      move: previousPointers => {
+      move: (previousPointers) => {
         this._onPointerMove(previousPointers, pointerTracker.currentPointers);
-      }
+      },
     });
 
     this.addEventListener('wheel', event => this._onWheel(event));
@@ -109,12 +109,12 @@ export default class PinchZoom extends HTMLElement {
   setTransform (opts: SetTransformOpts = {}) {
     const {
       scale = this.scale,
-      allowChangeEvent = false
+      allowChangeEvent = false,
     } = opts;
 
     let {
       x = this.x,
-      y = this.y
+      y = this.y,
     } = opts;
 
     // If we don't have an element to position, just set the value as given.
@@ -144,7 +144,7 @@ export default class PinchZoom extends HTMLElement {
     bottomRight.y = positioningElBounds.height + topLeft.y;
 
     // Calculate the intended position of _positioningEl.
-    let matrix = createMatrix()
+    const matrix = createMatrix()
       .translate(x, y)
       .scale(scale)
       // Undo current transform
@@ -239,7 +239,7 @@ export default class PinchZoom extends HTMLElement {
     this._applyChange({
       scaleDiff,
       originX: event.clientX - thisRect.left,
-      originY: event.clientY - thisRect.top
+      originY: event.clientY - thisRect.top,
     });
   }
 
@@ -263,7 +263,7 @@ export default class PinchZoom extends HTMLElement {
     this._applyChange({
       originX, originY, scaleDiff,
       panX: newMidpoint.clientX - prevMidpoint.clientX,
-      panY: newMidpoint.clientY - prevMidpoint.clientY
+      panY: newMidpoint.clientY - prevMidpoint.clientY,
     });
   }
 
@@ -272,7 +272,7 @@ export default class PinchZoom extends HTMLElement {
     const {
       panX = 0, panY = 0,
       originX = 0, originY = 0,
-      scaleDiff = 1
+      scaleDiff = 1,
     } = opts;
 
     const matrix = createMatrix()
@@ -290,7 +290,7 @@ export default class PinchZoom extends HTMLElement {
       scale: matrix.a,
       x: matrix.e,
       y: matrix.f,
-      allowChangeEvent: true
+      allowChangeEvent: true,
     });
   }
 }
