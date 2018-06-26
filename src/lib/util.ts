@@ -42,3 +42,11 @@ export async function bitmapToImageData(bitmap: ImageBitmap): Promise<ImageData>
   ctx.drawImage(bitmap, 0, 0);
   return ctx.getImageData(0, 0, bitmap.width, bitmap.height);
 }
+
+/** Replace the contents of a canvas with the given bitmap */
+export function drawBitmapToCanvas (canvas: HTMLCanvasElement, img ?: ImageBitmap) {
+  let ctx = canvas.getContext('2d');
+  if (!ctx) throw Error('Canvas not initialized');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (img) ctx.drawImage(img, 0, 0);
+}
