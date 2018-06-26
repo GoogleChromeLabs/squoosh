@@ -8,7 +8,8 @@
     "build:codecs": "npm run build:mozjpeg_enc",
     "start": "webpack serve --host 0.0.0.0 --hot",
     "build": "webpack -p",
-    "lint": "tslint -c tslint.json 'src/**/*.{ts,js}'"
+    "lint": "tslint -c tslint.json -t verbose 'src/**/*.{ts,js}'",
+    "lintfix": "tslint -c tslint.json -t verbose --fix 'src/**/*.{ts,js}'"
   },
   "husky": {
     "hooks": {
