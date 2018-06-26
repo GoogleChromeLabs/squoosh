@@ -51,7 +51,13 @@ export default class Options extends Component<Props, State> {
   @bind
   updateOption(e: Event) {
     const el = e.currentTarget as HTMLInputElement;
-    this.setOption(el.name, /(rad|box)/i.test(el.type) ? el.checked : el.value);
+    let value;
+    if (el.type === 'radio' || el.type === 'checkbox') {
+      value = el.checked;
+    } else {
+      value = el.value;
+    }
+    this.setOption(el.name, value);
   }
 
   @bind
