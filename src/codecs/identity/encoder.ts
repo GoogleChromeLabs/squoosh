@@ -2,7 +2,7 @@ import { Encoder } from '../codec';
 
 type EncodeOptions = {};
 
-export default class IdentityEncoder implements Encoder {
+export default class IdentityEncoder implements Encoder<EncodeOptions> {
   static mimeType = null;
 
   async encode(data: ImageData, options: EncodeOptions): Promise<ImageData> {

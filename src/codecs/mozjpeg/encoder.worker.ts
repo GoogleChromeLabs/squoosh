@@ -19,7 +19,7 @@ type EncodeOptions = {
   quality?: number
 };
 
-export default class MozJpegEncoder implements Encoder {
+export default class MozJpegEncoder implements Encoder<EncodeOptions> {
   static mimeType = 'image/jpeg';
 
   private emscriptenModule: Promise<EmscriptenWasm.Module>;
