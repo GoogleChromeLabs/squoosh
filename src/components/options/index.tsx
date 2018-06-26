@@ -14,7 +14,7 @@ CodecConfigurations.MozJpeg = MozJpegEncoderOptions;
 
 type ChildProps = {
   options: CodecOptions,
-  updateOption(e: Event): void,
+  onChange(e: Event): void,
   setOption(key: string, value: any): void
 };
 
@@ -78,7 +78,7 @@ export default class Options extends Component<Props, State> {
           <CodecOptionComponent
             options={options}
             setOption={this.setOption}
-            updateOption={this.updateOption}
+            onChange={this.updateOption}
           />
         )}
       </div>
