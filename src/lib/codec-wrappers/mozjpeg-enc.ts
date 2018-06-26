@@ -1,4 +1,4 @@
-import {Encoder} from './codec';
+import { Encoder } from './codec';
 
 import mozjpeg_enc from '../../../codecs/mozjpeg_enc/mozjpeg_enc';
 // Using require() so TypeScript doesn’t complain about this not being a module.
@@ -19,13 +19,13 @@ export class MozJpegEncoder implements Encoder {
   private emscriptenModule: Promise<EmscriptenWasm.Module>;
   private api: Promise<ModuleAPI>;
   constructor() {
-    this.emscriptenModule = new Promise(resolve => {
+    this.emscriptenModule = new Promise((resolve) => {
       const m = mozjpeg_enc({
         // Just to be safe, don’t automatically invoke any wasm functions
         noInitialRun: false,
         locateFile(url: string): string {
           // Redirect the request for the wasm binary to whatever webpack gave us.
-          if(url.endsWith('.wasm')) {
+          if (url.endsWith('.wasm')) {
             return wasmBinaryUrl;
           }
           return url;
@@ -38,12 +38,14 @@ export class MozJpegEncoder implements Encoder {
           // TODO(surma@): File a bug with Emscripten on this.
           delete (m as any).then;
           resolve(m);
-        }
+        },
       });
     });
 
     this.api = (async () => {
-      // Not sure why, but TypeScript complains that I am using `emscriptenModule` before it’s getting assigned, which is clearly not true :shrug: Using `any`
+      // Not sure why, but TypeScript complains that I am using
+      // `emscriptenModule` before it’s getting assigned, which is clearly not
+      // true :shrug: Using `any`
       const m = await (this as any).emscriptenModule;
       return {
         version: m.cwrap('version', 'number', []),

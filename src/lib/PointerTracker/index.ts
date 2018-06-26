@@ -32,9 +32,10 @@ const isPointerEvent = (event: any): event is PointerEvent =>
 
 const noop = () => {};
 
-type StartCallback = ((pointer: Pointer, event: TouchEvent | PointerEvent | MouseEvent) => boolean);
-type MoveCallback = ((previousPointers: Pointer[], event: TouchEvent | PointerEvent | MouseEvent) => void);
-type EndCallback = ((pointer: Pointer, event: TouchEvent | PointerEvent | MouseEvent) => void);
+export type InputEvent = TouchEvent | PointerEvent | MouseEvent;
+type StartCallback = ((pointer: Pointer, event: InputEvent) => boolean);
+type MoveCallback = ((previousPointers: Pointer[], event: InputEvent) => void);
+type EndCallback = ((pointer: Pointer, event: InputEvent) => void);
 
 interface PointerTrackerCallbacks {
   /**
@@ -95,7 +96,7 @@ export class PointerTracker {
     const {
       start = () => true,
       move = noop,
-      end = noop
+      end = noop,
     } = callbacks;
 
     this._startCallback = start;
@@ -120,7 +121,7 @@ export class PointerTracker {
    * @param event Related event
    * @returns Whether the pointer is being tracked.
    */
-  private _triggerPointerStart (pointer: Pointer, event: PointerEvent | MouseEvent | TouchEvent): boolean {
+  private _triggerPointerStart (pointer: Pointer, event: InputEvent): boolean {
     if (!this._startCallback(pointer, event)) return false;
     this.currentPointers.push(pointer);
     this.startPointers.push(pointer);
@@ -193,7 +194,7 @@ export class PointerTracker {
    * @param event Related event
    */
   @bind
-  private _triggerPointerEnd (pointer: Pointer, event: PointerEvent | MouseEvent | TouchEvent): boolean {
+  private _triggerPointerEnd (pointer: Pointer, event: InputEvent): boolean {
     const index = this.currentPointers.findIndex(p => p.id === pointer.id);
     // Not a pointer we're interested in?
     if (index === -1) return false;
