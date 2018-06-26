@@ -11,7 +11,7 @@
     "function-name": false,
     "variable-name": [true, "check-format", "allow-leading-underscore"]
   },
-  "cliOptions": {
+  "linterOptions": {
     "exclude": [
       "build"
     ]
