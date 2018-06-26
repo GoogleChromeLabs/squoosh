@@ -27,6 +27,7 @@
       get_result_pointer: Module.cwrap('get_result_pointer', 'number', []),
       get_result_size: Module.cwrap('get_result_size', 'number', []),
     };
+    console.log('Version:', api.version().toString(16));
     const image = await loadImage('../example.png');
     const p = api.create_buffer(image.width, image.height);
     Module.HEAP8.set(image.data, p);
@@ -38,7 +39,7 @@
     api.free_result(resultPointer);
     api.destroy_buffer(p);
 
-    const blob = new Blob([result], {type: 'image/jpeg'});
+    const blob = new Blob([result], {type: 'image/webp'});
     const blobURL = URL.createObjectURL(blob);
     const img = document.createElement('img');
     img.src = blobURL;

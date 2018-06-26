@@ -1,0 +1,45 @@
+<!doctype html>
+<script src='webp_dec.js'></script>
+<script>
+  const Module = webp_dec();
+
+  async function loadFile(src) {
+    const resp = await fetch(src);
+    return await resp.arrayBuffer();
+  }
+
+  Module.onRuntimeInitialized = async _ => {
+    const api = {
+      version: Module.cwrap('version', 'number', []),
+      create_buffer: Module.cwrap('create_buffer', 'number', ['number', 'number']),
+      destroy_buffer: Module.cwrap('destroy_buffer', '', ['number']),
+      decode: Module.cwrap('decode', '', ['number', 'number']),
+      free_result: Module.cwrap('free_result', '', ['number']),
+      get_result_pointer: Module.cwrap('get_result_pointer', 'number', []),
+      get_result_width: Module.cwrap('get_result_width', 'number', []),
+      get_result_height: Module.cwrap('get_result_height', 'number', []),
+    };
+    console.log('Version:', api.version().toString(16));
+    const image = await loadFile('../example.webp');
+    const p = api.create_buffer(image.byteLength);
+    Module.HEAP8.set(new Uint8Array(image), p);
+    api.decode(p, image.byteLength);
+    const resultPointer = api.get_result_pointer();
+    if(resultPointer === 0) {
+      throw new Error("Could not decode image");
+    }
+    const resultWidth = api.get_result_width();
+    const resultHeight = api.get_result_height();
+    const resultView = new Uint8Array(Module.HEAP8.buffer, resultPointer, resultWidth * resultHeight * 4);
+    const result = new Uint8ClampedArray(resultView);
+    const imageData = new ImageData(result, resultWidth, resultHeight);
+    api.free_result(resultPointer);
+    api.destroy_buffer(p);
+    const canvas = document.createElement('canvas');
+    canvas.width = resultWidth;
+    canvas.height = resultHeight;
+    document.body.appendChild(canvas);
+    const ctx = canvas.getContext('2d');
+    ctx.putImageData(imageData, 0, 0);
+  };
+</script>

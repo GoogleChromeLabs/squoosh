@@ -3,6 +3,7 @@ import { bind, bitmapToImageData } from '../../lib/util';
 import * as style from './style.scss';
 import Output from '../output';
 import Options from '../options';
+import './custom-els/FileDrop';
 
 import { Encoder } from '../../codecs/codec';
 import IdentityEncoder from '../../codecs/identity/encoder';
@@ -17,6 +18,11 @@ const ENCODER_NAMES = {
   MozJpeg: 'JPEG'
 };
 
+const ENCODER_EXTENSION = {
+  original: '',
+  MozJpeg: 'jpeg'
+};
+
 const ENCODERS = {
   original: IdentityEncoder,
   MozJpeg: MozJpegEncoder
@@ -26,8 +32,15 @@ type Image = {
   type: ImageType,
   options: CodecOptions,
   data?: ImageBitmap,
+  downloadUrl: string,
+  extension: string,
   counter: number,
   loading: boolean
+};
+
+type CompressedImage = {
+  data: ImageData | Blob;
+  type: string;
 };
 
 type Props = {};
@@ -41,14 +54,18 @@ type State = {
   error?: string
 };
 
-export default class App extends Component<Props, State> {
-  state: State = {
+function initialState(): State {
+  return {
     loading: false,
     images: [
-      { type: 'original', options: {}, loading: false, counter: 0 },
-      { type: 'MozJpeg', options: { quality: 7 }, loading: false, counter: 0 }
+      { type: 'original', options: {}, loading: false, counter: 0, downloadUrl: '', extension: '' },
+      { type: 'MozJpeg', options: { quality: 7 }, loading: false, counter: 0, downloadUrl: '', extension: ENCODER_EXTENSION['MozJpeg'] }
     ]
   };
+}
+
+export default class App extends Component<Props, State> {
+  state: State = initialState();
 
   constructor() {
     super();
@@ -80,6 +97,7 @@ export default class App extends Component<Props, State> {
     const { sourceImg, sourceData, images } = this.state;
     for (let i = 0; i < images.length; i++) {
       if (sourceData !== prevState.sourceData || images[i] !== prevState.images[i]) {
+        URL.revokeObjectURL(images[i].downloadUrl);
         this.updateImage(i);
       }
     }
@@ -93,6 +111,19 @@ export default class App extends Component<Props, State> {
     const fileInput = event.target as HTMLInputElement;
     const sourceFile = fileInput.files && fileInput.files[0];
     if (!sourceFile) return;
+    await this.updateFile(sourceFile);
+  }
+
+  @bind
+  async onFileDrop(event: CustomEvent) {
+    const sourceFile = event.detail as File;
+    this.setState(initialState());
+
+    if (!sourceFile) return;
+    await this.updateFile(sourceFile);
+  }
+
+  async updateFile(sourceFile: File) {
     this.setState({ loading: true });
     try {
       const sourceImg = await createImageBitmap(sourceFile);
@@ -105,38 +136,53 @@ export default class App extends Component<Props, State> {
   }
 
   async updateImage(index: number) {
-    const { sourceData, images } = this.state;
+    const { sourceData, sourceFile, images } = this.state;
     if (!sourceData) return;
     let image = images[index];
     // Each time we trigger an async encode, the ID changes.
     const id = ++image.counter;
     image.loading = true;
     this.setState({ });
-    let result = await this.updateCompressedImage(sourceData, image.type, image.options);
+    if (image.type === 'original' && sourceFile) {
+      image.extension = sourceFile.name.split('.').pop() || '';
+      // If we don't use this then image data is a bitmap from identity encoder.
+      image.downloadUrl = URL.createObjectURL(new Blob([sourceFile]));
+    }
+    const compressedImage = await this.updateCompressedImage(sourceData, image.type, image.options);
+    const imageBitmap = await createImageBitmap(compressedImage.data);
     image = this.state.images[index];
     // If another encode has been intiated since we started, ignore this one.
     if (image.counter !== id) return;
-    image.data = result;
+    image.data = imageBitmap;
+    if (image.type !== 'original') {
+      if (compressedImage.data instanceof Blob) {
+        image.downloadUrl = URL.createObjectURL(compressedImage.data);
+      } else {
+        image.downloadUrl = URL.createObjectURL(new Blob([compressedImage.data.data]));
+      }
+    }
     image.loading = false;
     this.setState({ });
   }
 
-  async updateCompressedImage(sourceData: ImageData, type: ImageType, options: CodecOptions) {
+  async updateCompressedImage(sourceData: ImageData, type: ImageType, options: CodecOptions): Promise<CompressedImage> {
+    let imageInfo: CompressedImage = { type: '', data: new Blob() };
     try {
       const encoder = await new ENCODERS[type]() as Encoder<CodecOptions>;
       const compressedData = await encoder.encode(sourceData, options);
-      let imageData;
       if (compressedData instanceof ArrayBuffer) {
-        imageData = new Blob([compressedData], {
+        imageInfo.data = new Blob([compressedData], {
           type: ENCODERS[type].mimeType || ''
         });
-      } else {
-        imageData = compressedData;
+        imageInfo.type = ENCODERS[type].mimeType || '';
+      } else if (compressedData instanceof ImageData) {
+        imageInfo.data = compressedData;
+        imageInfo.type = ENCODERS[type].mimeType || '';
       }
-      return await createImageBitmap(imageData);
     } catch (err) {
       console.error(`Encoding error (type=${type}): ${err}`);
     }
+    return imageInfo;
   }
 
   render({ }: Props, { loading, error, images }: State) {
@@ -147,7 +193,9 @@ export default class App extends Component<Props, State> {
     const rightImg = images[1].data;
 
     return (
+      <file-drop accepts="image/*" onFileDrop={this.onFileDrop}>
       <div id="app" class={style.app}>
+        
         {(leftImg && rightImg) ? (
           <Output leftImg={leftImg} rightImg={rightImg} />
         ) : (
@@ -157,7 +205,12 @@ export default class App extends Component<Props, State> {
           </div>
         )}
         {images.map((image, index: number) => (
-          <span class={index ? style.rightLabel : style.leftLabel}>{ENCODER_NAMES[image.type]}</span>
+          <span class={index ? style.rightLabel : style.leftLabel}>
+            <span>{ENCODER_NAMES[image.type]}</span>
+            { (image.data !== undefined) ? (
+              (<a href={image.downloadUrl} download={image.type + '.' + image.extension}> 🔻 </a>)
+            ) : ('')}
+          </span>
         ))}
         {images.map((image, index: number) => (
           <Options
@@ -172,6 +225,7 @@ export default class App extends Component<Props, State> {
         {loading && <span style={{ position: 'fixed', top: 0, left: 0 }}>Loading...</span>}
         {error && <span style={{ position: 'fixed', top: 0, left: 0 }}>Error: {error}</span>}
       </div>
+      </file-drop>
     );
   }
 }
