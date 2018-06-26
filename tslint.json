@@ -1,16 +1,17 @@
 {
   "extends": [
-    "tslint-config-semistandard",
+    "tslint-config-airbnb",
     "tslint-react"
   ],
   "rules": {
-    "quotemark": [true, "single", "jsx-double", "avoid-escape"],
-    "no-use-before-declare": false,
-    "no-floating-promises": false,
-    "space-before-function-paren": [true, false],
     "jsx-boolean-value": [true, "never"],
     "jsx-no-multiline-js": false,
     "jsx-no-bind": true,
     "jsx-no-lambda": true
+  },
+  "cliOptions": {
+    "exclude": [
+      "build"
+    ]
   }
 }
