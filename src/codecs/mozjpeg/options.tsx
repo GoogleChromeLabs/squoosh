@@ -3,11 +3,11 @@ import { CodecOptions } from '../../components/app';
 
 type Props = {
   options: CodecOptions,
-  updateOption(e: Event): void,
+  onChange(e: Event): void,
   setOption(key: string, value: any): void
 };
 
-const MozJpegCodecOptions = ({ options, updateOption }: Props) => (
+const MozJpegCodecOptions = ({ options, onChange }: Props) => (
   <div>
     <label>
       Quality:
@@ -18,7 +18,7 @@ const MozJpegCodecOptions = ({ options, updateOption }: Props) => (
         max="100"
         step="1"
         value={options.quality}
-        onInput={updateOption}
+        onInput={onChange}
       />
     </label>
   </div>
