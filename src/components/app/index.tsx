@@ -140,11 +140,10 @@ export default class App extends Component<Props, State> {
   }
 
   render({ }: Props, { loading, error, images }: State) {
-    for (let image of images) {
-      if (image.loading) loading = true;
-    }
     const leftImg = images[0].data;
     const rightImg = images[1].data;
+
+    loading = loading || images.some(image => image.loading);
 
     return (
       <div id="app" class={style.app}>
