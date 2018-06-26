@@ -8,7 +8,8 @@
     "jsx-no-multiline-js": false,
     "jsx-no-bind": true,
     "jsx-no-lambda": true,
-    "function-name": false
+    "function-name": false,
+    "variable-name": [true, "check-format", "allow-leading-underscore"]
   },
   "cliOptions": {
     "exclude": [
