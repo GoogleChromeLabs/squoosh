@@ -21,7 +21,7 @@ const ENCODER_NAMES = {
 const ENCODER_EXTENSION = {
   original: '',
   MozJpeg: 'jpeg'
-}
+};
 
 const ENCODERS = {
   original: IdentityEncoder,
@@ -32,7 +32,7 @@ type Image = {
   type: ImageType,
   options: CodecOptions,
   data?: ImageBitmap,
-  dataUrl: string,
+  downloadUrl: string,
   extension: string,
   counter: number,
   loading: boolean
@@ -54,12 +54,12 @@ type State = {
   error?: string
 };
 
-function initialState() : State {
+function initialState(): State {
   return {
     loading: false,
     images: [
-      { type: 'original', options: {}, loading: false, counter: 0, dataUrl:"", extension: '' },
-      { type: 'MozJpeg', options: { quality: 7 }, loading: false, counter: 0, dataUrl:"", extension: ENCODER_EXTENSION['MozJpeg'] }
+      { type: 'original', options: {}, loading: false, counter: 0, downloadUrl: '', extension: '' },
+      { type: 'MozJpeg', options: { quality: 7 }, loading: false, counter: 0, downloadUrl: '', extension: ENCODER_EXTENSION['MozJpeg'] }
     ]
   };
 }
@@ -97,7 +97,7 @@ export default class App extends Component<Props, State> {
     const { sourceImg, sourceData, images } = this.state;
     for (let i = 0; i < images.length; i++) {
       if (sourceData !== prevState.sourceData || images[i] !== prevState.images[i]) {
-        URL.revokeObjectURL(images[i].dataUrl);
+        URL.revokeObjectURL(images[i].downloadUrl);
         this.updateImage(i);
       }
     }
@@ -143,31 +143,30 @@ export default class App extends Component<Props, State> {
     const id = ++image.counter;
     image.loading = true;
     this.setState({ });
-    if(image.type == 'original' && sourceFile) {
-      image.extension = sourceFile.name.split('.').pop() || "";;
+    if (image.type === 'original' && sourceFile) {
+      image.extension = sourceFile.name.split('.').pop() || '';
       // If we don't use this then image data is a bitmap from identity encoder.
-      image.dataUrl = URL.createObjectURL(new Blob([sourceFile]));
+      image.downloadUrl = URL.createObjectURL(new Blob([sourceFile]));
     }
-    let compressedImage = await this.updateCompressedImage(sourceData, image.type, image.options);
-    let imageBitmap = await createImageBitmap(compressedImage.data);
+    const compressedImage = await this.updateCompressedImage(sourceData, image.type, image.options);
+    const imageBitmap = await createImageBitmap(compressedImage.data);
     image = this.state.images[index];
     // If another encode has been intiated since we started, ignore this one.
     if (image.counter !== id) return;
     image.data = imageBitmap;
-    if(image.type != 'original') {
-      if(compressedImage.data instanceof Blob) {
-        image.dataUrl = URL.createObjectURL(compressedImage.data);
+    if (image.type !== 'original') {
+      if (compressedImage.data instanceof Blob) {
+        image.downloadUrl = URL.createObjectURL(compressedImage.data);
+      } else {
+        image.downloadUrl = URL.createObjectURL(new Blob([compressedImage.data.data]));
       }
-      else{
-        image.dataUrl = URL.createObjectURL(new Blob([compressedImage.data.data]));
-      }
-    } 
+    }
     image.loading = false;
     this.setState({ });
   }
 
   async updateCompressedImage(sourceData: ImageData, type: ImageType, options: CodecOptions): Promise<CompressedImage> {
-    let imageInfo: CompressedImage = {type: '', data: new Blob};
+    let imageInfo: CompressedImage = { type: '', data: new Blob() };
     try {
       const encoder = await new ENCODERS[type]() as Encoder;
       const compressedData = await encoder.encode(sourceData, options);
@@ -175,11 +174,10 @@ export default class App extends Component<Props, State> {
         imageInfo.data = new Blob([compressedData], {
           type: ENCODERS[type].mimeType || ''
         });
-        imageInfo.type = ENCODERS[type].mimeType || ''
-      } 
-      else if (compressedData instanceof ImageData) {
+        imageInfo.type = ENCODERS[type].mimeType || '';
+      } else if (compressedData instanceof ImageData) {
         imageInfo.data = compressedData;
-        imageInfo.type = ENCODERS[type].mimeType || ''
+        imageInfo.type = ENCODERS[type].mimeType || '';
       }
     } catch (err) {
       console.error(`Encoding error (type=${type}): ${err}`);
@@ -210,7 +208,7 @@ export default class App extends Component<Props, State> {
           <span class={index ? style.rightLabel : style.leftLabel}>
             <span>{ENCODER_NAMES[image.type]}</span>
             { (image.data !== undefined) ? (
-              (<a href={image.dataUrl} download={image.type +'.'+image.extension}> 🔻 </a>)
+              (<a href={image.downloadUrl} download={image.type + '.' + image.extension}> 🔻 </a>)
             ) : ('')}
           </span>
         ))}
