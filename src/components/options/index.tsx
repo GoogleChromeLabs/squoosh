@@ -68,11 +68,11 @@ export default class Options extends Component<Props, State> {
     this.props.onOptionsChange(options);
   }
 
-  render({ class: c, name, type }: Props, { options }: State) {
+  render({ class: className, type }: Props, { options }: State) {
     const CodecOptionComponent = CodecConfigurations[type];
 
     return (
-      <div class={`${style.options}${c ? (' ' + c) : ''}`}>
+      <div class={`${style.options}${className ? (' ' + className) : ''}`}>
         <label>
           Mode:
           <select value={type} onChange={this.setType}>

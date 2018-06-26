@@ -3,7 +3,7 @@ import PinchZoom from './custom-els/PinchZoom';
 import './custom-els/PinchZoom';
 import './custom-els/TwoUp';
 import * as style from './style.scss';
-import { bind } from '../../lib/util';
+import { bind, drawBitmapToCanvas } from '../../lib/util';
 import { twoUpHandle } from './custom-els/TwoUp/styles.css';
 
 type Props = {
@@ -21,28 +21,21 @@ export default class Output extends Component<Props, State> {
   pinchZoomRight?: PinchZoom;
   retargetedEvents = new WeakSet<Event>();
 
-  updateCanvas(canvas: HTMLCanvasElement, img?: ImageBitmap) {
-    let ctx = canvas.getContext('2d');
-    if (!ctx) throw Error('Canvas not initialized');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (img) ctx.drawImage(img, 0, 0);
-  }
-
   componentDidMount() {
     if (this.canvasLeft) {
-      this.updateCanvas(this.canvasLeft, this.props.leftImg);
+      drawBitmapToCanvas(this.canvasLeft, this.props.leftImg);
     }
     if (this.canvasRight) {
-      this.updateCanvas(this.canvasRight, this.props.rightImg);
+      drawBitmapToCanvas(this.canvasRight, this.props.rightImg);
     }
   }
 
   componentWillReceiveProps({ leftImg, rightImg }: Props) {
     if (leftImg !== this.props.leftImg && this.canvasLeft) {
-      this.updateCanvas(this.canvasLeft, leftImg);
+      drawBitmapToCanvas(this.canvasLeft, leftImg);
     }
     if (rightImg !== this.props.rightImg && this.canvasRight) {
-      this.updateCanvas(this.canvasRight, rightImg);
+      drawBitmapToCanvas(this.canvasRight, rightImg);
     }
   }
 
