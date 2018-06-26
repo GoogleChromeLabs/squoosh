@@ -133,9 +133,11 @@ export default class App extends Component<Props, State> {
       } else {
         imageData = compressedData;
       }
-      return await createImageBitmap(imageData);
+      const bitmap = await createImageBitmap(imageData);
+      this.setState({ error: '' });
+      return bitmap;
     } catch (err) {
-      console.error(`Encoding error (type=${type}): ${err}`);
+      this.setState({ error: `Encoding error (type=${type}): ${err}` });
     }
   }
 
