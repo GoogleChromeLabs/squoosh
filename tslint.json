@@ -7,7 +7,8 @@
     "jsx-boolean-value": [true, "never"],
     "jsx-no-multiline-js": false,
     "jsx-no-bind": true,
-    "jsx-no-lambda": true
+    "jsx-no-lambda": true,
+    "function-name": false
   },
   "cliOptions": {
     "exclude": [
