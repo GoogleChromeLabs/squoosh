@@ -123,7 +123,7 @@ export default class App extends Component<Props, State> {
 
   async updateCompressedImage(sourceData: ImageData, type: ImageType, options: CodecOptions) {
     try {
-      const encoder = await new ENCODERS[type]() as Encoder;
+      const encoder = await new ENCODERS[type]() as Encoder<CodecOptions>;
       const compressedData = await encoder.encode(sourceData, options);
       let imageData;
       if (compressedData instanceof ArrayBuffer) {
