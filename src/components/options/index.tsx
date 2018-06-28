@@ -1,92 +1,62 @@
 import { h, Component } from 'preact';
 import * as style from './style.scss';
 import { bind } from '../../lib/util';
-import { ImageType, CodecOptions } from '../app';
 import MozJpegEncoderOptions from '../../codecs/mozjpeg/options';
 
-const CodecConfigurations: {
-  [type: string]: (props: ChildProps) => JSX.Element | null
-} = {
-  original: () => null
+import { type as mozJPEGType } from '../../codecs/mozjpeg/encoder';
+import { type as identityType } from '../../codecs/identity/encoder';
+import { EncoderState, EncoderType, EncoderOptions, encoders } from '../../codecs/encoders';
+
+const encoderOptionsComponentMap = {
+  [mozJPEGType]: MozJpegEncoderOptions,
+  [identityType]: undefined
 };
 
-CodecConfigurations.MozJpeg = MozJpegEncoderOptions;
+interface Props {
+  class?: string;
+  encoderState: EncoderState;
+  onTypeChange(newType: EncoderType): void;
+  onOptionsChange(newOptions: EncoderOptions): void;
+}
 
-type ChildProps = {
-  options: CodecOptions,
-  onChange(e: Event): void,
-  setOption(key: string, value: any): void
-};
-
-type Props = {
-  name: string,
-  class?: string,
-  type: ImageType,
-  options: CodecOptions,
-  onTypeChange(type: string): void,
-  onOptionsChange(options: any): void
-};
-
-type State = {
-  options: CodecOptions
-};
+interface State {}
 
 export default class Options extends Component<Props, State> {
-  state = {
-    options: this.props.options || {}
-  };
-
-  componentWillReceiveProps({ options }: Props) {
-    if (options !== this.props.options) {
-      this.setState({ options });
-    }
-  }
+  typeSelect?: HTMLSelectElement;
 
   @bind
-  setType(e: Event) {
-    const el = e.currentTarget as HTMLSelectElement;
-    this.props.onTypeChange(el.value);
+  onTypeChange(event: Event) {
+    const el = event.currentTarget as HTMLSelectElement;
+
+    // The select element only has values matching encoder types,
+    // so 'as' is safe here.
+    const type = el.value as EncoderType;
+    this.props.onTypeChange(type);
   }
 
-  @bind
-  updateOption(e: Event) {
-    const el = e.currentTarget as HTMLInputElement;
-    let value;
-    if (el.type === 'radio' || el.type === 'checkbox') {
-      value = el.checked;
-    } else {
-      value = el.value;
-    }
-    this.setOption(el.name, value);
-  }
-
-  @bind
-  setOption(key: string, value?: any) {
-    const options = Object.assign({}, this.state.options);
-    options[key] = value;
-    this.setState({ options });
-    this.props.onOptionsChange(options);
-  }
-
-  render({ class: className, type }: Props, { options }: State) {
-    const CodecOptionComponent = CodecConfigurations[type];
+  render({ class: className, encoderState, onOptionsChange }: Props) {
+    const EncoderOptionComponent = encoderOptionsComponentMap[encoderState.type];
 
     return (
       <div class={`${style.options}${className ? (' ' + className) : ''}`}>
         <label>
           Mode:
-          <select value={type} onChange={this.setType}>
-            <option value="original">Original</option>
-            <option value="MozJpeg">JPEG</option>
+          <select value={encoderState.type} onChange={this.onTypeChange}>
+            {encoders.map(encoder => (
+              <option value={encoder.type}>{encoder.label}</option>
+            ))}
           </select>
         </label>
-        {CodecOptionComponent && (
-          <CodecOptionComponent
-            options={options}
-            setOption={this.setOption}
-            onChange={this.updateOption}
+        {EncoderOptionComponent &&
+          <EncoderOptionComponent
+            options={
+              // Casting options, as encoderOptionsComponentMap[encodeData.type] ensures the correct type,
+              // but typescript isn't smart enough.
+              encoderState.options as typeof EncoderOptionComponent['prototype']['props']['options']
+            }
+            onChange={onOptionsChange}
           />
-        )}
+        }
       </div>
     );
   }

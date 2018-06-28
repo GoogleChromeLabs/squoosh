@@ -1,7 +1,6 @@
-import { Encoder } from '../codec';
-
 import mozjpeg_enc from '../../../codecs/mozjpeg_enc/mozjpeg_enc';
 // Using require() so TypeScript doesn’t complain about this not being a module.
+import { EncodeOptions } from './encoder';
 const wasmBinaryUrl = require('../../../codecs/mozjpeg_enc/mozjpeg_enc.wasm');
 
 // API exposed by wasm module. Details in the codec’s README.
@@ -15,13 +14,7 @@ interface ModuleAPI {
   get_result_size(): number;
 }
 
-type EncodeOptions = {
-  quality?: number
-};
-
-export default class MozJpegEncoder implements Encoder<EncodeOptions> {
-  static mimeType = 'image/jpeg';
-
+export default class MozJpegEncoder {
   private emscriptenModule: Promise<EmscriptenWasm.Module>;
   private api: Promise<ModuleAPI>;
 

@@ -1,11 +1,6 @@
-import { Encoder } from '../codec';
+export interface EncodeOptions {}
+export interface EncoderState { type: typeof type; options: EncodeOptions; }
 
-type EncodeOptions = {};
-
-export default class IdentityEncoder implements Encoder<EncodeOptions> {
-  static mimeType = null;
-
-  async encode(data: ImageData, options: EncodeOptions): Promise<ImageData> {
-    return data;
-  }
-}
+export const type = 'identity';
+export const label = 'Original image';
+export const defaultOptions: EncodeOptions = {};

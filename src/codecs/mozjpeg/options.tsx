@@ -1,27 +1,35 @@
-import { h } from 'preact';
-import { CodecOptions } from '../../components/app';
+import { h, Component } from 'preact';
+import { EncodeOptions } from './encoder';
+import { bind } from '../../lib/util';
 
 type Props = {
-  options: CodecOptions,
-  onChange(e: Event): void,
-  setOption(key: string, value: any): void
+  options: EncodeOptions,
+  onChange(newOptions: EncodeOptions): void
 };
 
-const MozJpegCodecOptions = ({ options, onChange }: Props) => (
-  <div>
-    <label>
-      Quality:
-      <input
-        name="quality"
-        type="range"
-        min="1"
-        max="100"
-        step="1"
-        value={options.quality}
-        onInput={onChange}
-      />
-    </label>
-  </div>
-);
+export default class MozJpegCodecOptions extends Component<Props, {}> {
+  @bind
+  onChange(event: Event) {
+    const el = event.currentTarget as HTMLInputElement;
+    this.props.onChange({ quality: Number(el.value) });
+  }
 
-export default MozJpegCodecOptions;
+  render({ options }: Props) {
+    return (
+      <div>
+        <label>
+          Quality:
+          <input
+            name="quality"
+            type="range"
+            min="1"
+            max="100"
+            step="1"
+            value={'' + options.quality}
+            onChange={this.onChange}
+          />
+        </label>
+      </div>
+    );
+  }
+}
