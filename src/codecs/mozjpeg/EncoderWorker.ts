@@ -60,10 +60,6 @@ export default class MozJpegEncoder {
   }
 
   async encode(data: ImageData, options: EncodeOptions): Promise<ArrayBuffer> {
-    if (!options.quality) {
-      throw Error('MozJpeg: options.quality is required');
-    }
-
     const m = await this.emscriptenModule;
     const api = await this.api;
 
