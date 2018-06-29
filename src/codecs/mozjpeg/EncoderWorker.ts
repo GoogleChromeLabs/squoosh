@@ -54,7 +54,7 @@ export default class MozJpegEncoder {
         encode: m.cwrap('encode', '', ['number', 'number', 'number', 'number']),
         free_result: m.cwrap('free_result', '', []),
         get_result_pointer: m.cwrap('get_result_pointer', 'number', []),
-        get_result_size: m.cwrap('get_result_size', 'number', [])
+        get_result_size: m.cwrap('get_result_size', 'number', []),
       };
     })();
   }

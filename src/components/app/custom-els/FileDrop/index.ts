@@ -1,13 +1,14 @@
 import { bind } from '../../../../lib/util';
 import './styles.css';
 
+// tslint:disable-next-line:max-line-length
 function firstMatchingItem(list: DataTransferItemList, acceptVal: string): DataTransferItem | undefined {
   // Split accepts values by ',' then by '/'. Trim everything & lowercase.
-  const accepts = acceptVal.toLowerCase().split(',').map(accept => {
+  const accepts = acceptVal.toLowerCase().split(',').map((accept) => {
     return accept.trim().split('/').map(part => part.trim());
   }).filter(acceptParts => acceptParts.length === 2); // Filter invalid values
 
-  return Array.from(list).find(item => {
+  return Array.from(list).find((item) => {
     if (item.kind !== 'file') return false;
 
     // 'Parse' the type.
@@ -56,7 +57,7 @@ export class FileDrop extends HTMLElement {
 
   constructor() {
     super();
-    this.addEventListener('dragover', (event) => event.preventDefault());
+    this.addEventListener('dragover', event => event.preventDefault());
     this.addEventListener('drop', this._onDrop);
     this.addEventListener('dragenter', this._onDragEnter);
     this.addEventListener('dragend', () => this._reset());
@@ -73,7 +74,7 @@ export class FileDrop extends HTMLElement {
 
   @bind
   private _onDragEnter(event: DragEvent) {
-    this._dragEnterCount++;
+    this._dragEnterCount += 1;
     if (this._dragEnterCount > 1) return;
 
     // We don't have data, attempt to get it and if it matches, set the correct state.
@@ -87,7 +88,7 @@ export class FileDrop extends HTMLElement {
 
   @bind
   private _onDragLeave() {
-    this._dragEnterCount--;
+    this._dragEnterCount -= 1;
     if (this._dragEnterCount === 0) {
       this._reset();
     }
