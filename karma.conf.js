@@ -1,6 +1,7 @@
 const fs = require("fs");
 
-function readJsonFile(path) {
+process.env.CHROME_BIN = require('puppeteer').executablePath();
+
   // TypeScript puts lots of comments in the default `tsconfig.json`, so you
   // can’t use `require()` to read it. Hence this hack.
   return eval("(" + fs.readFileSync(path).toString("utf-8") + ")");
