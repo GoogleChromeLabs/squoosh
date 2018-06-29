@@ -30,12 +30,12 @@ export default class Output extends Component<Props, State> {
     }
   }
 
-  componentWillReceiveProps({ leftImg, rightImg }: Props) {
-    if (leftImg !== this.props.leftImg && this.canvasLeft) {
-      drawBitmapToCanvas(this.canvasLeft, leftImg);
+  componentDidUpdate(prevProps: Props) {
+    if (prevProps.leftImg !== this.props.leftImg && this.canvasLeft) {
+      drawBitmapToCanvas(this.canvasLeft, this.props.leftImg);
     }
-    if (rightImg !== this.props.rightImg && this.canvasRight) {
-      drawBitmapToCanvas(this.canvasRight, rightImg);
+    if (prevProps.rightImg !== this.props.rightImg && this.canvasRight) {
+      drawBitmapToCanvas(this.canvasRight, this.props.rightImg);
     }
   }
 

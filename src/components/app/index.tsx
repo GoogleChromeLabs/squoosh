@@ -35,8 +35,8 @@ interface State {
   error?: string;
 }
 
-function initialState(): State {
-  return {
+export default class App extends Component<Props, State> {
+  state: State = {
     loading: false,
     images: [
       {
@@ -53,10 +53,6 @@ function initialState(): State {
       }
     ]
   };
-}
-
-export default class App extends Component<Props, State> {
-  state: State = initialState();
 
   constructor() {
     super();
@@ -117,7 +113,6 @@ export default class App extends Component<Props, State> {
   async onFileDrop(event: FileDropEvent) {
     const { file } = event;
     if (!file) return;
-    this.setState(initialState());
     await this.updateFile(file);
   }
 
