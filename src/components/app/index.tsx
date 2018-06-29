@@ -137,7 +137,7 @@ export default class App extends Component<Props, State> {
     // If a later encode has landed before this one, return.
     if (loadingCounter < image.loadedCounter) return;
     image.bmp = result;
-    image.loading = false;
+    image.loading = image.loadingCounter !== loadingCounter;
     image.loadedCounter = loadingCounter;
     this.setState({ });
   }
