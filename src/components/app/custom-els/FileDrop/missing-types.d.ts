@@ -1,5 +1,4 @@
-import { FileDropEvent, FileDrop } from ".";
-
+import { FileDropEvent, FileDrop } from '.';
 
 declare global {
 
