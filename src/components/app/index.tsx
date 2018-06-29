@@ -17,8 +17,11 @@ interface SourceImage {
 interface EncodedImage {
   encoderState: EncoderState;
   bmp?: ImageBitmap;
-  counter: number;
   loading: boolean;
+  /** Counter of the latest bmp currently encoding */
+  loadingCounter: number;
+  /** Counter of the latest bmp encoded */
+  loadedCounter: number;
 }
 
 interface Props {}
@@ -36,12 +39,14 @@ export default class App extends Component<Props, State> {
     images: [
       {
         encoderState: { type: identity.type, options: identity.defaultOptions },
-        counter: 0,
+        loadingCounter: 0,
+        loadedCounter: 0,
         loading: false
       },
       {
         encoderState: { type: mozJPEG.type, options: mozJPEG.defaultOptions },
-        counter: 0,
+        loadingCounter: 0,
+        loadedCounter: 0,
         loading: false
       }
     ]
@@ -52,7 +57,7 @@ export default class App extends Component<Props, State> {
     // In development, persist application state across hot reloads:
     if (process.env.NODE_ENV === 'development') {
       this.setState(window.STATE);
-      let oldCDU = this.componentDidUpdate;
+      const oldCDU = this.componentDidUpdate;
       this.componentDidUpdate = (props, state) => {
         if (oldCDU) oldCDU.call(this, props, state);
         window.STATE = this.state;
@@ -75,8 +80,6 @@ export default class App extends Component<Props, State> {
     images[index] = {
       ...image,
       encoderState,
-      loading: true,
-      counter: image.counter++
     };
 
     this.setState({ images });
@@ -122,15 +125,20 @@ export default class App extends Component<Props, State> {
     let image = images[index];
 
     // Each time we trigger an async encode, the ID changes.
-    const id = ++image.counter;
+    image.loadingCounter = image.loadingCounter + 1;
+    const loadingCounter = image.loadingCounter;
+
     image.loading = true;
     this.setState({ });
+
     const result = await this.updateCompressedImage(source, image.encoderState);
+
     image = this.state.images[index];
-    // If another encode has been initiated since we started, ignore this one.
-    if (image.counter !== id) return;
+    // If a later encode has landed before this one, return.
+    if (loadingCounter < image.loadedCounter) return;
     image.bmp = result;
     image.loading = false;
+    image.loadedCounter = loadingCounter;
     this.setState({ });
   }
 
