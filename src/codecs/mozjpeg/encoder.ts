@@ -10,8 +10,7 @@ export const extension = 'jpg';
 export const defaultOptions: EncodeOptions = { quality: 7 };
 
 export async function encode(data: ImageData, options: EncodeOptions) {
-  // This is horrible because TypeScript doesn't realise that
-  // Encoder has been comlinked.
-  const encoder = new EncoderWorker() as any as Promise<EncoderWorker>;
-  return (await encoder).encode(data, options);
+  // We need to await this because it's been comlinked.
+  const encoder = await new EncoderWorker();
+  return encoder.encode(data, options);
 }
