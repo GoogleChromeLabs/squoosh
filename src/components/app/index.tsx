@@ -3,6 +3,8 @@ import { bind, bitmapToImageData } from '../../lib/util';
 import * as style from './style.scss';
 import Output from '../output';
 import Options from '../options';
+import { FileDropEvent } from './custom-els/FileDrop';
+import './custom-els/FileDrop';
 
 import * as mozJPEG from '../../codecs/mozjpeg/encoder';
 import * as identity from '../../codecs/identity/encoder';
@@ -33,8 +35,8 @@ interface State {
   error?: string;
 }
 
-export default class App extends Component<Props, State> {
-  state: State = {
+function initialState(): State {
+  return {
     loading: false,
     images: [
       {
@@ -51,6 +53,10 @@ export default class App extends Component<Props, State> {
       }
     ]
   };
+}
+
+export default class App extends Component<Props, State> {
+  state: State = initialState();
 
   constructor() {
     super();
@@ -104,6 +110,18 @@ export default class App extends Component<Props, State> {
     const fileInput = event.target as HTMLInputElement;
     const file = fileInput.files && fileInput.files[0];
     if (!file) return;
+    await this.updateFile(file);
+  }
+
+  @bind
+  async onFileDrop(event: FileDropEvent) {
+    const { file } = event;
+    if (!file) return;
+    this.setState(initialState());
+    await this.updateFile(file);
+  }
+
+  async updateFile(file: File) {
     this.setState({ loading: true });
     try {
       const bmp = await createImageBitmap(file);
@@ -112,7 +130,7 @@ export default class App extends Component<Props, State> {
       this.setState({
         source: { data, bmp, file },
         error: undefined,
-        loading: false
+        loading: false,
       });
     } catch (err) {
       this.setState({ error: 'IMAGE_INVALID', loading: false });
@@ -173,29 +191,33 @@ export default class App extends Component<Props, State> {
     loading = loading || images.some(image => image.loading);
 
     return (
-      <div id="app" class={style.app}>
-        {(leftImageBmp && rightImageBmp) ? (
-          <Output leftImg={leftImageBmp} rightImg={rightImageBmp} />
-        ) : (
-          <div class={style.welcome}>
-            <h1>Select an image</h1>
-            <input type="file" onChange={this.onFileChange} />
-          </div>
-        )}
-        {images.map((image, index) => (
-          <span class={index ? style.rightLabel : style.leftLabel}>{encoderMap[image.encoderState.type].label}</span>
-        ))}
-        {images.map((image, index) => (
-          <Options
-            class={index ? style.rightOptions : style.leftOptions}
-            encoderState={image.encoderState}
-            onTypeChange={this.onEncoderChange.bind(this, index)}
-            onOptionsChange={this.onOptionsChange.bind(this, index)}
-          />
-        ))}
-        {loading && <span style={{ position: 'fixed', top: 0, left: 0 }}>Loading...</span>}
-        {error && <span style={{ position: 'fixed', top: 0, left: 0 }}>Error: {error}</span>}
-      </div>
+      <file-drop accept="image/*" onfiledrop={this.onFileDrop}>
+        <div id="app" class={style.app}>
+          {(leftImageBmp && rightImageBmp) ? (
+            <Output leftImg={leftImageBmp} rightImg={rightImageBmp} />
+          ) : (
+              <div class={style.welcome}>
+                <h1>Select an image</h1>
+                <input type="file" onChange={this.onFileChange} />
+              </div>
+            )}
+          {images.map((image, index) => (
+            <span class={index ? style.rightLabel : style.leftLabel}>
+              {encoderMap[image.encoderState.type].label}
+            </span>
+          ))}
+          {images.map((image, index) => (
+            <Options
+              class={index ? style.rightOptions : style.leftOptions}
+              encoderState={image.encoderState}
+              onTypeChange={this.onEncoderChange.bind(this, index)}
+              onOptionsChange={this.onOptionsChange.bind(this, index)}
+            />
+          ))}
+          {loading && <span style={{ position: 'fixed', top: 0, left: 0 }}>Loading...</span>}
+          {error && <span style={{ position: 'fixed', top: 0, left: 0 }}>Error: {error}</span>}
+        </div>
+      </file-drop>
     );
   }
 }
