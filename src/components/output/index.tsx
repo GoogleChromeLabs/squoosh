@@ -8,7 +8,7 @@ import { twoUpHandle } from './custom-els/TwoUp/styles.css';
 
 type Props = {
   leftImg: ImageBitmap,
-  rightImg: ImageBitmap
+  rightImg: ImageBitmap,
 };
 
 type State = {};
@@ -39,13 +39,17 @@ export default class Output extends Component<Props, State> {
     }
   }
 
+  shouldComponentUpdate(nextProps: Props) {
+    return this.props.leftImg !== nextProps.leftImg || this.props.rightImg !== nextProps.rightImg;
+  }
+
   @bind
   onPinchZoomLeftChange(event: Event) {
     if (!this.pinchZoomRight || !this.pinchZoomLeft) throw Error('Missing pinch-zoom element');
     this.pinchZoomRight.setTransform({
       scale: this.pinchZoomLeft.scale,
       x: this.pinchZoomLeft.x,
-      y: this.pinchZoomLeft.y
+      y: this.pinchZoomLeft.y,
     });
   }
 

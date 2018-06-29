@@ -35,6 +35,28 @@ interface State {
   error?: string;
 }
 
+async function updateCompressedImage(
+  source: SourceImage,
+  encodeData: EncoderState,
+): Promise<ImageBitmap> {
+  // Special case for identity
+  if (encodeData.type === identity.type) return source.bmp;
+
+  const compressedData = await (() => {
+    switch (encodeData.type) {
+      case mozJPEG.type: return mozJPEG.encode(source.data, encodeData.options);
+      default: throw Error(`Unexpected encoder name`);
+    }
+  })();
+
+  const blob = new Blob([compressedData], {
+    type: encoderMap[encodeData.type].mimeType,
+  });
+
+  const bitmap = await createImageBitmap(blob);
+  return bitmap;
+}
+
 export default class App extends Component<Props, State> {
   state: State = {
     loading: false,
@@ -43,15 +65,15 @@ export default class App extends Component<Props, State> {
         encoderState: { type: identity.type, options: identity.defaultOptions },
         loadingCounter: 0,
         loadedCounter: 0,
-        loading: false
+        loading: false,
       },
       {
         encoderState: { type: mozJPEG.type, options: mozJPEG.defaultOptions },
         loadingCounter: 0,
         loadedCounter: 0,
-        loading: false
-      }
-    ]
+        loading: false,
+      },
+    ],
   };
 
   constructor() {
@@ -69,18 +91,18 @@ export default class App extends Component<Props, State> {
 
   onEncoderChange(index: 0 | 1, type: EncoderType, options?: EncoderOptions): void {
     const images = this.state.images.slice() as [EncodedImage, EncodedImage];
-    const image = images[index];
+    const oldImage = images[index];
 
     // Some type cheating here.
     // encoderMap[type].defaultOptions is always safe.
     // options should always be correct for the type, but TypeScript isn't smart enough.
     const encoderState: EncoderState = {
       type,
-      options: options ? options : encoderMap[type].defaultOptions
+      options: options ? options : encoderMap[type].defaultOptions,
     } as EncoderState;
 
     images[index] = {
-      ...image,
+      ...oldImage,
       encoderState,
     };
 
@@ -95,7 +117,7 @@ export default class App extends Component<Props, State> {
     const { source, images } = this.state;
 
     for (const [i, image] of images.entries()) {
-      if (source !== prevState.source || image !== prevState.images[i]) {
+      if (source !== prevState.source || image.encoderState !== prevState.images[i].encoderState) {
         this.updateImage(i);
       }
     }
@@ -122,6 +144,7 @@ export default class App extends Component<Props, State> {
       const bmp = await createImageBitmap(file);
       // compute the corresponding ImageData once since it only changes when the file changes:
       const data = await bitmapToImageData(bmp);
+
       this.setState({
         source: { data, bmp, file },
         error: undefined,
@@ -133,57 +156,53 @@ export default class App extends Component<Props, State> {
   }
 
   async updateImage(index: number): Promise<void> {
-    const { source, images } = this.state;
+    const { source } = this.state;
     if (!source) return;
-    let image = images[index];
+    let images = this.state.images.slice() as [EncodedImage, EncodedImage];
 
-    // Each time we trigger an async encode, the ID changes.
-    image.loadingCounter = image.loadingCounter + 1;
-    const loadingCounter = image.loadingCounter;
+    // Each time we trigger an async encode, the counter changes.
+    const loadingCounter = images[index].loadingCounter + 1;
 
-    image.loading = true;
-    this.setState({ });
+    const image = images[index] = {
+      ...images[index],
+      loadingCounter,
+      loading: true,
+    };
 
-    const result = await this.updateCompressedImage(source, image.encoderState);
+    this.setState({ images });
 
-    image = this.state.images[index];
-    // If a later encode has landed before this one, return.
-    if (loadingCounter < image.loadedCounter) return;
-    image.bmp = result;
-    image.loading = image.loadingCounter !== loadingCounter;
-    image.loadedCounter = loadingCounter;
-    this.setState({ });
-  }
-
-  async updateCompressedImage(source: SourceImage, encodeData: EncoderState): Promise<ImageBitmap> {
-    // Special case for identity
-    if (encodeData.type === identity.type) return source.bmp;
+    let result;
 
     try {
-      const compressedData = await (() => {
-        switch (encodeData.type) {
-          case mozJPEG.type: return mozJPEG.encode(source.data, encodeData.options);
-          default: throw Error(`Unexpected encoder name`);
-        }
-      })();
-
-      const blob = new Blob([compressedData], {
-        type: encoderMap[encodeData.type].mimeType
-      });
-
-      const bitmap = await createImageBitmap(blob);
-      this.setState({ error: '' });
-      return bitmap;
+      result = await updateCompressedImage(source, image.encoderState);
     } catch (err) {
-      this.setState({ error: `Encoding error (type=${encodeData.type}): ${err}` });
+      this.setState({ error: `Encoding error (type=${image.encoderState.type}): ${err}` });
       throw err;
     }
+
+    const latestImage = this.state.images[index];
+    // If a later encode has landed before this one, return.
+    if (loadingCounter < latestImage.loadedCounter) {
+      this.setState({ error: '' });
+      return;
+    }
+
+    images = this.state.images.slice() as [EncodedImage, EncodedImage];
+
+    images[index] = {
+      ...images[index],
+      bmp: result,
+      loading: image.loadingCounter !== loadingCounter,
+      loadedCounter: loadingCounter,
+    };
+
+    this.setState({ images, error: '' });
   }
 
-  render({ }: Props, { loading, error, images, source }: State) {
+  render({ }: Props, { loading, error, images }: State) {
     const [leftImageBmp, rightImageBmp] = images.map(i => i.bmp);
 
-    loading = loading || images.some(image => image.loading);
+    const anyLoading = loading || images.some(image => image.loading);
 
     return (
       <file-drop accept="image/*" onfiledrop={this.onFileDrop}>
@@ -209,7 +228,7 @@ export default class App extends Component<Props, State> {
               onOptionsChange={this.onOptionsChange.bind(this, index)}
             />
           ))}
-          {loading && <span style={{ position: 'fixed', top: 0, left: 0 }}>Loading...</span>}
+          {anyLoading && <span style={{ position: 'fixed', top: 0, left: 0 }}>Loading...</span>}
           {error && <span style={{ position: 'fixed', top: 0, left: 0 }}>Error: {error}</span>}
         </div>
       </file-drop>
