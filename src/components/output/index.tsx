@@ -3,16 +3,17 @@ import PinchZoom from './custom-els/PinchZoom';
 import './custom-els/PinchZoom';
 import './custom-els/TwoUp';
 import * as style from './style.scss';
-import { bind } from '../../lib/util';
+import { bind, drawBitmapToCanvas } from '../../lib/util';
 import { twoUpHandle } from './custom-els/TwoUp/styles.css';
 
 type Props = {
-  img: ImageBitmap
+  leftImg: ImageBitmap,
+  rightImg: ImageBitmap
 };
 
 type State = {};
 
-export default class App extends Component<Props, State> {
+export default class Output extends Component<Props, State> {
   state: State = {};
   canvasLeft?: HTMLCanvasElement;
   canvasRight?: HTMLCanvasElement;
@@ -20,26 +21,22 @@ export default class App extends Component<Props, State> {
   pinchZoomRight?: PinchZoom;
   retargetedEvents = new WeakSet<Event>();
 
-  updateCanvases(img: ImageBitmap) {
-    for (const [i, canvas] of [this.canvasLeft, this.canvasRight].entries()) {
-      if (!canvas) throw Error('Missing canvas');
-      const ctx = canvas.getContext('2d');
-      if (!ctx) throw Error('Expected 2d canvas context');
-      if (i === 1) {
-        // This is temporary, to show the images are different
-        ctx.filter = 'hue-rotate(180deg)';
-      }
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0);
+  componentDidMount() {
+    if (this.canvasLeft) {
+      drawBitmapToCanvas(this.canvasLeft, this.props.leftImg);
+    }
+    if (this.canvasRight) {
+      drawBitmapToCanvas(this.canvasRight, this.props.rightImg);
     }
   }
 
-  componentDidMount() {
-    this.updateCanvases(this.props.img);
-  }
-
-  componentDidUpdate({ img }: Props) {
-    if (img !== this.props.img) this.updateCanvases(this.props.img);
+  componentDidUpdate(prevProps: Props) {
+    if (prevProps.leftImg !== this.props.leftImg && this.canvasLeft) {
+      drawBitmapToCanvas(this.canvasLeft, this.props.leftImg);
+    }
+    if (prevProps.rightImg !== this.props.rightImg && this.canvasRight) {
+      drawBitmapToCanvas(this.canvasRight, this.props.rightImg);
+    }
   }
 
   @bind
@@ -78,9 +75,9 @@ export default class App extends Component<Props, State> {
     this.pinchZoomLeft.dispatchEvent(clonedEvent);
   }
 
-  render({ img }: Props, { }: State) {
+  render({ leftImg, rightImg }: Props, { }: State) {
     return (
-      <div>
+      <div class={style.output}>
         <two-up
           // Event redirecting. See onRetargetableEvent.
           onTouchStartCapture={this.onRetargetableEvent}
@@ -91,13 +88,12 @@ export default class App extends Component<Props, State> {
           onWheelCapture={this.onRetargetableEvent}
         >
           <pinch-zoom onChange={this.onPinchZoomLeftChange} ref={p => this.pinchZoomLeft = p as PinchZoom}>
-            <canvas class={style.outputCanvas} ref={c => this.canvasLeft = c as HTMLCanvasElement} width={img.width} height={img.height} />
+            <canvas class={style.outputCanvas} ref={c => this.canvasLeft = c as HTMLCanvasElement} width={leftImg.width} height={leftImg.height} />
           </pinch-zoom>
           <pinch-zoom ref={p => this.pinchZoomRight = p as PinchZoom}>
-            <canvas class={style.outputCanvas} ref={c => this.canvasRight = c as HTMLCanvasElement} width={img.width} height={img.height} />
+            <canvas class={style.outputCanvas} ref={c => this.canvasRight = c as HTMLCanvasElement} width={rightImg.width} height={rightImg.height} />
           </pinch-zoom>
         </two-up>
-        <p>And that's all the app does so far!</p>
       </div>
     );
   }

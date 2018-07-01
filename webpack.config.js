@@ -33,7 +33,8 @@ module.exports = function (_, env) {
       filename: isProd ? '[name].[chunkhash:5].js' : '[name].js',
       chunkFilename: '[name].chunk.[chunkhash:5].js',
       path: path.join(__dirname, 'build'),
-      publicPath: '/'
+      publicPath: '/',
+      globalObject: 'self'
     },
     resolve: {
       extensions: ['.ts', '.tsx', '.js', '.jsx', '.scss', '.css'],
@@ -98,6 +99,10 @@ module.exports = function (_, env) {
           ]
         },
         {
+          test: /\.worker.[tj]sx?$/,
+          loader: 'comlink-loader'
+        },
+        {
           test: /\.tsx?$/,
           exclude: nodeModules,
           loader: 'ts-loader'
@@ -111,16 +116,16 @@ module.exports = function (_, env) {
         {
           // All the codec files define a global with the same name as their file name. `exports-loader` attaches those to `module.exports`.
           test: /\/codecs\/.*\.js$/,
-          loader: 'exports-loader',
+          loader: 'exports-loader'
         },
         {
           test: /\/codecs\/.*\.wasm$/,
           // This is needed to make webpack NOT process wasm files.
           // See https://github.com/webpack/webpack/issues/6725
           type: 'javascript/auto',
-          loader: 'file-loader',
+          loader: 'file-loader'
         }
-      ],
+      ]
     },
     plugins: [
       new webpack.IgnorePlugin(/(fs)/, /\/codecs\//),

@@ -16,12 +16,12 @@ export function bind(target: any, propertyKey: string, descriptor: PropertyDescr
     // define an instance property pointing to the bound function.
     // This effectively "caches" the bound prototype method as an instance property.
     get() {
-      let bound = descriptor.value.bind(this);
+      const bound = descriptor.value.bind(this);
       Object.defineProperty(this, propertyKey, {
-        value: bound
+        value: bound,
       });
       return bound;
-    }
+    },
   };
 }
 
@@ -37,9 +37,16 @@ export async function bitmapToImageData(bitmap: ImageBitmap): Promise<ImageData>
   // Draw image onto canvas
   const ctx = canvas.getContext('2d');
   if (!ctx) {
-    throw new Error("Could not create canvas context");
+    throw new Error('Could not create canvas context');
   }
   ctx.drawImage(bitmap, 0, 0);
   return ctx.getImageData(0, 0, bitmap.width, bitmap.height);
 }
 
+/** Replace the contents of a canvas with the given bitmap */
+export function drawBitmapToCanvas(canvas: HTMLCanvasElement, img: ImageBitmap) {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw Error('Canvas not initialized');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(img, 0, 0);
+}
