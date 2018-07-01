@@ -10,5 +10,5 @@ export const extension = 'png';
 export const defaultOptions: EncodeOptions = {};
 
 export function encode(data: ImageData, options: EncodeOptions) {
-  return canvasEncode(data, 'image/png');
+  return canvasEncode(data, mimeType);
 }
