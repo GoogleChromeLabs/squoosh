@@ -35,7 +35,7 @@ interface State {
   error?: string;
 }
 
-async function updateCompressedImage(
+async function compressImage(
   source: SourceImage,
   encodeData: EncoderState,
 ): Promise<ImageBitmap> {
@@ -117,6 +117,8 @@ export default class App extends Component<Props, State> {
     const { source, images } = this.state;
 
     for (const [i, image] of images.entries()) {
+      // The image only needs updated if the encoder settings have changed, or the source has
+      // changed.
       if (source !== prevState.source || image.encoderState !== prevState.images[i].encoderState) {
         this.updateImage(i);
       }
@@ -174,7 +176,7 @@ export default class App extends Component<Props, State> {
     let result;
 
     try {
-      result = await updateCompressedImage(source, image.encoderState);
+      result = await compressImage(source, image.encoderState);
     } catch (err) {
       this.setState({ error: `Encoding error (type=${image.encoderState.type}): ${err}` });
       throw err;
