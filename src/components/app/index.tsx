@@ -8,6 +8,7 @@ import './custom-els/FileDrop';
 
 import * as mozJPEG from '../../codecs/mozjpeg/encoder';
 import * as identity from '../../codecs/identity/encoder';
+import * as browserPNG from '../../codecs/browser-png/encoder';
 import { EncoderState, EncoderType, EncoderOptions, encoderMap } from '../../codecs/encoders';
 
 interface SourceImage {
@@ -45,6 +46,7 @@ async function compressImage(
   const compressedData = await (() => {
     switch (encodeData.type) {
       case mozJPEG.type: return mozJPEG.encode(source.data, encodeData.options);
+      case browserPNG.type: return browserPNG.encode(source.data, encodeData.options);
       default: throw Error(`Unexpected encoder name`);
     }
   })();

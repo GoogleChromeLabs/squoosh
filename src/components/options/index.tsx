@@ -5,11 +5,13 @@ import MozJpegEncoderOptions from '../../codecs/mozjpeg/options';
 
 import { type as mozJPEGType } from '../../codecs/mozjpeg/encoder';
 import { type as identityType } from '../../codecs/identity/encoder';
+import { type as browserPNGType } from '../../codecs/browser-png/encoder';
 import { EncoderState, EncoderType, EncoderOptions, encoders } from '../../codecs/encoders';
 
 const encoderOptionsComponentMap = {
   [mozJPEGType]: MozJpegEncoderOptions,
-  [identityType]: undefined
+  [identityType]: undefined,
+  [browserPNGType]: undefined,
 };
 
 interface Props {
@@ -50,8 +52,8 @@ export default class Options extends Component<Props, State> {
         {EncoderOptionComponent &&
           <EncoderOptionComponent
             options={
-              // Casting options, as encoderOptionsComponentMap[encodeData.type] ensures the correct type,
-              // but typescript isn't smart enough.
+              // Casting options, as encoderOptionsComponentMap[encodeData.type] ensures the correct
+              // type, but typescript isn't smart enough.
               encoderState.options as typeof EncoderOptionComponent['prototype']['props']['options']
             }
             onChange={onOptionsChange}
