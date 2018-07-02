@@ -65,8 +65,9 @@ export default class Output extends Component<Props, State> {
   onRetargetableEvent(event: Event) {
     const targetEl = event.target as HTMLElement;
     if (!this.pinchZoomLeft) throw Error('Missing pinch-zoom element');
-    // If the event is on the handle of the two-up, let it through.
-    if (targetEl.closest('.' + twoUpHandle)) return;
+    // If the event is on the handle of the two-up, let it through,
+    // unless it's a wheel event, in which case always let it through.
+    if (event.type !== 'wheel' && targetEl.closest('.' + twoUpHandle)) return;
     // If we've already retargeted this event, let it through.
     if (this.retargetedEvents.has(event)) return;
     // Stop the event in its tracks.
