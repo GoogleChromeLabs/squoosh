@@ -59,10 +59,7 @@ export async function canvasEncode(data: ImageData, type: string, quality?: numb
   if (!ctx) throw Error('Canvas not initialized');
   ctx.putImageData(data, 0, 0);
 
-  const blob = await new Promise(resolve =>
-    // TypeScript doesn't allow the promise to resolve with null for some reason.
-    canvas.toBlob(b => resolve(b || undefined), type, quality),
-  );
+  const blob = await new Promise<Blob | null>(r => canvas.toBlob(r, type, quality));
 
   if (!blob) throw Error('Encoding failed');
   return blob;
