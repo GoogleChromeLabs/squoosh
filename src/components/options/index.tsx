@@ -31,7 +31,7 @@ const encoderOptionsComponentMap = {
   [browserJPEG.type]: BrowserJPEGEncoderOptions,
   [browserWebP.type]: BrowserWebPEncoderOptions,
   [browserBMP.type]: undefined,
-  // Only Safari the rest, and it doesn't support quality settings.
+  // Only Safari supports the rest, and it doesn't support quality settings.
   [browserGIF.type]: undefined,
   [browserTIFF.type]: undefined,
   [browserJP2.type]: undefined,
