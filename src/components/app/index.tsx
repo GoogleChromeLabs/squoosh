@@ -197,11 +197,13 @@ export default class App extends Component<Props, State> {
       return;
     }
 
+    const bmp = await createImageBitmap(result);
+
     images = this.state.images.slice() as [EncodedImage, EncodedImage];
 
     images[index] = {
       ...images[index],
-      bmp: await createImageBitmap(result),
+      bmp,
       size: result.size,
       loading: image.loadingCounter !== loadingCounter,
       loadedCounter: loadingCounter,
