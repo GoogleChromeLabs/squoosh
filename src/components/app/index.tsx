@@ -13,6 +13,11 @@ import * as identity from '../../codecs/identity/encoder';
 import * as browserPNG from '../../codecs/browser-png/encoder';
 import * as browserJPEG from '../../codecs/browser-jpeg/encoder';
 import * as browserWebP from '../../codecs/browser-webp/encoder';
+import * as browserGIF from '../../codecs/browser-gif/encoder';
+import * as browserTIFF from '../../codecs/browser-tiff/encoder';
+import * as browserJP2 from '../../codecs/browser-jp2/encoder';
+import * as browserBMP from '../../codecs/browser-bmp/encoder';
+import * as browserPDF from '../../codecs/browser-pdf/encoder';
 import {
     EncoderState,
     EncoderType,
@@ -62,6 +67,11 @@ async function compressImage(
       case browserPNG.type: return browserPNG.encode(source.data, encodeData.options);
       case browserJPEG.type: return browserJPEG.encode(source.data, encodeData.options);
       case browserWebP.type: return browserWebP.encode(source.data, encodeData.options);
+      case browserGIF.type: return browserGIF.encode(source.data, encodeData.options);
+      case browserTIFF.type: return browserTIFF.encode(source.data, encodeData.options);
+      case browserJP2.type: return browserJP2.encode(source.data, encodeData.options);
+      case browserBMP.type: return browserBMP.encode(source.data, encodeData.options);
+      case browserPDF.type: return browserPDF.encode(source.data, encodeData.options);
       default: throw Error(`Unexpected encoder ${JSON.stringify(encodeData)}`);
     }
   })();

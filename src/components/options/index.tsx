@@ -10,6 +10,11 @@ import * as identity from '../../codecs/identity/encoder';
 import * as browserPNG from '../../codecs/browser-png/encoder';
 import * as browserJPEG from '../../codecs/browser-jpeg/encoder';
 import * as browserWebP from '../../codecs/browser-webp/encoder';
+import * as browserGIF from '../../codecs/browser-gif/encoder';
+import * as browserTIFF from '../../codecs/browser-tiff/encoder';
+import * as browserJP2 from '../../codecs/browser-jp2/encoder';
+import * as browserBMP from '../../codecs/browser-bmp/encoder';
+import * as browserPDF from '../../codecs/browser-pdf/encoder';
 import {
     EncoderState,
     EncoderType,
@@ -25,6 +30,12 @@ const encoderOptionsComponentMap = {
   [browserPNG.type]: undefined,
   [browserJPEG.type]: BrowserJPEGEncoderOptions,
   [browserWebP.type]: BrowserWebPEncoderOptions,
+  [browserBMP.type]: undefined,
+  // Only Safari the rest, and it doesn't support quality settings.
+  [browserGIF.type]: undefined,
+  [browserTIFF.type]: undefined,
+  [browserJP2.type]: undefined,
+  [browserPDF.type]: undefined,
 };
 
 interface Props {
