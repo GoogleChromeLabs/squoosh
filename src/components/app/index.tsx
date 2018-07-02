@@ -12,7 +12,13 @@ import * as mozJPEG from '../../codecs/mozjpeg/encoder';
 import * as identity from '../../codecs/identity/encoder';
 import * as browserPNG from '../../codecs/browser-png/encoder';
 import * as browserJPEG from '../../codecs/browser-jpeg/encoder';
-import { EncoderState, EncoderType, EncoderOptions, encoderMap } from '../../codecs/encoders';
+import * as browserWebP from '../../codecs/browser-webp/encoder';
+import {
+    EncoderState,
+    EncoderType,
+    EncoderOptions,
+    encoderMap,
+} from '../../codecs/encoders';
 
 interface SourceImage {
   file: File;
@@ -54,7 +60,8 @@ async function compressImage(
       case mozJPEG.type: return mozJPEG.encode(source.data, encodeData.options);
       case browserPNG.type: return browserPNG.encode(source.data, encodeData.options);
       case browserJPEG.type: return browserJPEG.encode(source.data, encodeData.options);
-      default: throw Error(`Unexpected encoder name`);
+      case browserWebP.type: return browserWebP.encode(source.data, encodeData.options);
+      default: throw Error(`Unexpected encoder ${JSON.stringify(encodeData)}`);
     }
   })();
 
