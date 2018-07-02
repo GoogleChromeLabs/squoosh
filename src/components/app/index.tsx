@@ -1,4 +1,6 @@
 import { h, Component } from 'preact';
+import { partial } from 'filesize';
+
 import { bind, bitmapToImageData } from '../../lib/util';
 import * as style from './style.scss';
 import Output from '../output';
@@ -8,6 +10,8 @@ import './custom-els/FileDrop';
 
 import * as mozJPEG from '../../codecs/mozjpeg/encoder';
 import * as identity from '../../codecs/identity/encoder';
+import * as browserPNG from '../../codecs/browser-png/encoder';
+import * as browserJPEG from '../../codecs/browser-jpeg/encoder';
 import { EncoderState, EncoderType, EncoderOptions, encoderMap } from '../../codecs/encoders';
 
 interface SourceImage {
@@ -19,6 +23,7 @@ interface SourceImage {
 interface EncodedImage {
   encoderState: EncoderState;
   bmp?: ImageBitmap;
+  size?: number;
   loading: boolean;
   /** Counter of the latest bmp currently encoding */
   loadingCounter: number;
@@ -35,16 +40,20 @@ interface State {
   error?: string;
 }
 
+const filesize = partial({});
+
 async function compressImage(
   source: SourceImage,
   encodeData: EncoderState,
-): Promise<ImageBitmap> {
+): Promise<Blob> {
   // Special case for identity
-  if (encodeData.type === identity.type) return source.bmp;
+  if (encodeData.type === identity.type) return source.file;
 
   const compressedData = await (() => {
     switch (encodeData.type) {
       case mozJPEG.type: return mozJPEG.encode(source.data, encodeData.options);
+      case browserPNG.type: return browserPNG.encode(source.data, encodeData.options);
+      case browserJPEG.type: return browserJPEG.encode(source.data, encodeData.options);
       default: throw Error(`Unexpected encoder name`);
     }
   })();
@@ -53,8 +62,7 @@ async function compressImage(
     type: encoderMap[encodeData.type].mimeType,
   });
 
-  const bitmap = await createImageBitmap(blob);
-  return bitmap;
+  return blob;
 }
 
 export default class App extends Component<Props, State> {
@@ -189,11 +197,14 @@ export default class App extends Component<Props, State> {
       return;
     }
 
+    const bmp = await createImageBitmap(result);
+
     images = this.state.images.slice() as [EncodedImage, EncodedImage];
 
     images[index] = {
       ...images[index],
-      bmp: result,
+      bmp,
+      size: result.size,
       loading: image.loadingCounter !== loadingCounter,
       loadedCounter: loadingCounter,
     };
@@ -220,6 +231,7 @@ export default class App extends Component<Props, State> {
           {images.map((image, index) => (
             <span class={index ? style.rightLabel : style.leftLabel}>
               {encoderMap[image.encoderState.type].label}
+              {image.size && ` - ${filesize(image.size)}`}
             </span>
           ))}
           {images.map((image, index) => (

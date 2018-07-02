@@ -62,9 +62,11 @@
     "webpack-plugin-replace": "^1.1.1"
   },
   "dependencies": {
+    "@types/filesize": "^3.6.0",
     "classnames": "^2.2.5",
     "comlink": "^3.0.3",
     "comlink-loader": "^1.0.0",
+    "filesize": "^3.6.1",
     "material-components-web": "^0.32.0",
     "preact": "^8.2.7",
     "preact-i18n": "^1.2.0",

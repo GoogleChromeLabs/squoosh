@@ -50,3 +50,17 @@ export function drawBitmapToCanvas(canvas: HTMLCanvasElement, bitmap: ImageBitma
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(bitmap, 0, 0);
 }
+
+export async function canvasEncode(data: ImageData, type: string, quality?: number) {
+  const canvas = document.createElement('canvas');
+  canvas.width = data.width;
+  canvas.height = data.height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw Error('Canvas not initialized');
+  ctx.putImageData(data, 0, 0);
+
+  const blob = await new Promise<Blob | null>(r => canvas.toBlob(r, type, quality));
+
+  if (!blob) throw Error('Encoding failed');
+  return blob;
+}
