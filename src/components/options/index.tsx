@@ -3,18 +3,21 @@ import * as style from './style.scss';
 import { bind } from '../../lib/util';
 import MozJpegEncoderOptions from '../../codecs/mozjpeg/options';
 import BrowserJPEGEncoderOptions from '../../codecs/browser-jpeg/options';
+import BrowserWebPEncoderOptions from '../../codecs/browser-webp/options';
 
-import { type as mozJPEGType } from '../../codecs/mozjpeg/encoder';
-import { type as identityType } from '../../codecs/identity/encoder';
-import { type as browserPNGType } from '../../codecs/browser-png/encoder';
-import { type as browserJPEGType } from '../../codecs/browser-jpeg/encoder';
+import * as mozJPEG from '../../codecs/mozjpeg/encoder';
+import * as identity from '../../codecs/identity/encoder';
+import * as browserPNG from '../../codecs/browser-png/encoder';
+import * as browserJPEG from '../../codecs/browser-jpeg/encoder';
+import * as browserWebP from '../../codecs/browser-webp/encoder';
 import { EncoderState, EncoderType, EncoderOptions, encoders } from '../../codecs/encoders';
 
 const encoderOptionsComponentMap = {
-  [mozJPEGType]: MozJpegEncoderOptions,
-  [identityType]: undefined,
-  [browserPNGType]: undefined,
-  [browserJPEGType]: BrowserJPEGEncoderOptions,
+  [mozJPEG.type]: MozJpegEncoderOptions,
+  [identity.type]: undefined,
+  [browserPNG.type]: undefined,
+  [browserJPEG.type]: BrowserJPEGEncoderOptions,
+  [browserWebP.type]: BrowserWebPEncoderOptions,
 };
 
 interface Props {
