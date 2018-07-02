@@ -27,7 +27,6 @@ export default function qualityOption(opts: QualityOptionArg = {}) {
     @bind
     onChange(event: Event) {
       const el = event.currentTarget as HTMLInputElement;
-      console.log(el.value);
       this.props.onChange({ quality: Number(el.value) });
     }
 
