@@ -28,10 +28,18 @@ interface FileDropEventInit extends EventInit {
   file: File;
 }
 
+// Safari and Edge don't quite support extending Event, this works around it.
+function fixExtendedEvent(instance: Event, type: Function) {
+  if (!(instance instanceof type)) {
+    Object.setPrototypeOf(instance, type.prototype);
+  }
+}
+
 export class FileDropEvent extends Event {
   private _file: File;
   constructor(typeArg: string, eventInitDict: FileDropEventInit) {
     super(typeArg, eventInitDict);
+    fixExtendedEvent(this, FileDropEvent);
     this._file = eventInitDict.file;
   }
 
@@ -78,8 +86,12 @@ export class FileDrop extends HTMLElement {
     if (this._dragEnterCount > 1) return;
 
     // We don't have data, attempt to get it and if it matches, set the correct state.
-    const dragDataItem = firstMatchingItem(event.dataTransfer.items, this.accept);
-    if (dragDataItem) {
+    const validDrop: boolean = event.dataTransfer.items.length ?
+      !!firstMatchingItem(event.dataTransfer.items, this.accept) :
+      // Safari doesn't give file information on drag enter, so the best we can do is return valid.
+      true;
+
+    if (validDrop) {
       this.classList.add('drop-valid');
     } else {
       this.classList.add('drop-invalid');
