@@ -21,9 +21,10 @@ interface SourceImage {
 }
 
 interface EncodedImage {
-  encoderState: EncoderState;
   bmp?: ImageBitmap;
-  size?: number;
+  file?: File;
+  downloadUrl?: string;
+  encoderState: EncoderState;
   loading: boolean;
   /** Counter of the latest bmp currently encoding */
   loadingCounter: number;
@@ -45,7 +46,7 @@ const filesize = partial({});
 async function compressImage(
   source: SourceImage,
   encodeData: EncoderState,
-): Promise<Blob> {
+): Promise<File> {
   // Special case for identity
   if (encodeData.type === identity.type) return source.file;
 
@@ -58,11 +59,13 @@ async function compressImage(
     }
   })();
 
-  const blob = new Blob([compressedData], {
-    type: encoderMap[encodeData.type].mimeType,
-  });
+  const encoder = encoderMap[encodeData.type];
 
-  return blob;
+  return new File(
+    [compressedData],
+    source.file.name.replace(/\..+$/, '.' + encoder.extension),
+    { type: encoder.mimeType },
+  );
 }
 
 export default class App extends Component<Props, State> {
@@ -125,9 +128,12 @@ export default class App extends Component<Props, State> {
     const { source, images } = this.state;
 
     for (const [i, image] of images.entries()) {
+      const prevImage = prevState.images[i];
+
       // The image only needs updated if the encoder settings have changed, or the source has
       // changed.
-      if (source !== prevState.source || image.encoderState !== prevState.images[i].encoderState) {
+      if (source !== prevState.source || image.encoderState !== prevImage.encoderState) {
+        if (prevImage.downloadUrl) URL.revokeObjectURL(prevImage.downloadUrl);
         this.updateImage(i);
       }
     }
@@ -181,10 +187,10 @@ export default class App extends Component<Props, State> {
 
     this.setState({ images });
 
-    let result;
+    let file;
 
     try {
-      result = await compressImage(source, image.encoderState);
+      file = await compressImage(source, image.encoderState);
     } catch (err) {
       this.setState({ error: `Encoding error (type=${image.encoderState.type}): ${err}` });
       throw err;
@@ -197,15 +203,16 @@ export default class App extends Component<Props, State> {
       return;
     }
 
-    const bmp = await createImageBitmap(result);
+    const bmp = await createImageBitmap(file);
 
     images = this.state.images.slice() as [EncodedImage, EncodedImage];
 
     images[index] = {
       ...images[index],
+      file,
       bmp,
-      size: result.size,
-      loading: image.loadingCounter !== loadingCounter,
+      downloadUrl: URL.createObjectURL(file),
+      loading: images[index].loadingCounter !== loadingCounter,
       loadedCounter: loadingCounter,
     };
 
@@ -214,7 +221,6 @@ export default class App extends Component<Props, State> {
 
   render({ }: Props, { loading, error, images }: State) {
     const [leftImageBmp, rightImageBmp] = images.map(i => i.bmp);
-
     const anyLoading = loading || images.some(image => image.loading);
 
     return (
@@ -231,7 +237,10 @@ export default class App extends Component<Props, State> {
           {images.map((image, index) => (
             <span class={index ? style.rightLabel : style.leftLabel}>
               {encoderMap[image.encoderState.type].label}
-              {image.size && ` - ${filesize(image.size)}`}
+              {(image.downloadUrl && image.file) && (
+                <a href={image.downloadUrl} download={image.file.name}>🔻</a>
+              )}
+              {image.file && ` - ${filesize(image.file.size)}`}
             </span>
           ))}
           {images.map((image, index) => (
