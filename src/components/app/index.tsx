@@ -18,7 +18,6 @@ import {
     EncoderType,
     EncoderOptions,
     encoderMap,
-    encodersSupported,
 } from '../../codecs/encoders';
 
 interface SourceImage {
