@@ -153,7 +153,7 @@ export default class App extends Component<Props, State> {
       // changed.
       if (source !== prevState.source || image.encoderState !== prevImage.encoderState) {
         if (prevImage.downloadUrl) URL.revokeObjectURL(prevImage.downloadUrl);
-        this.updateImage(i);
+        this.updateImage(i).catch(console.error);
       }
     }
   }
@@ -228,7 +228,13 @@ export default class App extends Component<Props, State> {
       return;
     }
 
-    const bmp = await createImageBitmap(file);
+    let bmp;
+    try {
+      bmp = await createImageBitmap(file);
+    } catch (err) {
+      this.setState({ error: `Encoding error (type=${image.encoderState.type}): ${err}` });
+      throw err;
+    }
 
     images = this.state.images.slice() as [EncodedImage, EncodedImage];
 
@@ -241,7 +247,7 @@ export default class App extends Component<Props, State> {
       loadedCounter: loadingCounter,
     };
 
-    this.setState({ images, error: '' });
+    this.setState({ images });
   }
 
   render({ }: Props, { loading, error, images }: State) {
