@@ -155,7 +155,9 @@ export default class App extends Component<Props, State> {
       // changed.
       if (source !== prevState.source || image.encoderState !== prevImage.encoderState) {
         if (prevImage.downloadUrl) URL.revokeObjectURL(prevImage.downloadUrl);
-        this.updateImage(i).catch(console.error);
+        this.updateImage(i).catch((err) => {
+          console.error(err);
+        });
       }
     }
   }
