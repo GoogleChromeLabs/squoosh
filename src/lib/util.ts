@@ -59,6 +59,21 @@ export async function bitmapToImageData(bitmap: ImageBitmap): Promise<ImageData>
   return ctx.getImageData(0, 0, bitmap.width, bitmap.height);
 }
 
+export async function imageDataToBitmap(data: ImageData): Promise<ImageBitmap> {
+  // Make canvas same size as image
+  // TODO: Move this off-thread if possible with `OffscreenCanvas` or iFrames?
+  const canvas = document.createElement('canvas');
+  canvas.width = data.width;
+  canvas.height = data.height;
+  // Draw image onto canvas
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    throw new Error('Could not create canvas context');
+  }
+  ctx.putImageData(data, 0, 0);
+  return createImageBitmap(canvas);
+}
+
 /** Replace the contents of a canvas with the given bitmap */
 export function drawBitmapToCanvas(canvas: HTMLCanvasElement, bitmap: ImageBitmap) {
   const ctx = canvas.getContext('2d');
@@ -79,4 +94,27 @@ export async function canvasEncode(data: ImageData, type: string, quality?: numb
 
   if (!blob) throw Error('Encoding failed');
   return blob;
+}
+
+export function canDecode(data: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    const img = document.createElement('img');
+    img.src = data;
+    img.onload = _ => resolve(true);
+    img.onerror = _ => resolve(false);
+  });
+}
+
+export function fileToBitmap(file: File): Promise<ImageBitmap> {
+  return createImageBitmap(file);
+}
+
+export function blobToArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
+  return new Promise((resolve) => {
+    const fileReader = new FileReader();
+    fileReader.addEventListener('load', () => {
+      resolve(fileReader.result);
+    });
+    fileReader.readAsArrayBuffer(blob);
+  });
 }
