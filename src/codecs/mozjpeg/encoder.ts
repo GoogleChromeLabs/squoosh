@@ -1,4 +1,4 @@
-import EncoderWorker from './EncoderWorker';
+import EncoderWorker from './Encoder.worker';
 
 export interface EncodeOptions { quality: number; }
 export interface EncoderState { type: typeof type; options: EncodeOptions; }
