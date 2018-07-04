@@ -3,7 +3,7 @@ import PinchZoom from './custom-els/PinchZoom';
 import './custom-els/PinchZoom';
 import './custom-els/TwoUp';
 import * as style from './style.scss';
-import { bind, drawBitmapToCanvas } from '../../lib/util';
+import { bind, drawBitmapToCanvas, linkRef } from '../../lib/util';
 import { twoUpHandle } from './custom-els/TwoUp/styles.css';
 
 type Props = {
@@ -92,11 +92,21 @@ export default class Output extends Component<Props, State> {
           onMouseDownCapture={this.onRetargetableEvent}
           onWheelCapture={this.onRetargetableEvent}
         >
-          <pinch-zoom onChange={this.onPinchZoomLeftChange} ref={p => this.pinchZoomLeft = p as PinchZoom}>
-            <canvas class={style.outputCanvas} ref={c => this.canvasLeft = c as HTMLCanvasElement} width={leftImg.width} height={leftImg.height} />
+          <pinch-zoom onChange={this.onPinchZoomLeftChange} ref={linkRef(this, 'pinchZoomLeft')}>
+            <canvas
+              class={style.outputCanvas}
+              ref={linkRef(this, 'canvasLeft')}
+              width={leftImg.width}
+              height={leftImg.height}
+            />
           </pinch-zoom>
-          <pinch-zoom ref={p => this.pinchZoomRight = p as PinchZoom}>
-            <canvas class={style.outputCanvas} ref={c => this.canvasRight = c as HTMLCanvasElement} width={rightImg.width} height={rightImg.height} />
+          <pinch-zoom ref={linkRef(this, 'pinchZoomRight')}>
+            <canvas
+              class={style.outputCanvas}
+              ref={linkRef(this, 'canvasRight')}
+              width={rightImg.width}
+              height={rightImg.height}
+            />
           </pinch-zoom>
         </two-up>
       </div>

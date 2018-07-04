@@ -1,7 +1,7 @@
 import { h, render } from 'preact';
 import './lib/fix-pmc';
 import './style';
-import App from './components/app';
+import App from './components/App';
 
 // Find the outermost Element in our server-rendered HTML structure.
 let root = document.querySelector('#app') || undefined;
@@ -15,8 +15,9 @@ if (process.env.NODE_ENV === 'development') {
   require('preact/debug');
 
   // When an update to any module is received, re-import the app and trigger a full re-render:
-  module.hot.accept('./components/app', () => {
-    import('./components/app').then(({ default: App }) => {
+  module.hot.accept('./components/App', () => {
+    // tslint:disable-next-line variable-name
+    import('./components/App').then(({ default: App }) => {
       root = render(<App />, document.body, root);
     });
   });
