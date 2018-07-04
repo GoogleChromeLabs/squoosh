@@ -25,6 +25,8 @@ import {
     encoderMap,
 } from '../../codecs/encoders';
 
+import {findDecoder} from "../../codecs/decoders";
+
 interface SourceImage {
   file: File;
   bmp: ImageBitmap;
@@ -174,7 +176,12 @@ export default class App extends Component<Props, State> {
   async updateFile(file: File) {
     this.setState({ loading: true });
     try {
-      const bmp = await createImageBitmap(file);
+      const decoder = await findDecoder(file);
+      if(!decoder) {
+        throw new Error('Can’t find a decoder for the given file');
+      }
+      console.log(`Decoding using ${decoder.name}`);
+      const bmp = await decoder.decode(file);
       // compute the corresponding ImageData once since it only changes when the file changes:
       const data = await bitmapToImageData(bmp);
 
@@ -184,6 +191,7 @@ export default class App extends Component<Props, State> {
         loading: false,
       });
     } catch (err) {
+      console.error(err);
       this.setState({ error: 'IMAGE_INVALID', loading: false });
     }
   }
