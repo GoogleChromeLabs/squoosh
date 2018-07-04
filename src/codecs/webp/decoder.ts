@@ -1,5 +1,5 @@
 import { blobToArrayBuffer, imageDataToBitmap } from '../../lib/util';
-import DecoderWorker  from './DecoderWorker';
+import DecoderWorker  from './Decoder.worker';
 
 export const name = 'WASM WebP Decoder';
 export const supportedExtensions = ['webp'];

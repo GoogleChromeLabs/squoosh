@@ -16,8 +16,8 @@ export const decodersPromise: Promise<Decoder[]> = Promise.all(
   [
     browserPNG,
     browserJPEG,
-    browserWebP,
     wasmWebP,
+    browserWebP,
   ]
   .map(async (encoder) => {
     if (await encoder.isSupported()) {
