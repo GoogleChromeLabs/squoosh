@@ -1,0 +1,208 @@
+import './styles.css';
+
+/**
+ * A multi-panel view that the user can add any number of 'panels'.
+ * 'a panel' consists of two elements. even index element begomes heading,
+ * and odd index element becomes the expandable content.
+ */
+export default class MultiPanel extends Element {
+
+  constructor () {
+    super();
+
+    // add EventListners
+    this.addEventListener('click', this._onClick, false);
+    this.addEventListener('keydown', this._onKeyDown, false);
+
+    // Watch for children changes.
+    new MutationObserver(() => this._childrenChange())
+      .observe(this, { childList: true });
+  }
+
+  connectedCallback () {
+    this._childrenChange();
+  }
+
+  // Click event handler
+  _onClick(event: Event) {
+    const el: Element = event.target as HTMLElement;
+    this._expand(this._getClosestHeading(el) as HTMLElement);
+  }
+
+  // KeyDown event handler
+  _onKeyDown(event: Event) {
+    const selectedEl = event.target as HTMLElement;
+    const keyboardEvent = event as KeyboardEvent;
+    // if keydown event is not on heading element, ignore
+    if (!this._getClosestHeading(selectedEl)) {
+      return;
+    }
+
+    // don’t handle modifier shortcuts used by assistive technology.
+    if (keyboardEvent.altKey) {
+      return;
+    }
+    let newHeading;
+    switch (keyboardEvent.key) {
+      case 'ArrowLeft':
+      case 'ArrowUp':
+        newHeading = this._prevHeading();
+        break;
+
+      case 'ArrowRight':
+      case 'ArrowDown':
+        newHeading = this._nextHeading();
+        break;
+
+      case 'Home':
+        newHeading = this._firstHeading();
+        break;
+
+      case 'End':
+        newHeading = this._lastHeading();
+        break;
+
+      case 'Enter':
+      case ' ':
+      case 'Spacebar':
+        this._expand(this._getClosestHeading(document.activeElement) as HTMLElement);
+        break;
+
+      // Any other key press is ignored and passed back to the browser.
+      default:
+        return;
+    }
+
+    event.preventDefault();
+    selectedEl.setAttribute('tabindex', '-1');
+    if (newHeading) {
+      newHeading.setAttribute('tabindex', '0');
+      newHeading.focus();
+    }
+  }
+
+  _expand (heading: HTMLElement) {
+
+    if (heading === undefined) {
+      return;
+    }
+
+    const content = heading.nextElementSibling;
+
+    // heading elment should always have nextElementSibling (checked on _childrenChange)
+    // but in case it is null, return.
+    if (content === null) {
+      return;
+    }
+
+    // toggle expanded and aria-expanded attoributes
+    if (content.hasAttribute('expanded')) {
+      content.removeAttribute('expanded');
+      content.setAttribute('aria-expanded', 'false');
+    } else {
+      content.setAttribute('expanded', '');
+      content.setAttribute('aria-expanded', 'true');
+    }
+  }
+
+  // children of multi-panel should always be even nuber (heading/content pair)
+  // if children are odd numbers, add a div at the end to prevent potential error.
+  _childrenChange () {
+    if (this.children.length % 2 !== 0) {
+      console.error(`detected odd number of elements inside multi-panel,
+      please make sure you have heading/content pair`);
+    }
+
+    const children : Element[] = Array.from(this.children);
+    let tabindexAlreadySet : boolean = false;
+
+    for (let i = 0; i < children.length; i += 2) {
+      const heading = children[i];
+      const content = children[i + 1];
+      const randomId = Math.random().toString(36).substr(2, 9);
+
+      // if panel-heading/panel-content class is already assigned to elements
+      // (= new child was added earlier), skip the ID/tabindex setting activities
+      // and just flag tabindexAlreadySet
+      if (heading.classList.contains('panel-heading')
+        && content.classList.contains('panel-content')) {
+        tabindexAlreadySet = true;
+        continue;
+      }
+
+      // for A11y add id and tab index
+      heading.classList.add('panel-heading');
+      heading.setAttribute('tabindex', '-1');
+      heading.id = `panel-heading-${randomId}`;
+      heading.setAttribute('aria-controls', `panel-content-${randomId}`);
+
+      content.classList.add('panel-content');
+      content.id = `panel-content-${randomId}`;
+      content.setAttribute('aria-labelledby', `panel-heading-${randomId}`);
+    }
+
+    // Only if tab index was never set (= initial load) make the first heading focusable.
+    // otherwise keep tab index where already is assigned.
+    if (!tabindexAlreadySet) {
+      children[0].setAttribute('tabindex', '0');
+    }
+  }
+
+  _getClosestHeading (el: Element) {
+    const closestEl = el.closest('multi-panel > *');
+    if (closestEl && closestEl.classList.contains('panel-heading')) {
+      return closestEl as HTMLElement;
+    }
+    return undefined;
+  }
+
+  // returns headding that is before currently selected one.
+  _prevHeading () {
+    // activeElement would be the currently selected headding
+    // 2 elemements before that would be the previouse heading unless it is the first element.
+    if (this.firstElementChild === document.activeElement) {
+      return this.firstElementChild as HTMLElement;
+    }
+    // previouse Element of active Element is previouse Content,
+    // previouse Element of previouse Content  is previouseHeadding
+    const previouseContent = document.activeElement.previousElementSibling;
+    if (previouseContent) {
+      return previouseContent.previousElementSibling as HTMLElement;
+    }
+    return;
+  }
+
+  // returns headding that is after currently selected one.
+  _nextHeading () {
+    // activeElement would be the currently selected headding
+    // 2 elemements after that would be the next heading.
+    const nextContent = document.activeElement.nextElementSibling;
+    if (nextContent) {
+      return nextContent.nextElementSibling as HTMLElement;
+    }
+    return;
+  }
+
+  // returns first heading in multi-panel.
+  _firstHeading () {
+    // first element is always first headding
+    return this.firstElementChild as HTMLElement;
+  }
+
+  // returns last heading in multi-panel.
+  _lastHeading () {
+    // if the last element is headding, return last element
+    const lastEl = this.lastElementChild as HTMLElement;
+    if (lastEl && lastEl.classList.contains('panel-heading')) {
+      return lastEl;
+    }
+    // otherwise return 2nd from the last
+    const lastContent = this.lastElementChild;
+    if (lastContent) {
+      return lastContent.previousElementSibling as HTMLElement;
+    }
+    return;
+  }
+}
+
+customElements.define('multi-panel', MultiPanel);

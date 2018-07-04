@@ -1,0 +1,11 @@
+multi-panel > .panel-heading {
+  background:gray;
+}
+multi-panel > .panel-content {
+  height:0px;
+  overflow:scroll;
+  transition: height 1s;
+}
+multi-panel > .panel-content[expanded] {
+  height:30px;
+}
