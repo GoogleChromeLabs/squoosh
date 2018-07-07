@@ -10,7 +10,8 @@
     "jsx-no-lambda": true,
     "function-name": false,
     "variable-name": [true, "check-format", "allow-leading-underscore"],
-    "no-duplicate-imports": false
+    "no-duplicate-imports": false,
+    "import-name": false
   },
   "linterOptions": {
     "exclude": [
