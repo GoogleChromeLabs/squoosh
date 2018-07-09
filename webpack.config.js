@@ -37,7 +37,7 @@ module.exports = function (_, env) {
       globalObject: 'self'
     },
     resolve: {
-      extensions: ['.ts', '.tsx', '.js', '.jsx', '.scss', '.css'],
+      extensions: ['.ts', '.tsx', '.mjs', '.js', '.scss', '.css'],
       alias: {
         style: path.join(__dirname, 'src/style')
       }
