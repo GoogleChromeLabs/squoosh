@@ -49,7 +49,38 @@ module.exports = function (_, env) {
       }
     },
     module: {
+      // Disable the default JavaScript handling:
+      defaultRules: [],
       rules: [
+        {
+          oneOf: [
+            {
+              test: /(\.mjs|\.esm\.js)$/i,
+              type: 'javascript/esm',
+              resolve: {},
+              parser: {
+                harmony: true,
+                amd: false,
+                commonjs: false,
+                system: false,
+                requireInclude: false,
+                requireEnsure: false,
+                requireContext: false,
+                browserify: false,
+                requireJs: false,
+                node: false
+              }
+            },
+            {
+              type: 'javascript/auto',
+              resolve: {},
+              parser: {
+                system: false,
+                requireJs: false
+              }
+            }
+          ]
+        },
         {
           test: /\.(scss|sass)$/,
           loader: 'sass-loader',
