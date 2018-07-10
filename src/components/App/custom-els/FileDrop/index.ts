@@ -70,6 +70,7 @@ export class FileDrop extends HTMLElement {
     this.addEventListener('dragenter', this._onDragEnter);
     this.addEventListener('dragend', () => this._reset());
     this.addEventListener('dragleave', this._onDragLeave);
+    this.addEventListener('paste', this._onPaste);
   }
 
   get accept() {
@@ -110,13 +111,26 @@ export class FileDrop extends HTMLElement {
   private _onDrop(event: DragEvent) {
     event.preventDefault();
     this._reset();
-    const dragDataItem = firstMatchingItem(event.dataTransfer.items, this.accept);
-    if (!dragDataItem) return;
 
-    const file = dragDataItem.getAsFile();
+    const file = this._getFileData(event.dataTransfer);
     if (file === null) return;
 
     this.dispatchEvent(new FileDropEvent('filedrop', { file }));
+  }
+
+  @bind
+  private _onPaste(event: ClipboardEvent) {
+    const file = this._getFileData(event.clipboardData);
+    if (file === null) return;
+
+    this.dispatchEvent(new FileDropEvent('filepaste', { file }));
+  }
+
+  private _getFileData(data: DataTransfer): File | null {
+    const dragDataItem = firstMatchingItem(data.items, this.accept);
+    if (!dragDataItem) return null;
+
+    return dragDataItem.getAsFile();
   }
 
   private _reset() {

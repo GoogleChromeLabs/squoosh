@@ -241,7 +241,7 @@ export default class App extends Component<Props, State> {
     const anyLoading = loading || images.some(image => image.loading);
 
     return (
-      <file-drop accept="image/*" onfiledrop={this.onFileDrop}>
+      <file-drop accept="image/*" onfiledrop={this.onFileDrop} onfilepaste={this.onFileDrop}>
         <div id="app" class={style.app}>
           {(leftImageBmp && rightImageBmp) ? (
             <Output leftImg={leftImageBmp} rightImg={rightImageBmp} />
