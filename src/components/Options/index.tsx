@@ -68,6 +68,7 @@ export default class Options extends Component<Props, State> {
   }
 
   render({ class: className, encoderState, onOptionsChange }: Props, { encoderSupportMap }: State) {
+    // tslint:disable variable-name
     const EncoderOptionComponent = encoderOptionsComponentMap[encoderState.type];
 
     return (

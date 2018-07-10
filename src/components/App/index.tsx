@@ -3,8 +3,8 @@ import { partial } from 'filesize';
 
 import { bind, bitmapToImageData } from '../../lib/util';
 import * as style from './style.scss';
-import Output from '../output';
-import Options from '../options';
+import Output from '../Output';
+import Options from '../Options';
 import { FileDropEvent } from './custom-els/FileDrop';
 import './custom-els/FileDrop';
 
