@@ -32,6 +32,7 @@ function getFileData(data: DataTransfer, accept: string): File | null {
 }
 
 interface FileDropEventInit extends EventInit {
+  action: string;
   file: File;
 }
 
@@ -43,11 +44,17 @@ function fixExtendedEvent(instance: Event, type: Function) {
 }
 
 export class FileDropEvent extends Event {
+  private _action: string;
   private _file: File;
   constructor(typeArg: string, eventInitDict: FileDropEventInit) {
     super(typeArg, eventInitDict);
     fixExtendedEvent(this, FileDropEvent);
     this._file = eventInitDict.file;
+    this._action = eventInitDict.action;
+  }
+
+  get action(): string {
+    return this._action;
   }
 
   get file(): File {
@@ -118,19 +125,20 @@ export class FileDrop extends HTMLElement {
   private _onDrop(event: DragEvent) {
     event.preventDefault();
     this._reset();
-
+    const action = 'drop';
     const file = getFileData(event.dataTransfer, this.accept);
     if (file === null) return;
 
-    this.dispatchEvent(new FileDropEvent('filedrop', { file }));
+    this.dispatchEvent(new FileDropEvent('filedrop', { action, file }));
   }
 
   @bind
   private _onPaste(event: ClipboardEvent) {
+    const action = 'paste';
     const file = getFileData(event.clipboardData, this.accept);
     if (file === null) return;
 
-    this.dispatchEvent(new FileDropEvent('filepaste', { file }));
+    this.dispatchEvent(new FileDropEvent('filedrop', { action, file }));
   }
 
   private _reset() {
