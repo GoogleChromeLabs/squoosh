@@ -33,10 +33,11 @@ module.exports = function (_, env) {
       filename: isProd ? '[name].[chunkhash:5].js' : '[name].js',
       chunkFilename: '[name].chunk.[chunkhash:5].js',
       path: path.join(__dirname, 'build'),
-      publicPath: '/'
+      publicPath: '/',
+      globalObject: 'self'
     },
     resolve: {
-      extensions: ['.ts', '.tsx', '.js', '.jsx', '.scss', '.css'],
+      extensions: ['.ts', '.tsx', '.mjs', '.js', '.scss', '.css'],
       alias: {
         style: path.join(__dirname, 'src/style')
       }
@@ -48,7 +49,38 @@ module.exports = function (_, env) {
       }
     },
     module: {
+      // Disable the default JavaScript handling:
+      defaultRules: [],
       rules: [
+        {
+          oneOf: [
+            {
+              test: /(\.mjs|\.esm\.js)$/i,
+              type: 'javascript/esm',
+              resolve: {},
+              parser: {
+                harmony: true,
+                amd: false,
+                commonjs: false,
+                system: false,
+                requireInclude: false,
+                requireEnsure: false,
+                requireContext: false,
+                browserify: false,
+                requireJs: false,
+                node: false
+              }
+            },
+            {
+              type: 'javascript/auto',
+              resolve: {},
+              parser: {
+                system: false,
+                requireJs: false
+              }
+            }
+          ]
+        },
         {
           test: /\.(scss|sass)$/,
           loader: 'sass-loader',
@@ -98,6 +130,10 @@ module.exports = function (_, env) {
           ]
         },
         {
+          test: /\.worker.[tj]sx?$/,
+          loader: 'comlink-loader'
+        },
+        {
           test: /\.tsx?$/,
           exclude: nodeModules,
           loader: 'ts-loader'
@@ -111,16 +147,16 @@ module.exports = function (_, env) {
         {
           // All the codec files define a global with the same name as their file name. `exports-loader` attaches those to `module.exports`.
           test: /\/codecs\/.*\.js$/,
-          loader: 'exports-loader',
+          loader: 'exports-loader'
         },
         {
           test: /\/codecs\/.*\.wasm$/,
           // This is needed to make webpack NOT process wasm files.
           // See https://github.com/webpack/webpack/issues/6725
           type: 'javascript/auto',
-          loader: 'file-loader',
+          loader: 'file-loader'
         }
-      ],
+      ]
     },
     plugins: [
       new webpack.IgnorePlugin(/(fs)/, /\/codecs\//),

@@ -62,7 +62,7 @@ export default class PinchZoom extends HTMLElement {
   // Current transform.
   private _transform: SVGMatrix = createMatrix();
 
-  constructor () {
+  constructor() {
     super();
 
     // Watch for children changes.
@@ -87,26 +87,26 @@ export default class PinchZoom extends HTMLElement {
     this.addEventListener('wheel', event => this._onWheel(event));
   }
 
-  connectedCallback () {
+  connectedCallback() {
     this._stageElChange();
   }
 
-  get x () {
+  get x() {
     return this._transform.e;
   }
 
-  get y () {
+  get y() {
     return this._transform.f;
   }
 
-  get scale () {
+  get scale() {
     return this._transform.a;
   }
 
   /**
    * Update the stage with a given scale/x/y.
    */
-  setTransform (opts: SetTransformOpts = {}) {
+  setTransform(opts: SetTransformOpts = {}) {
     const {
       scale = this.scale,
       allowChangeEvent = false,
@@ -174,7 +174,7 @@ export default class PinchZoom extends HTMLElement {
   /**
    * Update transform values without checking bounds. This is only called in setTransform.
    */
-  _updateTransform (scale: number, x: number, y: number, allowChangeEvent: boolean) {
+  _updateTransform(scale: number, x: number, y: number, allowChangeEvent: boolean) {
     // Return if there's no change
     if (
       scale === this.scale &&
@@ -202,7 +202,7 @@ export default class PinchZoom extends HTMLElement {
    * require a single element to be the child of <pinch-zoom>, and
    * that's the element we pan/scale.
    */
-  private _stageElChange () {
+  private _stageElChange() {
     this._positioningEl = undefined;
 
     if (this.children.length === 0) {
@@ -220,7 +220,7 @@ export default class PinchZoom extends HTMLElement {
     this.setTransform();
   }
 
-  private _onWheel (event: WheelEvent) {
+  private _onWheel(event: WheelEvent) {
     event.preventDefault();
 
     const thisRect = this.getBoundingClientRect();
@@ -243,7 +243,7 @@ export default class PinchZoom extends HTMLElement {
     });
   }
 
-  private _onPointerMove (previousPointers: Pointer[], currentPointers: Pointer[]) {
+  private _onPointerMove(previousPointers: Pointer[], currentPointers: Pointer[]) {
     // Combine next points with previous points
     const thisRect = this.getBoundingClientRect();
 
@@ -268,7 +268,7 @@ export default class PinchZoom extends HTMLElement {
   }
 
   /** Transform the view & fire a change event */
-  private _applyChange (opts: ApplyChangeOpts = {}) {
+  private _applyChange(opts: ApplyChangeOpts = {}) {
     const {
       panX = 0, panY = 0,
       originX = 0, originY = 0,
