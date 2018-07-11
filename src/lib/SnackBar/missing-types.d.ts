@@ -7,7 +7,7 @@ declare global {
     }
 
     interface SnackBarAttributes extends HTMLAttributes {
-      showSnackbar?: (options: SnackBarOptions) => void
+      showSnackbar?: (options: SnackBarOptions) => void;
     }
   }
 }
