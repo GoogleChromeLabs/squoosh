@@ -31,10 +31,11 @@ export default class MultiPanel extends Element {
 
   // KeyDown event handler
   private _onKeyDown(event: Event) {
-    const selectedEl = event.target as HTMLElement;
+    const selectedEl = document.activeElement;
     const keyboardEvent = event as KeyboardEvent;
+    const closestHeading = this._getClosestHeading(selectedEl)
     // if keydown event is not on heading element, ignore
-    if (!this._getClosestHeading(selectedEl)) {
+    if (!closestHeading) {
       return;
     }
 
@@ -65,7 +66,7 @@ export default class MultiPanel extends Element {
       case 'Enter':
       case ' ':
       case 'Spacebar':
-        this._expand(this._getClosestHeading(document.activeElement) as HTMLElement);
+        this._expand(closestHeading as HTMLElement);
         break;
 
       // Any other key press is ignored and passed back to the browser.
