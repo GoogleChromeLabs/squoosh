@@ -8,7 +8,7 @@ function firstMatchingItem(list: DataTransferItemList, acceptVal: string): DataT
     return accept.trim().split('/').map(part => part.trim());
   }).filter(acceptParts => acceptParts.length === 2); // Filter invalid values
 
-  return Array.from(list).find((item) => {
+  return Array.from<DataTransferItem>(list).find((item) => {
     if (item.kind !== 'file') return false;
 
     // 'Parse' the type.
