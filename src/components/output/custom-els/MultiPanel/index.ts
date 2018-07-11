@@ -24,7 +24,7 @@ export default class MultiPanel extends Element {
   }
 
   // Click event handler
-  private _onClick(event: MouseEvent) {
+  private _onClick(event: Event) {
     const el: Element = event.target as HTMLElement;
     this._expand(this._getClosestHeading(el) as HTMLElement);
   }
@@ -81,7 +81,7 @@ export default class MultiPanel extends Element {
     }
   }
 
-  private _expand (heading: HTMLElement) {
+  private _expand(heading: HTMLElement) {
 
     if (heading === undefined) {
       return;
@@ -156,15 +156,15 @@ export default class MultiPanel extends Element {
     return undefined;
   }
 
-  // returns headding that is before currently selected one.
+  // returns heading that is before currently selected one.
   private _prevHeading () {
-    // activeElement would be the currently selected headding
+    // activeElement would be the currently selected heading
     // 2 elemements before that would be the previouse heading unless it is the first element.
     if (this.firstElementChild === document.activeElement) {
       return this.firstElementChild as HTMLElement;
     }
     // previouse Element of active Element is previouse Content,
-    // previouse Element of previouse Content  is previouseHeadding
+    // previouse Element of previouse Content  is previouseHeading
     const previouseContent = document.activeElement.previousElementSibling;
     if (previouseContent) {
       return previouseContent.previousElementSibling as HTMLElement;
@@ -172,9 +172,9 @@ export default class MultiPanel extends Element {
     return;
   }
 
-  // returns headding that is after currently selected one.
-  private _nextHeading () {
-    // activeElement would be the currently selected headding
+  // returns heading that is after currently selected one.
+  private _nextHeading() {
+    // activeElement would be the currently selected heading
     // 2 elemements after that would be the next heading.
     const nextContent = document.activeElement.nextElementSibling;
     if (nextContent) {
@@ -185,13 +185,13 @@ export default class MultiPanel extends Element {
 
   // returns first heading in multi-panel.
   private _firstHeading () {
-    // first element is always first headding
+    // first element is always first heading
     return this.firstElementChild as HTMLElement;
   }
 
   // returns last heading in multi-panel.
-  private _lastHeading () {
-    // if the last element is headding, return last element
+  private _lastHeading() {
+    // if the last element is heading, return last element
     const lastEl = this.lastElementChild as HTMLElement;
     if (lastEl && lastEl.classList.contains('panel-heading')) {
       return lastEl;
