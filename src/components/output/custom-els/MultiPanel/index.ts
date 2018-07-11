@@ -2,7 +2,7 @@ import './styles.css';
 
 /**
  * A multi-panel view that the user can add any number of 'panels'.
- * 'a panel' consists of two elements. even index element begomes heading,
+ * 'a panel' consists of two elements. Even index element becomes heading,
  * and odd index element becomes the expandable content.
  */
 export default class MultiPanel extends Element {
@@ -24,13 +24,13 @@ export default class MultiPanel extends Element {
   }
 
   // Click event handler
-  _onClick(event: Event) {
+  private _onClick(event: MouseEvent) {
     const el: Element = event.target as HTMLElement;
     this._expand(this._getClosestHeading(el) as HTMLElement);
   }
 
   // KeyDown event handler
-  _onKeyDown(event: Event) {
+  private _onKeyDown(event: Event) {
     const selectedEl = event.target as HTMLElement;
     const keyboardEvent = event as KeyboardEvent;
     // if keydown event is not on heading element, ignore
@@ -81,7 +81,7 @@ export default class MultiPanel extends Element {
     }
   }
 
-  _expand (heading: HTMLElement) {
+  private _expand (heading: HTMLElement) {
 
     if (heading === undefined) {
       return;
@@ -107,7 +107,7 @@ export default class MultiPanel extends Element {
 
   // children of multi-panel should always be even nuber (heading/content pair)
   // if children are odd numbers, add a div at the end to prevent potential error.
-  _childrenChange () {
+  private _childrenChange () {
     if (this.children.length % 2 !== 0) {
       console.error(`detected odd number of elements inside multi-panel,
       please make sure you have heading/content pair`);
@@ -148,7 +148,7 @@ export default class MultiPanel extends Element {
     }
   }
 
-  _getClosestHeading (el: Element) {
+  private _getClosestHeading (el: Element) {
     const closestEl = el.closest('multi-panel > *');
     if (closestEl && closestEl.classList.contains('panel-heading')) {
       return closestEl as HTMLElement;
@@ -157,7 +157,7 @@ export default class MultiPanel extends Element {
   }
 
   // returns headding that is before currently selected one.
-  _prevHeading () {
+  private _prevHeading () {
     // activeElement would be the currently selected headding
     // 2 elemements before that would be the previouse heading unless it is the first element.
     if (this.firstElementChild === document.activeElement) {
@@ -173,7 +173,7 @@ export default class MultiPanel extends Element {
   }
 
   // returns headding that is after currently selected one.
-  _nextHeading () {
+  private _nextHeading () {
     // activeElement would be the currently selected headding
     // 2 elemements after that would be the next heading.
     const nextContent = document.activeElement.nextElementSibling;
@@ -184,13 +184,13 @@ export default class MultiPanel extends Element {
   }
 
   // returns first heading in multi-panel.
-  _firstHeading () {
+  private _firstHeading () {
     // first element is always first headding
     return this.firstElementChild as HTMLElement;
   }
 
   // returns last heading in multi-panel.
-  _lastHeading () {
+  private _lastHeading () {
     // if the last element is headding, return last element
     const lastEl = this.lastElementChild as HTMLElement;
     if (lastEl && lastEl.classList.contains('panel-heading')) {
