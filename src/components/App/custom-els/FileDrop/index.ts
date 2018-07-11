@@ -24,6 +24,13 @@ function firstMatchingItem(list: DataTransferItemList, acceptVal: string): DataT
   });
 }
 
+function getFileData(data: DataTransfer, accept: string): File | null {
+  const dragDataItem = firstMatchingItem(data.items, accept);
+  if (!dragDataItem) return null;
+
+  return dragDataItem.getAsFile();
+}
+
 interface FileDropEventInit extends EventInit {
   file: File;
 }
@@ -112,7 +119,7 @@ export class FileDrop extends HTMLElement {
     event.preventDefault();
     this._reset();
 
-    const file = this._getFileData(event.dataTransfer);
+    const file = getFileData(event.dataTransfer, this.accept);
     if (file === null) return;
 
     this.dispatchEvent(new FileDropEvent('filedrop', { file }));
@@ -120,17 +127,10 @@ export class FileDrop extends HTMLElement {
 
   @bind
   private _onPaste(event: ClipboardEvent) {
-    const file = this._getFileData(event.clipboardData);
+    const file = getFileData(event.clipboardData, this.accept);
     if (file === null) return;
 
     this.dispatchEvent(new FileDropEvent('filepaste', { file }));
-  }
-
-  private _getFileData(data: DataTransfer): File | null {
-    const dragDataItem = firstMatchingItem(data.items, this.accept);
-    if (!dragDataItem) return null;
-
-    return dragDataItem.getAsFile();
   }
 
   private _reset() {
