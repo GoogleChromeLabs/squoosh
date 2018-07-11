@@ -7,7 +7,7 @@ import './styles.css';
  */
 export default class MultiPanel extends Element {
 
-  constructor () {
+  constructor() {
     super();
 
     // add EventListners
@@ -19,7 +19,7 @@ export default class MultiPanel extends Element {
       .observe(this, { childList: true });
   }
 
-  connectedCallback () {
+  connectedCallback() {
     this._childrenChange();
   }
 
@@ -107,7 +107,7 @@ export default class MultiPanel extends Element {
 
   // children of multi-panel should always be even nuber (heading/content pair)
   // if children are odd numbers, add a div at the end to prevent potential error.
-  private _childrenChange () {
+  private _childrenChange() {
     if (this.children.length % 2 !== 0) {
       console.error(`detected odd number of elements inside multi-panel,
       please make sure you have heading/content pair`);
@@ -148,7 +148,7 @@ export default class MultiPanel extends Element {
     }
   }
 
-  private _getClosestHeading (el: Element) {
+  private _getClosestHeading(el: Element) {
     const closestEl = el.closest('multi-panel > *');
     if (closestEl && closestEl.classList.contains('panel-heading')) {
       return closestEl as HTMLElement;
@@ -157,7 +157,7 @@ export default class MultiPanel extends Element {
   }
 
   // returns heading that is before currently selected one.
-  private _prevHeading () {
+  private _prevHeading() {
     // activeElement would be the currently selected heading
     // 2 elemements before that would be the previouse heading unless it is the first element.
     if (this.firstElementChild === document.activeElement) {
@@ -184,7 +184,7 @@ export default class MultiPanel extends Element {
   }
 
   // returns first heading in multi-panel.
-  private _firstHeading () {
+  private _firstHeading() {
     // first element is always first heading
     return this.firstElementChild as HTMLElement;
   }
