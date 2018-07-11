@@ -1,54 +1,95 @@
 .snackbar {
   position: fixed;
   display: flex;
+  box-sizing: border-box;
   left: 50%;
   bottom: 24px;
-  transform: translate(-50%, 200%);
-  padding: 0 24px;
-  border-radius: 2px;
+  width: 344px;
+  margin-left: -172px;
   background: #2a2a2a;
-  color: #eee;
+  border-radius: 2px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.5);
-  pointer-events: none;
-  will-change: transform;
+  transform-origin: center;
+  color: #eee;
   z-index: 100;
-  animation: snackbar-show 500ms ease forwards 1;
+  pointer-events: none;
+  cursor: default;
+  will-change: transform;
+  animation: snackbar-show 300ms ease forwards 1;
+}
+.snackbar[aria-hidden="true"] {
+  animation: snackbar-hide 300ms ease forwards 1;
 }
 @keyframes snackbar-show {
-  to { transform: translate(-50%, 0%); }
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
 }
-@media (max-width: 500px) {
+@keyframes snackbar-hide {
+  to {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+}
+
+@media (max-width: 400px) {
   .snackbar {
     width: 100%;
-    border-radius: 0;
     bottom: 0;
+    left: 0;
+    margin-left: 0;
+    border-radius: 0;
   }
 }
 
 .snackbar--text {
   flex: 1 1 auto;
+  padding: 16px;
+  font-size: 100%;
 }
 
 .snackbar--button {
   position: relative;
   flex: 0 1 auto;
-  color: lightgreen;
-  font-weight: bold;
   padding: 8px;
-  margin: 0 -8px 0 24px;
+  height: 36px;
+  margin: auto 8px auto -8px;
+  min-width: 5em;
+  background: none;
+  border: none;
   border-radius: 3px;
+  color: lightgreen;
+  font-weight: inherit;
+  letter-spacing: 0.05em;
+  font-size: 100%;
+  text-transform: uppercase;
+  text-align: center;
   pointer-events: all;
+  cursor: pointer;
+  overflow: hidden;
+  transition: background-color 200ms ease;
   outline: none;
+}
+.snackbar--button:hover {
+  background-color: rgba(0,0,0,0.15);
 }
 .snackbar--button:focus:before {
   content: '';
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 200%;
+  width: 120%;
   height: 0;
-  padding: 0 0 200%;
-  margin: -100% 0 0 -100%;
+  padding: 0 0 120%;
+  margin: -60% 0 0 -60%;
   background: rgba(255,255,255,0.1);
+  transform-origin: center;
   border-radius: 50%;
+  animation: focus-ring 300ms ease-out forwards 1;
+}
+@keyframes focus-ring {
+  from {
+    transform: scale(0.01);
+  }
 }

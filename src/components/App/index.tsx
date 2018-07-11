@@ -24,6 +24,8 @@ import {
     EncoderOptions,
     encoderMap,
 } from '../../codecs/encoders';
+import SnackBarElement from '../../lib/SnackBar';
+import '../../lib/SnackBar';
 
 interface SourceImage {
   file: File;
@@ -49,7 +51,6 @@ interface State {
   source?: SourceImage;
   images: [EncodedImage, EncodedImage];
   loading: boolean;
-  error?: string;
 }
 
 const filesize = partial({});
@@ -103,6 +104,8 @@ export default class App extends Component<Props, State> {
       },
     ],
   };
+
+  private snackbar?: SnackBarElement = undefined;
 
   constructor() {
     super();
@@ -180,11 +183,11 @@ export default class App extends Component<Props, State> {
 
       this.setState({
         source: { data, bmp, file },
-        error: undefined,
         loading: false,
       });
     } catch (err) {
-      this.setState({ error: 'IMAGE_INVALID', loading: false });
+      this.showError(`Invalid image`);
+      this.setState({ loading: false });
     }
   }
 
@@ -209,14 +212,13 @@ export default class App extends Component<Props, State> {
     try {
       file = await compressImage(source, image.encoderState);
     } catch (err) {
-      this.setState({ error: `Encoding error (type=${image.encoderState.type}): ${err}` });
+      this.showError(`Encoding error (type=${image.encoderState.type}): ${err}`);
       throw err;
     }
 
     const latestImage = this.state.images[index];
     // If a later encode has landed before this one, return.
     if (loadingCounter < latestImage.loadedCounter) {
-      this.setState({ error: '' });
       return;
     }
 
@@ -233,10 +235,15 @@ export default class App extends Component<Props, State> {
       loadedCounter: loadingCounter,
     };
 
-    this.setState({ images, error: '' });
+    this.setState({ images });
   }
 
-  render({ }: Props, { loading, error, images }: State) {
+  showError (error: Error | String) {
+    if (!this.snackbar) return;
+    this.snackbar.showSnackbar({ message: String(error) });
+  }
+
+  render({ }: Props, { loading, images }: State) {
     const [leftImageBmp, rightImageBmp] = images.map(i => i.bmp);
     const anyLoading = loading || images.some(image => image.loading);
 
@@ -269,7 +276,7 @@ export default class App extends Component<Props, State> {
             />
           ))}
           {anyLoading && <span style={{ position: 'fixed', top: 0, left: 0 }}>Loading...</span>}
-          {error && <span style={{ position: 'fixed', top: 0, left: 0 }}>Error: {error}</span>}
+          <snack-bar ref={(c) => { this.snackbar = c as SnackBarElement; }} />
         </div>
       </file-drop>
     );
