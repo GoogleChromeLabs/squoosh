@@ -11,8 +11,8 @@ export default class MultiPanel extends Element {
     super();
 
     // add EventListners
-    this.addEventListener('click', this._onClick, false);
-    this.addEventListener('keydown', this._onKeyDown, false);
+    this.addEventListener('click', this._onClick);
+    this.addEventListener('keydown', this._onKeyDown);
 
     // Watch for children changes.
     new MutationObserver(() => this._childrenChange())
@@ -89,13 +89,13 @@ export default class MultiPanel extends Element {
 
     const content = heading.nextElementSibling;
 
-    // heading elment should always have nextElementSibling (checked on _childrenChange)
+    // heading element should always have nextElementSibling (checked on _childrenChange)
     // but in case it is null, return.
     if (content === null) {
       return;
     }
 
-    // toggle expanded and aria-expanded attoributes
+    // toggle expanded and aria-expanded attributes
     if (content.hasAttribute('expanded')) {
       content.removeAttribute('expanded');
       content.setAttribute('aria-expanded', 'false');
@@ -105,7 +105,7 @@ export default class MultiPanel extends Element {
     }
   }
 
-  // children of multi-panel should always be even nuber (heading/content pair)
+  // children of multi-panel should always be even number (heading/content pair)
   // if children are odd numbers, add a div at the end to prevent potential error.
   private _childrenChange() {
     if (this.children.length % 2 !== 0) {
@@ -159,15 +159,15 @@ export default class MultiPanel extends Element {
   // returns heading that is before currently selected one.
   private _prevHeading() {
     // activeElement would be the currently selected heading
-    // 2 elemements before that would be the previouse heading unless it is the first element.
+    // 2 elemements before that would be the previous heading unless it is the first element.
     if (this.firstElementChild === document.activeElement) {
       return this.firstElementChild as HTMLElement;
     }
-    // previouse Element of active Element is previouse Content,
-    // previouse Element of previouse Content  is previouseHeading
-    const previouseContent = document.activeElement.previousElementSibling;
-    if (previouseContent) {
-      return previouseContent.previousElementSibling as HTMLElement;
+    // previous Element of active Element is previous Content,
+    // previous Element of previous Content  is previousHeading
+    const previousContent = document.activeElement.previousElementSibling;
+    if (previousContent) {
+      return previousContent.previousElementSibling as HTMLElement;
     }
     return;
   }
