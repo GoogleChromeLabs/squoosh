@@ -5,6 +5,16 @@ import './styles.css';
  * 'a panel' consists of two elements. Even index element becomes heading,
  * and odd index element becomes the expandable content.
  */
+
+
+function getClosestHeading(el: Element) {
+  const closestEl = el.closest('multi-panel > *');
+  if (closestEl && closestEl.classList.contains('panel-heading')) {
+    return closestEl as HTMLElement;
+  }
+  return undefined;
+}
+
 export default class MultiPanel extends Element {
 
   constructor() {
@@ -26,14 +36,14 @@ export default class MultiPanel extends Element {
   // Click event handler
   private _onClick(event: Event) {
     const el: Element = event.target as HTMLElement;
-    this._expand(this._getClosestHeading(el) as HTMLElement);
+    this._expand(getClosestHeading(el) as HTMLElement);
   }
 
   // KeyDown event handler
   private _onKeyDown(event: Event) {
     const selectedEl = document.activeElement;
     const keyboardEvent = event as KeyboardEvent;
-    const closestHeading = this._getClosestHeading(selectedEl);
+    const closestHeading = getClosestHeading(selectedEl);
     // if keydown event is not on heading element, ignore
     if (!closestHeading) {
       return;
@@ -143,14 +153,6 @@ export default class MultiPanel extends Element {
     if (!tabindexAlreadySet) {
       children[0].setAttribute('tabindex', '0');
     }
-  }
-
-  private _getClosestHeading(el: Element) {
-    const closestEl = el.closest('multi-panel > *');
-    if (closestEl && closestEl.classList.contains('panel-heading')) {
-      return closestEl as HTMLElement;
-    }
-    return undefined;
   }
 
   // returns heading that is before currently selected one.
