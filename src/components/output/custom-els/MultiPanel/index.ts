@@ -33,7 +33,7 @@ export default class MultiPanel extends Element {
   private _onKeyDown(event: Event) {
     const selectedEl = document.activeElement;
     const keyboardEvent = event as KeyboardEvent;
-    const closestHeading = this._getClosestHeading(selectedEl)
+    const closestHeading = this._getClosestHeading(selectedEl);
     // if keydown event is not on heading element, ignore
     if (!closestHeading) {
       return;
@@ -84,17 +84,13 @@ export default class MultiPanel extends Element {
 
   private _expand(heading: HTMLElement) {
 
-    if (heading === undefined) {
-      return;
-    }
+    if (!heading) return;
 
     const content = heading.nextElementSibling;
 
     // heading element should always have nextElementSibling (checked on _childrenChange)
     // but in case it is null, return.
-    if (content === null) {
-      return;
-    }
+    if (!content) return;
 
     // toggle expanded and aria-expanded attributes
     if (content.hasAttribute('expanded')) {
@@ -170,7 +166,6 @@ export default class MultiPanel extends Element {
     if (previousContent) {
       return previousContent.previousElementSibling as HTMLElement;
     }
-    return;
   }
 
   // returns heading that is after currently selected one.
@@ -181,7 +176,6 @@ export default class MultiPanel extends Element {
     if (nextContent) {
       return nextContent.nextElementSibling as HTMLElement;
     }
-    return;
   }
 
   // returns first heading in multi-panel.
@@ -202,7 +196,6 @@ export default class MultiPanel extends Element {
     if (lastContent) {
       return lastContent.previousElementSibling as HTMLElement;
     }
-    return;
   }
 }
 
