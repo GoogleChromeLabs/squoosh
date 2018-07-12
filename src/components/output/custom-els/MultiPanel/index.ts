@@ -6,21 +6,20 @@ import './styles.css';
  * and odd index element becomes the expandable content.
  */
 
-
 function getClosestHeading(el: Element) {
   const closestEl = el.closest('multi-panel > *');
   if (closestEl && closestEl.classList.contains('panel-heading')) {
-    return closestEl as HTMLElement;
+    return closestEl;
   }
   return undefined;
 }
 
-export default class MultiPanel extends Element {
+export default class MultiPanel extends HTMLElement {
 
   constructor() {
     super();
 
-    // add EventListners
+    // add EventListeners
     this.addEventListener('click', this._onClick);
     this.addEventListener('keydown', this._onKeyDown);
 
@@ -34,27 +33,26 @@ export default class MultiPanel extends Element {
   }
 
   // Click event handler
-  private _onClick(event: Event) {
-    const el: Element = event.target as HTMLElement;
-    this._expand(getClosestHeading(el) as HTMLElement);
+  private _onClick(event: MouseEvent) {
+    const el: Element = event.target as Element;
+    const heading = getClosestHeading(el);
+    if (!heading) return;
+    this._expand(heading);
   }
 
   // KeyDown event handler
-  private _onKeyDown(event: Event) {
+  private _onKeyDown(event: KeyboardEvent) {
     const selectedEl = document.activeElement;
-    const keyboardEvent = event as KeyboardEvent;
-    const closestHeading = getClosestHeading(selectedEl);
+    const heading = getClosestHeading(selectedEl);
+
     // if keydown event is not on heading element, ignore
-    if (!closestHeading) {
-      return;
-    }
+    if (!heading) return;
 
     // don’t handle modifier shortcuts used by assistive technology.
-    if (keyboardEvent.altKey) {
-      return;
-    }
+    if (event.altKey) return;
+
     let newHeading;
-    switch (keyboardEvent.key) {
+    switch (event.key) {
       case 'ArrowLeft':
       case 'ArrowUp':
         newHeading = this._prevHeading();
@@ -76,7 +74,7 @@ export default class MultiPanel extends Element {
       case 'Enter':
       case ' ':
       case 'Spacebar':
-        this._expand(closestHeading as HTMLElement);
+        this._expand(heading);
         break;
 
       // Any other key press is ignored and passed back to the browser.
@@ -92,14 +90,11 @@ export default class MultiPanel extends Element {
     }
   }
 
-  private _expand(heading: HTMLElement) {
-
+  private _expand(heading: Element) {
     if (!heading) return;
-
     const content = heading.nextElementSibling;
 
-    // heading element should always have nextElementSibling (checked on _childrenChange)
-    // but in case it is null, return.
+    // if there is no content, nothing to expand
     if (!content) return;
 
     // toggle expanded and aria-expanded attributes
@@ -113,52 +108,73 @@ export default class MultiPanel extends Element {
   }
 
   // children of multi-panel should always be even number (heading/content pair)
-  // if children are odd numbers, add a div at the end to prevent potential error.
   private _childrenChange() {
-    if (this.children.length % 2 !== 0) {
-      console.error(`detected odd number of elements inside multi-panel,
-      please make sure you have heading/content pair`);
-    }
+    let preserveTabIndex : boolean = false;
+    let heading = this.firstElementChild;
 
-    const children : Element[] = Array.from(this.children);
-    let tabindexAlreadySet : boolean = false;
-
-    for (let i = 0; i < children.length; i += 2) {
-      const heading = children[i];
-      const content = children[i + 1];
+    while (heading) {
+      const content = heading.nextElementSibling;
       const randomId = Math.random().toString(36).substr(2, 9);
 
-      // if panel-heading/panel-content class is already assigned to elements
-      // (= new child was added earlier), skip the ID/tabindex setting activities
-      // and just flag tabindexAlreadySet
-      if (heading.classList.contains('panel-heading')
-        && content.classList.contains('panel-content')) {
-        tabindexAlreadySet = true;
+      // if at the end of this loop, runout of element for content,
+      // it means it has odd number of elements. log error and set heading to end the loop.
+      if (!content) {
+        console.error('<multi-panel> requires an even number of element children.');
+        heading = null;
         continue;
       }
 
-      // for A11y add id and tab index
+      // When odd number of elements were inserted in the middle,
+      // what was heading before may become content after the insertion.
+      // Remove classes and attributes to prepare for this change.
+      if (heading.classList.contains('panel-content')) {
+        heading.classList.remove('panel-content');
+      }
+      if (content.classList.contains('panel-heading')) {
+        content.classList.remove('panel-heading');
+      }
+      if (heading.hasAttribute('expanded') && heading.hasAttribute('aria-expanded')) {
+        heading.removeAttribute('expanded');
+        heading.removeAttribute('aria-expanded');
+      }
+
+      // If appreciable, remove tabindex from content which used to be header.
+      if (content.hasAttribute('tabindex')) {
+        content.removeAttribute('tabindex');
+      }
+
+      // Assign heading and content classes
       heading.classList.add('panel-heading');
-      heading.setAttribute('tabindex', '-1');
+      content.classList.add('panel-content');
+
+      // Assign ids and aria-X for heading/content pair.
       heading.id = `panel-heading-${randomId}`;
       heading.setAttribute('aria-controls', `panel-content-${randomId}`);
-
-      content.classList.add('panel-content');
       content.id = `panel-content-${randomId}`;
       content.setAttribute('aria-labelledby', `panel-heading-${randomId}`);
+
+      // If tabindex 0 is assigned to a heading, flag to preserve tab index position.
+      // Otherwise, make sure tabindex -1 is set to heading elements.
+      if (heading.getAttribute('tabindex') === '0') {
+        preserveTabIndex = true;
+      } else {
+        heading.setAttribute('tabindex', '-1');
+      }
+
+      // next sibling of content = next heading
+      heading = content.nextElementSibling;
     }
 
-    // Only if tab index was never set (= initial load) make the first heading focusable.
-    // otherwise keep tab index where already is assigned.
-    if (!tabindexAlreadySet) {
-      children[0].setAttribute('tabindex', '0');
+    // if no flag, make 1st heading as tabindex 0 (otherwise keep previous tab index position).
+    if (!preserveTabIndex && this.firstElementChild) {
+      this.firstElementChild.setAttribute('tabindex', '0');
     }
   }
 
   // returns heading that is before currently selected one.
   private _prevHeading() {
     // activeElement would be the currently selected heading
-    // 2 elemements before that would be the previous heading unless it is the first element.
+    // 2 elements before that would be the previous heading unless it is the first element.
     if (this.firstElementChild === document.activeElement) {
       return this.firstElementChild as HTMLElement;
     }
