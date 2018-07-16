@@ -101,7 +101,7 @@ export default class Output extends Component<Props, State> {
     return (
       <div class={style.output}>
         <two-up
-          vertical={verticalTwoUp}
+          orientation={verticalTwoUp ? 'vertical' : 'horizontal'}
           // Event redirecting. See onRetargetableEvent.
           onTouchStartCapture={this.onRetargetableEvent}
           onTouchEndCapture={this.onRetargetableEvent}
