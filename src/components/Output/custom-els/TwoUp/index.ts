@@ -1,15 +1,13 @@
 import * as styles from './styles.css';
 import { PointerTracker, Pointer } from '../../../../lib/PointerTracker';
 
-const legacyClipCompat = 'legacy-clip-compat';
+const legacyClipCompatAttr = 'legacy-clip-compat';
 
 /**
  * A split view that the user can adjust. The first child becomes
  * the left-hand side, and the second child becomes the right-hand side.
  */
 export default class TwoUp extends HTMLElement {
-  static get observedAttributes () { return [legacyClipCompat]; }
-
   private readonly _handle = document.createElement('div');
   /**
    * The position of the split in pixels.
@@ -52,7 +50,7 @@ export default class TwoUp extends HTMLElement {
     });
   }
 
-  connectedCallback () {
+  connectedCallback() {
     this._childrenChange();
     if (!this._everConnected) {
       // Set the initial position of the handle.
@@ -69,22 +67,22 @@ export default class TwoUp extends HTMLElement {
    * If true, this element works in browsers that don't support clip-path (Edge).
    * However, this means you'll have to set the height of this element manually.
    */
-  get noClipPathCompat () {
-    return this.hasAttribute(legacyClipCompat);
+  get legacyClipCompat() {
+    return this.hasAttribute(legacyClipCompatAttr);
   }
 
-  set noClipPathCompat (val: boolean) {
+  set legacyClipCompat(val: boolean) {
     if (val) {
-      this.setAttribute(legacyClipCompat, '');
+      this.setAttribute(legacyClipCompatAttr, '');
     } else {
-      this.removeAttribute(legacyClipCompat);
+      this.removeAttribute(legacyClipCompatAttr);
     }
   }
 
   /**
    * Called when element's child list changes
    */
-  private _childrenChange () {
+  private _childrenChange() {
     // Ensure the handle is the last child.
     // The CSS depends on this.
     if (this.lastElementChild !== this._handle) {
@@ -103,7 +101,7 @@ export default class TwoUp extends HTMLElement {
     this._setPosition();
   }
 
-  private _setPosition () {
+  private _setPosition() {
     this.style.setProperty('--split-point', `${this._position}px`);
   }
 }
