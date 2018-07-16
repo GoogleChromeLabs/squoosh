@@ -17,9 +17,9 @@
     }
   },
   "devDependencies": {
-    "@types/node": "^9.4.7",
+    "@types/node": "^9.6.23",
     "@types/webassembly-js-api": "0.0.1",
-    "babel-loader": "^7.1.4",
+    "babel-loader": "^7.1.5",
     "babel-plugin-jsx-pragmatic": "^1.0.2",
     "babel-plugin-syntax-dynamic-import": "^6.18.0",
     "babel-plugin-transform-class-properties": "^6.24.1",
@@ -36,11 +36,11 @@
     "exports-loader": "^0.7.0",
     "file-loader": "^1.1.11",
     "html-webpack-plugin": "^3.0.6",
-    "husky": "^1.0.0-rc.9",
+    "husky": "^1.0.0-rc.13",
     "if-env": "^1.0.4",
     "loader-utils": "^1.1.0",
     "mini-css-extract-plugin": "^0.3.0",
-    "node-sass": "^4.7.2",
+    "node-sass": "^4.9.2",
     "optimize-css-assets-webpack-plugin": "^4.0.0",
     "progress-bar-webpack-plugin": "^1.11.0",
     "raw-loader": "^0.5.1",
@@ -55,7 +55,7 @@
     "tslint-react": "^3.5.1",
     "typescript": "^2.7.2",
     "typings-for-css-modules-loader": "^1.7.0",
-    "webpack": "^4.3.0",
+    "webpack": "^4.15.1",
     "webpack-bundle-analyzer": "^2.11.1",
     "webpack-cli": "^2.0.13",
     "webpack-dev-server": "^3.1.1",
@@ -70,7 +70,7 @@
     "material-components-web": "^0.32.0",
     "preact": "^8.2.7",
     "preact-i18n": "^1.2.0",
-    "preact-material-components": "^1.3.7",
+    "preact-material-components": "^1.4.7",
     "preact-router": "^2.6.0"
   }
 }
