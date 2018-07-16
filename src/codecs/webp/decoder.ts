@@ -11,6 +11,5 @@ export async function decode(file: File): Promise<ImageBitmap> {
 }
 
 export async function isSupported(): Promise<boolean> {
-  // TODO(@surma): Should we do wasm detection here or something?
   return true;
 }

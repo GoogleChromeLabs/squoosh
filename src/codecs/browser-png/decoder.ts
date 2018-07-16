@@ -1,4 +1,4 @@
-import { canDecode, fileToBitmap } from '../../lib/util';
+import { canDecodeImage, fileToBitmap } from '../../lib/util';
 
 export const name = 'Browser PNG Decoder';
 export const supportedExtensions = ['png'];
@@ -11,5 +11,5 @@ export async function decode(file: File): Promise<ImageBitmap> {
 const pngFile = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQYV2NgAAIAAAUAAarVyFEAAAAASUVORK5CYII=';
 
 export function isSupported(): Promise<boolean> {
-  return canDecode(pngFile);
+  return canDecodeImage(pngFile);
 }

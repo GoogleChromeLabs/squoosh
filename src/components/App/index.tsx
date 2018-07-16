@@ -184,7 +184,6 @@ export default class App extends Component<Props, State> {
       if (!decoder) {
         throw new Error('Can’t find a decoder for the given file');
       }
-      console.log(`Decoding using ${decoder.name}`);
       const bmp = await decoder.decode(file);
       // compute the corresponding ImageData once since it only changes when the file changes:
       const data = await bitmapToImageData(bmp);
@@ -251,7 +250,7 @@ export default class App extends Component<Props, State> {
       loadedCounter: loadingCounter,
     };
 
-    this.setState({ images });
+    this.setState({ images, error: '' });
   }
 
   render({ }: Props, { loading, error, images }: State) {

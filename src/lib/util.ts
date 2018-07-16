@@ -96,7 +96,7 @@ export async function canvasEncode(data: ImageData, type: string, quality?: numb
   return blob;
 }
 
-export function canDecode(data: string): Promise<boolean> {
+export function canDecodeImage(data: string): Promise<boolean> {
   return new Promise((resolve) => {
     const img = document.createElement('img');
     img.src = data;
