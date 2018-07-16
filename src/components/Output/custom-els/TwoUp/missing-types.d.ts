@@ -9,8 +9,13 @@ interface Window {
   Touch: typeof Touch;
 }
 
+interface TwoUpAttributes extends JSX.HTMLAttributes {
+  'vertical'?: boolean;
+  'legacy-clip-compat'?: boolean;
+}
+
 declare namespace JSX {
   interface IntrinsicElements {
-    'two-up': HTMLAttributes;
+    'two-up': TwoUpAttributes;
   }
 }

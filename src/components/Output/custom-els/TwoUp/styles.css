@@ -36,6 +36,17 @@ two-up[legacy-clip-compat] > :not(.twoUpHandle) {
   border-radius: 20px;
 }
 
+two-up[vertical] .twoUpHandle {
+  width: auto;
+  height: 10px;
+  transform: translateY(var(--split-point)) translateY(-50%);
+}
+
+two-up[vertical] .twoUpHandle::after {
+  width: 40px;
+  height: 80px;
+}
+
 two-up > :nth-child(1):not(.twoUpHandle) {
   -webkit-clip-path: inset(0 calc(100% - var(--split-point)) 0 0);
   clip-path: inset(0 calc(100% - var(--split-point)) 0 0);
@@ -44,6 +55,16 @@ two-up > :nth-child(1):not(.twoUpHandle) {
 two-up > :nth-child(2):not(.twoUpHandle) {
   -webkit-clip-path: inset(0 0 0 var(--split-point));
   clip-path: inset(0 0 0 var(--split-point));
+}
+
+two-up[vertical] > :nth-child(1):not(.twoUpHandle) {
+  -webkit-clip-path: inset(0 0 calc(100% - var(--split-point)) 0);
+  clip-path: inset(0 0 calc(100% - var(--split-point)) 0);
+}
+
+two-up[vertical] > :nth-child(2):not(.twoUpHandle) {
+  -webkit-clip-path: inset(var(--split-point) 0 0 0);
+  clip-path: inset(var(--split-point) 0 0 0);
 }
 
 /*
@@ -57,5 +78,13 @@ two-up > :nth-child(2):not(.twoUpHandle) {
 
   two-up[legacy-clip-compat] > :nth-child(2):not(.twoUpHandle) {
     clip: rect(auto auto auto var(--split-point));
+  }
+
+  two-up[vertical][legacy-clip-compat] > :nth-child(1):not(.twoUpHandle) {
+    clip: rect(auto auto var(--split-point) auto);
+  }
+
+  two-up[vertical][legacy-clip-compat] > :nth-child(2):not(.twoUpHandle) {
+    clip: rect(var(--split-point) auto auto auto);
   }
 }

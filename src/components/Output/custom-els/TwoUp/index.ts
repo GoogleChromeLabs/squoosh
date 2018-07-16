@@ -2,12 +2,15 @@ import * as styles from './styles.css';
 import { PointerTracker, Pointer } from '../../../../lib/PointerTracker';
 
 const legacyClipCompatAttr = 'legacy-clip-compat';
+const verticalAttr = 'vertical';
 
 /**
  * A split view that the user can adjust. The first child becomes
  * the left-hand side, and the second child becomes the right-hand side.
  */
 export default class TwoUp extends HTMLElement {
+  static get observedAttributes() { return [verticalAttr]; }
+
   private readonly _handle = document.createElement('div');
   /**
    * The position of the split in pixels.
@@ -53,14 +56,24 @@ export default class TwoUp extends HTMLElement {
   connectedCallback() {
     this._childrenChange();
     if (!this._everConnected) {
-      // Set the initial position of the handle.
-      requestAnimationFrame(() => {
-        const bounds = this.getBoundingClientRect();
-        this._position = bounds.width / 2;
-        this._setPosition();
-      });
+      this._resetPosition();
       this._everConnected = true;
     }
+  }
+
+  attributeChangedCallback(name: string) {
+    if (name === verticalAttr) {
+      this._resetPosition();
+    }
+  }
+
+  private _resetPosition() {
+    // Set the initial position of the handle.
+    requestAnimationFrame(() => {
+      const bounds = this.getBoundingClientRect();
+      this._position = (this.vertical ? bounds.height : bounds.width) / 2;
+      this._setPosition();
+    });
   }
 
   /**
@@ -80,6 +93,21 @@ export default class TwoUp extends HTMLElement {
   }
 
   /**
+   * Split vertically rather than horizontally.
+   */
+  get vertical() {
+    return this.hasAttribute(verticalAttr);
+  }
+
+  set vertical(val: boolean) {
+    if (val) {
+      this.setAttribute(verticalAttr, '');
+    } else {
+      this.removeAttribute(verticalAttr);
+    }
+  }
+
+  /**
    * Called when element's child list changes
    */
   private _childrenChange() {
@@ -93,11 +121,16 @@ export default class TwoUp extends HTMLElement {
   /**
    * Called when a pointer moves.
    */
-  private _pointerChange (startPoint: Pointer, currentPoint: Pointer) {
+  private _pointerChange(startPoint: Pointer, currentPoint: Pointer) {
+    const pointAxis = this.vertical ? 'clientY' : 'clientX';
+    const dimensionAxis = this.vertical ? 'height' : 'width';
     const bounds = this.getBoundingClientRect();
-    this._position = this._positionOnPointerStart + (currentPoint.clientX - startPoint.clientX);
+
+    this._position = this._positionOnPointerStart +
+      (currentPoint[pointAxis] - startPoint[pointAxis]);
+
     // Clamp position to element bounds.
-    this._position = Math.max(0, Math.min(this._position, bounds.width));
+    this._position = Math.max(0, Math.min(this._position, bounds[dimensionAxis]));
     this._setPosition();
   }
 
