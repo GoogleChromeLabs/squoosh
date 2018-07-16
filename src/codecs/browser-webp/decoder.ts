@@ -1,9 +1,9 @@
-import { canDecodeImage, fileToBitmap } from '../../lib/util';
+import { canDecodeImage, createImageBitmapPolyfill } from '../../lib/util';
 
 export const name = 'Browser WebP Decoder';
 export const supportedMimeTypes = ['image/webp'];
 export async function decode(file: File): Promise<ImageBitmap> {
-  return fileToBitmap(file);
+  return createImageBitmapPolyfill(file);
 }
 
 // tslint:disable-next-line:max-line-length It’s a data URL. Whatcha gonna do?

@@ -1,9 +1,7 @@
-import * as browserJPEG from './browser-jpeg/decoder';
-import * as browserPNG from './browser-png/decoder';
-import * as browserWebP from './browser-webp/decoder';
 import * as wasmWebP from './webp/decoder';
+import * as browserWebP from './browser-webp/decoder';
 
-import { sniffMimeType } from '../lib/util';
+import { createImageBitmapPolyfill, sniffMimeType } from '../lib/util';
 
 export interface Decoder {
   name: string;
@@ -15,10 +13,8 @@ export interface Decoder {
 // We load all decoders and filter out the unsupported ones.
 export const decodersPromise: Promise<Decoder[]> = Promise.all(
   [
-    browserPNG,
-    browserJPEG,
-    wasmWebP,
     browserWebP,
+    wasmWebP,
   ]
   .map(async (decoder) => {
     if (await decoder.isSupported()) {
@@ -37,4 +33,26 @@ export async function findDecoder(file: File): Promise<Decoder | undefined> {
     return;
   }
   return decoders.find(decoder => decoder.canHandleMimeType(mimeType));
+}
+
+const nativelySupportedMimeTypes = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+];
+
+export async function decodeFile(file: File): Promise<ImageBitmap> {
+  const mimeType = await sniffMimeType(file);
+  if (!mimeType) {
+    throw new Error('Could not determine mime type');
+  }
+  if (nativelySupportedMimeTypes.includes(mimeType)) {
+    return createImageBitmapPolyfill(file);
+  }
+  const decoder = await findDecoder(file);
+  if (!decoder) {
+    throw new Error(`Can’t decode files with mime type ${mimeType}`);
+  }
+  console.log(`Going with ${decoder.name}`);
+  return decoder.decode(file);
 }

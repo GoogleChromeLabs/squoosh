@@ -105,10 +105,6 @@ export function canDecodeImage(data: string): Promise<boolean> {
   });
 }
 
-export function fileToBitmap(file: File): Promise<ImageBitmap> {
-  return createImageBitmap(file);
-}
-
 export function blobToArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
   return new Promise((resolve) => {
     const fileReader = new FileReader();
@@ -142,4 +138,8 @@ export async function sniffMimeType(blob: Blob): Promise<string | undefined> {
       return mimeType;
     }
   }
+}
+
+export function createImageBitmapPolyfill(blob: Blob): Promise<ImageBitmap> {
+  return createImageBitmap(blob);
 }
