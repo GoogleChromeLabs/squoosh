@@ -8,7 +8,7 @@ export async function decode(file: File): Promise<ImageBitmap> {
 }
 
 // tslint:disable-next-line:max-line-length It’s a data URL. Whatcha gonna do?
-const webpFile = 'data:image/webp;base64,UklGRkAAAABXRUJQVlA4WAoAAAAQAAAAAAAAAAAAQUxQSAIAAAAAAFZQOCAYAAAAMAEAnQEqAQABAAFAJiWkAANwAP79NmgA';
+const webpFile = 'data:image/webp;base64,UklGRh4AAABXRUJQVlA4TBEAAAAvAAAAAAfQ//73v/+BiOh/AAA=';
 
 export function isSupported(): Promise<boolean> {
   return canDecode(webpFile);
