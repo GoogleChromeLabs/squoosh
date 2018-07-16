@@ -3,12 +3,13 @@ import * as browserPNG from './browser-png/decoder';
 import * as browserWebP from './browser-webp/decoder';
 import * as wasmWebP from './webp/decoder';
 
+import { sniffMimeType } from '../lib/util';
+
 export interface Decoder {
   name: string;
   decode(file: File): Promise<ImageBitmap>;
   isSupported(): Promise<boolean>;
-  supportedMimeTypes: string[];
-  supportedExtensions: string[];
+  canHandleMimeType(mimeType: string): boolean;
 }
 
 // We load all decoders and filter out the unsupported ones.
@@ -19,9 +20,9 @@ export const decodersPromise: Promise<Decoder[]> = Promise.all(
     wasmWebP,
     browserWebP,
   ]
-  .map(async (encoder) => {
-    if (await encoder.isSupported()) {
-      return encoder;
+  .map(async (decoder) => {
+    if (await decoder.isSupported()) {
+      return decoder;
     }
     return null;
   }),
@@ -31,12 +32,9 @@ export const decodersPromise: Promise<Decoder[]> = Promise.all(
 
 export async function findDecoder(file: File): Promise<Decoder | undefined> {
   const decoders = await decodersPromise;
-  // Prefer a match on mime type over a match on file extension
-  const decoder = decoders.find(decoder => decoder.supportedMimeTypes.includes(file.type));
-  if (decoder) {
-    return decoder;
+  const mimeType = await sniffMimeType(file);
+  if (!mimeType) {
+    return;
   }
-  return decoders.find(decoder =>
-    decoder.supportedExtensions.some(extension =>
-       file.name.endsWith(`.${extension}`)));
+  return decoders.find(decoder => decoder.canHandleMimeType(mimeType));
 }

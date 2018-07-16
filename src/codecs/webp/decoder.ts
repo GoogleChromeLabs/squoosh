@@ -2,7 +2,6 @@ import { blobToArrayBuffer, imageDataToBitmap } from '../../lib/util';
 import DecoderWorker  from './Decoder.worker';
 
 export const name = 'WASM WebP Decoder';
-export const supportedExtensions = ['webp'];
 export const supportedMimeTypes = ['image/webp'];
 export async function decode(file: File): Promise<ImageBitmap> {
   const decoder = await new DecoderWorker();
@@ -12,4 +11,8 @@ export async function decode(file: File): Promise<ImageBitmap> {
 
 export async function isSupported(): Promise<boolean> {
   return true;
+}
+
+export function canHandleMimeType(mimeType: string): boolean {
+  return supportedMimeTypes.includes(mimeType);
 }

@@ -1,7 +1,6 @@
 import { canDecodeImage, fileToBitmap } from '../../lib/util';
 
 export const name = 'Browser JPEG Decoder';
-export const supportedExtensions = ['jpg', 'jpeg'];
 export const supportedMimeTypes = ['image/jpeg'];
 export async function decode(file: File): Promise<ImageBitmap> {
   return fileToBitmap(file);
@@ -12,4 +11,8 @@ const jpegFile = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgI
 
 export function isSupported(): Promise<boolean> {
   return canDecodeImage(jpegFile);
+}
+
+export function canHandleMimeType(mimeType: string): boolean {
+  return supportedMimeTypes.includes(mimeType);
 }

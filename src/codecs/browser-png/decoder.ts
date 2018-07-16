@@ -1,7 +1,6 @@
 import { canDecodeImage, fileToBitmap } from '../../lib/util';
 
 export const name = 'Browser PNG Decoder';
-export const supportedExtensions = ['png'];
 export const supportedMimeTypes = ['image/png'];
 export async function decode(file: File): Promise<ImageBitmap> {
   return fileToBitmap(file);
@@ -12,4 +11,8 @@ const pngFile = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfF
 
 export function isSupported(): Promise<boolean> {
   return canDecodeImage(pngFile);
+}
+
+export function canHandleMimeType(mimeType: string): boolean {
+  return supportedMimeTypes.includes(mimeType);
 }
