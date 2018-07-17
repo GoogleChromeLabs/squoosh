@@ -1,7 +1,7 @@
 import { h, Component } from 'preact';
 import { partial } from 'filesize';
 
-import { bind, bitmapToImageData } from '../../lib/util';
+import { bind, linkRef, bitmapToImageData } from '../../lib/util';
 import * as style from './style.scss';
 import Output from '../Output';
 import Options from '../Options';
@@ -276,7 +276,7 @@ export default class App extends Component<Props, State> {
             />
           ))}
           {anyLoading && <span style={{ position: 'fixed', top: 0, left: 0 }}>Loading...</span>}
-          <snack-bar ref={(c) => { this.snackbar = c as SnackBarElement; }} />
+          <snack-bar ref={linkRef(this, 'snackbar')} />
         </div>
       </file-drop>
     );
