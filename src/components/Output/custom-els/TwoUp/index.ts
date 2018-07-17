@@ -4,6 +4,8 @@ import { PointerTracker, Pointer } from '../../../../lib/PointerTracker';
 const legacyClipCompatAttr = 'legacy-clip-compat';
 const orientationAttr = 'orientation';
 
+type TwoUpOrientation = 'horizontal' | 'vertical';
+
 /**
  * A split view that the user can adjust. The first child becomes
  * the left-hand side, and the second child becomes the right-hand side.
@@ -98,7 +100,9 @@ export default class TwoUp extends HTMLElement {
   get orientation(): TwoUpOrientation {
     const value = this.getAttribute(orientationAttr);
 
-    if (value === 'vertical') return value;
+    // This mirrors the behaviour of input.type, where setting just sets the attribute, but getting
+    // returns the value only if it's valid.
+    if (value && value.toLowerCase() === 'vertical') return 'vertical';
     return 'horizontal';
   }
 

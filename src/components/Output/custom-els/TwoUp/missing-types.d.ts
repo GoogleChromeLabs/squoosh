@@ -9,10 +9,8 @@ interface Window {
   Touch: typeof Touch;
 }
 
-type TwoUpOrientation = 'horizontal' | 'vertical';
-
 interface TwoUpAttributes extends JSX.HTMLAttributes {
-  'orientation'?: TwoUpOrientation;
+  'orientation'?: string;
   'legacy-clip-compat'?: boolean;
 }
 
