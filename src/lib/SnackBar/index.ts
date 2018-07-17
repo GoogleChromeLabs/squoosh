@@ -61,7 +61,6 @@ class SnackBar {
     this._showing = false;
     this.cancelTimer();
     this._element.addEventListener('animationend', this.remove.bind(this));
-    this._element.addEventListener('transitionend', this.remove.bind(this));
     this._element.setAttribute('aria-hidden', 'true');
   }
 
