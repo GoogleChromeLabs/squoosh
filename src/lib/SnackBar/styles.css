@@ -94,9 +94,11 @@ snack-bar {
   padding: 0 0 120%;
   margin: -60% 0 0 -60%;
   background: rgba(255,255,255,0.1);
-  transform-origin: center;
   border-radius: 50%;
+  transform-origin: center;
+  will-change: transform;
   animation: focus-ring 300ms ease-out forwards 1;
+  pointer-events: none;
 }
 @keyframes focus-ring {
   from {
