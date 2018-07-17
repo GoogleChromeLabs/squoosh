@@ -105,7 +105,7 @@ export default class App extends Component<Props, State> {
     ],
   };
 
-  private snackbar?: SnackBarElement = undefined;
+  private snackbar?: SnackBarElement;
 
   constructor() {
     super();
