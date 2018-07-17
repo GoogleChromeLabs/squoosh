@@ -12,63 +12,63 @@ export interface SnackBarOptions {
 class SnackBar {
   on?: () => void;
   onhide?: () => void;
-  private options: SnackBarOptions;
-  private element: Element = document.createElement('div');
-  private text: Element = document.createElement('div');
-  private button: Element = document.createElement('button');
-  private parent: Element;
-  private showing = false;
-  private closeTimer?: number;
+  private _options: SnackBarOptions;
+  private _element: Element = document.createElement('div');
+  private _text: Element = document.createElement('div');
+  private _button: Element = document.createElement('button');
+  private _parent: Element;
+  private _showing = false;
+  private _closeTimer?: number;
 
   constructor (options: SnackBarOptions, parent: Element) {
-    this.options = options;
-    this.parent = parent;
+    this._options = options;
+    this._parent = parent;
 
-    this.element.className = 'snackbar';
-    this.element.setAttribute('aria-live', 'assertive');
-    this.element.setAttribute('aria-atomic', 'true');
-    this.element.setAttribute('aria-hidden', 'true');
+    this._element.className = 'snackbar';
+    this._element.setAttribute('aria-live', 'assertive');
+    this._element.setAttribute('aria-atomic', 'true');
+    this._element.setAttribute('aria-hidden', 'true');
 
-    this.text.className = 'snackbar--text';
-    this.text.textContent = options.message;
-    this.element.appendChild(this.text);
+    this._text.className = 'snackbar--text';
+    this._text.textContent = options.message;
+    this._element.appendChild(this._text);
 
     if (options.actionText) {
-      this.button.className = 'snackbar--button';
-      this.button.textContent = options.actionText || '';
-      this.button.addEventListener('click', (event) => {
+      this._button.className = 'snackbar--button';
+      this._button.textContent = options.actionText || '';
+      this._button.addEventListener('click', (event) => {
         if (options.actionHandler && options.actionHandler() === false) return;
         this.hide();
       });
-      this.element.appendChild(this.button);
+      this._element.appendChild(this._button);
     }
   }
 
   cancelTimer () {
-    if (this.closeTimer != null) clearTimeout(this.closeTimer);
+    if (this._closeTimer != null) clearTimeout(this._closeTimer);
   }
 
   show () {
-    if (this.showing) return;
-    this.showing = true;
+    if (this._showing) return;
+    this._showing = true;
     this.cancelTimer();
-    this.parent.appendChild(this.element);
-    this.element.removeAttribute('aria-hidden');
-    this.closeTimer = setTimeout(this.hide.bind(this), this.options.timeout || DEFAULT_TIMEOUT);
+    this._parent.appendChild(this._element);
+    this._element.removeAttribute('aria-hidden');
+    this._closeTimer = setTimeout(this.hide.bind(this), this._options.timeout || DEFAULT_TIMEOUT);
   }
 
   hide () {
-    if (!this.showing) return;
-    this.showing = false;
+    if (!this._showing) return;
+    this._showing = false;
     this.cancelTimer();
-    this.element.addEventListener('animationend', this.remove.bind(this));
-    this.element.addEventListener('transitionend', this.remove.bind(this));
-    this.element.setAttribute('aria-hidden', 'true');
+    this._element.addEventListener('animationend', this.remove.bind(this));
+    this._element.addEventListener('transitionend', this.remove.bind(this));
+    this._element.setAttribute('aria-hidden', 'true');
   }
 
   remove () {
     this.cancelTimer();
-    this.parent.removeChild(this.element);
+    this._parent.removeChild(this._element);
     if (this.onhide) this.onhide();
   }
 }
@@ -82,14 +82,14 @@ export default class SnackBarElement extends HTMLElement {
     this._processStack();
   }
 
-  _processStack () {
+  private _processStack () {
     if (this._snackbars.length === 0) return;
     const snackbar = this._snackbars[0];
-    snackbar.onhide = this.handleSnackBarRemoved.bind(this);
+    snackbar.onhide = this._handleSnackBarRemoved.bind(this);
     snackbar.show();
   }
 
-  handleSnackBarRemoved () {
+  private _handleSnackBarRemoved () {
     this._snackbars.shift();
     this._processStack();
   }
