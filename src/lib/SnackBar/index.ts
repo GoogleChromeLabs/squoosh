@@ -34,7 +34,7 @@ class SnackBar {
 
     if (options.actionText) {
       this._button.className = 'snackbar--button';
-      this._button.textContent = options.actionText || '';
+      this._button.textContent = options.actionText;
       this._button.addEventListener('click', (event) => {
         if (options.actionHandler && options.actionHandler() === false) return;
         this.hide();
