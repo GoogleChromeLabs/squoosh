@@ -238,9 +238,9 @@ export default class App extends Component<Props, State> {
     this.setState({ images });
   }
 
-  showError (error: Error | String) {
+  showError (error: string) {
     if (!this.snackbar) return;
-    this.snackbar.showSnackbar({ message: String(error) });
+    this.snackbar.showSnackbar({ message: error });
   }
 
   render({ }: Props, { loading, images }: State) {
