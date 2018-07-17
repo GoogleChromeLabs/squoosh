@@ -90,7 +90,7 @@ export default class SnackBarElement extends HTMLElement {
   }
 
   handleSnackBarRemoved () {
-    this._snackbars = this._snackbars.slice(1);
+    this._snackbars.shift();
     this._processStack();
   }
 }
