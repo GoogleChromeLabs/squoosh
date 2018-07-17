@@ -1,3 +1,13 @@
+snack-bar {
+  display: block;
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 0;
+  overflow: visible;
+}
+
 .snackbar {
   position: fixed;
   display: flex;

@@ -76,7 +76,7 @@ export default class SnackBarElement extends HTMLElement {
   private _snackbars: SnackBar[] = [];
 
   showSnackbar (options: SnackBarOptions) {
-    const snackbar = new SnackBar(options, this.ownerDocument.body);
+    const snackbar = new SnackBar(options, this);
     this._snackbars.push(snackbar);
     this._processStack();
   }
