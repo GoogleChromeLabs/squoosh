@@ -10,7 +10,7 @@ export interface SnackBarOptions {
 }
 
 class SnackBar {
-  onhide?: () => void;
+  onremove?: () => void;
   private _options: SnackBarOptions;
   private _element: Element = document.createElement('div');
   private _text: Element = document.createElement('div');
@@ -68,7 +68,7 @@ class SnackBar {
   remove () {
     this.cancelTimer();
     this._parent.removeChild(this._element);
-    if (this.onhide) this.onhide();
+    if (this.onremove) this.onremove();
   }
 }
 
@@ -84,7 +84,7 @@ export default class SnackBarElement extends HTMLElement {
   private _processStack () {
     if (this._snackbars.length === 0) return;
     const snackbar = this._snackbars[0];
-    snackbar.onhide = this._handleSnackBarRemoved.bind(this);
+    snackbar.onremove = this._handleSnackBarRemoved.bind(this);
     snackbar.show();
   }
 
