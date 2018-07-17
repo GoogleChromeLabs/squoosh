@@ -10,7 +10,6 @@ export interface SnackBarOptions {
 }
 
 class SnackBar {
-  on?: () => void;
   onhide?: () => void;
   private _options: SnackBarOptions;
   private _element: Element = document.createElement('div');
