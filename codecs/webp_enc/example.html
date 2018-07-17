@@ -1,7 +1,7 @@
 <!doctype html>
 <script src='webp_enc.js'></script>
 <script>
-  const Module = webp_enc();
+  const module = webp_enc();
 
   async function loadImage(src) {
     // Load image
@@ -17,27 +17,18 @@
     return ctx.getImageData(0, 0, img.width, img.height);
   }
 
-  Module.onRuntimeInitialized = async _ => {
-    const api = {
-      version: Module.cwrap('version', 'number', []),
-      create_buffer: Module.cwrap('create_buffer', 'number', ['number', 'number']),
-      destroy_buffer: Module.cwrap('destroy_buffer', '', ['number']),
-      encode: Module.cwrap('encode', '', ['number', 'number', 'number', 'number']),
-      free_result: Module.cwrap('free_result', '', ['number']),
-      get_result_pointer: Module.cwrap('get_result_pointer', 'number', []),
-      get_result_size: Module.cwrap('get_result_size', 'number', []),
-    };
-    console.log('Version:', api.version().toString(16));
+  module.onRuntimeInitialized = async _ => {
+    console.log('Version:', module.version().toString(16));
     const image = await loadImage('../example.png');
-    const p = api.create_buffer(image.width, image.height);
-    Module.HEAP8.set(image.data, p);
-    api.encode(p, image.width, image.height, 2);
-    const resultPointer = api.get_result_pointer();
-    const resultSize = api.get_result_size();
-    const resultView = new Uint8Array(Module.HEAP8.buffer, resultPointer, resultSize);
+    const p = module.create_buffer(image.width, image.height);
+    module.HEAP8.set(image.data, p);
+    module.encode(p, image.width, image.height, 2);
+    const resultPointer = module.get_result_pointer();
+    const resultSize = module.get_result_size();
+    const resultView = new Uint8Array(module.HEAP8.buffer, resultPointer, resultSize);
     const result = new Uint8Array(resultView);
-    api.free_result(resultPointer);
-    api.destroy_buffer(p);
+    module.free_result(resultPointer);
+    module.destroy_buffer(p);
 
     const blob = new Blob([result], {type: 'image/webp'});
     const blobURL = URL.createObjectURL(blob);
