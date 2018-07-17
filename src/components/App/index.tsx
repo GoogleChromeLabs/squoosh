@@ -9,6 +9,7 @@ import { FileDropEvent } from './custom-els/FileDrop';
 import './custom-els/FileDrop';
 
 import * as mozJPEG from '../../codecs/mozjpeg/encoder';
+import * as webP from '../../codecs/webp/encoder';
 import * as identity from '../../codecs/identity/encoder';
 import * as browserPNG from '../../codecs/browser-png/encoder';
 import * as browserJPEG from '../../codecs/browser-jpeg/encoder';
@@ -64,6 +65,7 @@ async function compressImage(
   const compressedData = await (() => {
     switch (encodeData.type) {
       case mozJPEG.type: return mozJPEG.encode(source.data, encodeData.options);
+      case webP.type: return webP.encode(source.data, encodeData.options);
       case browserPNG.type: return browserPNG.encode(source.data, encodeData.options);
       case browserJPEG.type: return browserJPEG.encode(source.data, encodeData.options);
       case browserWebP.type: return browserWebP.encode(source.data, encodeData.options);
