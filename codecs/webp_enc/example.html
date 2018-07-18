@@ -18,6 +18,7 @@
   }
 
   module.onRuntimeInitialized = async _ => {
+    console.log(module.blah({bar: 123, world: 321}));
     console.log('Version:', module.version().toString(16));
     const image = await loadImage('../example.png');
     const p = module.create_buffer(image.width, image.height);
@@ -27,7 +28,7 @@
     const resultSize = module.get_result_size();
     const resultView = new Uint8Array(module.HEAP8.buffer, resultPointer, resultSize);
     const result = new Uint8Array(resultView);
-    module.free_result(resultPointer);
+    module.free_result();
     module.destroy_buffer(p);
 
     const blob = new Blob([result], {type: 'image/webp'});
