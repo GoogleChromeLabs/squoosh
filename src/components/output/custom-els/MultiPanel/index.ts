@@ -82,8 +82,8 @@ export default class MultiPanel extends HTMLElement {
     }
 
     event.preventDefault();
-    selectedEl.setAttribute('tabindex', '-1');
     if (newHeading) {
+      selectedEl.setAttribute('tabindex', '-1');
       newHeading.setAttribute('tabindex', '0');
       newHeading.focus();
     }
