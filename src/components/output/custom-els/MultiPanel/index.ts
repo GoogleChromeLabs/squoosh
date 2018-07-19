@@ -1,11 +1,5 @@
 import './styles.css';
 
-/**
- * A multi-panel view that the user can add any number of 'panels'.
- * 'a panel' consists of two elements. Even index element becomes heading,
- * and odd index element becomes the expandable content.
- */
-
 function getClosestHeading(el: Element) {
   const closestEl = el.closest('multi-panel > *');
   if (closestEl && closestEl.classList.contains('panel-heading')) {
@@ -14,6 +8,11 @@ function getClosestHeading(el: Element) {
   return undefined;
 }
 
+/**
+ * A multi-panel view that the user can add any number of 'panels'.
+ * 'a panel' consists of two elements. Even index element becomes heading,
+ * and odd index element becomes the expandable content.
+ */
 export default class MultiPanel extends HTMLElement {
 
   constructor() {
@@ -51,7 +50,7 @@ export default class MultiPanel extends HTMLElement {
     // don’t handle modifier shortcuts used by assistive technology.
     if (event.altKey) return;
 
-    let newHeading;
+    let newHeading:HTMLElement | undefined;
     switch (event.key) {
       case 'ArrowLeft':
       case 'ArrowUp':
@@ -127,9 +126,8 @@ export default class MultiPanel extends HTMLElement {
       // When odd number of elements were inserted in the middle,
       // what was heading before may become content after the insertion.
       // Remove classes and attributes to prepare for this change.
-      if (heading.classList.contains('panel-content')) {
-        heading.classList.remove('panel-content');
-      }
+      heading.classList.remove('panel-content');
+
       if (content.classList.contains('panel-heading')) {
         content.classList.remove('panel-heading');
       }
