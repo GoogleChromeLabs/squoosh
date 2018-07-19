@@ -1,11 +1,11 @@
-import * as wasmWebP from './webp/decoder';
-import * as browserWebP from './browser-webp/decoder';
+import * as wasmWebp from './webp/decoder';
+import * as browserWebp from './webp/decoder';
 
 import { createImageBitmapPolyfill, sniffMimeType } from '../lib/util';
 
 export interface Decoder {
   name: string;
-  decode(file: File): Promise<ImageBitmap>;
+  decode(blob: Blob): Promise<ImageBitmap>;
   isSupported(): Promise<boolean>;
   canHandleMimeType(mimeType: string): boolean;
 }
@@ -13,8 +13,8 @@ export interface Decoder {
 // We load all decoders and filter out the unsupported ones.
 export const decodersPromise: Promise<Decoder[]> = Promise.all(
   [
-    browserWebP,
-    wasmWebP,
+    browserWebp,
+    wasmWebp,
   ]
   .map(async (decoder) => {
     if (await decoder.isSupported()) {
@@ -26,33 +26,22 @@ export const decodersPromise: Promise<Decoder[]> = Promise.all(
 // values here.
 ).then(list => list.filter(item => !!item)) as any as Promise<Decoder[]>;
 
-export async function findDecoder(file: File): Promise<Decoder | undefined> {
+export async function findDecodersByMimeType(mimeType: string): Promise<Decoder[]> {
   const decoders = await decodersPromise;
-  const mimeType = await sniffMimeType(file);
-  if (!mimeType) {
-    return;
-  }
-  return decoders.find(decoder => decoder.canHandleMimeType(mimeType));
+  return decoders.filter(decoder => decoder.canHandleMimeType(mimeType));
 }
 
-const nativelySupportedMimeTypes = [
-  'image/jpeg',
-  'image/png',
-  'image/gif',
-];
-
-export async function decodeFile(file: File): Promise<ImageBitmap> {
-  const mimeType = await sniffMimeType(file);
-  if (!mimeType) {
-    throw new Error('Could not determine mime type');
+export async function decodeImage(blob: Blob): Promise<ImageBitmap> {
+  const mimeType = await sniffMimeType(blob);
+  const decoders = await findDecodersByMimeType(mimeType);
+  if (decoders.length <= 0) {
+    // If we can’t find a decoder, hailmary with createImageBitmap
+    return createImageBitmapPolyfill(blob);
   }
-  if (nativelySupportedMimeTypes.includes(mimeType)) {
-    return createImageBitmapPolyfill(file);
+  for (const decoder of decoders) {
+    try {
+      return await decoder.decode(blob);
+    } catch { }
   }
-  const decoder = await findDecoder(file);
-  if (!decoder) {
-    throw new Error(`Can’t decode files with mime type ${mimeType}`);
-  }
-  console.log(`Going with ${decoder.name}`);
-  return decoder.decode(file);
+  throw new Error('No decoder could decode image');
 }

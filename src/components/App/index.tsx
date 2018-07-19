@@ -26,7 +26,7 @@ import {
     encoderMap,
 } from '../../codecs/encoders';
 
-import { decodeFile } from '../../codecs/decoders';
+import { decodeImage } from '../../codecs/decoders';
 
 interface SourceImage {
   file: File;
@@ -180,7 +180,7 @@ export default class App extends Component<Props, State> {
   async updateFile(file: File) {
     this.setState({ loading: true });
     try {
-      const bmp = await decodeFile(file);
+      const bmp = await decodeImage(file);
       // compute the corresponding ImageData once since it only changes when the file changes:
       const data = await bitmapToImageData(bmp);
 
