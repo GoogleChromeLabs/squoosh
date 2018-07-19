@@ -18,14 +18,71 @@
   }
 
   module.onRuntimeInitialized = async _ => {
-    console.log(module.blah({bar: 123, world: 321}));
     console.log('Version:', module.version().toString(16));
     const image = await loadImage('../example.png');
     const p = module.create_buffer(image.width, image.height);
     module.HEAP8.set(image.data, p);
-    module.encode(p, image.width, image.height, 2);
+    module.encode(p, image.width, image.height, {
+      quality: 10,
+      target_size: 0,
+      target_PSNR: 0,
+      method: 6,
+      sns_strength: 50,
+      filter_strength: 60,
+      filter_sharpness: 0,
+      filter_type: 1,
+      partitions: 3,
+      segments: 4,
+      pass: 1,
+      show_compressed: 0,
+      preprocessing: 0,
+      autofilter: 1,
+      partition_limit: 0,
+      alpha_compression: 1,
+      alpha_filtering: 1,
+      alpha_quality: 100,
+      lossless: 0,
+      exact: 0,
+      image_hint: 0,
+      emulate_jpeg_size: 0,
+      thread_level: 0,
+      low_memory: 0,
+      near_lossless: 0,
+      use_delta_palette: 0,
+      use_sharp_yuv: 0,
+      /* defaults:
+      quality: 3,
+      target_size: 0,
+      target_PSNR: 0,
+      method: 4,
+      sns_strength: 50,
+      filter_strength: 60,
+      filter_sharpness: 0,
+      filter_type: 1,
+      partitions: 0,
+      segments: 4,
+      pass: 1,
+      show_compressed: 0,
+      preprocessing: 0,
+      autofilter: 0,
+      partition_limit: 0,
+      alpha_compression: 1,
+      alpha_filtering: 1,
+      alpha_quality: 100,
+      lossless: 0,
+      exact: 0,
+      image_hint: 0,
+      emulate_jpeg_size: 0,
+      thread_level: 0,
+      low_memory: 0,
+      near_lossless: 100,
+      use_delta_palette: 0,
+      use_sharp_yuv: 0,
+      */
+    });
     const resultPointer = module.get_result_pointer();
     const resultSize = module.get_result_size();
+    console.log('size', resultSize);
     const resultView = new Uint8Array(module.HEAP8.buffer, resultPointer, resultSize);
     const result = new Uint8Array(resultView);
     module.free_result();
