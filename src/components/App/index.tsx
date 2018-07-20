@@ -9,6 +9,7 @@ import { FileDropEvent } from './custom-els/FileDrop';
 import './custom-els/FileDrop';
 
 import * as mozJPEG from '../../codecs/mozjpeg/encoder';
+import * as webP from '../../codecs/webp/encoder';
 import * as identity from '../../codecs/identity/encoder';
 import * as browserPNG from '../../codecs/browser-png/encoder';
 import * as browserJPEG from '../../codecs/browser-jpeg/encoder';
@@ -26,6 +27,8 @@ import {
 } from '../../codecs/encoders';
 import SnackBarElement from '../../lib/SnackBar';
 import '../../lib/SnackBar';
+
+import { decodeImage } from '../../codecs/decoders';
 
 interface SourceImage {
   file: File;
@@ -65,6 +68,7 @@ async function compressImage(
   const compressedData = await (() => {
     switch (encodeData.type) {
       case mozJPEG.type: return mozJPEG.encode(source.data, encodeData.options);
+      case webP.type: return webP.encode(source.data, encodeData.options);
       case browserPNG.type: return browserPNG.encode(source.data, encodeData.options);
       case browserJPEG.type: return browserJPEG.encode(source.data, encodeData.options);
       case browserWebP.type: return browserWebP.encode(source.data, encodeData.options);
@@ -154,7 +158,9 @@ export default class App extends Component<Props, State> {
       // changed.
       if (source !== prevState.source || image.encoderState !== prevImage.encoderState) {
         if (prevImage.downloadUrl) URL.revokeObjectURL(prevImage.downloadUrl);
-        this.updateImage(i);
+        this.updateImage(i).catch((err) => {
+          console.error(err);
+        });
       }
     }
   }
@@ -177,7 +183,7 @@ export default class App extends Component<Props, State> {
   async updateFile(file: File) {
     this.setState({ loading: true });
     try {
-      const bmp = await createImageBitmap(file);
+      const bmp = await decodeImage(file);
       // compute the corresponding ImageData once since it only changes when the file changes:
       const data = await bitmapToImageData(bmp);
 
@@ -186,6 +192,7 @@ export default class App extends Component<Props, State> {
         loading: false,
       });
     } catch (err) {
+      console.error(err);
       this.showError(`Invalid image`);
       this.setState({ loading: false });
     }
@@ -222,7 +229,13 @@ export default class App extends Component<Props, State> {
       return;
     }
 
-    const bmp = await createImageBitmap(file);
+    let bmp;
+    try {
+      bmp = await createImageBitmap(file);
+    } catch (err) {
+      this.setState({ error: `Encoding error (type=${image.encoderState.type}): ${err}` });
+      throw err;
+    }
 
     images = this.state.images.slice() as [EncodedImage, EncodedImage];
 

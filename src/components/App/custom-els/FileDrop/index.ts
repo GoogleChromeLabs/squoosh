@@ -24,9 +24,19 @@ function firstMatchingItem(list: DataTransferItemList, acceptVal: string): DataT
   });
 }
 
+function getFileData(data: DataTransfer, accept: string): File | undefined {
+  const dragDataItem = firstMatchingItem(data.items, accept);
+  if (!dragDataItem) return;
+
+  return dragDataItem.getAsFile() || undefined;
+}
+
 interface FileDropEventInit extends EventInit {
+  action: FileDropAccept;
   file: File;
 }
+
+type FileDropAccept = 'drop' | 'paste';
 
 // Safari and Edge don't quite support extending Event, this works around it.
 function fixExtendedEvent(instance: Event, type: Function) {
@@ -36,14 +46,20 @@ function fixExtendedEvent(instance: Event, type: Function) {
 }
 
 export class FileDropEvent extends Event {
+  private _action: FileDropAccept;
   private _file: File;
   constructor(typeArg: string, eventInitDict: FileDropEventInit) {
     super(typeArg, eventInitDict);
     fixExtendedEvent(this, FileDropEvent);
     this._file = eventInitDict.file;
+    this._action = eventInitDict.action;
   }
 
-  get file(): File {
+  get action() {
+    return this._action;
+  }
+
+  get file() {
     return this._file;
   }
 }
@@ -70,6 +86,7 @@ export class FileDrop extends HTMLElement {
     this.addEventListener('dragenter', this._onDragEnter);
     this.addEventListener('dragend', () => this._reset());
     this.addEventListener('dragleave', this._onDragLeave);
+    this.addEventListener('paste', this._onPaste);
   }
 
   get accept() {
@@ -110,13 +127,20 @@ export class FileDrop extends HTMLElement {
   private _onDrop(event: DragEvent) {
     event.preventDefault();
     this._reset();
-    const dragDataItem = firstMatchingItem(event.dataTransfer.items, this.accept);
-    if (!dragDataItem) return;
+    const action = 'drop';
+    const file = getFileData(event.dataTransfer, this.accept);
+    if (file === undefined) return;
 
-    const file = dragDataItem.getAsFile();
-    if (file === null) return;
+    this.dispatchEvent(new FileDropEvent('filedrop', { action, file }));
+  }
 
-    this.dispatchEvent(new FileDropEvent('filedrop', { file }));
+  @bind
+  private _onPaste(event: ClipboardEvent) {
+    const action = 'paste';
+    const file = getFileData(event.clipboardData, this.accept);
+    if (file === undefined) return;
+
+    this.dispatchEvent(new FileDropEvent('filedrop', { action, file }));
   }
 
   private _reset() {

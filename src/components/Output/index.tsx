@@ -6,20 +6,30 @@ import * as style from './style.scss';
 import { bind, drawBitmapToCanvas, linkRef } from '../../lib/util';
 import { twoUpHandle } from './custom-els/TwoUp/styles.css';
 
-type Props = {
-  leftImg: ImageBitmap,
-  rightImg: ImageBitmap,
-};
+interface Props {
+  leftImg: ImageBitmap;
+  rightImg: ImageBitmap;
+}
 
-type State = {};
+interface State {
+  verticalTwoUp: boolean;
+}
 
 export default class Output extends Component<Props, State> {
-  state: State = {};
+  widthQuery = window.matchMedia('(min-width: 500px)');
+  state: State = {
+    verticalTwoUp: !this.widthQuery.matches,
+  };
   canvasLeft?: HTMLCanvasElement;
   canvasRight?: HTMLCanvasElement;
   pinchZoomLeft?: PinchZoom;
   pinchZoomRight?: PinchZoom;
   retargetedEvents = new WeakSet<Event>();
+
+  constructor() {
+    super();
+    this.widthQuery.addListener(this.onMobileWidthChange);
+  }
 
   componentDidMount() {
     if (this.canvasLeft) {
@@ -39,8 +49,15 @@ export default class Output extends Component<Props, State> {
     }
   }
 
-  shouldComponentUpdate(nextProps: Props) {
-    return this.props.leftImg !== nextProps.leftImg || this.props.rightImg !== nextProps.rightImg;
+  shouldComponentUpdate(nextProps: Props, nextState: State) {
+    return this.props.leftImg !== nextProps.leftImg ||
+      this.props.rightImg !== nextProps.rightImg ||
+      this.state.verticalTwoUp !== nextState.verticalTwoUp;
+  }
+
+  @bind
+  onMobileWidthChange() {
+    this.setState({ verticalTwoUp: !this.widthQuery.matches });
   }
 
   @bind
@@ -80,10 +97,11 @@ export default class Output extends Component<Props, State> {
     this.pinchZoomLeft.dispatchEvent(clonedEvent);
   }
 
-  render({ leftImg, rightImg }: Props, { }: State) {
+  render({ leftImg, rightImg }: Props, { verticalTwoUp }: State) {
     return (
       <div class={style.output}>
         <two-up
+          orientation={verticalTwoUp ? 'vertical' : 'horizontal'}
           // Event redirecting. See onRetargetableEvent.
           onTouchStartCapture={this.onRetargetableEvent}
           onTouchEndCapture={this.onRetargetableEvent}

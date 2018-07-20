@@ -1,14 +1,17 @@
 import * as styles from './styles.css';
 import { PointerTracker, Pointer } from '../../../../lib/PointerTracker';
 
-const legacyClipCompat = 'legacy-clip-compat';
+const legacyClipCompatAttr = 'legacy-clip-compat';
+const orientationAttr = 'orientation';
+
+type TwoUpOrientation = 'horizontal' | 'vertical';
 
 /**
  * A split view that the user can adjust. The first child becomes
  * the left-hand side, and the second child becomes the right-hand side.
  */
 export default class TwoUp extends HTMLElement {
-  static get observedAttributes () { return [legacyClipCompat]; }
+  static get observedAttributes() { return [orientationAttr]; }
 
   private readonly _handle = document.createElement('div');
   /**
@@ -52,39 +55,65 @@ export default class TwoUp extends HTMLElement {
     });
   }
 
-  connectedCallback () {
+  connectedCallback() {
     this._childrenChange();
     if (!this._everConnected) {
-      // Set the initial position of the handle.
-      requestAnimationFrame(() => {
-        const bounds = this.getBoundingClientRect();
-        this._position = bounds.width / 2;
-        this._setPosition();
-      });
+      this._resetPosition();
       this._everConnected = true;
     }
+  }
+
+  attributeChangedCallback(name: string) {
+    if (name === orientationAttr) {
+      this._resetPosition();
+    }
+  }
+
+  private _resetPosition() {
+    // Set the initial position of the handle.
+    requestAnimationFrame(() => {
+      const bounds = this.getBoundingClientRect();
+      this._position = (this.orientation === 'vertical' ? bounds.height : bounds.width) / 2;
+      this._setPosition();
+    });
   }
 
   /**
    * If true, this element works in browsers that don't support clip-path (Edge).
    * However, this means you'll have to set the height of this element manually.
    */
-  get noClipPathCompat () {
-    return this.hasAttribute(legacyClipCompat);
+  get legacyClipCompat() {
+    return this.hasAttribute(legacyClipCompatAttr);
   }
 
-  set noClipPathCompat (val: boolean) {
+  set legacyClipCompat(val: boolean) {
     if (val) {
-      this.setAttribute(legacyClipCompat, '');
+      this.setAttribute(legacyClipCompatAttr, '');
     } else {
-      this.removeAttribute(legacyClipCompat);
+      this.removeAttribute(legacyClipCompatAttr);
     }
+  }
+
+  /**
+   * Split vertically rather than horizontally.
+   */
+  get orientation(): TwoUpOrientation {
+    const value = this.getAttribute(orientationAttr);
+
+    // This mirrors the behaviour of input.type, where setting just sets the attribute, but getting
+    // returns the value only if it's valid.
+    if (value && value.toLowerCase() === 'vertical') return 'vertical';
+    return 'horizontal';
+  }
+
+  set orientation(val: TwoUpOrientation) {
+    this.setAttribute(orientationAttr, val);
   }
 
   /**
    * Called when element's child list changes
    */
-  private _childrenChange () {
+  private _childrenChange() {
     // Ensure the handle is the last child.
     // The CSS depends on this.
     if (this.lastElementChild !== this._handle) {
@@ -95,15 +124,20 @@ export default class TwoUp extends HTMLElement {
   /**
    * Called when a pointer moves.
    */
-  private _pointerChange (startPoint: Pointer, currentPoint: Pointer) {
+  private _pointerChange(startPoint: Pointer, currentPoint: Pointer) {
+    const pointAxis = this.orientation === 'vertical' ? 'clientY' : 'clientX';
+    const dimensionAxis = this.orientation === 'vertical' ? 'height' : 'width';
     const bounds = this.getBoundingClientRect();
-    this._position = this._positionOnPointerStart + (currentPoint.clientX - startPoint.clientX);
+
+    this._position = this._positionOnPointerStart +
+      (currentPoint[pointAxis] - startPoint[pointAxis]);
+
     // Clamp position to element bounds.
-    this._position = Math.max(0, Math.min(this._position, bounds.width));
+    this._position = Math.max(0, Math.min(this._position, bounds[dimensionAxis]));
     this._setPosition();
   }
 
-  private _setPosition () {
+  private _setPosition() {
     this.style.setProperty('--split-point', `${this._position}px`);
   }
 }

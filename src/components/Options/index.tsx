@@ -3,10 +3,12 @@ import * as style from './style.scss';
 import { bind } from '../../lib/util';
 import MozJpegEncoderOptions from '../../codecs/mozjpeg/options';
 import BrowserJPEGEncoderOptions from '../../codecs/browser-jpeg/options';
+import WebPEncoderOptions from '../../codecs/webp/options';
 import BrowserWebPEncoderOptions from '../../codecs/browser-webp/options';
 
-import * as mozJPEG from '../../codecs/mozjpeg/encoder';
 import * as identity from '../../codecs/identity/encoder';
+import * as mozJPEG from '../../codecs/mozjpeg/encoder';
+import * as webP from '../../codecs/webp/encoder';
 import * as browserPNG from '../../codecs/browser-png/encoder';
 import * as browserJPEG from '../../codecs/browser-jpeg/encoder';
 import * as browserWebP from '../../codecs/browser-webp/encoder';
@@ -25,8 +27,9 @@ import {
 } from '../../codecs/encoders';
 
 const encoderOptionsComponentMap = {
-  [mozJPEG.type]: MozJpegEncoderOptions,
   [identity.type]: undefined,
+  [mozJPEG.type]: MozJpegEncoderOptions,
+  [webP.type]: WebPEncoderOptions,
   [browserPNG.type]: undefined,
   [browserJPEG.type]: BrowserJPEGEncoderOptions,
   [browserWebP.type]: BrowserWebPEncoderOptions,
