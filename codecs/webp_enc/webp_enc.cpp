@@ -59,11 +59,18 @@ int get_result_size() {
 }
 
 EMSCRIPTEN_BINDINGS(my_module) {
+  enum_<WebPImageHint>("WebPImageHint")
+    .value("WEBP_HINT_DEFAULT", WebPImageHint::WEBP_HINT_DEFAULT)
+    .value("WEBP_HINT_PICTURE", WebPImageHint::WEBP_HINT_PICTURE)
+    .value("WEBP_HINT_PHOTO", WebPImageHint::WEBP_HINT_PHOTO)
+    .value("WEBP_HINT_GRAPH", WebPImageHint::WEBP_HINT_GRAPH)
+    ;
+
   value_object<WebPConfig>("WebPConfig")
     .field("lossless", &WebPConfig::lossless)
     .field("quality", &WebPConfig::quality)
     .field("method", &WebPConfig::method)
-    //.field("image_hint", &WebPConfig::image_hint)
+    .field("image_hint", &WebPConfig::image_hint)
     .field("target_size", &WebPConfig::target_size)
     .field("target_PSNR", &WebPConfig::target_PSNR)
     .field("segments", &WebPConfig::segments)
@@ -87,7 +94,6 @@ EMSCRIPTEN_BINDINGS(my_module) {
     .field("exact", &WebPConfig::exact)
     .field("use_delta_palette", &WebPConfig::use_delta_palette)
     .field("use_sharp_yuv", &WebPConfig::use_sharp_yuv)
-    //.field("pad", &WebPConfig::pad)
     ;
 
   function("version", &version);

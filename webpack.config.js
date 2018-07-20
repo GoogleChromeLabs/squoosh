@@ -21,7 +21,8 @@ module.exports = function (_, env) {
   const isProd = env.mode === 'production';
   const nodeModules = path.join(__dirname, 'node_modules');
   const componentStyleDirs = [
-    path.join(__dirname, 'src/components')
+    path.join(__dirname, 'src/components'),
+    path.join(__dirname, 'src/codecs')
   ];
 
   return {
