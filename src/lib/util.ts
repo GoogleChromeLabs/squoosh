@@ -134,7 +134,7 @@ export async function sniffMimeType(blob: Blob): Promise<string> {
     Array.from(new Uint8Array(firstChunk))
       .map(v => String.fromCodePoint(v))
       .join('');
-  for (const [detector, mimeType] of magicNumberToMimeType.entries()) {
+  for (const [detector, mimeType] of magicNumberToMimeType) {
     if (detector.test(firstChunkString)) {
       return mimeType;
     }

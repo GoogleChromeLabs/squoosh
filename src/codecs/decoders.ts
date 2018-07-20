@@ -26,7 +26,7 @@ export const decodersPromise: Promise<Decoder[]> = Promise.all(
 // values here.
 ).then(list => list.filter(item => !!item)) as any as Promise<Decoder[]>;
 
-export async function findDecodersByMimeType(mimeType: string): Promise<Decoder[]> {
+async function findDecodersByMimeType(mimeType: string): Promise<Decoder[]> {
   const decoders = await decodersPromise;
   return decoders.filter(decoder => decoder.canHandleMimeType(mimeType));
 }
