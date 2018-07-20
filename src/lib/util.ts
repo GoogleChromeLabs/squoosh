@@ -128,7 +128,7 @@ const magicNumberToMimeType = new Map<RegExp, string>([
   [/^RIFF....WEBPVP8 /, 'image/webp'],
 ]);
 
-export async function sniffMimeType(blob: Blob): Promise<string | ''> {
+export async function sniffMimeType(blob: Blob): Promise<string> {
   const firstChunk = await blobToArrayBuffer(blob.slice(0, 16));
   const firstChunkString =
     Array.from(new Uint8Array(firstChunk))
