@@ -3,17 +3,6 @@ import webp_enc, { WebPModule } from '../../../codecs/webp_enc/webp_enc';
 import { EncodeOptions } from './encoder';
 const wasmBinaryUrl = require('../../../codecs/webp_enc/webp_enc.wasm');
 
-// API exposed by wasm module. Details in the codec’s README.
-interface ModuleAPI {
-  version(): number;
-  create_buffer(width: number, height: number): number;
-  destroy_buffer(pointer: number): void;
-  encode(buffer: number, width: number, height: number, quality: number): void;
-  free_result(): void;
-  get_result_pointer(): number;
-  get_result_size(): number;
-}
-
 export default class WebPEncoder {
   private emscriptenModule: Promise<WebPModule>;
 
