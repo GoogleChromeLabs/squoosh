@@ -1,3 +1,4 @@
+import './styles.css';
 import * as styles from './styles.css';
 import { PointerTracker, Pointer } from '../../../../lib/PointerTracker';
 
