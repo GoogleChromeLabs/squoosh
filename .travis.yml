@@ -2,7 +2,8 @@ language: node_js
 node_js:
 - node
 cache: npm
-script: npm run build || npm run build
+script: npm run build || npm run build # scss ts definitions need to be generated before an actual build
+before_deploy: ls .
 deploy:
   provider: firebase
   project: squoosh-beta-ci # change this when when PR
