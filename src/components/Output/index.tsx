@@ -2,7 +2,6 @@ import { h, Component } from 'preact';
 import PinchZoom from './custom-els/PinchZoom';
 import './custom-els/PinchZoom';
 import './custom-els/TwoUp';
-import './style.scss';
 import * as style from './style.scss';
 import { bind, drawBitmapToCanvas, linkRef } from '../../lib/util';
 import { twoUpHandle } from './custom-els/TwoUp/styles.css';

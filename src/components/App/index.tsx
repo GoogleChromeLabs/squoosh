@@ -2,7 +2,6 @@ import { h, Component } from 'preact';
 import { partial } from 'filesize';
 
 import { bind, bitmapToImageData } from '../../lib/util';
-import './style.scss';
 import * as style from './style.scss';
 import Output from '../Output';
 import Options from '../Options';
