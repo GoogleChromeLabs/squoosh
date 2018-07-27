@@ -1,4 +1,5 @@
 import { h, Component } from 'preact';
+import './style.scss';
 import * as style from './style.scss';
 import { bind } from '../../lib/util';
 import MozJpegEncoderOptions from '../../codecs/mozjpeg/options';
