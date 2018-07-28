@@ -81,7 +81,16 @@ module.exports = function (_, env) {
             }
           ]
         },
-
+        {
+          test: /\.(scss|sass)$/,
+          loader: 'sass-loader',
+          // SCSS gets preprocessed, then treated like any other CSS:
+          enforce: 'pre',
+          options: {
+            sourceMap: true,
+            includePaths: [nodeModules]
+          }
+        },
         {
           test: /\.(scss|sass|css)$/,
           // Only enable CSS Modules within `src/components/*`
@@ -102,8 +111,7 @@ module.exports = function (_, env) {
                 sourceMap: isProd,
                 sass: true
               }
-            },
-            "sass-loader"
+            }
           ]
         },
         {
