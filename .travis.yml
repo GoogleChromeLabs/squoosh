@@ -5,10 +5,8 @@ cache: npm
 script: npm run build || npm run build # scss ts definitions need to be generated before an actual build
 deploy:
   provider: firebase
-  project: squoosh-beta-ci # change this when when PR
+  project: squoosh-beta-ci # change this when the PR lands
   skip_cleanup: true # stop build folder being cleared up
-  token: # Change the token below for main squoosh site security token
-    secure: $FB_TOKEN
   on:
     branch: ci # change this to master when PR 
    
