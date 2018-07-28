@@ -8,7 +8,7 @@ deploy:
   project: squoosh-beta-ci # change this when when PR
   skip_cleanup: true # stop build folder being cleared up
   token: # Change the token below for main squoosh site security token
-    secure: AHFQ1RVeeihVOyYi6Xfd4PfPHoZGktJjVn+HGHQMcfAl1lc1HM/sgeUGcs35QstF18ONuEBd+VPSSTRuvjIbi60k71aXKGDt/o817uCShU+KAzXqXXGOCqNdmgblDXFHqXCf0Wyzdwt4C7Ux2YeX+/A0ml5o4TAUQMQLbeAuGeqG69KOcTShMqApPCl/rRNUy55YMxtgLC0nJDX3af3wb79Jjm+2KuGb/ZQhKZy+4nSMDUR/owd5Vfg8XU0OCWZ0jDWfR+vnFqtb57DfGh1vptB3IQBBbnhqBApaxFm9MBi67fm6I+wRtqbY0O0b3US1tb3iQ6Uml7cTIQNAWiKtfKXdZqtVRzp7eMfyd/u7u0pOwijh9hdngYe7NZj06cU0jndSXu8tnHVoCkascZcUz9ccaGXICf+cvvUQtrGJpHlFOJZ4nvohH+mb/n3tWoQkX9BvTVmLMAubuZkzq8+Aen3vhBTK+nfbVOBni5qnbg2sneHDCc9zmKMMTXDG5nmKziEg74gre6lgWZZt6H5SSOqTdvHUPfKc2ESczdS/r3HavLOLpbzP58lsIBhW5ehq5ZuAk0JXUYnqoyuYgdlqeQPOK2fxy4iIUjvVorxnI40COODhdVE46Ydk170JVl5hiXq1eDZlPIH6mbAOnyjzbY/yYGdH2HAar7Cto6bCVc4=
+    secure: $FB_TOKEN
   on:
     branch: ci # change this to master when PR 
    
