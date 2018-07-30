@@ -8,6 +8,7 @@ import Options from '../Options';
 import { FileDropEvent } from './custom-els/FileDrop';
 import './custom-els/FileDrop';
 
+import * as quantizer from '../../codecs/imagequant/quantizer';
 import * as mozJPEG from '../../codecs/mozjpeg/encoder';
 import * as webP from '../../codecs/webp/encoder';
 import * as identity from '../../codecs/identity/encoder';
@@ -64,18 +65,19 @@ async function compressImage(
   // Special case for identity
   if (encodeData.type === identity.type) return source.file;
 
+  const quantizedSource = await quantizer.quantize(source.data);
   const compressedData = await (() => {
     switch (encodeData.type) {
-      case mozJPEG.type: return mozJPEG.encode(source.data, encodeData.options);
-      case webP.type: return webP.encode(source.data, encodeData.options);
-      case browserPNG.type: return browserPNG.encode(source.data, encodeData.options);
-      case browserJPEG.type: return browserJPEG.encode(source.data, encodeData.options);
-      case browserWebP.type: return browserWebP.encode(source.data, encodeData.options);
-      case browserGIF.type: return browserGIF.encode(source.data, encodeData.options);
-      case browserTIFF.type: return browserTIFF.encode(source.data, encodeData.options);
-      case browserJP2.type: return browserJP2.encode(source.data, encodeData.options);
-      case browserBMP.type: return browserBMP.encode(source.data, encodeData.options);
-      case browserPDF.type: return browserPDF.encode(source.data, encodeData.options);
+      case mozJPEG.type: return mozJPEG.encode(quantizedSource, encodeData.options);
+      case webP.type: return webP.encode(quantizedSource, encodeData.options);
+      case browserPNG.type: return browserPNG.encode(quantizedSource, encodeData.options);
+      case browserJPEG.type: return browserJPEG.encode(quantizedSource, encodeData.options);
+      case browserWebP.type: return browserWebP.encode(quantizedSource, encodeData.options);
+      case browserGIF.type: return browserGIF.encode(quantizedSource, encodeData.options);
+      case browserTIFF.type: return browserTIFF.encode(quantizedSource, encodeData.options);
+      case browserJP2.type: return browserJP2.encode(quantizedSource, encodeData.options);
+      case browserBMP.type: return browserBMP.encode(quantizedSource, encodeData.options);
+      case browserPDF.type: return browserPDF.encode(quantizedSource, encodeData.options);
       default: throw Error(`Unexpected encoder ${JSON.stringify(encodeData)}`);
     }
   })();
