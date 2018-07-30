@@ -60,24 +60,28 @@ const filesize = partial({});
 
 async function compressImage(
   source: SourceImage,
+  quantizerOptions: quantizer.QuantizeOptions | null,
   encodeData: EncoderState,
 ): Promise<File> {
   // Special case for identity
   if (encodeData.type === identity.type) return source.file;
 
-  const quantizedSource = await quantizer.quantize(source.data);
+  let sourceData = source.data;
+  if (quantizerOptions) {
+    sourceData = await quantizer.quantize(sourceData, quantizerOptions);
+  }
   const compressedData = await (() => {
     switch (encodeData.type) {
-      case mozJPEG.type: return mozJPEG.encode(quantizedSource, encodeData.options);
-      case webP.type: return webP.encode(quantizedSource, encodeData.options);
-      case browserPNG.type: return browserPNG.encode(quantizedSource, encodeData.options);
-      case browserJPEG.type: return browserJPEG.encode(quantizedSource, encodeData.options);
-      case browserWebP.type: return browserWebP.encode(quantizedSource, encodeData.options);
-      case browserGIF.type: return browserGIF.encode(quantizedSource, encodeData.options);
-      case browserTIFF.type: return browserTIFF.encode(quantizedSource, encodeData.options);
-      case browserJP2.type: return browserJP2.encode(quantizedSource, encodeData.options);
-      case browserBMP.type: return browserBMP.encode(quantizedSource, encodeData.options);
-      case browserPDF.type: return browserPDF.encode(quantizedSource, encodeData.options);
+      case mozJPEG.type: return mozJPEG.encode(sourceData, encodeData.options);
+      case webP.type: return webP.encode(sourceData, encodeData.options);
+      case browserPNG.type: return browserPNG.encode(sourceData, encodeData.options);
+      case browserJPEG.type: return browserJPEG.encode(sourceData, encodeData.options);
+      case browserWebP.type: return browserWebP.encode(sourceData, encodeData.options);
+      case browserGIF.type: return browserGIF.encode(sourceData, encodeData.options);
+      case browserTIFF.type: return browserTIFF.encode(sourceData, encodeData.options);
+      case browserJP2.type: return browserJP2.encode(sourceData, encodeData.options);
+      case browserBMP.type: return browserBMP.encode(sourceData, encodeData.options);
+      case browserPDF.type: return browserPDF.encode(sourceData, encodeData.options);
       default: throw Error(`Unexpected encoder ${JSON.stringify(encodeData)}`);
     }
   })();
@@ -216,7 +220,8 @@ export default class App extends Component<Props, State> {
     let file;
 
     try {
-      file = await compressImage(source, image.encoderState);
+      // FIXME (@surma): Somehow show a options window and get the values from there.
+      file = await compressImage(source, { maxNumColors: 8, dither: 0.5 }, image.encoderState);
     } catch (err) {
       this.setState({ error: `Encoding error (type=${image.encoderState.type}): ${err}` });
       throw err;

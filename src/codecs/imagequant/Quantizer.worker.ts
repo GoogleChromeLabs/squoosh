@@ -1,3 +1,4 @@
+import { QuantizeOptions } from './quantizer';
 import imagequant from '../../../codecs/imagequant/imagequant';
 // Using require() so TypeScript doesn’t complain about this not being a module.
 const wasmBinaryUrl = require('../../../codecs/imagequant/imagequant.wasm');
@@ -56,13 +57,13 @@ export default class ImageQuant {
     })();
   }
 
-  async quantize(data: ImageData): Promise<ImageData> {
+  async quantize(data: ImageData, opts: QuantizeOptions): Promise<ImageData> {
     const m = await this.emscriptenModule;
     const api = await this.api;
 
     const p = api.create_buffer(data.width, data.height);
     m.HEAP8.set(new Uint8Array(data.data), p);
-    api.quantize(p, data.width, data.height, 256, 1.0);
+    api.quantize(p, data.width, data.height, opts.maxNumColors, opts.dither);
     const resultPointer = api.get_result_pointer();
     const resultView = new Uint8Array(
       m.HEAP8.buffer,
