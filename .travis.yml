@@ -1,0 +1,11 @@
+language: node_js
+node_js:
+- node
+cache: npm
+script: npm run build || npm run build # scss ts definitions need to be generated before an actual build
+deploy:
+  provider: firebase
+  skip_cleanup: true # stop build folder being cleared up
+  on:
+    branch: master
+   
