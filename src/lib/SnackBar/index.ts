@@ -9,19 +9,17 @@ export interface SnackOptions {
   actionHandler?: () => boolean | null;
 }
 
-  onremove?: () => void;
-  private _options: SnackBarOptions;
 class Snack {
+  private _onremove: (() => void)[] = [];
+  private _options: SnackOptions;
   private _element: Element = document.createElement('div');
   private _text: Element = document.createElement('div');
   private _button: Element = document.createElement('button');
-  private _parent: Element;
   private _showing = false;
   private _closeTimer?: number;
 
-  constructor (options: SnackBarOptions, parent: Element) {
+  constructor (options: SnackOptions) {
     this._options = options;
-    this._parent = parent;
 
     this._element.className = 'snackbar';
     this._element.setAttribute('aria-live', 'assertive');
@@ -35,7 +33,7 @@ class Snack {
     if (options.actionText) {
       this._button.className = 'snackbar--button';
       this._button.textContent = options.actionText;
-      this._button.addEventListener('click', (event) => {
+      this._button.addEventListener('click', () => {
         if (this._showing && options.actionHandler && options.actionHandler() === false) return;
         this.hide();
       });
@@ -47,13 +45,18 @@ class Snack {
     if (this._closeTimer != null) clearTimeout(this._closeTimer);
   }
 
-  show () {
-    if (this._showing) return;
+  show (parent: Element): Promise<void> {
+    if (this._showing) return Promise.resolve();
     this._showing = true;
     this.cancelTimer();
-    this._parent.appendChild(this._element);
+    if (parent !== this._element.parentNode) {
+      parent.appendChild(this._element);
+    }
     this._element.removeAttribute('aria-hidden');
     this._closeTimer = setTimeout(this.hide.bind(this), this._options.timeout || DEFAULT_TIMEOUT);
+    return new Promise((resolve) => {
+      this._onremove.push(resolve);
+    });
   }
 
   hide () {
@@ -66,30 +69,28 @@ class Snack {
 
   remove () {
     this.cancelTimer();
-    this._parent.removeChild(this._element);
-    if (this.onremove) this.onremove();
+    const parent = this._element.parentNode;
+    if (parent) parent.removeChild(this._element);
+    this._onremove.forEach(f => f());
+    this._onremove = [];
   }
 }
 
 export default class SnackBarElement extends HTMLElement {
   private _snackbars: Snack[] = [];
 
-  showSnackbar (options: SnackBarOptions) {
-    const snackbar = new SnackBar(options, this);
-    this._snackbars.push(snackbar);
+  showSnackbar (options: SnackOptions) {
+    const snack = new Snack(options);
+    this._snackbars.push(snack);
     this._processStack();
   }
 
   private _processStack () {
     if (this._snackbars.length === 0) return;
-    const snackbar = this._snackbars[0];
-    snackbar.onremove = this._handleSnackBarRemoved.bind(this);
-    snackbar.show();
-  }
-
-  private _handleSnackBarRemoved () {
-    this._snackbars.shift();
-    this._processStack();
+    this._snackbars[0].show(this).then(() => {
+      this._snackbars.shift();
+      this._processStack();
+    });
   }
 }
 
