@@ -1,4 +1,4 @@
-import { SnackBarOptions } from '.';
+import { SnackOptions } from '.';
 
 declare global {
   namespace JSX {
@@ -7,7 +7,7 @@ declare global {
     }
 
     interface SnackBarAttributes extends HTMLAttributes {
-      showSnackbar?: (options: SnackBarOptions) => void;
+      showSnackbar?: (options: SnackOptions) => void;
     }
   }
 }

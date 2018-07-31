@@ -2,16 +2,16 @@ import './styles.css';
 
 const DEFAULT_TIMEOUT = 2750;
 
-export interface SnackBarOptions {
+export interface SnackOptions {
   message: string;
   timeout?: number;
   actionText?: string;
   actionHandler?: () => boolean | null;
 }
 
-class SnackBar {
   onremove?: () => void;
   private _options: SnackBarOptions;
+class Snack {
   private _element: Element = document.createElement('div');
   private _text: Element = document.createElement('div');
   private _button: Element = document.createElement('button');
@@ -72,7 +72,7 @@ class SnackBar {
 }
 
 export default class SnackBarElement extends HTMLElement {
-  private _snackbars: SnackBar[] = [];
+  private _snackbars: Snack[] = [];
 
   showSnackbar (options: SnackBarOptions) {
     const snackbar = new SnackBar(options, this);
