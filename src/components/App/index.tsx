@@ -54,6 +54,7 @@ interface State {
   source?: SourceImage;
   images: [EncodedImage, EncodedImage];
   loading: boolean;
+  error?: string;
 }
 
 const filesize = partial({});
