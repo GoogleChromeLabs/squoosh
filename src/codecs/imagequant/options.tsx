@@ -31,7 +31,7 @@ export default class QuantizerOptions extends Component<Props, {}> {
     return (
       <form>
         <label>
-          Pallette Color:
+          Pallette Colors:
           <input
             name="maxNumColors"
             type="range"

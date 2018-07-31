@@ -25,6 +25,7 @@ import {
     EncoderType,
     EncoderOptions,
     encoderMap,
+    PreprocessorState,
 } from '../../codecs/encoders';
 
 import { decodeImage } from '../../codecs/decoders';
@@ -33,12 +34,14 @@ interface SourceImage {
   file: File;
   bmp: ImageBitmap;
   data: ImageData;
+  preprocessed?: ImageData;
 }
 
 interface EncodedImage {
   bmp?: ImageBitmap;
   file?: File;
   downloadUrl?: string;
+  preprocessorState: PreprocessorState;
   encoderState: EncoderState;
   loading: boolean;
   /** Counter of the latest bmp currently encoding */
@@ -58,17 +61,26 @@ interface State {
 
 const filesize = partial({});
 
+async function preprocessImage(
+  source: SourceImage,
+  preprocessData: PreprocessorState,
+): Promise<ImageData> {
+  let result = source.data;
+  if (preprocessData.quantizer.enabled) {
+    result = await quantizer.quantize(result, preprocessData.quantizer);
+  }
+  return result;
+}
 async function compressImage(
   source: SourceImage,
-  quantizerOptions: quantizer.QuantizeOptions | null,
   encodeData: EncoderState,
 ): Promise<File> {
   // Special case for identity
   if (encodeData.type === identity.type) return source.file;
 
   let sourceData = source.data;
-  if (quantizerOptions) {
-    sourceData = await quantizer.quantize(sourceData, quantizerOptions);
+  if (source.preprocessed) {
+    sourceData = source.preprocessed;
   }
   const compressedData = await (() => {
     switch (encodeData.type) {
@@ -100,12 +112,24 @@ export default class App extends Component<Props, State> {
     loading: false,
     images: [
       {
+        preprocessorState: {
+          quantizer: {
+            enabled: false,
+            ...quantizer.defaultOptions,
+          },
+        },
         encoderState: { type: identity.type, options: identity.defaultOptions },
         loadingCounter: 0,
         loadedCounter: 0,
         loading: false,
       },
       {
+        preprocessorState: {
+          quantizer: {
+            enabled: false,
+            ...quantizer.defaultOptions,
+          },
+        },
         encoderState: { type: mozJPEG.type, options: mozJPEG.defaultOptions },
         loadingCounter: 0,
         loadedCounter: 0,
@@ -127,7 +151,12 @@ export default class App extends Component<Props, State> {
     }
   }
 
-  onEncoderChange(index: 0 | 1, type: EncoderType, options?: EncoderOptions): void {
+  onChange(
+    index: 0 | 1,
+    preprocessorState: PreprocessorState,
+    type: EncoderType,
+    options?: EncoderOptions,
+  ): void {
     const images = this.state.images.slice() as [EncodedImage, EncodedImage];
     const oldImage = images[index];
 
@@ -142,13 +171,32 @@ export default class App extends Component<Props, State> {
     images[index] = {
       ...oldImage,
       encoderState,
+      preprocessorState,
     };
 
     this.setState({ images });
   }
 
-  onOptionsChange(index: 0 | 1, options: EncoderOptions): void {
-    this.onEncoderChange(index, this.state.images[index].encoderState.type, options);
+  onEncoderTypeChange(index: 0 | 1, newType: EncoderType): void {
+    this.onChange(index, this.state.images[index].preprocessorState, newType);
+  }
+
+  onPreprocessorOptionsChange(index: 0 | 1, options: PreprocessorState): void {
+    this.onChange(
+      index,
+      options,
+      this.state.images[index].encoderState.type,
+      this.state.images[index].encoderState.options,
+    );
+  }
+
+  onEncoderOptionsChange(index: 0 | 1, options: EncoderOptions): void {
+    this.onChange(
+      index,
+      this.state.images[index].preprocessorState,
+      this.state.images[index].encoderState.type,
+      options,
+    );
   }
 
   componentDidUpdate(prevProps: Props, prevState: State): void {
@@ -218,10 +266,9 @@ export default class App extends Component<Props, State> {
     this.setState({ images });
 
     let file;
-
     try {
-      // FIXME (@surma): Somehow show a options window and get the values from there.
-      file = await compressImage(source, { maxNumColors: 8, dither: 0.5 }, image.encoderState);
+      source.preprocessed = await preprocessImage(source, image.preprocessorState);
+      file = await compressImage(source, image.encoderState);
     } catch (err) {
       this.setState({ error: `Encoding error (type=${image.encoderState.type}): ${err}` });
       throw err;
@@ -283,9 +330,11 @@ export default class App extends Component<Props, State> {
           {images.map((image, index) => (
             <Options
               class={index ? style.rightOptions : style.leftOptions}
+              preprocessorState={image.preprocessorState}
               encoderState={image.encoderState}
-              onTypeChange={this.onEncoderChange.bind(this, index)}
-              onOptionsChange={this.onOptionsChange.bind(this, index)}
+              onEncoderTypeChange={this.onEncoderTypeChange.bind(this, index)}
+              onEncoderOptionsChange={this.onEncoderOptionsChange.bind(this, index)}
+              onPreprocessorOptionsChange={this.onPreprocessorOptionsChange.bind(this, index)}
             />
           ))}
           {anyLoading && <span style={{ position: 'fixed', top: 0, left: 0 }}>Loading...</span>}

@@ -11,7 +11,6 @@ export interface QuantizeOptions {
   dither: number;
 }
 
-// These come from struct WebPConfig in encode.h.
 export const defaultOptions: QuantizeOptions = {
   maxNumColors: 256,
   dither: 1.0,

@@ -6,6 +6,8 @@ import BrowserJPEGEncoderOptions from '../../codecs/browser-jpeg/options';
 import WebPEncoderOptions from '../../codecs/webp/options';
 import BrowserWebPEncoderOptions from '../../codecs/browser-webp/options';
 
+import QuantizerOptions from '../../codecs/imagequant/options';
+
 import * as identity from '../../codecs/identity/encoder';
 import * as mozJPEG from '../../codecs/mozjpeg/encoder';
 import * as webP from '../../codecs/webp/encoder';
@@ -24,6 +26,7 @@ import {
     encoders,
     encodersSupported,
     EncoderSupportMap,
+    PreprocessorState,
 } from '../../codecs/encoders';
 
 const encoderOptionsComponentMap = {
@@ -44,8 +47,10 @@ const encoderOptionsComponentMap = {
 interface Props {
   class?: string;
   encoderState: EncoderState;
-  onTypeChange(newType: EncoderType): void;
-  onOptionsChange(newOptions: EncoderOptions): void;
+  preprocessorState: PreprocessorState;
+  onEncoderTypeChange(newType: EncoderType): void;
+  onEncoderOptionsChange(newOptions: EncoderOptions): void;
+  onPreprocessorOptionsChange(newOptions: PreprocessorState): void;
 }
 
 interface State {
@@ -61,25 +66,64 @@ export default class Options extends Component<Props, State> {
   }
 
   @bind
-  onTypeChange(event: Event) {
+  onEncoderTypeChange(event: Event) {
     const el = event.currentTarget as HTMLSelectElement;
 
     // The select element only has values matching encoder types,
     // so 'as' is safe here.
     const type = el.value as EncoderType;
-    this.props.onTypeChange(type);
+    this.props.onEncoderTypeChange(type);
   }
 
-  render({ class: className, encoderState, onOptionsChange }: Props, { encoderSupportMap }: State) {
+  @bind
+  onPreprocessorEnabledChange(event: Event) {
+    const el = event.currentTarget as HTMLInputElement;
+
+    const preprocessorState = this.props.preprocessorState;
+    const preprocessor = el.name.split('.')[0] as keyof typeof preprocessorState;
+    preprocessorState[preprocessor].enabled = el.checked;
+    this.props.onPreprocessorOptionsChange(preprocessorState);
+  }
+
+  render(
+    { class: className, encoderState, preprocessorState, onEncoderOptionsChange }: Props,
+    { encoderSupportMap }: State,
+  ) {
     // tslint:disable variable-name
     const EncoderOptionComponent = encoderOptionsComponentMap[encoderState.type];
 
     return (
       <div class={`${style.options}${className ? (' ' + className) : ''}`}>
+        <p>Quantization</p>
+        <label>
+          <input
+            name="quantizer.enable"
+            type="checkbox"
+            checked={!!preprocessorState.quantizer.enabled}
+            onChange={this.onPreprocessorEnabledChange}
+          />
+          Enable
+        </label>
+        {preprocessorState.quantizer.enabled ? (
+          <QuantizerOptions
+            options={preprocessorState.quantizer}
+            // tslint:disable-next-line:jsx-no-lambda
+            onChange={quantizeOpts => this.props.onPreprocessorOptionsChange({
+              ...preprocessorState,
+              quantizer: {
+                ...quantizeOpts,
+                enabled: preprocessorState.quantizer.enabled,
+              },
+            })}
+          />
+        ) : (
+          <div/>
+        )}
+        <hr/>
         <label>
           Mode:
           {encoderSupportMap ?
-            <select value={encoderState.type} onChange={this.onTypeChange}>
+            <select value={encoderState.type} onChange={this.onEncoderTypeChange}>
               {encoders.filter(encoder => encoderSupportMap[encoder.type]).map(encoder => (
                 <option value={encoder.type}>{encoder.label}</option>
               ))}
@@ -95,7 +139,7 @@ export default class Options extends Component<Props, State> {
               // type, but typescript isn't smart enough.
               encoderState.options as typeof EncoderOptionComponent['prototype']['props']['options']
             }
-            onChange={onOptionsChange}
+            onChange={onEncoderOptionsChange}
           />
         }
       </div>
