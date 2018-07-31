@@ -48,6 +48,7 @@ export default class QuantizerOptions extends Component<Props, {}> {
             type="range"
             min="0"
             max="1"
+            step="0.01"
             value={'' + options.dither}
             onChange={this.onChange}
           />

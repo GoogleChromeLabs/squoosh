@@ -6,7 +6,7 @@ import BrowserJPEGEncoderOptions from '../../codecs/browser-jpeg/options';
 import WebPEncoderOptions from '../../codecs/webp/options';
 import BrowserWebPEncoderOptions from '../../codecs/browser-webp/options';
 
-import QuantizerOptions from '../../codecs/imagequant/options';
+import QuantizerOptionsComponent from '../../codecs/imagequant/options';
 
 import * as identity from '../../codecs/identity/encoder';
 import * as mozJPEG from '../../codecs/mozjpeg/encoder';
@@ -28,6 +28,7 @@ import {
     EncoderSupportMap,
     PreprocessorState,
 } from '../../codecs/encoders';
+import { QuantizeOptions } from '../../codecs/imagequant/quantizer';
 
 const encoderOptionsComponentMap = {
   [identity.type]: undefined,
@@ -85,6 +86,17 @@ export default class Options extends Component<Props, State> {
     this.props.onPreprocessorOptionsChange(preprocessorState);
   }
 
+  @bind
+  onQuantizerOptionsChange(opts: QuantizeOptions) {
+    this.props.onPreprocessorOptionsChange({
+      ...this.props.preprocessorState,
+      quantizer: {
+        ...opts,
+        enabled: this.props.preprocessorState.quantizer.enabled,
+      },
+    });
+  }
+
   render(
     { class: className, encoderState, preprocessorState, onEncoderOptionsChange }: Props,
     { encoderSupportMap }: State,
@@ -105,16 +117,9 @@ export default class Options extends Component<Props, State> {
           Enable
         </label>
         {preprocessorState.quantizer.enabled ? (
-          <QuantizerOptions
+          <QuantizerOptionsComponent
             options={preprocessorState.quantizer}
-            // tslint:disable-next-line:jsx-no-lambda
-            onChange={quantizeOpts => this.props.onPreprocessorOptionsChange({
-              ...preprocessorState,
-              quantizer: {
-                ...quantizeOpts,
-                enabled: preprocessorState.quantizer.enabled,
-              },
-            })}
+            onChange={this.onQuantizerOptionsChange}
           />
         ) : (
           <div/>
