@@ -30,7 +30,7 @@ void quantize(uint8_t* image_buffer, int image_width, int image_height, int num_
   int size = image_width * image_height;
   attr = liq_attr_create();
   image = liq_image_create_rgba(attr, image_buffer, image_width, image_height, 0);
-  liq_set_max_colors(attr, 16);
+  liq_set_max_colors(attr, num_colors);
   liq_image_quantize(image, attr, &res);
   liq_set_dithering_level(res, dithering);
   uint8_t* image8bit = (uint8_t*) malloc(size);
