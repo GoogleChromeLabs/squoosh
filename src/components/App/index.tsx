@@ -252,7 +252,7 @@ export default class App extends Component<Props, State> {
   }
 
   showError (error: string) {
-    if (!this.snackbar) return;
+    if (!this.snackbar) throw Error('Snackbar missing');
     this.snackbar.showSnackbar({ message: error });
   }
 
