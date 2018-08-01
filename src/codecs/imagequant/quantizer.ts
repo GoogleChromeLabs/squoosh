@@ -1,6 +1,5 @@
 import QuantizerWorker from './Quantizer.worker';
 
-export const name = 'Image Quanitzer';
 export async function quantize(data: ImageData, opts: QuantizeOptions): Promise<ImageData> {
   const quantizer = await new QuantizerWorker();
   return quantizer.quantize(data, opts);
