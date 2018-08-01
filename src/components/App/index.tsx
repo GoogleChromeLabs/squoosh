@@ -25,8 +25,12 @@ import {
     EncoderType,
     EncoderOptions,
     encoderMap,
-    PreprocessorState,
 } from '../../codecs/encoders';
+
+import {
+  PreprocessorState,
+  defaultPreprocessorState,
+} from '../../codecs/preprocessors';
 
 import { decodeImage } from '../../codecs/decoders';
 
@@ -112,24 +116,14 @@ export default class App extends Component<Props, State> {
     loading: false,
     images: [
       {
-        preprocessorState: {
-          quantizer: {
-            enabled: false,
-            ...quantizer.defaultOptions,
-          },
-        },
+        preprocessorState: defaultPreprocessorState,
         encoderState: { type: identity.type, options: identity.defaultOptions },
         loadingCounter: 0,
         loadedCounter: 0,
         loading: false,
       },
       {
-        preprocessorState: {
-          quantizer: {
-            enabled: false,
-            ...quantizer.defaultOptions,
-          },
-        },
+        preprocessorState: defaultPreprocessorState,
         encoderState: { type: mozJPEG.type, options: mozJPEG.defaultOptions },
         loadingCounter: 0,
         loadedCounter: 0,

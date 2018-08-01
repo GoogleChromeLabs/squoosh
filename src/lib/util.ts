@@ -145,3 +145,17 @@ export async function sniffMimeType(blob: Blob): Promise<string> {
 export function createImageBitmapPolyfill(blob: Blob): Promise<ImageBitmap> {
   return createImageBitmap(blob);
 }
+
+/**
+ * @param field An HTMLInputElement, but the casting is done here to tidy up onChange.
+ */
+export function inputFieldValueAsNumber(field: any): number {
+  return Number((field as HTMLInputElement).value);
+}
+
+/**
+ * @param field An HTMLInputElement, but the casting is done here to tidy up onChange.
+ */
+export function inputFieldCheckedAsNumber(field: any): number {
+  return Number((field as HTMLInputElement).checked);
+}

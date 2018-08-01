@@ -1,5 +1,5 @@
 import { h, Component } from 'preact';
-import { bind } from '../../lib/util';
+import { bind, inputFieldCheckedAsNumber, inputFieldValueAsNumber } from '../../lib/util';
 import { EncodeOptions, WebPImageHint } from './encoder';
 import * as styles from './styles.scss';
 
@@ -24,25 +24,11 @@ function determineLosslessQuality(quality: number): number {
   return losslessPresetDefault;
 }
 
-/**
- * @param field An HTMLInputElement, but the casting is done here to tidy up onChange.
- */
-function fieldCheckedAsNumber(field: any): number {
-  return Number((field as HTMLInputElement).checked);
-}
-
-/**
- * @param field An HTMLInputElement, but the casting is done here to tidy up onChange.
- */
-function fieldValueAsNumber(field: any): number {
-  return Number((field as HTMLInputElement).value);
-}
-
 export default class WebPEncoderOptions extends Component<Props, {}> {
   @bind
   onChange(event: Event) {
     const form = (event.currentTarget as HTMLInputElement).closest('form') as HTMLFormElement;
-    const lossless = fieldCheckedAsNumber(form.lossless);
+    const lossless = inputFieldCheckedAsNumber(form.lossless);
     const losslessPresetInput = (form.lossless_preset as HTMLInputElement);
 
     const options: EncodeOptions = {
@@ -54,31 +40,31 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
       // In lossless mode, the quality is derived from the preset.
       quality: lossless ?
         losslessPresets[Number(losslessPresetInput.value)][1] :
-        fieldValueAsNumber(form.quality),
+        inputFieldValueAsNumber(form.quality),
       // In lossless mode, the method is derived from the preset.
       method: lossless ?
         losslessPresets[Number(losslessPresetInput.value)][0] :
-        fieldValueAsNumber(form.method_input),
+        inputFieldValueAsNumber(form.method_input),
       image_hint: (form.image_hint as HTMLInputElement).checked ?
         WebPImageHint.WEBP_HINT_GRAPH :
         WebPImageHint.WEBP_HINT_DEFAULT,
       // .checked
-      exact: fieldCheckedAsNumber(form.exact),
-      alpha_compression: fieldCheckedAsNumber(form.alpha_compression),
-      autofilter: fieldCheckedAsNumber(form.autofilter),
-      filter_type: fieldCheckedAsNumber(form.filter_type),
-      use_sharp_yuv: fieldCheckedAsNumber(form.use_sharp_yuv),
+      exact: inputFieldCheckedAsNumber(form.exact),
+      alpha_compression: inputFieldCheckedAsNumber(form.alpha_compression),
+      autofilter: inputFieldCheckedAsNumber(form.autofilter),
+      filter_type: inputFieldCheckedAsNumber(form.filter_type),
+      use_sharp_yuv: inputFieldCheckedAsNumber(form.use_sharp_yuv),
       // .value
-      near_lossless: fieldValueAsNumber(form.near_lossless),
-      alpha_quality: fieldValueAsNumber(form.alpha_quality),
-      alpha_filtering: fieldValueAsNumber(form.alpha_filtering),
-      sns_strength: fieldValueAsNumber(form.sns_strength),
-      filter_strength: fieldValueAsNumber(form.filter_strength),
-      filter_sharpness: fieldValueAsNumber(form.filter_sharpness),
-      pass: fieldValueAsNumber(form.pass),
-      preprocessing: fieldValueAsNumber(form.preprocessing),
-      segments: fieldValueAsNumber(form.segments),
-      partitions: fieldValueAsNumber(form.partitions),
+      near_lossless: inputFieldValueAsNumber(form.near_lossless),
+      alpha_quality: inputFieldValueAsNumber(form.alpha_quality),
+      alpha_filtering: inputFieldValueAsNumber(form.alpha_filtering),
+      sns_strength: inputFieldValueAsNumber(form.sns_strength),
+      filter_strength: inputFieldValueAsNumber(form.filter_strength),
+      filter_sharpness: inputFieldValueAsNumber(form.filter_sharpness),
+      pass: inputFieldValueAsNumber(form.pass),
+      preprocessing: inputFieldValueAsNumber(form.preprocessing),
+      segments: inputFieldValueAsNumber(form.segments),
+      partitions: inputFieldValueAsNumber(form.partitions),
     };
     this.props.onChange(options);
   }

@@ -26,9 +26,10 @@ import {
     encoders,
     encodersSupported,
     EncoderSupportMap,
-    PreprocessorState,
 } from '../../codecs/encoders';
 import { QuantizeOptions } from '../../codecs/imagequant/quantizer';
+
+import { PreprocessorState } from '../../codecs/preprocessors';
 
 const encoderOptionsComponentMap = {
   [identity.type]: undefined,

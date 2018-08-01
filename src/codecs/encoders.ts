@@ -10,8 +10,6 @@ import * as browserJP2 from './browser-jp2/encoder';
 import * as browserBMP from './browser-bmp/encoder';
 import * as browserPDF from './browser-pdf/encoder';
 
-import * as quantizer from './imagequant/quantizer';
-
 export interface EncoderSupportMap {
   [key: string]: boolean;
 }
@@ -27,13 +25,6 @@ export type EncoderOptions =
   browserTIFF.EncodeOptions | browserJP2.EncodeOptions | browserBMP.EncodeOptions |
   browserPDF.EncodeOptions;
 export type EncoderType = keyof typeof encoderMap;
-
-export interface Enableable {
-  enabled: boolean;
-}
-export interface PreprocessorState {
-  quantizer: Enableable & quantizer.QuantizeOptions;
-}
 
 export const encoderMap = {
   [identity.type]: identity,
