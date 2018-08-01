@@ -24,7 +24,7 @@ void destroy_buffer(uint8_t* p) {
 liq_attr *attr;
 liq_image *image;
 liq_result *res;
-int result[2];
+int result;
 EMSCRIPTEN_KEEPALIVE
 void quantize(uint8_t* image_buffer, int image_width, int image_height, int num_colors, float dithering) {
   int size = image_width * image_height;
@@ -34,15 +34,15 @@ void quantize(uint8_t* image_buffer, int image_width, int image_height, int num_
   liq_image_quantize(image, attr, &res);
   liq_set_dithering_level(res, dithering);
   uint8_t* image8bit = (uint8_t*) malloc(size);
-  result[0] = (int) malloc(size * 4);
+  result = (int) malloc(size * 4);
   liq_write_remapped_image(res, image, image8bit, size);
   const liq_palette *pal = liq_get_palette(res);
   // Turn palletted image back into an RGBA image
   for(int i = 0; i < size; i++) {
-    ((uint8_t*)result[0])[i * 4 + 0] = pal->entries[image8bit[i]].r;
-    ((uint8_t*)result[0])[i * 4 + 1] = pal->entries[image8bit[i]].g;
-    ((uint8_t*)result[0])[i * 4 + 2] = pal->entries[image8bit[i]].b;
-    ((uint8_t*)result[0])[i * 4 + 3] = pal->entries[image8bit[i]].a;
+    ((uint8_t*)result)[i * 4 + 0] = pal->entries[image8bit[i]].r;
+    ((uint8_t*)result)[i * 4 + 1] = pal->entries[image8bit[i]].g;
+    ((uint8_t*)result)[i * 4 + 2] = pal->entries[image8bit[i]].b;
+    ((uint8_t*)result)[i * 4 + 3] = pal->entries[image8bit[i]].a;
   }
   free(image8bit);
   liq_result_destroy(res);
@@ -52,16 +52,10 @@ void quantize(uint8_t* image_buffer, int image_width, int image_height, int num_
 
 EMSCRIPTEN_KEEPALIVE
 void free_result() {
-  free(result[0]);
+  free(result);
 }
 
 EMSCRIPTEN_KEEPALIVE
 int get_result_pointer() {
-  return result[0];
+  return result;
 }
-
-EMSCRIPTEN_KEEPALIVE
-int get_result_palette_pointer() {
-  return result[1];
-}
-

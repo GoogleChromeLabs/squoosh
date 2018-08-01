@@ -25,7 +25,6 @@
       quantize: Module.cwrap('quantize', '', ['number', 'number', 'number', 'number', 'number']),
       free_result: Module.cwrap('free_result', '', ['number']),
       get_result_pointer: Module.cwrap('get_result_pointer', 'number', []),
-      // get_result_size: Module.cwrap('get_result_size', 'number', []),
     };
     console.log('Version:', api.version().toString(16));
     const image = await loadImage('../example.png');
