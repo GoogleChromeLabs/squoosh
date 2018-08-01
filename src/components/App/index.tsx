@@ -8,6 +8,7 @@ import Options from '../Options';
 import { FileDropEvent } from './custom-els/FileDrop';
 import './custom-els/FileDrop';
 
+import * as quantizer from '../../codecs/imagequant/quantizer';
 import * as mozJPEG from '../../codecs/mozjpeg/encoder';
 import * as webP from '../../codecs/webp/encoder';
 import * as identity from '../../codecs/identity/encoder';
@@ -26,18 +27,25 @@ import {
     encoderMap,
 } from '../../codecs/encoders';
 
+import {
+  PreprocessorState,
+  defaultPreprocessorState,
+} from '../../codecs/preprocessors';
+
 import { decodeImage } from '../../codecs/decoders';
 
 interface SourceImage {
   file: File;
   bmp: ImageBitmap;
   data: ImageData;
+  preprocessed?: ImageData;
 }
 
 interface EncodedImage {
   bmp?: ImageBitmap;
   file?: File;
   downloadUrl?: string;
+  preprocessorState: PreprocessorState;
   encoderState: EncoderState;
   loading: boolean;
   /** Counter of the latest bmp currently encoding */
@@ -57,6 +65,16 @@ interface State {
 
 const filesize = partial({});
 
+async function preprocessImage(
+  source: SourceImage,
+  preprocessData: PreprocessorState,
+): Promise<ImageData> {
+  let result = source.data;
+  if (preprocessData.quantizer.enabled) {
+    result = await quantizer.quantize(result, preprocessData.quantizer);
+  }
+  return result;
+}
 async function compressImage(
   source: SourceImage,
   encodeData: EncoderState,
@@ -64,18 +82,22 @@ async function compressImage(
   // Special case for identity
   if (encodeData.type === identity.type) return source.file;
 
+  let sourceData = source.data;
+  if (source.preprocessed) {
+    sourceData = source.preprocessed;
+  }
   const compressedData = await (() => {
     switch (encodeData.type) {
-      case mozJPEG.type: return mozJPEG.encode(source.data, encodeData.options);
-      case webP.type: return webP.encode(source.data, encodeData.options);
-      case browserPNG.type: return browserPNG.encode(source.data, encodeData.options);
-      case browserJPEG.type: return browserJPEG.encode(source.data, encodeData.options);
-      case browserWebP.type: return browserWebP.encode(source.data, encodeData.options);
-      case browserGIF.type: return browserGIF.encode(source.data, encodeData.options);
-      case browserTIFF.type: return browserTIFF.encode(source.data, encodeData.options);
-      case browserJP2.type: return browserJP2.encode(source.data, encodeData.options);
-      case browserBMP.type: return browserBMP.encode(source.data, encodeData.options);
-      case browserPDF.type: return browserPDF.encode(source.data, encodeData.options);
+      case mozJPEG.type: return mozJPEG.encode(sourceData, encodeData.options);
+      case webP.type: return webP.encode(sourceData, encodeData.options);
+      case browserPNG.type: return browserPNG.encode(sourceData, encodeData.options);
+      case browserJPEG.type: return browserJPEG.encode(sourceData, encodeData.options);
+      case browserWebP.type: return browserWebP.encode(sourceData, encodeData.options);
+      case browserGIF.type: return browserGIF.encode(sourceData, encodeData.options);
+      case browserTIFF.type: return browserTIFF.encode(sourceData, encodeData.options);
+      case browserJP2.type: return browserJP2.encode(sourceData, encodeData.options);
+      case browserBMP.type: return browserBMP.encode(sourceData, encodeData.options);
+      case browserPDF.type: return browserPDF.encode(sourceData, encodeData.options);
       default: throw Error(`Unexpected encoder ${JSON.stringify(encodeData)}`);
     }
   })();
@@ -94,12 +116,14 @@ export default class App extends Component<Props, State> {
     loading: false,
     images: [
       {
+        preprocessorState: defaultPreprocessorState,
         encoderState: { type: identity.type, options: identity.defaultOptions },
         loadingCounter: 0,
         loadedCounter: 0,
         loading: false,
       },
       {
+        preprocessorState: defaultPreprocessorState,
         encoderState: { type: mozJPEG.type, options: mozJPEG.defaultOptions },
         loadingCounter: 0,
         loadedCounter: 0,
@@ -121,7 +145,12 @@ export default class App extends Component<Props, State> {
     }
   }
 
-  onEncoderChange(index: 0 | 1, type: EncoderType, options?: EncoderOptions): void {
+  onChange(
+    index: 0 | 1,
+    preprocessorState: PreprocessorState,
+    type: EncoderType,
+    options?: EncoderOptions,
+  ): void {
     const images = this.state.images.slice() as [EncodedImage, EncodedImage];
     const oldImage = images[index];
 
@@ -136,13 +165,32 @@ export default class App extends Component<Props, State> {
     images[index] = {
       ...oldImage,
       encoderState,
+      preprocessorState,
     };
 
     this.setState({ images });
   }
 
-  onOptionsChange(index: 0 | 1, options: EncoderOptions): void {
-    this.onEncoderChange(index, this.state.images[index].encoderState.type, options);
+  onEncoderTypeChange(index: 0 | 1, newType: EncoderType): void {
+    this.onChange(index, this.state.images[index].preprocessorState, newType);
+  }
+
+  onPreprocessorOptionsChange(index: 0 | 1, options: PreprocessorState): void {
+    this.onChange(
+      index,
+      options,
+      this.state.images[index].encoderState.type,
+      this.state.images[index].encoderState.options,
+    );
+  }
+
+  onEncoderOptionsChange(index: 0 | 1, options: EncoderOptions): void {
+    this.onChange(
+      index,
+      this.state.images[index].preprocessorState,
+      this.state.images[index].encoderState.type,
+      options,
+    );
   }
 
   componentDidUpdate(prevProps: Props, prevState: State): void {
@@ -212,8 +260,8 @@ export default class App extends Component<Props, State> {
     this.setState({ images });
 
     let file;
-
     try {
+      source.preprocessed = await preprocessImage(source, image.preprocessorState);
       file = await compressImage(source, image.encoderState);
     } catch (err) {
       this.setState({ error: `Encoding error (type=${image.encoderState.type}): ${err}` });
@@ -276,9 +324,11 @@ export default class App extends Component<Props, State> {
           {images.map((image, index) => (
             <Options
               class={index ? style.rightOptions : style.leftOptions}
+              preprocessorState={image.preprocessorState}
               encoderState={image.encoderState}
-              onTypeChange={this.onEncoderChange.bind(this, index)}
-              onOptionsChange={this.onOptionsChange.bind(this, index)}
+              onEncoderTypeChange={this.onEncoderTypeChange.bind(this, index)}
+              onEncoderOptionsChange={this.onEncoderOptionsChange.bind(this, index)}
+              onPreprocessorOptionsChange={this.onPreprocessorOptionsChange.bind(this, index)}
             />
           ))}
           {anyLoading && <span style={{ position: 'fixed', top: 0, left: 0 }}>Loading...</span>}
