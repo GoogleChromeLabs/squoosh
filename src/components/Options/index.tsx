@@ -125,14 +125,12 @@ export default class Options extends Component<Props, State> {
           />
           Enable
         </label>
-        {preprocessorState.quantizer.enabled ? (
+        {preprocessorState.quantizer.enabled &&
           <QuantizerOptionsComponent
             options={preprocessorState.quantizer}
             onChange={this.onQuantizerOptionsChange}
           />
-        ) : (
-          <div/>
-        )}
+        }
         <hr/>
         <label>
           Mode:
