@@ -81,10 +81,18 @@ export default class Options extends Component<Props, State> {
   onPreprocessorEnabledChange(event: Event) {
     const el = event.currentTarget as HTMLInputElement;
 
-    const preprocessorState = this.props.preprocessorState;
-    const preprocessor = el.name.split('.')[0] as keyof typeof preprocessorState;
-    preprocessorState[preprocessor].enabled = el.checked;
-    this.props.onPreprocessorOptionsChange(preprocessorState);
+    const newPreprocessorState = {
+      ...this.props.preprocessorState,
+    };
+
+    const preprocessor = el.name.split('.')[0] as keyof typeof newPreprocessorState;
+
+    newPreprocessorState[preprocessor] = {
+      ...newPreprocessorState[preprocessor],
+      enabled: el.checked,
+    };
+
+    this.props.onPreprocessorOptionsChange(newPreprocessorState);
   }
 
   @bind
