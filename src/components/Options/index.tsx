@@ -112,23 +112,27 @@ export default class Options extends Component<Props, State> {
 
     return (
       <div class={`${style.options}${className ? (' ' + className) : ''}`}>
-        <p>Quantization</p>
-        <label>
-          <input
-            name="quantizer.enable"
-            type="checkbox"
-            checked={!!preprocessorState.quantizer.enabled}
-            onChange={this.onPreprocessorEnabledChange}
-          />
-          Enable
-        </label>
-        {preprocessorState.quantizer.enabled &&
-          <QuantizerOptionsComponent
-            options={preprocessorState.quantizer}
-            onChange={this.onQuantizerOptionsChange}
-          />
-        }
-        <hr/>
+        {encoderState.type !== 'identity' && (
+          <div>
+            <p>Quantization</p>
+            <label>
+              <input
+                name="quantizer.enable"
+                type="checkbox"
+                checked={!!preprocessorState.quantizer.enabled}
+                onChange={this.onPreprocessorEnabledChange}
+              />
+              Enable
+            </label>
+            {preprocessorState.quantizer.enabled &&
+              <QuantizerOptionsComponent
+                options={preprocessorState.quantizer}
+                onChange={this.onQuantizerOptionsChange}
+              />
+            }
+            <hr/>
+          </div>
+        )}
         <label>
           Mode:
           {encoderSupportMap ?
