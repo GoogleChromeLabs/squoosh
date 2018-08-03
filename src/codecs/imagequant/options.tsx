@@ -1,6 +1,7 @@
 import { h, Component } from 'preact';
 import { bind, inputFieldValueAsNumber } from '../../lib/util';
 import { QuantizeOptions } from './quantizer';
+import * as styles from './styles.scss';
 
 interface Props {
   options: QuantizeOptions;
@@ -13,6 +14,7 @@ export default class QuantizerOptions extends Component<Props, {}> {
     const form = (event.currentTarget as HTMLInputElement).closest('form') as HTMLFormElement;
 
     const options: QuantizeOptions = {
+      zx: inputFieldValueAsNumber(form.zx),
       maxNumColors: inputFieldValueAsNumber(form.maxNumColors),
       dither: inputFieldValueAsNumber(form.dither),
     };
@@ -23,7 +25,18 @@ export default class QuantizerOptions extends Component<Props, {}> {
     return (
       <form>
         <label>
-          Pallette Colors:
+          Type:
+          <select
+            name="zx"
+            value={'' + options.zx}
+            onChange={this.onChange}
+          >
+            <option value="0">Standard</option>
+            <option value="1">ZX</option>
+          </select>
+        </label>
+        <label style={options.zx ? 'display: none' : ''}>
+          Palette Colors:
           <input
             name="maxNumColors"
             type="range"

@@ -28,8 +28,7 @@
       create_buffer: Module.cwrap('create_buffer', 'number', ['number', 'number']),
       destroy_buffer: Module.cwrap('destroy_buffer', '', ['number']),
       quantize: Module.cwrap('quantize', '', ['number', 'number', 'number', 'number', 'number']),
-      speccy_quantize: Module.cwrap('speccy_quantize', '', ['number', 'number', 'number', 'number']),
-      //speccy_quantize2: Module.cwrap('speccy_quantize', '', ['number', 'number', 'number', 'number']),
+      zx_quantize: Module.cwrap('zx_quantize', '', ['number', 'number', 'number', 'number']),
       free_result: Module.cwrap('free_result', '', ['number']),
       get_result_pointer: Module.cwrap('get_result_pointer', 'number', []),
     };
@@ -38,7 +37,7 @@
     const p = api.create_buffer(image.width, image.height);
     Module.HEAP8.set(image.data, p);
     //api.quantize(p, image.width, image.height, 256, 1.0);
-    api.speccy_quantize(p, image.width, image.height, 1);
+    api.zx_quantize(p, image.width, image.height, 1);
     console.log('done');
     const resultPointer = api.get_result_pointer();
     const resultView = new Uint8Array(Module.HEAP8.buffer, resultPointer, image.width * image.height * 4);

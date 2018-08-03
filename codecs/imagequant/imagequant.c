@@ -67,7 +67,7 @@ const liq_color speccy_colors[] = {
   {.a = 255, .r = 0, .g = 255, .b = 0},     // bright green
   {.a = 255, .r = 0, .g = 255, .b = 255},   // bright cyan
   {.a = 255, .r = 255, .g = 255, .b = 0},   // bright yellow
-  {.a = 255, .r = 255, .g = 255, .b = 255}, // bright white
+  {.a = 255, .r = 255, .g = 255, .b = 255} // bright white
 };
 
 /**
@@ -75,7 +75,7 @@ const liq_color speccy_colors[] = {
  * both be 'regular' or 'bright'. Black exists as both regular and bright
  */
 EMSCRIPTEN_KEEPALIVE
-void speccy_quantize(uint8_t* image_buffer, int image_width, int image_height, float dithering) {
+void zx_quantize(uint8_t* image_buffer, int image_width, int image_height, float dithering) {
   int size = image_width * image_height;
   int bytes_per_pixel = 4;
   result = (int) malloc(size * bytes_per_pixel);
