@@ -92,10 +92,7 @@ export default class Options extends Component<Props, State> {
   @bind
   onQuantizerOptionsChange(opts: QuantizeOptions) {
     this.props.onPreprocessorOptionsChange(
-      cleanMerge(this.props.preprocessorState, 'quantizer', {
-        ...opts,
-        enabled: this.props.preprocessorState.quantizer.enabled,
-      }),
+      cleanMerge(this.props.preprocessorState, 'quantizer', opts),
     );
   }
 
