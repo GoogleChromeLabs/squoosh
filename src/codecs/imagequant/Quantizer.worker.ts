@@ -9,6 +9,7 @@ interface ModuleAPI {
   create_buffer(width: number, height: number): number;
   destroy_buffer(pointer: number): void;
   quantize(buffer: number, width: number, height: number, numColors: number, dither: number): void;
+  zx_quantize(buffer: number, width: number, height: number, dither: number): void;
   free_result(): void;
   get_result_pointer(): number;
 }
@@ -51,6 +52,7 @@ export default class ImageQuant {
         create_buffer: m.cwrap('create_buffer', 'number', ['number', 'number']),
         destroy_buffer: m.cwrap('destroy_buffer', '', ['number']),
         quantize: m.cwrap('quantize', '', ['number', 'number', 'number', 'number', 'number']),
+        zx_quantize: m.cwrap('zx_quantize', '', ['number', 'number', 'number', 'number']),
         free_result: m.cwrap('free_result', '', []),
         get_result_pointer: m.cwrap('get_result_pointer', 'number', []),
       };
@@ -63,7 +65,11 @@ export default class ImageQuant {
 
     const p = api.create_buffer(data.width, data.height);
     m.HEAP8.set(new Uint8Array(data.data), p);
-    api.quantize(p, data.width, data.height, opts.maxNumColors, opts.dither);
+    if (opts.zx) {
+      api.zx_quantize(p, data.width, data.height, opts.dither);
+    } else {
+      api.quantize(p, data.width, data.height, opts.maxNumColors, opts.dither);
+    }
     const resultPointer = api.get_result_pointer();
     const resultView = new Uint8Array(
       m.HEAP8.buffer,

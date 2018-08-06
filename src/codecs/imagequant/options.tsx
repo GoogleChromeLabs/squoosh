@@ -1,29 +1,55 @@
 import { h, Component } from 'preact';
-import { bind, inputFieldValueAsNumber } from '../../lib/util';
+import { bind, inputFieldValueAsNumber, konami } from '../../lib/util';
 import { QuantizeOptions } from './quantizer';
+
+const konamiPromise = konami();
 
 interface Props {
   options: QuantizeOptions;
   onChange(newOptions: QuantizeOptions): void;
 }
 
-export default class QuantizerOptions extends Component<Props, {}> {
+interface State {
+  extendedSettings: boolean;
+}
+
+export default class QuantizerOptions extends Component<Props, State> {
+  state: State = { extendedSettings: false };
+
+  componentDidMount() {
+    konamiPromise.then(() => {
+      this.setState({ extendedSettings: true });
+    });
+  }
+
   @bind
   onChange(event: Event) {
     const form = (event.currentTarget as HTMLInputElement).closest('form') as HTMLFormElement;
 
     const options: QuantizeOptions = {
+      zx: inputFieldValueAsNumber(form.zx),
       maxNumColors: inputFieldValueAsNumber(form.maxNumColors),
       dither: inputFieldValueAsNumber(form.dither),
     };
     this.props.onChange(options);
   }
 
-  render({ options }: Props) {
+  render({ options }: Props, { extendedSettings }: State) {
     return (
       <form>
-        <label>
-          Pallette Colors:
+        <label style={{ display: extendedSettings ? '' : 'none' }}>
+          Type:
+          <select
+            name="zx"
+            value={'' + options.zx}
+            onChange={this.onChange}
+          >
+            <option value="0">Standard</option>
+            <option value="1">ZX</option>
+          </select>
+        </label>
+        <label style={{ display: options.zx ? 'none' : '' }}>
+          Palette Colors:
           <input
             name="maxNumColors"
             type="range"
