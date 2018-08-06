@@ -70,6 +70,8 @@ const liq_color zx_colors[] = {
   {.a = 255, .r = 255, .g = 255, .b = 255}  // bright white
 };
 
+uint8_t block[8 * 8 * 4];
+
 /**
  * The ZX has one bit per pixel, but can assign two colours to an 8x8 block. The two colours must
  * both be 'regular' or 'bright'. Black exists as both regular and bright.
@@ -79,7 +81,6 @@ void zx_quantize(uint8_t* image_buffer, int image_width, int image_height, float
   int size = image_width * image_height;
   int bytes_per_pixel = 4;
   result = (int) malloc(size * bytes_per_pixel);
-  uint8_t* block = malloc(8 * 8 * bytes_per_pixel);
   uint8_t* image8bit = (uint8_t*) malloc(8 * 8);
 
   // For each 8x8 grid
@@ -211,7 +212,6 @@ void zx_quantize(uint8_t* image_buffer, int image_width, int image_height, float
     }
   }
 
-  free(block);
   free(image8bit);
 }
 
