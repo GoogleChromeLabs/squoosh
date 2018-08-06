@@ -67,7 +67,7 @@ const liq_color speccy_colors[] = {
   {.a = 255, .r = 0, .g = 255, .b = 0},     // bright green
   {.a = 255, .r = 0, .g = 255, .b = 255},   // bright cyan
   {.a = 255, .r = 255, .g = 255, .b = 0},   // bright yellow
-  {.a = 255, .r = 255, .g = 255, .b = 255} // bright white
+  {.a = 255, .r = 255, .g = 255, .b = 255}  // bright white
 };
 
 /**
@@ -128,34 +128,52 @@ void zx_quantize(uint8_t* image_buffer, int image_width, int image_height, float
         }
       }
 
-      // Get the two most popular colours for a square
+      // Get the three most popular colours for a square
       int first_color_index = 0;
       int second_color_index = 0;
+      int third_color_index = 0;
       int highest_popularity = -1;
       int second_highest_popularity = -1;
+      int third_highest_popularity = -1;
 
       for (int color_index = 0; color_index < 15; color_index++) {
         if (color_popularity[color_index] > highest_popularity) {
+          third_color_index = second_color_index;
+          third_highest_popularity = second_highest_popularity;
           second_color_index = first_color_index;
           second_highest_popularity = highest_popularity;
           first_color_index = color_index;
           highest_popularity = color_popularity[color_index];
         } else if (color_popularity[color_index] > second_highest_popularity) {
+          third_color_index = second_color_index;
+          third_highest_popularity = second_highest_popularity;
           second_color_index = color_index;
           second_highest_popularity = color_popularity[color_index];
+        } else if (color_popularity[color_index] > third_highest_popularity) {
+          third_color_index = color_index;
+          third_highest_popularity = color_popularity[color_index];
         }
       }
 
       // Speccy images can't mix bright and regular, except black which appears in both.
       // Resolve the conflict:
-      if (first_color_index != 0 && second_color_index != 0) {
-        if (first_color_index >= 8 && second_color_index < 8) {
-          // Make the second color regular
-          second_color_index = second_color_index - 7;
-        } else if (first_color_index < 8 && second_color_index >= 8) {
-          // Make the second color bright
-          second_color_index = second_color_index + 7;
+      while (1) {
+        if (first_color_index != 0 && second_color_index != 0) {
+          if (first_color_index >= 8 && second_color_index < 8) {
+            // Make the second color bright
+            second_color_index = second_color_index + 7;
+          } else if (first_color_index < 8 && second_color_index >= 8) {
+            // Make the second color regular
+            second_color_index = second_color_index - 7;
+          }
         }
+
+        // If, during conflict resolving, we now have two of the same colour (because we selected
+        // the bright & regular version of the same colour), retry again with the third most popular
+        // colour.
+        if (first_color_index == second_color_index) {
+          second_color_index = third_color_index;
+        } else break;
       }
 
       // Quantize
