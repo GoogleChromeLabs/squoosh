@@ -1,6 +1,5 @@
 import { h, Component } from 'preact';
 import { partial } from 'filesize';
-import cleanSet from 'clean-set';
 
 import { bind, bitmapToImageData } from '../../lib/util';
 import * as style from './style.scss';
@@ -34,6 +33,7 @@ import {
 } from '../../codecs/preprocessors';
 
 import { decodeImage } from '../../codecs/decoders';
+import { cleanMerge } from '../../lib/clean-modify';
 
 interface SourceImage {
   file: File;
@@ -160,10 +160,7 @@ export default class App extends Component<Props, State> {
       options: options || encoderMap[type].defaultOptions,
     } as EncoderState;
 
-    let { images } = this.state;
-    images = cleanSet(images, `${index}.encoderState`, encoderState as any);
-    images = cleanSet(images, `${index}.preprocessorState`, preprocessorState as any);
-
+    const images = cleanMerge(this.state.images, '' + index, { encoderState, preprocessorState });
     this.setState({ images });
   }
 
@@ -243,12 +240,13 @@ export default class App extends Component<Props, State> {
     const { source } = this.state;
     if (!source) return;
 
-    let { images } = this.state;
     // Each time we trigger an async encode, the counter changes.
-    const loadingCounter = images[index].loadingCounter + 1;
+    const loadingCounter = this.state.images[index].loadingCounter + 1;
 
-    images = cleanSet(images, `${index}.loadingCounter`, loadingCounter as any);
-    images = cleanSet(images, `${index}.loading`, true as any);
+    let images = cleanMerge(this.state.images, '' + index, {
+      loadingCounter,
+      loading: true,
+    });
 
     this.setState({ images });
 
@@ -278,17 +276,13 @@ export default class App extends Component<Props, State> {
       throw err;
     }
 
-    images = this.state.images;
-
-    images = cleanSet(images, `${index}.file`, file as any);
-    images = cleanSet(images, `${index}.bmp`, bmp as any);
-    images = cleanSet(images, `${index}.downloadUrl`, URL.createObjectURL(file) as any);
-    images = cleanSet(
-      images,
-      `${index}.loading`,
-      (images[index].loadingCounter !== loadingCounter) as any,
-    );
-    images = cleanSet(images, `${index}.loadedCounter`, loadingCounter as any);
+    images = cleanMerge(this.state.images, '' + index, {
+      file,
+      bmp,
+      downloadUrl: URL.createObjectURL(file),
+      loading: images[index].loadingCounter !== loadingCounter,
+      loadedCounter: loadingCounter,
+    });
 
     this.setState({ images, error: '' });
   }
