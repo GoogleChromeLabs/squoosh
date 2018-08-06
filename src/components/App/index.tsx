@@ -1,5 +1,6 @@
 import { h, Component } from 'preact';
 import { partial } from 'filesize';
+import cleanSet from 'clean-set';
 
 import { bind, bitmapToImageData } from '../../lib/util';
 import * as style from './style.scss';
@@ -151,9 +152,6 @@ export default class App extends Component<Props, State> {
     type: EncoderType,
     options?: EncoderOptions,
   ): void {
-    const images = this.state.images.slice() as [EncodedImage, EncodedImage];
-    const oldImage = images[index];
-
     // Some type cheating here.
     // encoderMap[type].defaultOptions is always safe.
     // options should always be correct for the type, but TypeScript isn't smart enough.
@@ -162,11 +160,9 @@ export default class App extends Component<Props, State> {
       options: options || encoderMap[type].defaultOptions,
     } as EncoderState;
 
-    images[index] = {
-      ...oldImage,
-      encoderState,
-      preprocessorState,
-    };
+    let { images } = this.state;
+    images = cleanSet(images, `${index}.encoderState`, encoderState as any);
+    images = cleanSet(images, `${index}.preprocessorState`, preprocessorState as any);
 
     this.setState({ images });
   }
@@ -246,18 +242,17 @@ export default class App extends Component<Props, State> {
   async updateImage(index: number): Promise<void> {
     const { source } = this.state;
     if (!source) return;
-    let images = this.state.images.slice() as [EncodedImage, EncodedImage];
 
+    let { images } = this.state;
     // Each time we trigger an async encode, the counter changes.
     const loadingCounter = images[index].loadingCounter + 1;
 
-    const image = images[index] = {
-      ...images[index],
-      loadingCounter,
-      loading: true,
-    };
+    images = cleanSet(images, `${index}.loadingCounter`, loadingCounter as any);
+    images = cleanSet(images, `${index}.loading`, true as any);
 
     this.setState({ images });
+
+    const image = images[index];
 
     let file;
     try {
@@ -283,16 +278,17 @@ export default class App extends Component<Props, State> {
       throw err;
     }
 
-    images = this.state.images.slice() as [EncodedImage, EncodedImage];
+    images = this.state.images;
 
-    images[index] = {
-      ...images[index],
-      file,
-      bmp,
-      downloadUrl: URL.createObjectURL(file),
-      loading: images[index].loadingCounter !== loadingCounter,
-      loadedCounter: loadingCounter,
-    };
+    images = cleanSet(images, `${index}.file`, file as any);
+    images = cleanSet(images, `${index}.bmp`, bmp as any);
+    images = cleanSet(images, `${index}.downloadUrl`, URL.createObjectURL(file) as any);
+    images = cleanSet(
+      images,
+      `${index}.loading`,
+      (images[index].loadingCounter !== loadingCounter) as any,
+    );
+    images = cleanSet(images, `${index}.loadedCounter`, loadingCounter as any);
 
     this.setState({ images, error: '' });
   }
