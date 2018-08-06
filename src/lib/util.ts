@@ -165,6 +165,7 @@ export function inputFieldCheckedAsNumber(field: any): number {
  */
 export function konami(): Promise<void> {
   return new Promise((resolve) => {
+    // Keycodes for: ↑ ↑ ↓ ↓ ← → ← → B A
     const expectedPattern = '38384040373937396665';
     let rollingPattern = '';
 
