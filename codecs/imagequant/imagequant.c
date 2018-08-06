@@ -52,7 +52,7 @@ void quantize(uint8_t* image_buffer, int image_width, int image_height, int num_
   liq_attr_destroy(attr);
 }
 
-const liq_color speccy_colors[] = {
+const liq_color zx_colors[] = {
   {.a = 255, .r = 0, .g = 0, .b = 0},       // regular black
   {.a = 255, .r = 0, .g = 0, .b = 215},     // regular blue
   {.a = 255, .r = 215, .g = 0, .b = 0},     // regular red
@@ -72,7 +72,7 @@ const liq_color speccy_colors[] = {
 
 /**
  * The ZX has one bit per pixel, but can assign two colours to an 8x8 block. The two colours must
- * both be 'regular' or 'bright'. Black exists as both regular and bright
+ * both be 'regular' or 'bright'. Black exists as both regular and bright.
  */
 EMSCRIPTEN_KEEPALIVE
 void zx_quantize(uint8_t* image_buffer, int image_width, int image_height, float dithering) {
@@ -90,6 +90,7 @@ void zx_quantize(uint8_t* image_buffer, int image_width, int image_height, float
       int block_width = 8;
       int block_height = 8;
 
+      // If the block hangs off the right/bottom of the image dimensions, make it smaller to fit.
       if (block_start_y + block_height > image_height) {
         block_height = image_height - block_start_y;
       }
@@ -98,22 +99,25 @@ void zx_quantize(uint8_t* image_buffer, int image_width, int image_height, float
         block_width = image_width - block_start_x;
       }
 
-      // For each pixel in that grid
+      // For each pixel in that block:
       for (int y = block_start_y; y < block_start_y + block_height; y++) {
         for (int x = block_start_x; x < block_start_x + block_width; x++) {
           int pixel_start = (y * image_width * bytes_per_pixel) + (x * bytes_per_pixel);
           int smallest_distance = INT_MAX;
           int winning_index = -1;
 
-          // Copy pixel data for later
+          // Copy pixel data for quantizing later
           block[block_index++] = image_buffer[pixel_start];
           block[block_index++] = image_buffer[pixel_start + 1];
           block[block_index++] = image_buffer[pixel_start + 2];
           block[block_index++] = image_buffer[pixel_start + 3];
 
-          // Which speccy color is this pixel closest to?
+          // Which zx color is this pixel closest to?
           for (int color_index = 0; color_index < 15; color_index++) {
-            liq_color color = speccy_colors[color_index];
+            liq_color color = zx_colors[color_index];
+
+            // Using Euclidean distance. LibQuant has better methods, but it requires conversion to
+            // LAB, so I don't think it's worth it.
             int distance =
               pow(color.r - image_buffer[pixel_start + 0], 2) +
               pow(color.g - image_buffer[pixel_start + 1], 2) +
@@ -128,7 +132,7 @@ void zx_quantize(uint8_t* image_buffer, int image_width, int image_height, float
         }
       }
 
-      // Get the three most popular colours for a square
+      // Get the three most popular colours for the block.
       int first_color_index = 0;
       int second_color_index = 0;
       int third_color_index = 0;
@@ -138,6 +142,7 @@ void zx_quantize(uint8_t* image_buffer, int image_width, int image_height, float
 
       for (int color_index = 0; color_index < 15; color_index++) {
         if (color_popularity[color_index] > highest_popularity) {
+          // Store this as the most popular pixel, and demote the current values:
           third_color_index = second_color_index;
           third_highest_popularity = second_highest_popularity;
           second_color_index = first_color_index;
@@ -155,9 +160,10 @@ void zx_quantize(uint8_t* image_buffer, int image_width, int image_height, float
         }
       }
 
-      // Speccy images can't mix bright and regular, except black which appears in both.
-      // Resolve the conflict:
+      // ZX images can't mix bright and regular colours, except black which appears in both.
+      // Resolve any conflict:
       while (1) {
+        // If either colour is black, there's no conflict to resolve.
         if (first_color_index != 0 && second_color_index != 0) {
           if (first_color_index >= 8 && second_color_index < 8) {
             // Make the second color bright
@@ -168,9 +174,9 @@ void zx_quantize(uint8_t* image_buffer, int image_width, int image_height, float
           }
         }
 
-        // If, during conflict resolving, we now have two of the same colour (because we selected
-        // the bright & regular version of the same colour), retry again with the third most popular
-        // colour.
+        // If, during conflict resolving, we now have two of the same colour (because we initially
+        // selected the bright & regular version of the same colour), retry again with the third
+        // most popular colour.
         if (first_color_index == second_color_index) {
           second_color_index = third_color_index;
         } else break;
@@ -180,14 +186,14 @@ void zx_quantize(uint8_t* image_buffer, int image_width, int image_height, float
       attr = liq_attr_create();
       image = liq_image_create_rgba(attr, block, block_width, block_height, 0);
       liq_set_max_colors(attr, 2);
-      liq_image_add_fixed_color(image, speccy_colors[first_color_index]);
-      liq_image_add_fixed_color(image, speccy_colors[second_color_index]);
+      liq_image_add_fixed_color(image, zx_colors[first_color_index]);
+      liq_image_add_fixed_color(image, zx_colors[second_color_index]);
       liq_image_quantize(image, attr, &res);
       liq_set_dithering_level(res, dithering);
       liq_write_remapped_image(res, image, image8bit, size);
       const liq_palette *pal = liq_get_palette(res);
 
-      // Turn palletted image back into an RGBA image
+      // Turn palletted image back into an RGBA image, and write it into the full size result image.
       for(int y = 0; y < block_height; y++) {
         for(int x = 0; x < block_width; x++) {
           int image8BitPos = y * block_width + x;
