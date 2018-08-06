@@ -1,7 +1,7 @@
 import { h, Component } from 'preact';
 import { partial } from 'filesize';
 
-import { bind, bitmapToImageData } from '../../lib/util';
+import { bind, linkRef, bitmapToImageData } from '../../lib/util';
 import * as style from './style.scss';
 import Output from '../Output';
 import Options from '../Options';
@@ -26,6 +26,8 @@ import {
     EncoderOptions,
     encoderMap,
 } from '../../codecs/encoders';
+import SnackBarElement from '../../lib/SnackBar';
+import '../../lib/SnackBar';
 
 import {
   PreprocessorState,
@@ -132,6 +134,8 @@ export default class App extends Component<Props, State> {
     ],
   };
 
+  private snackbar?: SnackBarElement;
+
   constructor() {
     super();
     // In development, persist application state across hot reloads:
@@ -234,12 +238,12 @@ export default class App extends Component<Props, State> {
 
       this.setState({
         source: { data, bmp, file },
-        error: undefined,
         loading: false,
       });
     } catch (err) {
       console.error(err);
-      this.setState({ error: 'IMAGE_INVALID', loading: false });
+      this.showError(`Invalid image`);
+      this.setState({ loading: false });
     }
   }
 
@@ -264,14 +268,13 @@ export default class App extends Component<Props, State> {
       source.preprocessed = await preprocessImage(source, image.preprocessorState);
       file = await compressImage(source, image.encoderState);
     } catch (err) {
-      this.setState({ error: `Encoding error (type=${image.encoderState.type}): ${err}` });
+      this.showError(`Encoding error (type=${image.encoderState.type}): ${err}`);
       throw err;
     }
 
     const latestImage = this.state.images[index];
     // If a later encode has landed before this one, return.
     if (loadingCounter < latestImage.loadedCounter) {
-      this.setState({ error: '' });
       return;
     }
 
@@ -294,10 +297,15 @@ export default class App extends Component<Props, State> {
       loadedCounter: loadingCounter,
     };
 
-    this.setState({ images, error: '' });
+    this.setState({ images });
   }
 
-  render({ }: Props, { loading, error, images }: State) {
+  showError (error: string) {
+    if (!this.snackbar) throw Error('Snackbar missing');
+    this.snackbar.showSnackbar({ message: error });
+  }
+
+  render({ }: Props, { loading, images }: State) {
     const [leftImageBmp, rightImageBmp] = images.map(i => i.bmp);
     const anyLoading = loading || images.some(image => image.loading);
 
@@ -332,7 +340,7 @@ export default class App extends Component<Props, State> {
             />
           ))}
           {anyLoading && <span style={{ position: 'fixed', top: 0, left: 0 }}>Loading...</span>}
-          {error && <span style={{ position: 'fixed', top: 0, left: 0 }}>Error: {error}</span>}
+          <snack-bar ref={linkRef(this, 'snackbar')} />
         </div>
       </file-drop>
     );
