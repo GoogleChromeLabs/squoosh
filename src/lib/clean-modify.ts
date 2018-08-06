@@ -1,4 +1,4 @@
-function cleanSetOrMerge<A = any[] | object>(
+function cleanSetOrMerge<A extends any[] | object>(
   source: A,
   keys: string | number | string[],
   toSetOrMerge: any[] | object,
@@ -29,7 +29,7 @@ function cleanSetOrMerge<A = any[] | object>(
   return newObject;
 }
 
-function copy<A = any[] | object>(source: A): A {
+function copy<A extends any[] | object>(source: A): A {
   // Some type cheating here, as TypeScript can't infer between generic types.
   if (Array.isArray(source)) return [...source] as any;
   return { ...(source as any) };
