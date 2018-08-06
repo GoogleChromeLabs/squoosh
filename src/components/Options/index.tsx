@@ -81,10 +81,15 @@ export default class Options extends Component<Props, State> {
   onPreprocessorEnabledChange(event: Event) {
     const el = event.currentTarget as HTMLInputElement;
 
-    const preprocessorState = this.props.preprocessorState;
-    const preprocessor = el.name.split('.')[0] as keyof typeof preprocessorState;
-    preprocessorState[preprocessor].enabled = el.checked;
-    this.props.onPreprocessorOptionsChange(preprocessorState);
+    const preprocessor = el.name.split('.')[0] as keyof PreprocessorState;
+
+    this.props.onPreprocessorOptionsChange({
+      ...this.props.preprocessorState,
+      [preprocessor]: {
+        ...this.props.preprocessorState[preprocessor],
+        enabled: el.checked,
+      },
+    });
   }
 
   @bind
@@ -107,25 +112,27 @@ export default class Options extends Component<Props, State> {
 
     return (
       <div class={`${style.options}${className ? (' ' + className) : ''}`}>
-        <p>Quantization</p>
-        <label>
-          <input
-            name="quantizer.enable"
-            type="checkbox"
-            checked={!!preprocessorState.quantizer.enabled}
-            onChange={this.onPreprocessorEnabledChange}
-          />
-          Enable
-        </label>
-        {preprocessorState.quantizer.enabled ? (
-          <QuantizerOptionsComponent
-            options={preprocessorState.quantizer}
-            onChange={this.onQuantizerOptionsChange}
-          />
-        ) : (
-          <div/>
+        {encoderState.type !== 'identity' && (
+          <div>
+            <p>Quantization</p>
+            <label>
+              <input
+                name="quantizer.enable"
+                type="checkbox"
+                checked={!!preprocessorState.quantizer.enabled}
+                onChange={this.onPreprocessorEnabledChange}
+              />
+              Enable
+            </label>
+            {preprocessorState.quantizer.enabled &&
+              <QuantizerOptionsComponent
+                options={preprocessorState.quantizer}
+                onChange={this.onQuantizerOptionsChange}
+              />
+            }
+            <hr/>
+          </div>
         )}
-        <hr/>
         <label>
           Mode:
           {encoderSupportMap ?

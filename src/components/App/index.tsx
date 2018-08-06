@@ -159,7 +159,7 @@ export default class App extends Component<Props, State> {
     // options should always be correct for the type, but TypeScript isn't smart enough.
     const encoderState: EncoderState = {
       type,
-      options: options ? options : encoderMap[type].defaultOptions,
+      options: options || encoderMap[type].defaultOptions,
     } as EncoderState;
 
     images[index] = {
