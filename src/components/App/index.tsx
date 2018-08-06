@@ -66,6 +66,10 @@ interface State {
   error?: string;
 }
 
+interface UpdateImageOptions {
+  skipPreprocessing?: boolean;
+}
+
 const filesize = partial({});
 
 async function preprocessImage(
@@ -150,44 +154,48 @@ export default class App extends Component<Props, State> {
     }
   }
 
-  onChange(
-    index: 0 | 1,
-    preprocessorState: PreprocessorState,
-    type: EncoderType,
-    options?: EncoderOptions,
-  ): void {
-    // Some type cheating here.
-    // encoderMap[type].defaultOptions is always safe.
-    // options should always be correct for the type, but TypeScript isn't smart enough.
-    const encoderState: EncoderState = {
-      type,
-      options: options || encoderMap[type].defaultOptions,
-    } as EncoderState;
+  onEncoderTypeChange(index: 0 | 1, newType: EncoderType): void {
+    const images = this.state.images.slice() as [EncodedImage, EncodedImage];
 
-    const images = cleanMerge(this.state.images, index, { encoderState, preprocessorState });
+    images[index] = {
+      ...images[index],
+      // Some type cheating here.
+      // encoderMap[type].defaultOptions is always safe.
+      // options should always be correct for the type, but TypeScript isn't smart enough.
+      encoderState: {
+        type: newType,
+        options: encoderMap[newType].defaultOptions,
+      } as EncoderState,
+    };
+
     this.setState({ images });
   }
 
-  onEncoderTypeChange(index: 0 | 1, newType: EncoderType): void {
-    this.onChange(index, this.state.images[index].preprocessorState, newType);
-  }
-
   onPreprocessorOptionsChange(index: 0 | 1, options: PreprocessorState): void {
-    this.onChange(
-      index,
-      options,
-      this.state.images[index].encoderState.type,
-      this.state.images[index].encoderState.options,
-    );
+    const images = this.state.images.slice() as [EncodedImage, EncodedImage];
+
+    images[index] = {
+      ...images[index],
+      preprocessorState: options,
+    };
+
+    this.setState({ images });
   }
 
   onEncoderOptionsChange(index: 0 | 1, options: EncoderOptions): void {
-    this.onChange(
-      index,
-      this.state.images[index].preprocessorState,
-      this.state.images[index].encoderState.type,
-      options,
-    );
+    const images = this.state.images.slice() as [EncodedImage, EncodedImage];
+
+    images[index] = {
+      ...images[index],
+      // Some type cheating here.
+      // The assumption is that options will always be correct for the encoding type.
+      encoderState: {
+        ...images[index].encoderState,
+        options,
+      } as EncoderState,
+    };
+
+    this.setState({ images });
   }
 
   componentDidUpdate(prevProps: Props, prevState: State): void {
@@ -195,12 +203,17 @@ export default class App extends Component<Props, State> {
 
     for (const [i, image] of images.entries()) {
       const prevImage = prevState.images[i];
+      const sourceChanged = source !== prevState.source;
+      const encoderChanged = image.encoderState !== prevImage.encoderState;
+      const preprocessorChanged = image.preprocessorState !== prevImage.preprocessorState;
 
       // The image only needs updated if the encoder settings have changed, or the source has
       // changed.
-      if (source !== prevState.source || image.encoderState !== prevImage.encoderState) {
+      if (sourceChanged || encoderChanged || preprocessorChanged) {
         if (prevImage.downloadUrl) URL.revokeObjectURL(prevImage.downloadUrl);
-        this.updateImage(i).catch((err) => {
+        this.updateImage(i, {
+          skipPreprocessing: !sourceChanged && !preprocessorChanged,
+        }).catch((err) => {
           console.error(err);
         });
       }
@@ -240,7 +253,8 @@ export default class App extends Component<Props, State> {
     }
   }
 
-  async updateImage(index: number): Promise<void> {
+  async updateImage(index: number, options: UpdateImageOptions = {}): Promise<void> {
+    const { skipPreprocessing = false } = options;
     const { source } = this.state;
     if (!source) return;
 
@@ -258,7 +272,9 @@ export default class App extends Component<Props, State> {
 
     let file;
     try {
-      source.preprocessed = await preprocessImage(source, image.preprocessorState);
+      if (!skipPreprocessing) {
+        source.preprocessed = await preprocessImage(source, image.preprocessorState);
+      }
       file = await compressImage(source, image.encoderState);
     } catch (err) {
       this.showError(`Encoding error (type=${image.encoderState.type}): ${err}`);
