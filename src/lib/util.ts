@@ -159,3 +159,24 @@ export function inputFieldValueAsNumber(field: any): number {
 export function inputFieldCheckedAsNumber(field: any): number {
   return Number((field as HTMLInputElement).checked);
 }
+
+/**
+ * Creates a promise that resolves when the user types the konami code.
+ */
+export function konami(): Promise<void> {
+  return new Promise((resolve) => {
+    const expectedPattern = '38384040373937396665';
+    let rollingPattern = '';
+
+    const listener = (event: KeyboardEvent) => {
+      rollingPattern += event.keyCode;
+      rollingPattern = rollingPattern.slice(0, expectedPattern.length);
+      if (rollingPattern === expectedPattern) {
+        window.removeEventListener('keydown', listener);
+        resolve();
+      }
+    };
+
+    window.addEventListener('keydown', listener);
+  });
+}
