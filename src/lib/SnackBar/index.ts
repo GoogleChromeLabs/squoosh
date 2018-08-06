@@ -78,6 +78,7 @@ class Snack {
 
 export default class SnackBarElement extends HTMLElement {
   private _snackbars: Snack[] = [];
+  private _processingStack = false;
 
   showSnackbar (options: SnackOptions) {
     const snack = new Snack(options);
@@ -85,12 +86,13 @@ export default class SnackBarElement extends HTMLElement {
     this._processStack();
   }
 
-  private _processStack () {
-    if (this._snackbars.length === 0) return;
-    this._snackbars[0].show(this).then(() => {
-      this._snackbars.shift();
-      this._processStack();
-    });
+  private async _processStack () {
+    if (this._processingStack === true || this._snackbars.length === 0) return;
+    this._processingStack = true;
+    await this._snackbars[0].show(this);
+    this._snackbars.shift();
+    this._processingStack = false;
+    this._processStack();
   }
 }
 
