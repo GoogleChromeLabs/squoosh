@@ -160,7 +160,7 @@ export default class App extends Component<Props, State> {
       options: options || encoderMap[type].defaultOptions,
     } as EncoderState;
 
-    const images = cleanMerge(this.state.images, '' + index, { encoderState, preprocessorState });
+    const images = cleanMerge(this.state.images, index, { encoderState, preprocessorState });
     this.setState({ images });
   }
 
@@ -243,7 +243,7 @@ export default class App extends Component<Props, State> {
     // Each time we trigger an async encode, the counter changes.
     const loadingCounter = this.state.images[index].loadingCounter + 1;
 
-    let images = cleanMerge(this.state.images, '' + index, {
+    let images = cleanMerge(this.state.images, index, {
       loadingCounter,
       loading: true,
     });
