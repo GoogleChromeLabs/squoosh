@@ -35,6 +35,7 @@ import {
 } from '../../codecs/preprocessors';
 
 import { decodeImage } from '../../codecs/decoders';
+import { cleanMerge } from '../../lib/clean-modify';
 
 interface SourceImage {
   file: File;
@@ -155,9 +156,6 @@ export default class App extends Component<Props, State> {
     type: EncoderType,
     options?: EncoderOptions,
   ): void {
-    const images = this.state.images.slice() as [EncodedImage, EncodedImage];
-    const oldImage = images[index];
-
     // Some type cheating here.
     // encoderMap[type].defaultOptions is always safe.
     // options should always be correct for the type, but TypeScript isn't smart enough.
@@ -166,12 +164,7 @@ export default class App extends Component<Props, State> {
       options: options || encoderMap[type].defaultOptions,
     } as EncoderState;
 
-    images[index] = {
-      ...oldImage,
-      encoderState,
-      preprocessorState,
-    };
-
+    const images = cleanMerge(this.state.images, index, { encoderState, preprocessorState });
     this.setState({ images });
   }
 
@@ -250,18 +243,18 @@ export default class App extends Component<Props, State> {
   async updateImage(index: number): Promise<void> {
     const { source } = this.state;
     if (!source) return;
-    let images = this.state.images.slice() as [EncodedImage, EncodedImage];
 
     // Each time we trigger an async encode, the counter changes.
-    const loadingCounter = images[index].loadingCounter + 1;
+    const loadingCounter = this.state.images[index].loadingCounter + 1;
 
-    const image = images[index] = {
-      ...images[index],
+    let images = cleanMerge(this.state.images, index, {
       loadingCounter,
       loading: true,
-    };
+    });
 
     this.setState({ images });
+
+    const image = images[index];
 
     let file;
     try {
@@ -286,16 +279,13 @@ export default class App extends Component<Props, State> {
       throw err;
     }
 
-    images = this.state.images.slice() as [EncodedImage, EncodedImage];
-
-    images[index] = {
-      ...images[index],
+    images = cleanMerge(this.state.images, '' + index, {
       file,
       bmp,
       downloadUrl: URL.createObjectURL(file),
       loading: images[index].loadingCounter !== loadingCounter,
       loadedCounter: loadingCounter,
-    };
+    });
 
     this.setState({ images });
   }
