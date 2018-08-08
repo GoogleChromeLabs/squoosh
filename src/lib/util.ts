@@ -171,7 +171,7 @@ export function konami(): Promise<void> {
 
     const listener = (event: KeyboardEvent) => {
       rollingPattern += event.keyCode;
-      rollingPattern = rollingPattern.slice(0, expectedPattern.length);
+      rollingPattern = rollingPattern.slice(-expectedPattern.length);
       if (rollingPattern === expectedPattern) {
         window.removeEventListener('keydown', listener);
         resolve();
