@@ -1,5 +1,4 @@
 import { h, Component } from 'preact';
-import { partial } from 'filesize';
 
 import { bind, linkRef, bitmapToImageData } from '../../lib/util';
 import * as style from './style.scss';
@@ -43,7 +42,7 @@ interface SourceImage {
   preprocessed?: ImageData;
 }
 
-interface EncodedImage {
+export interface EncodedImage {
   bmp?: ImageBitmap;
   file?: File;
   downloadUrl?: string;
@@ -64,8 +63,6 @@ interface State {
   loading: boolean;
   error?: string;
 }
-
-const filesize = partial({});
 
 async function preprocessImage(
   source: SourceImage,
@@ -321,16 +318,8 @@ export default class App extends Component<Props, State> {
               </div>
             )}
           {images.map((image, index) => (
-            <span class={index ? style.rightLabel : style.leftLabel}>
-              {encoderMap[image.encoderState.type].label}
-              {(image.downloadUrl && image.file) && (
-                <a href={image.downloadUrl} download={image.file.name}>🔻</a>
-              )}
-              {image.file && ` - ${filesize(image.file.size)}`}
-            </span>
-          ))}
-          {images.map((image, index) => (
             <Options
+              image={image}
               class={index ? style.rightOptions : style.leftOptions}
               preprocessorState={image.preprocessorState}
               encoderState={image.encoderState}

@@ -26,10 +26,15 @@ import {
     encoders,
     encodersSupported,
     EncoderSupportMap,
+    encoderMap,
 } from '../../codecs/encoders';
 import { QuantizeOptions } from '../../codecs/imagequant/quantizer';
 
 import { PreprocessorState } from '../../codecs/preprocessors';
+import { EncodedImage } from '../App';
+
+import GzipSize from '../GzipSize';
+import DownloadIcon from '../../lib/icons/Download';
 
 const encoderOptionsComponentMap = {
   [identity.type]: undefined,
@@ -48,6 +53,7 @@ const encoderOptionsComponentMap = {
 
 interface Props {
   class?: string;
+  image: EncodedImage;
   encoderState: EncoderState;
   preprocessorState: PreprocessorState;
   onEncoderTypeChange(newType: EncoderType): void;
@@ -104,7 +110,7 @@ export default class Options extends Component<Props, State> {
   }
 
   render(
-    { class: className, encoderState, preprocessorState, onEncoderOptionsChange }: Props,
+    { image, class: className, encoderState, preprocessorState, onEncoderOptionsChange }: Props,
     { encoderSupportMap }: State,
   ) {
     // tslint:disable variable-name
@@ -112,6 +118,22 @@ export default class Options extends Component<Props, State> {
 
     return (
       <div class={`${style.options}${className ? (' ' + className) : ''}`}>
+        <h2 class={style.title}>
+          {className && className.match(/left/) ? 'Left Image' : 'Right Image'}
+          {', '}
+          {encoderMap[encoderState.type].label}
+
+          {(image.downloadUrl && image.file) && (
+            <a
+              class={style.download}
+              href={image.downloadUrl}
+              download={image.file.name}
+              title="Download"
+            >
+              <DownloadIcon />
+            </a>
+          )}
+        </h2>
         {encoderState.type !== 'identity' && (
           <div>
             <p>Quantization</p>
@@ -155,6 +177,14 @@ export default class Options extends Component<Props, State> {
             onChange={onEncoderOptionsChange}
           />
         }
+
+        <div class={style.sizeDetails}>
+          <GzipSize
+            // @todo: once we have a nice way to pass down the original image
+            // (image size?), pass compareTo prop here to show size delta.
+            data={image.file}
+          />
+        </div>
       </div>
     );
   }

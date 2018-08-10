@@ -20,3 +20,5 @@ declare module 'material-radial-progress';
 declare module 'classnames' {
   export default function classnames(...args: any[]): string;
 }
+
+declare module 'pako/lib/deflate';
