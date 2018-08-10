@@ -14,21 +14,17 @@ Note: These styles are temporary. They will be replaced before going live.
 
 .output {
   @extend %fill;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"><path fill="rgba(0,0,0,0.05)" d="M0 0h10v10H0zM10 10h10v10H10z"/></svg>') center repeat;
 
-  --background-color: rgba(0,0,0,0.05);
-  background-color: #fff;
-  background-repeat: repeat;
-  background-image:
-    linear-gradient(45deg, var(--background-color) 25%, transparent 25%),
-    linear-gradient(-45deg, var(--background-color) 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, var(--background-color) 75%),
-    linear-gradient(-45deg, transparent 75%, var(--background-color) 75%);
-  background-size: 20px 20px;
-  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-  transition: background-color 300ms ease;
-
-  &.altBackground {
-    background-color: #777;
+  &:before {
+    content: '';
+    @extend %fill;
+    background: #000;
+    opacity: 0;
+    transition: opacity 500ms ease;
+  }
+  &.altBackground:before {
+    opacity: .6;
   }
 
   > two-up {
