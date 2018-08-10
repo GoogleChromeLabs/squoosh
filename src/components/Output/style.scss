@@ -15,12 +15,176 @@ Note: These styles are temporary. They will be replaced before going live.
 .output {
   @extend %fill;
 
+  --background-color: rgba(0,0,0,0.05);
+  background-color: #fff;
+  background-repeat: repeat;
+  background-image:
+    linear-gradient(45deg, var(--background-color) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--background-color) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--background-color) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--background-color) 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+  transition: background-color 300ms ease;
+
+  &.altBackground {
+    background-color: #777;
+  }
+
   > two-up {
     @extend %fill;
 
+    [two-up-handle] {
+      background: #43CEF1;
+      box-shadow: inset 4px 0 0 #34B9EB, 0 1px 4px rgba(0,0,0,0.5);
+      cursor: ew-resize;
+      width: 9px;
+
+      &:after {
+        width: 62px;
+        height: 56px;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="30" height="20" fill="none"><path fill="#34B9EB" d="M10 0v20L0 10zM20 0v20l10-10z"/></svg>') center no-repeat #fff;
+        border: 1px solid rgba(0,0,0,0.12);
+        border-radius: 5px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        transform-origin: 50% 50%;
+        transition: all 300ms ease;
+
+        /*
+        // use a smaller thumb on larger screens?
+        @media (min-width: 600px) {
+          transform: translate(-50%, -50%) scale(0.75);
+        }
+        */
+      }
+
+      &:hover:after,
+      &:active:after {
+        // box-shadow: 0 3px 7px rgba(0,0,0,0.3);
+        background-color: #fafafa;
+        border-color: #34B9EB;
+      }
+  }
+
     > pinch-zoom {
       @extend %fill;
+      outline: none;
     }
+  }
+}
+
+.controls {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  left: 220px;
+  right: 220px;
+  bottom: 0;
+  padding: 9px;
+  overflow: hidden;
+  flex-wrap: wrap;
+  contain: content;
+
+  @media (max-width: 680px) {
+    top: 0;
+    bottom: auto;
+    left: 0;
+    right: 0;
+  }
+
+  > * {
+    z-index: 2;
+  }
+
+  .group {
+    flex: 0;
+    display: flex;
+    justify-items: center;
+    align-items: space-around;
+    flex-wrap: nowrap;
+  }
+
+  .button,
+  .zoom {
+    display: flex;
+    align-items: center;
+    flex: 0;
+    box-sizing: border-box;
+    height: 48px;
+    padding: 0 16px;
+    margin: 4px;
+    background-color: #fff;
+    border: 1px solid rgba(0,0,0,0.2);
+    border-radius: 5px;
+    line-height: 1;
+    font-size: 110%;
+    white-space: nowrap;
+
+    &:focus {
+      box-shadow: 0 0 0 2px var(--button-fg);
+      outline: none;
+      z-index: 1;
+    }
+  }
+
+  .icon {
+    display: inline-block;
+    flex: 1;
+    font-size: 24px;
+    fill: var(--button-fg);
+  }
+
+  .button {
+    text-transform: uppercase;
+    color: var(--button-fg);
+    cursor: pointer;
+
+    // svg {
+    //   color: var(--button-fg);
+    // }
+  }
+
+  .button.icon-left .icon {
+    padding-right: 6px;
+  }
+
+  .button:hover {
+    background-color: #eee;
+  }
+
+  .zoom {
+    flex: 0 0 6em;
+    color: #625E80;
+    font: inherit;
+    cursor: text;
+    width: 6em;
+    text-align: center;
+    justify-content: center;
+
+    &:focus {
+      box-shadow: inset 0 1px 4px rgba(0,0,0,0.2), 0 0 0 2px var(--button-fg);
+    }
+
+    strong {
+      position: relative;
+      top: 1px;
+      margin: 0 3px 0 0;
+      color: #888;
+      font-weight: normal;
+      border-bottom: 1px dashed #999;
+    }
+  }
+
+  .group > :not(:first-child) {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    margin-left: 0;
+  }
+  .group > :not(:last-child) {
+    margin-right: 0;
+    border-right-width: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
   }
 }
 
