@@ -85,14 +85,11 @@ export default class FileSize extends Component<Props, State> {
     { size, compareSize }: State,
   ) {
     const sizeFormatted = size ? prettyBytes(size) : '';
-    let delta;
-    if (size && compareSize) {
-      delta = (size - compareSize) / compareSize;
-    }
+    const delta = size && compareSize ? (size - compareSize) / compareSize : 0;
     return (
       <span title={sizeFormatted} {...props}>
         {sizeFormatted}
-        {delta && (
+        {Math.abs(delta) >= 0.01 && (
           <span class={delta > 0 ? increaseClass : decreaseClass}>
             {Math.round(delta * 100)}%
           </span>

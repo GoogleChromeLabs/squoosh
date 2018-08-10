@@ -56,6 +56,9 @@ interface Props {
     downloadUrl?: string;
     file?: File;
   };
+  sourceImage?: {
+    file?: File;
+  };
   encoderState: EncoderState;
   preprocessorState: PreprocessorState;
   onEncoderTypeChange(newType: EncoderType): void;
@@ -112,7 +115,14 @@ export default class Options extends Component<Props, State> {
   }
 
   render(
-    { image, class: className, encoderState, preprocessorState, onEncoderOptionsChange }: Props,
+    {
+      image,
+      sourceImage,
+      class: className,
+      encoderState,
+      preprocessorState,
+      onEncoderOptionsChange,
+    }: Props,
     { encoderSupportMap }: State,
   ) {
     // tslint:disable variable-name
@@ -185,6 +195,7 @@ export default class Options extends Component<Props, State> {
             // @todo: once we have a nice way to pass down the original image
             // (image size?), pass compareTo prop here to show size delta.
             data={image.file}
+            compareTo={sourceImage && sourceImage.file}
             // @todo determine cases for compressing and pass here
             compress={false}
           />

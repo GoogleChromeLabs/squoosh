@@ -302,7 +302,7 @@ export default class App extends Component<Props, State> {
     this.snackbar.showSnackbar({ message: error });
   }
 
-  render({ }: Props, { loading, images }: State) {
+  render({ }: Props, { loading, images, source }: State) {
     const [leftImageBmp, rightImageBmp] = images.map(i => i.bmp);
     const anyLoading = loading || images.some(image => image.loading);
 
@@ -319,6 +319,7 @@ export default class App extends Component<Props, State> {
           )}
           {(leftImageBmp && rightImageBmp) && images.map((image, index) => (
             <Options
+              sourceImage={source}
               image={image}
               class={index ? style.rightOptions : style.leftOptions}
               preprocessorState={image.preprocessorState}
