@@ -6,6 +6,7 @@ import GzipSizeWorker from '../lib/gzip-size.worker';
 type FileContents = string | ArrayBuffer | File | Blob;
 
 interface Props extends PreactHTMLAttributes {
+  compress?: boolean;
   data?: FileContents;
   compareTo?: FileContents;
   increaseClass?: string;
@@ -21,18 +22,22 @@ let gzipSizeWorker: GzipSizeWorker;
 
 const CACHE = new WeakMap();
 
-async function compressedSize(rawData: FileContents): Promise<number | void> {
+async function calculateSize(rawData: FileContents, compress = false): Promise<number | void> {
   let data = rawData;
-
-  if (!gzipSizeWorker) {
-    gzipSizeWorker = await new GzipSizeWorker();
-  }
 
   if (typeof data === 'string') {
     data = new Blob([data]);
   }
   if (data instanceof Blob || data instanceof File) {
     data = await blobToArrayBuffer(data);
+  }
+
+  if (!compress) {
+    return data.byteLength;
+  }
+
+  if (!gzipSizeWorker) {
+    gzipSizeWorker = await new GzipSizeWorker();
   }
 
   if (CACHE.has(data)) {
@@ -45,32 +50,32 @@ async function compressedSize(rawData: FileContents): Promise<number | void> {
   return await size;
 }
 
-export default class GzipSize extends Component<Props, State> {
+export default class FileSize extends Component<Props, State> {
   // "lock" counters for computed state properties
   counters: Partial<State> = {};
 
   componentDidMount() {
-    const { data, compareTo } = this.props;
+    const { compress, data, compareTo } = this.props;
     if (data) {
-      this.computeSize('size', data);
+      this.computeSize('size', compress, data);
     }
     if (compareTo) {
-      this.computeSize('compareSize', compareTo);
+      this.computeSize('compareSize', compress, compareTo);
     }
   }
 
-  componentWillReceiveProps({ data, compareTo }: Props) {
-    if (data !== this.props.data) {
-      this.computeSize('size', data);
+  componentWillReceiveProps({ compress, data, compareTo }: Props) {
+    if (compress !== this.props.compress || data !== this.props.data) {
+      this.computeSize('size', compress, data);
     }
-    if (compareTo !== this.props.compareTo) {
-      this.computeSize('compareSize', compareTo);
+    if (compress !== this.props.compress || compareTo !== this.props.compareTo) {
+      this.computeSize('compareSize', compress, compareTo);
     }
   }
 
-  async computeSize(prop: keyof State, data?: FileContents) {
+  async computeSize(prop: keyof State, compress = false, data?: FileContents) {
     const id = this.counters[prop] = (this.counters[prop] || 0) + 1;
-    const size = data ? await compressedSize(data) : 0;
+    const size = data ? await calculateSize(data, compress) : 0;
     if (this.counters[prop] !== id) return;
     this.setState({ [prop]: size });
   }

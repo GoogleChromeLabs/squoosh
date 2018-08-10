@@ -33,7 +33,7 @@ import { QuantizeOptions } from '../../codecs/imagequant/quantizer';
 import { PreprocessorState } from '../../codecs/preprocessors';
 import { EncodedImage } from '../App';
 
-import GzipSize from '../GzipSize';
+import FileSize from '../FileSize';
 import DownloadIcon from '../../lib/icons/Download';
 
 const encoderOptionsComponentMap = {
@@ -179,10 +179,12 @@ export default class Options extends Component<Props, State> {
         }
 
         <div class={style.sizeDetails}>
-          <GzipSize
+          <FileSize
             // @todo: once we have a nice way to pass down the original image
             // (image size?), pass compareTo prop here to show size delta.
             data={image.file}
+            // @todo determine cases for compressing and pass here
+            compress={false}
           />
         </div>
       </div>
