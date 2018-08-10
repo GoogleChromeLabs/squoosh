@@ -29,44 +29,7 @@ Note: These styles are temporary. They will be replaced before going live.
 
   > two-up {
     @extend %fill;
-
-    [two-up-handle] {
-      background: #43CEF1;
-      box-shadow: inset 4px 0 0 #34B9EB, 0 1px 4px rgba(0,0,0,0.5);
-
-      &:after {
-        width: 62px;
-        height: 56px;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="30" height="20" fill="none"><path fill="#34B9EB" d="M10 0v20L0 10zM20 0v20l10-10z"/></svg>') center no-repeat #fff;
-        border: 1px solid rgba(0,0,0,0.12);
-        border-radius: 5px;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-        transform-origin: 50% 50%;
-        transition: all 300ms ease;
-      }
-
-      &:hover:after,
-      &:active:after {
-        background-color: #fafafa;
-        border-color: #34B9EB;
-      }
-    }
-
-    &[orientation='horizontal'] [two-up-handle] {
-      cursor: ew-resize;
-      width: 9px;
-    }
-
-    &[orientation='vertical'] [two-up-handle] {
-      cursor: ns-resize;
-      height: 9px;
-
-      &:after {
-        width: 47px;
-        height: 40px;
-        transform: translate(-50%, -50%) rotate(-90deg);
-      }
-    }
+    --accent-color: var(--button-fg);
 
     > pinch-zoom {
       @extend %fill;
