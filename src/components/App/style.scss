@@ -68,7 +68,7 @@ Note: These styles are temporary. They will be replaced before going live.
       border-radius: 10px;
       opacity: 0;
       transform: scale(0.95);
-      transition: all 300ms ease, transform 300ms cubic-bezier(.6,2,.6,1);
+      transition: opacity 300ms ease, transform 300ms cubic-bezier(.6,2,.6,1), background-color 300ms step-end, border-color 300ms step-end;
       pointer-events: none;
     }
 
@@ -76,6 +76,7 @@ Note: These styles are temporary. They will be replaced before going live.
     &.drop-invalid:after {
       opacity: 1;
       transform: scale(1);
+      transition: opacity 300ms ease, transform 300ms cubic-bezier(.6,2,.6,1);
     }
 
     &.drop-valid:after {
