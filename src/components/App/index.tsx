@@ -312,12 +312,12 @@ export default class App extends Component<Props, State> {
           {(leftImageBmp && rightImageBmp) ? (
             <Output leftImg={leftImageBmp} rightImg={rightImageBmp} />
           ) : (
-              <div class={style.welcome}>
-                <h1>Select an image</h1>
-                <input type="file" onChange={this.onFileChange} />
-              </div>
-            )}
-          {images.map((image, index) => (
+            <div class={style.welcome}>
+              <h1>Drop, paste or select an image</h1>
+              <input type="file" onChange={this.onFileChange} />
+            </div>
+          )}
+          {(leftImageBmp && rightImageBmp) && images.map((image, index) => (
             <Options
               image={image}
               class={index ? style.rightOptions : style.leftOptions}

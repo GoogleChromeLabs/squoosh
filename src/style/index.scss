@@ -9,8 +9,15 @@ html, body {
   width: 100%;
   padding: 0;
   margin: 0;
-  font: 14px/1.3 Roboto,'Helvetica Neue',arial,helvetica,sans-serif;
+  font: 12px/1.3 system-ui,-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
   overflow: hidden;
   overscroll-behavior: none;
   contain: strict;
+}
+
+:root {
+  --gray-dark: rgba(0,0,0,0.8);
+
+  --button-fg-color: 95, 180, 228;
+  --button-fg: rgb(95, 180, 228);
 }
