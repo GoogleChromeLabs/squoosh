@@ -134,29 +134,8 @@ export default class Options extends Component<Props, State> {
             </a>
           )}
         </h2>
-        {encoderState.type !== 'identity' && (
-          <div>
-            <p>Quantization</p>
-            <label>
-              <input
-                name="quantizer.enable"
-                type="checkbox"
-                checked={!!preprocessorState.quantizer.enabled}
-                onChange={this.onPreprocessorEnabledChange}
-              />
-              Enable
-            </label>
-            {preprocessorState.quantizer.enabled &&
-              <QuantizerOptionsComponent
-                options={preprocessorState.quantizer}
-                onChange={this.onQuantizerOptionsChange}
-              />
-            }
-            <hr/>
-          </div>
-        )}
-        <label>
-          Mode:
+
+        <section class={style.picker}>
           {encoderSupportMap ?
             <select value={encoderState.type} onChange={this.onEncoderTypeChange}>
               {encoders.filter(encoder => encoderSupportMap[encoder.type]).map(encoder => (
@@ -166,7 +145,28 @@ export default class Options extends Component<Props, State> {
             :
             <select><option>Loading…</option></select>
           }
-        </label>
+        </section>
+
+        {encoderState.type !== 'identity' && (
+          <div key="quantization" class={style.quantization}>
+            <label class={style.toggle}>
+              <input
+                name="quantizer.enable"
+                type="checkbox"
+                checked={!!preprocessorState.quantizer.enabled}
+                onChange={this.onPreprocessorEnabledChange}
+              />
+              Enable Quantization
+            </label>
+            {preprocessorState.quantizer.enabled &&
+              <QuantizerOptionsComponent
+                options={preprocessorState.quantizer}
+                onChange={this.onQuantizerOptionsChange}
+              />
+            }
+          </div>
+        )}
+
         {EncoderOptionComponent &&
           <EncoderOptionComponent
             options={

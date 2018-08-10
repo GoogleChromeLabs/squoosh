@@ -3,34 +3,59 @@ Note: These styles are temporary. They will be replaced before going live.
 */
 
 .options {
-    width: 180px;
-    padding: 10px;
-    background: rgba(50,50,50,0.8);
-    border: 1px solid #222;
-    box-shadow: inset 0 0 1px #fff, 0 0 1px #fff;
-    border-radius: 3px;
-    color: #eee;
-    overflow: auto;
-    z-index: 1;
-    transition: opacity 300ms ease;
+  box-sizing: border-box;
+  width: 250px;
+  padding: 0;
+  background: rgba(40,40,40,0.9);
+  box-shadow: 0 0 3px rgba(0,0,0,0.3);
+  border-radius: 1px 1px 5px 5px;
+  color: #eee;
+  overflow: auto;
+  z-index: 1;
+  opacity: 0.9;
+  transform-origin: 50% 140%;
+  transition: opacity 300ms linear;
+  animation: options-open 500ms cubic-bezier(.6,1.6,.6,1) forwards 1;
 
-    &:not(:hover) {
-        opacity: .6;
+  &:hover, &:focus, &:focus-within {
+    opacity: 1;
+  }
+
+  @keyframes options-open {
+    from {
+      transform: translateY(100px) scale(.8);
     }
+  }
 
-    label {
-        display: block;
-        padding: 5px;
-        font-weight: bold;
+  .picker {
+    margin: 5px 15px;
 
-        select {
-            margin-left: 5px;
-        }
+    select {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      -webkit-appearance: none;
+      appearance: none;
+      padding: 10px 30px 10px 10px;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="25" height="5"><polygon fill="#fff" points="10,0 5,5 0,0"/></svg>') right center no-repeat;
+      background-color: var(--gray-dark);
+      opacity: 0.9;
+      border: none;
+      font: inherit;
+      color: white;
+      transition: box-shadow 150ms ease;
 
-        input {
-            vertical-align: middle;
-        }
+      &:hover {
+        opacity: 1;
+      }
+      &:focus {
+        opacity: 1;
+        outline: none;
+        box-shadow: 0 0 0 2px var(--button-fg, #ccc);
+      }
     }
+  }
+
   .title {
     display: flex;
     align-items: center;
@@ -61,13 +86,64 @@ Note: These styles are temporary. They will be replaced before going live.
     }
   }
 
+  label {
+    display: block;
+    padding: 5px;
+    margin: 0 10px;
+
+    input {
+        vertical-align: middle;
+    }
+
+    input[type=checkbox],
+    input[type=radio] {
+      margin-right: 8px;
+    }
+
+    range-input {
+      display: block;
+      width: 90%;
+    }
+  }
 
   .size-details {
     padding: 5px 15px;
     background: rgba(0,0,0,0.5);
   }
+}
 
-    pre {
-        font-size: 10px;
+
+.quantization {
+  padding: 5px 0;
+  margin: 5px 0;
+  box-shadow: inset 0 -.5px 0 rgba(0,0,0,0.25), 0 .5px 0 rgba(255,255,255,0.15);
+
+  .toggle {
+    display: flex;
+    position: relative;
+    align-content: center;
+    font-size: 14px;
+
+    input {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 0;
+      height: 0;
+      margin-top: 6px;
+      border-top: 7px solid #fff;
+      border-right: 7px solid transparent;
+      border-left: 7px solid transparent;
+      // background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><polygon fill="#fff" points="10,2 5,8 0,2"/></svg>') center no-repeat;
+      transition: transform 300ms ease;
+
+      &:focus {
+        outline: none;
+        border-top-color: var(--button-fg);
+      }
+
+      &:not(:checked) {
+        transform: rotate(-90deg);
+      }
     }
+  }
 }
