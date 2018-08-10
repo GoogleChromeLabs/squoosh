@@ -37,8 +37,6 @@ Note: These styles are temporary. They will be replaced before going live.
     [two-up-handle] {
       background: #43CEF1;
       box-shadow: inset 4px 0 0 #34B9EB, 0 1px 4px rgba(0,0,0,0.5);
-      cursor: ew-resize;
-      width: 9px;
 
       &:after {
         width: 62px;
@@ -56,7 +54,23 @@ Note: These styles are temporary. They will be replaced before going live.
         background-color: #fafafa;
         border-color: #34B9EB;
       }
-  }
+    }
+
+    &[orientation='horizontal'] [two-up-handle] {
+      cursor: ew-resize;
+      width: 9px;
+    }
+
+    &[orientation='vertical'] [two-up-handle] {
+      cursor: ns-resize;
+      height: 9px;
+
+      &:after {
+        width: 47px;
+        height: 40px;
+        transform: translate(-50%, -50%) rotate(-90deg);
+      }
+    }
 
     > pinch-zoom {
       @extend %fill;
