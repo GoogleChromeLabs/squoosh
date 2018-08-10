@@ -49,18 +49,10 @@ Note: These styles are temporary. They will be replaced before going live.
         box-shadow: 0 1px 4px rgba(0,0,0,0.1);
         transform-origin: 50% 50%;
         transition: all 300ms ease;
-
-        /*
-        // use a smaller thumb on larger screens?
-        @media (min-width: 600px) {
-          transform: translate(-50%, -50%) scale(0.75);
-        }
-        */
       }
 
       &:hover:after,
       &:active:after {
-        // box-shadow: 0 3px 7px rgba(0,0,0,0.3);
         background-color: #fafafa;
         border-color: #34B9EB;
       }
