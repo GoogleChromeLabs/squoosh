@@ -31,7 +31,6 @@ import {
 import { QuantizeOptions } from '../../codecs/imagequant/quantizer';
 
 import { PreprocessorState } from '../../codecs/preprocessors';
-import { EncodedImage } from '../App';
 
 import FileSize from '../FileSize';
 import DownloadIcon from '../../lib/icons/Download';
@@ -53,7 +52,10 @@ const encoderOptionsComponentMap = {
 
 interface Props {
   class?: string;
-  image: EncodedImage;
+  image: {
+    downloadUrl?: string;
+    file?: File;
+  };
   encoderState: EncoderState;
   preprocessorState: PreprocessorState;
   onEncoderTypeChange(newType: EncoderType): void;

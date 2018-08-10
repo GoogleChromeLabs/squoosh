@@ -42,7 +42,7 @@ interface SourceImage {
   preprocessed?: ImageData;
 }
 
-export interface EncodedImage {
+interface EncodedImage {
   bmp?: ImageBitmap;
   file?: File;
   downloadUrl?: string;
