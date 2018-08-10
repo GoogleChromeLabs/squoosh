@@ -1,6 +1,8 @@
 import { h, Component } from 'preact';
+
 import * as style from './style.scss';
 import { bind } from '../../lib/util';
+import { cleanSet, cleanMerge } from '../../lib/clean-modify';
 import MozJpegEncoderOptions from '../../codecs/mozjpeg/options';
 import BrowserJPEGEncoderOptions from '../../codecs/browser-jpeg/options';
 import WebPEncoderOptions from '../../codecs/webp/options';
@@ -91,27 +93,18 @@ export default class Options extends Component<Props, State> {
   @bind
   onPreprocessorEnabledChange(event: Event) {
     const el = event.currentTarget as HTMLInputElement;
-
     const preprocessor = el.name.split('.')[0] as keyof PreprocessorState;
 
-    this.props.onPreprocessorOptionsChange({
-      ...this.props.preprocessorState,
-      [preprocessor]: {
-        ...this.props.preprocessorState[preprocessor],
-        enabled: el.checked,
-      },
-    });
+    this.props.onPreprocessorOptionsChange(
+      cleanSet(this.props.preprocessorState, `${preprocessor}.enabled`, el.checked),
+    );
   }
 
   @bind
   onQuantizerOptionsChange(opts: QuantizeOptions) {
-    this.props.onPreprocessorOptionsChange({
-      ...this.props.preprocessorState,
-      quantizer: {
-        ...opts,
-        enabled: this.props.preprocessorState.quantizer.enabled,
-      },
-    });
+    this.props.onPreprocessorOptionsChange(
+      cleanMerge(this.props.preprocessorState, 'quantizer', opts),
+    );
   }
 
   render(

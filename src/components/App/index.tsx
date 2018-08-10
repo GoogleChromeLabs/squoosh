@@ -34,15 +34,16 @@ import {
 } from '../../codecs/preprocessors';
 
 import { decodeImage } from '../../codecs/decoders';
+import { cleanMerge, cleanSet } from '../../lib/clean-modify';
 
 interface SourceImage {
   file: File;
   bmp: ImageBitmap;
   data: ImageData;
-  preprocessed?: ImageData;
 }
 
 interface EncodedImage {
+  preprocessed?: ImageData;
   bmp?: ImageBitmap;
   file?: File;
   downloadUrl?: string;
@@ -64,6 +65,10 @@ interface State {
   error?: string;
 }
 
+interface UpdateImageOptions {
+  skipPreprocessing?: boolean;
+}
+
 async function preprocessImage(
   source: SourceImage,
   preprocessData: PreprocessorState,
@@ -75,28 +80,22 @@ async function preprocessImage(
   return result;
 }
 async function compressImage(
-  source: SourceImage,
+  image: ImageData,
   encodeData: EncoderState,
+  sourceFilename: string,
 ): Promise<File> {
-  // Special case for identity
-  if (encodeData.type === identity.type) return source.file;
-
-  let sourceData = source.data;
-  if (source.preprocessed) {
-    sourceData = source.preprocessed;
-  }
   const compressedData = await (() => {
     switch (encodeData.type) {
-      case mozJPEG.type: return mozJPEG.encode(sourceData, encodeData.options);
-      case webP.type: return webP.encode(sourceData, encodeData.options);
-      case browserPNG.type: return browserPNG.encode(sourceData, encodeData.options);
-      case browserJPEG.type: return browserJPEG.encode(sourceData, encodeData.options);
-      case browserWebP.type: return browserWebP.encode(sourceData, encodeData.options);
-      case browserGIF.type: return browserGIF.encode(sourceData, encodeData.options);
-      case browserTIFF.type: return browserTIFF.encode(sourceData, encodeData.options);
-      case browserJP2.type: return browserJP2.encode(sourceData, encodeData.options);
-      case browserBMP.type: return browserBMP.encode(sourceData, encodeData.options);
-      case browserPDF.type: return browserPDF.encode(sourceData, encodeData.options);
+      case mozJPEG.type: return mozJPEG.encode(image, encodeData.options);
+      case webP.type: return webP.encode(image, encodeData.options);
+      case browserPNG.type: return browserPNG.encode(image, encodeData.options);
+      case browserJPEG.type: return browserJPEG.encode(image, encodeData.options);
+      case browserWebP.type: return browserWebP.encode(image, encodeData.options);
+      case browserGIF.type: return browserGIF.encode(image, encodeData.options);
+      case browserTIFF.type: return browserTIFF.encode(image, encodeData.options);
+      case browserJP2.type: return browserJP2.encode(image, encodeData.options);
+      case browserBMP.type: return browserBMP.encode(image, encodeData.options);
+      case browserPDF.type: return browserPDF.encode(image, encodeData.options);
       default: throw Error(`Unexpected encoder ${JSON.stringify(encodeData)}`);
     }
   })();
@@ -105,7 +104,7 @@ async function compressImage(
 
   return new File(
     [compressedData],
-    source.file.name.replace(/\..+$/, '.' + encoder.extension),
+    sourceFilename.replace(/\..+$/, '.' + encoder.extension),
     { type: encoder.mimeType },
   );
 }
@@ -146,52 +145,25 @@ export default class App extends Component<Props, State> {
     }
   }
 
-  onChange(
-    index: 0 | 1,
-    preprocessorState: PreprocessorState,
-    type: EncoderType,
-    options?: EncoderOptions,
-  ): void {
-    const images = this.state.images.slice() as [EncodedImage, EncodedImage];
-    const oldImage = images[index];
-
-    // Some type cheating here.
-    // encoderMap[type].defaultOptions is always safe.
-    // options should always be correct for the type, but TypeScript isn't smart enough.
-    const encoderState: EncoderState = {
-      type,
-      options: options || encoderMap[type].defaultOptions,
-    } as EncoderState;
-
-    images[index] = {
-      ...oldImage,
-      encoderState,
-      preprocessorState,
-    };
-
-    this.setState({ images });
-  }
-
   onEncoderTypeChange(index: 0 | 1, newType: EncoderType): void {
-    this.onChange(index, this.state.images[index].preprocessorState, newType);
+    this.setState({
+      images: cleanSet(this.state.images, `${index}.encoderState`, {
+        type: newType,
+        options: encoderMap[newType].defaultOptions,
+      }),
+    });
   }
 
   onPreprocessorOptionsChange(index: 0 | 1, options: PreprocessorState): void {
-    this.onChange(
-      index,
-      options,
-      this.state.images[index].encoderState.type,
-      this.state.images[index].encoderState.options,
-    );
+    this.setState({
+      images: cleanSet(this.state.images, `${index}.preprocessorState`, options),
+    });
   }
 
   onEncoderOptionsChange(index: 0 | 1, options: EncoderOptions): void {
-    this.onChange(
-      index,
-      this.state.images[index].preprocessorState,
-      this.state.images[index].encoderState.type,
-      options,
-    );
+    this.setState({
+      images: cleanSet(this.state.images, `${index}.encoderState.options`, options),
+    });
   }
 
   componentDidUpdate(prevProps: Props, prevState: State): void {
@@ -199,12 +171,17 @@ export default class App extends Component<Props, State> {
 
     for (const [i, image] of images.entries()) {
       const prevImage = prevState.images[i];
+      const sourceChanged = source !== prevState.source;
+      const encoderChanged = image.encoderState !== prevImage.encoderState;
+      const preprocessorChanged = image.preprocessorState !== prevImage.preprocessorState;
 
       // The image only needs updated if the encoder settings have changed, or the source has
       // changed.
-      if (source !== prevState.source || image.encoderState !== prevImage.encoderState) {
+      if (sourceChanged || encoderChanged || preprocessorChanged) {
         if (prevImage.downloadUrl) URL.revokeObjectURL(prevImage.downloadUrl);
-        this.updateImage(i).catch((err) => {
+        this.updateImage(i, {
+          skipPreprocessing: !sourceChanged && !preprocessorChanged,
+        }).catch((err) => {
           console.error(err);
         });
       }
@@ -244,26 +221,34 @@ export default class App extends Component<Props, State> {
     }
   }
 
-  async updateImage(index: number): Promise<void> {
+  async updateImage(index: number, options: UpdateImageOptions = {}): Promise<void> {
+    const { skipPreprocessing = false } = options;
     const { source } = this.state;
     if (!source) return;
-    let images = this.state.images.slice() as [EncodedImage, EncodedImage];
 
     // Each time we trigger an async encode, the counter changes.
-    const loadingCounter = images[index].loadingCounter + 1;
+    const loadingCounter = this.state.images[index].loadingCounter + 1;
 
-    const image = images[index] = {
-      ...images[index],
+    let images = cleanMerge(this.state.images, index, {
       loadingCounter,
       loading: true,
-    };
+    });
 
     this.setState({ images });
 
+    const image = images[index];
+
     let file;
     try {
-      source.preprocessed = await preprocessImage(source, image.preprocessorState);
-      file = await compressImage(source, image.encoderState);
+      // Special case for identity
+      if (image.encoderState.type === identity.type) {
+        file = source.file;
+      } else {
+        if (!skipPreprocessing || !image.preprocessed) {
+          image.preprocessed = await preprocessImage(source, image.preprocessorState);
+        }
+        file = await compressImage(image.preprocessed, image.encoderState, source.file.name);
+      }
     } catch (err) {
       this.showError(`Encoding error (type=${image.encoderState.type}): ${err}`);
       throw err;
@@ -277,22 +262,19 @@ export default class App extends Component<Props, State> {
 
     let bmp;
     try {
-      bmp = await createImageBitmap(file);
+      bmp = await decodeImage(file);
     } catch (err) {
       this.setState({ error: `Encoding error (type=${image.encoderState.type}): ${err}` });
       throw err;
     }
 
-    images = this.state.images.slice() as [EncodedImage, EncodedImage];
-
-    images[index] = {
-      ...images[index],
+    images = cleanMerge(this.state.images, '' + index, {
       file,
       bmp,
       downloadUrl: URL.createObjectURL(file),
       loading: images[index].loadingCounter !== loadingCounter,
       loadedCounter: loadingCounter,
-    };
+    });
 
     this.setState({ images });
   }
