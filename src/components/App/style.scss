@@ -49,23 +49,52 @@ Note: These styles are temporary. They will be replaced before going live.
   }
 }
 
-:global { 
+:global {
   file-drop {
     overflow: hidden;
     touch-action: none;
     height:100%;
     width:100%;
 
-    &.drop-valid {
-      transition: opacity 200ms ease-in-out, background-color 200ms;
-      opacity: 0.5;
-      background-color:green;
+    &:after {
+      content: '';
+      position: absolute;
+      display: block;
+      left: 10px;
+      top: 10px;
+      right: 10px;
+      bottom: 10px;
+      border: 2px dashed #fff;
+      border-radius: 10px;
+      opacity: 0;
+      transform: scale(0.95);
+      transition: all 300ms ease, transform 300ms cubic-bezier(.6,2,.6,1);
+      pointer-events: none;
     }
 
-    &.drop-invalid {
-      transition: opacity 200ms ease-in-out, background-color 200ms;
-      opacity: 0.5;
-      background-color:red;
+    &.drop-valid:after,
+    &.drop-invalid:after {
+      opacity: 1;
+      transform: scale(1);
     }
+
+    &.drop-valid:after {
+      background-color:rgba(88, 116, 88, 0.2);
+      border-color: rgba(65, 129, 65, 0.5);
+    }
+
+    &.drop-invalid:after {
+      background-color:rgba(119, 85, 85, 0.2);
+      border-color:rgba(129, 63, 63, 0.5);
+    }
+  }
+}
+
+@keyframes drop-pop {
+  from {
+    transform: scale(0.9);
+  }
+  to {
+    transform: scale(1);
   }
 }
