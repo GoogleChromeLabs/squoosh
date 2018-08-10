@@ -1,14 +1,15 @@
-import { h, Component, PreactHTMLAttributes } from 'preact';
+import { h, Component, ClassAttributes } from 'preact';
 import * as prettyBytes from 'pretty-bytes';
 import { blobToArrayBuffer } from '../lib/util';
 import GzipSizeWorker from '../lib/gzip-size.worker';
 
 type FileContents = string | ArrayBuffer | File | Blob;
 
-interface Props extends PreactHTMLAttributes {
+interface Props extends ClassAttributes<HTMLSpanElement> {
   compress?: boolean;
   data?: FileContents;
   compareTo?: FileContents;
+  class?: string;
   increaseClass?: string;
   decreaseClass?: string;
 }
@@ -70,6 +71,16 @@ export default class FileSize extends Component<Props, State> {
     }
     if (compress !== this.props.compress || compareTo !== this.props.compareTo) {
       this.computeSize('compareSize', compress, compareTo);
+    }
+    this.componentDidUpdate();
+  }
+
+  componentDidUpdate() {
+    const { size, compareSize= 0 } = this.state;
+    if (size != null && this.base) {
+      const delta = Math.round(size && compareSize ? (size - compareSize) / compareSize * 100 : 0);
+      this.base.style.setProperty('--size', '' + size);
+      this.base.style.setProperty('--size-delta', '' + Math.abs(delta));
     }
   }
 

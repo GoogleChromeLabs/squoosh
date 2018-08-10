@@ -109,6 +109,30 @@ Note: These styles are temporary. They will be replaced before going live.
   .size-details {
     padding: 5px 15px;
     background: rgba(0,0,0,0.5);
+
+    .size {
+      font-weight: normal;
+
+      .increase,
+      .decrease {
+        font-style: italic;
+        filter: #{"grayscale(calc(50% - var(--size-delta, 50) * 0.5%))"};
+
+        &:before {
+          content: ' (';
+        }
+        &:after {
+          content: ')';
+        }
+      }
+
+      .increase {
+        color: var(--negative);
+      }
+      .decrease {
+        color: var(--positive);
+      }
+    }
   }
 }
 
