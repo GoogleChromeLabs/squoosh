@@ -30,6 +30,7 @@ export default class TwoUp extends HTMLElement {
   constructor () {
     super();
     this._handle.className = styles.twoUpHandle;
+    this._handle.setAttribute('two-up-handle', '');
 
     // Watch for children changes.
     // Note this won't fire for initial contents,
