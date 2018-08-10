@@ -168,6 +168,7 @@ export default class Output extends Component<Props, State> {
     if (event.type !== 'wheel' && targetEl.closest('.' + twoUpHandle)) return;
     // If we've already retargeted this event, let it through.
     if (this.retargetedEvents.has(event)) return;
+    if (event.type === 'pointerdown') this.pinchZoomLeft.focus();
     // Stop the event in its tracks.
     event.stopImmediatePropagation();
     event.preventDefault();
@@ -194,7 +195,11 @@ export default class Output extends Component<Props, State> {
           onMouseDownCapture={this.onRetargetableEvent}
           onWheelCapture={this.onRetargetableEvent}
         >
-          <pinch-zoom onChange={this.onPinchZoomLeftChange} ref={linkRef(this, 'pinchZoomLeft')}>
+          <pinch-zoom
+            tabIndex={-1}
+            onChange={this.onPinchZoomLeftChange}
+            ref={linkRef(this, 'pinchZoomLeft')}
+          >
             <canvas
               class={style.outputCanvas}
               ref={linkRef(this, 'canvasLeft')}
