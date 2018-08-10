@@ -17,9 +17,10 @@ const PROPERTIES = [
 
 interface RangeInputElement {
   value: string;
-  min: string;
-  max: string;
-  step: string;
+  min?: string;
+  max?: string;
+  step?: string;
+  precision?: number | string;
 }
 
 class RangeInputElement extends HTMLElement {
@@ -67,12 +68,20 @@ class RangeInputElement extends HTMLElement {
   }
 
   private _update() {
-    this._valueDisplay.textContent = this.value;
     const value = parseFloat(this.value || '0');
     const min = parseFloat(this._input.min || '0');
     const max = parseFloat(this._input.max || '100');
     const percent = 100 * (value - min) / (max - min);
     this.style.setProperty('--value-percent', percent + '%');
+    let displayValue = '' + value;
+    let precision = this.precision;
+    if (typeof precision === 'string') {
+      precision = parseInt(precision, 10) || 0;
+    }
+    if (precision) {
+      displayValue = parseFloat(displayValue).toPrecision(precision);
+    }
+    this._valueDisplay.textContent = '' + displayValue;
   }
 
   attributeChangedCallback (name: string, value: string) {
