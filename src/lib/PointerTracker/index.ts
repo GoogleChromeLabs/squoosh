@@ -12,17 +12,20 @@ export class Pointer {
   clientY: number;
   /** ID for this pointer */
   id: number = -1;
+  /** The platform object used to create this Pointer */
+  nativePointer: Touch | PointerEvent | MouseEvent;
 
-  constructor (private _nativePointer: Touch | PointerEvent | MouseEvent) {
-    this.pageX = _nativePointer.pageX;
-    this.pageY = _nativePointer.pageY;
-    this.clientX = _nativePointer.clientX;
-    this.clientY = _nativePointer.clientY;
+  constructor (nativePointer: Touch | PointerEvent | MouseEvent) {
+    this.nativePointer = nativePointer;
+    this.pageX = nativePointer.pageX;
+    this.pageY = nativePointer.pageY;
+    this.clientX = nativePointer.clientX;
+    this.clientY = nativePointer.clientY;
 
-    if (self.Touch && _nativePointer instanceof Touch) {
-      this.id = _nativePointer.identifier;
-    } else if (isPointerEvent(_nativePointer)) { // is PointerEvent
-      this.id = _nativePointer.pointerId;
+    if (self.Touch && nativePointer instanceof Touch) {
+      this.id = nativePointer.identifier;
+    } else if (isPointerEvent(nativePointer)) { // is PointerEvent
+      this.id = nativePointer.pointerId;
     }
   }
 
@@ -30,8 +33,8 @@ export class Pointer {
    * Returns an expanded set of Pointers for high-resolution inputs.
    */
   getCoalesced(): Pointer[] {
-    if ('getCoalescedEvents' in this._nativePointer) {
-      return this._nativePointer.getCoalescedEvents().map(p => new Pointer(p));
+    if ('getCoalescedEvents' in this.nativePointer) {
+      return this.nativePointer.getCoalescedEvents().map(p => new Pointer(p));
     }
     return [this];
   }
@@ -196,7 +199,7 @@ export class PointerTracker {
       this.currentPointers[index] = pointer;
     }
 
-    if (!trackedChangedPointers[0]) return;
+    if (trackedChangedPointers.length === 0) return;
 
     this._moveCallback(previousPointers, trackedChangedPointers, event);
   }
