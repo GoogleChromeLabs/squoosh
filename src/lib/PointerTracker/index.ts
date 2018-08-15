@@ -12,8 +12,11 @@ export class Pointer {
   clientY: number;
   /** ID for this pointer */
   id: number = -1;
+  /** The platform object used to create this Pointer */
+  nativePointer: Touch | PointerEvent | MouseEvent;
 
   constructor (nativePointer: Touch | PointerEvent | MouseEvent) {
+    this.nativePointer = nativePointer;
     this.pageX = nativePointer.pageX;
     this.pageY = nativePointer.pageY;
     this.clientX = nativePointer.clientX;
@@ -25,6 +28,16 @@ export class Pointer {
       this.id = nativePointer.pointerId;
     }
   }
+
+  /**
+   * Returns an expanded set of Pointers for high-resolution inputs.
+   */
+  getCoalesced(): Pointer[] {
+    if ('getCoalescedEvents' in this.nativePointer) {
+      return this.nativePointer.getCoalescedEvents().map(p => new Pointer(p));
+    }
+    return [this];
+  }
 }
 
 const isPointerEvent = (event: any): event is PointerEvent =>
@@ -33,9 +46,13 @@ const isPointerEvent = (event: any): event is PointerEvent =>
 const noop = () => {};
 
 export type InputEvent = TouchEvent | PointerEvent | MouseEvent;
-type StartCallback = ((pointer: Pointer, event: InputEvent) => boolean);
-type MoveCallback = ((previousPointers: Pointer[], event: InputEvent) => void);
-type EndCallback = ((pointer: Pointer, event: InputEvent) => void);
+type StartCallback = (pointer: Pointer, event: InputEvent) => boolean;
+type MoveCallback = (
+  previousPointers: Pointer[],
+  changedPointers: Pointer[],
+  event: InputEvent,
+) => void;
+type EndCallback = (pointer: Pointer, event: InputEvent) => void;
 
 interface PointerTrackerCallbacks {
   /**
@@ -54,6 +71,7 @@ interface PointerTrackerCallbacks {
    * @param previousPointers The state of the pointers before this event.
    * This contains the same number of pointers, in the same order, as
    * this.currentPointers and this.startPointers.
+   * @param changedPointers The pointers that have changed since the last move callback.
    * @param event The event related to the pointer changes.
    */
   move?: MoveCallback;
@@ -172,19 +190,18 @@ export class PointerTracker {
     const changedPointers = ('changedTouches' in event) ? // Shortcut for 'is touch event'.
       Array.from(event.changedTouches).map(t => new Pointer(t)) :
       [new Pointer(event)];
-
-    let shouldCallback = false;
+    const trackedChangedPointers = [];
 
     for (const pointer of changedPointers) {
       const index = this.currentPointers.findIndex(p => p.id === pointer.id);
-      if (index === -1) continue;
-      shouldCallback = true;
+      if (index === -1) continue; // Not a pointer we're tracking
+      trackedChangedPointers.push(pointer);
       this.currentPointers[index] = pointer;
     }
 
-    if (!shouldCallback) return;
+    if (trackedChangedPointers.length === 0) return;
 
-    this._moveCallback(previousPointers, event);
+    this._moveCallback(previousPointers, trackedChangedPointers, event);
   }
 
   /**
