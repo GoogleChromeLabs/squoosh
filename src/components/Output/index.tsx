@@ -113,14 +113,6 @@ export default class Output extends Component<Props, State> {
   }
 
   @bind
-  resetZoom() {
-    if (!this.pinchZoomLeft) throw Error('Missing pinch-zoom element');
-    this.pinchZoomLeft.setTransform({
-      scale: 1,
-    });
-  }
-
-  @bind
   onMobileWidthChange() {
     this.setState({ verticalTwoUp: !this.widthQuery.matches });
   }
