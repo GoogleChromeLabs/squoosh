@@ -301,9 +301,10 @@ export default class App extends Component<Props, State> {
           )}
           {(leftImageBmp && rightImageBmp) && images.map((image, index) => (
             <Options
-              sourceImage={source}
-              image={image}
               class={index ? style.rightOptions : style.leftOptions}
+              imageFile={image.file}
+              sourceImageFile={source && source.file}
+              downloadUrl={image.downloadUrl}
               preprocessorState={image.preprocessorState}
               encoderState={image.encoderState}
               onEncoderTypeChange={this.onEncoderTypeChange.bind(this, index)}

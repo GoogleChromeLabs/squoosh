@@ -54,13 +54,9 @@ const encoderOptionsComponentMap = {
 
 interface Props {
   class?: string;
-  image: {
-    downloadUrl?: string;
-    file?: File;
-  };
-  sourceImage?: {
-    file?: File;
-  };
+  sourceImageFile?: File;
+  imageFile?: File;
+  downloadUrl?: string;
   encoderState: EncoderState;
   preprocessorState: PreprocessorState;
   onEncoderTypeChange(newType: EncoderType): void;
@@ -109,8 +105,9 @@ export default class Options extends Component<Props, State> {
 
   render(
     {
-      image,
-      sourceImage,
+      sourceImageFile,
+      imageFile,
+      downloadUrl,
       class: className,
       encoderState,
       preprocessorState,
@@ -128,11 +125,11 @@ export default class Options extends Component<Props, State> {
           {', '}
           {encoderMap[encoderState.type].label}
 
-          {(image.downloadUrl && image.file) && (
+          {(downloadUrl && imageFile) && (
             <a
               class={style.download}
-              href={image.downloadUrl}
-              download={image.file.name}
+              href={downloadUrl}
+              download={imageFile.name}
               title="Download"
             >
               <DownloadIcon />
@@ -190,8 +187,8 @@ export default class Options extends Component<Props, State> {
             decreaseClass={style.decrease}
             // @todo: once we have a nice way to pass down the original image
             // (image size?), pass compareTo prop here to show size delta.
-            data={image.file}
-            compareTo={sourceImage && sourceImage.file}
+            data={imageFile}
+            compareTo={sourceImageFile}
             // @todo determine cases for compressing and pass here
             compress={false}
           />
