@@ -29,11 +29,8 @@ two-up[legacy-clip-compat] > :not(.twoUpHandle) {
   cursor: ew-resize;
 }
 
-.twoUpHandle::after {
-  content: '◀ ►';
+.scrubber {
   display: flex;
-  justify-content: center;
-  align-items: center;
   position: absolute;
   top: 50%;
   left: 50%;
@@ -46,10 +43,10 @@ two-up[legacy-clip-compat] > :not(.twoUpHandle) {
   border-radius: 5px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.1);
   color: var(--thumb-color);
-  font-size: 24px;
-  letter-spacing: -0.05em;
-  text-align: center;
-  white-space: nowrap;
+}
+.scrubber svg {
+  flex: 1;
+  margin: 0 10px;
 }
 
 two-up[orientation='vertical'] .twoUpHandle {
@@ -60,7 +57,7 @@ two-up[orientation='vertical'] .twoUpHandle {
   cursor: ns-resize;
 }
 
-two-up[orientation='vertical'] .twoUpHandle::after {
+two-up[orientation='vertical'] .scrubber {
   width: 46px;
   height: 40px;
   font-size: 18px;

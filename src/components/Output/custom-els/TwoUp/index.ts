@@ -56,6 +56,10 @@ export default class TwoUp extends HTMLElement {
   }
 
   connectedCallback() {
+    this._handle.innerHTML = `<div class="${styles.scrubber}">${
+      `<svg viewBox="0 0 20 10" fill="currentColor"><path d="M8 0v10L0 5zM12 0v10l8-5z"/></svg>`
+    }</div>`;
+
     this._childrenChange();
     if (!this._everConnected) {
       this._resetPosition();
