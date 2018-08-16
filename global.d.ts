@@ -13,12 +13,6 @@ declare namespace JSX {
   interface IntrinsicElements { }
 }
 
-declare module 'preact-i18n';
-declare module 'preact-material-components-drawer';
-declare module 'material-radial-progress';
-
 declare module 'classnames' {
   export default function classnames(...args: any[]): string;
 }
-
-declare module 'pako/lib/deflate';

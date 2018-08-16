@@ -66,12 +66,7 @@
     "classnames": "^2.2.6",
     "comlink": "^3.0.3",
     "comlink-loader": "^1.0.0",
-    "material-components-web": "^0.32.0",
-    "pako": "^1.0.6",
     "preact": "^8.2.9",
-    "preact-i18n": "^1.2.2",
-    "preact-material-components": "^1.4.7",
-    "preact-router": "^2.6.1",
     "pretty-bytes": "^5.1.0"
   }
 }
