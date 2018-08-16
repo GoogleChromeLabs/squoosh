@@ -11,6 +11,7 @@ Note: These styles are temporary. They will be replaced before going live.
   overflow: hidden;
   contain: strict;
   display: flex;
+  justify-content: flex-end;
 
   &.horizontal {
     justify-content: space-between;
@@ -18,7 +19,7 @@ Note: These styles are temporary. They will be replaced before going live.
   }
 
   &.vertical {
-    flex-direction: column-reverse;
+    flex-direction: column;
   }
 }
 
