@@ -77,6 +77,7 @@ export default class FileSize extends Component<Props, State> {
         {sizeFormatted}
         {Math.abs(delta) >= 0.01 && (
           <span class={delta > 0 ? increaseClass : decreaseClass}>
+            {delta > 0 && '+'}
             {Math.round(delta * 100)}%
           </span>
         )}
