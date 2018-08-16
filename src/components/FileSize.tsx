@@ -1,7 +1,5 @@
 import { h, Component, ClassAttributes } from 'preact';
 import * as prettyBytes from 'pretty-bytes';
-import { blobToArrayBuffer } from '../lib/util';
-import GzipSizeWorker from '../lib/gzip-size.worker';
 
 type FileContents = string | ArrayBuffer | File | Blob;
 
@@ -16,66 +14,54 @@ interface Props extends ClassAttributes<HTMLSpanElement> {
 
 interface State {
   size?: number;
+  sizeFormatted?: string;
   compareSize?: number;
+  compareSizeFormatted?: string;
 }
 
-let gzipSizeWorker: GzipSizeWorker;
-
-const CACHE = new WeakMap();
-
-async function calculateSize(rawData: FileContents, compress = false): Promise<number | void> {
-  let data = rawData;
-
+function calculateSize(data: FileContents, compress = false): number | void {
   if (typeof data === 'string') {
-    data = new Blob([data]);
-  }
-  if (data instanceof Blob || data instanceof File) {
-    data = await blobToArrayBuffer(data);
+    return data.length;
   }
 
-  if (!compress) {
+  if (data instanceof ArrayBuffer) {
     return data.byteLength;
   }
 
-  if (!gzipSizeWorker) {
-    gzipSizeWorker = await new GzipSizeWorker();
+  if (data instanceof Blob) {
+    return data.size;
   }
-
-  if (CACHE.has(data)) {
-    return CACHE.get(data);
-  }
-
-  const size = gzipSizeWorker.gzipSize(data);
-  // cache the Promise so we dedupe in-flight requests.
-  CACHE.set(data, size);
-  return await size;
 }
 
 export default class FileSize extends Component<Props, State> {
-  // "lock" counters for computed state properties
-  counters: Partial<State> = {};
-
-  componentDidMount() {
-    const { compress, data, compareTo } = this.props;
-    if (data) {
-      this.computeSize('size', compress, data);
+  constructor(props: Props) {
+    super(props);
+    if (props.data) {
+      this.computeSize('size', props.data);
     }
-    if (compareTo) {
-      this.computeSize('compareSize', compress, compareTo);
+    if (props.compareTo) {
+      this.computeSize('compareSize', props.compareTo);
     }
   }
 
-  componentWillReceiveProps({ compress, data, compareTo }: Props) {
-    if (compress !== this.props.compress || data !== this.props.data) {
-      this.computeSize('size', compress, data);
+  componentWillReceiveProps({ data, compareTo }: Props) {
+    if (data !== this.props.data) {
+      this.computeSize('size', data);
     }
-    if (compress !== this.props.compress || compareTo !== this.props.compareTo) {
-      this.computeSize('compareSize', compress, compareTo);
+    if (compareTo !== this.props.compareTo) {
+      this.computeSize('compareSize', compareTo);
     }
-    this.componentDidUpdate();
+  }
+
+  componentDidMount() {
+    this.applyStyles();
   }
 
   componentDidUpdate() {
+    this.applyStyles();
+  }
+
+  applyStyles() {
     const { size, compareSize= 0 } = this.state;
     if (size != null && this.base) {
       const delta = Math.round(size && compareSize ? (size - compareSize) / compareSize * 100 : 0);
@@ -84,18 +70,19 @@ export default class FileSize extends Component<Props, State> {
     }
   }
 
-  async computeSize(prop: keyof State, compress = false, data?: FileContents) {
-    const id = this.counters[prop] = (this.counters[prop] || 0) + 1;
-    const size = data ? await calculateSize(data, compress) : 0;
-    if (this.counters[prop] !== id) return;
-    this.setState({ [prop]: size });
+  computeSize(prop: keyof State, data?: FileContents) {
+    const size = data && calculateSize(data) || 0;
+    const pretty = prettyBytes(size);
+    this.setState({
+      [prop]: size,
+      [prop + 'Formatted']: pretty,
+    });
   }
 
   render(
     { data, compareTo, increaseClass, decreaseClass, ...props }: Props,
-    { size, compareSize }: State,
+    { size, sizeFormatted = '', compareSize }: State,
   ) {
-    const sizeFormatted = size ? prettyBytes(size) : '';
     const delta = size && compareSize ? (size - compareSize) / compareSize : 0;
     return (
       <span title={sizeFormatted} {...props}>
