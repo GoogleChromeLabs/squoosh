@@ -19,14 +19,8 @@ interface State {
   compareSizeFormatted?: string;
 }
 
-function calculateSize(data: FileContents, compress = false): number | void {
-  if (data instanceof ArrayBuffer) {
-    return data.byteLength;
-  }
-
-  if (data instanceof Blob) {
-    return data.size;
-  }
+function calculateSize(data: FileContents): number {
+  return data instanceof ArrayBuffer ? data.byteLength : data.size;
 }
 
 export default class FileSize extends Component<Props, State> {
