@@ -8,21 +8,19 @@ import ToggleIcon from '../../lib/icons/Toggle';
 import { twoUpHandle } from './custom-els/TwoUp/styles.css';
 
 interface Props {
+  orientation: 'horizontal' | 'vertical';
   leftImg: ImageBitmap;
   rightImg: ImageBitmap;
 }
 
 interface State {
-  verticalTwoUp: boolean;
   scale: number;
   editingScale: boolean;
   altBackground: boolean;
 }
 
 export default class Output extends Component<Props, State> {
-  widthQuery = window.matchMedia('(min-width: 500px)');
   state: State = {
-    verticalTwoUp: !this.widthQuery.matches,
     scale: 1,
     editingScale: false,
     altBackground: false,
@@ -33,11 +31,6 @@ export default class Output extends Component<Props, State> {
   pinchZoomRight?: PinchZoom;
   scaleInput?: HTMLInputElement;
   retargetedEvents = new WeakSet<Event>();
-
-  constructor() {
-    super();
-    this.widthQuery.addListener(this.onMobileWidthChange);
-  }
 
   componentDidMount() {
     if (this.canvasLeft) {
@@ -113,11 +106,6 @@ export default class Output extends Component<Props, State> {
   }
 
   @bind
-  onMobileWidthChange() {
-    this.setState({ verticalTwoUp: !this.widthQuery.matches });
-  }
-
-  @bind
   onPinchZoomLeftChange(event: Event) {
     if (!this.pinchZoomRight || !this.pinchZoomLeft) throw Error('Missing pinch-zoom element');
     this.setState({
@@ -158,13 +146,13 @@ export default class Output extends Component<Props, State> {
   }
 
   render(
-    { leftImg, rightImg }: Props,
-    { verticalTwoUp, scale, editingScale, altBackground }: State,
+    { orientation, leftImg, rightImg }: Props,
+    { scale, editingScale, altBackground }: State,
   ) {
     return (
       <div class={`${style.output} ${altBackground ? style.altBackground : ''}`}>
         <two-up
-          orientation={verticalTwoUp ? 'vertical' : 'horizontal'}
+          orientation={orientation}
           // Event redirecting. See onRetargetableEvent.
           onTouchStartCapture={this.onRetargetableEvent}
           onTouchEndCapture={this.onRetargetableEvent}

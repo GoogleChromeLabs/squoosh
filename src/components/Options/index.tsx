@@ -52,8 +52,15 @@ const encoderOptionsComponentMap = {
   [browserPDF.type]: undefined,
 };
 
+const titles = {
+  horizontal: ['Left Image', 'Right Image'],
+  vertical: ['Top Image', 'Bottom Image'],
+};
+
 interface Props {
   class?: string;
+  orientation: 'horizontal' | 'vertical';
+  imageIndex: number;
   sourceImageFile?: File;
   imageFile?: File;
   downloadUrl?: string;
@@ -106,9 +113,11 @@ export default class Options extends Component<Props, State> {
   render(
     {
       sourceImageFile,
+      imageIndex,
       imageFile,
       downloadUrl,
       class: className,
+      orientation,
       encoderState,
       preprocessorState,
       onEncoderOptionsChange,
@@ -121,7 +130,7 @@ export default class Options extends Component<Props, State> {
     return (
       <div class={`${style.options}${className ? (' ' + className) : ''}`}>
         <h2 class={style.title}>
-          {className && className.match(/left/) ? 'Left Image' : 'Right Image'}
+          {titles[orientation][imageIndex]}
           {', '}
           {encoderMap[encoderState.type].label}
 

@@ -36,6 +36,8 @@ import {
 import { decodeImage } from '../../codecs/decoders';
 import { cleanMerge, cleanSet } from '../../lib/clean-modify';
 
+type Orientation = 'horizontal' | 'vertical';
+
 interface SourceImage {
   file: File;
   bmp: ImageBitmap;
@@ -63,6 +65,7 @@ interface State {
   images: [EncodedImage, EncodedImage];
   loading: boolean;
   error?: string;
+  orientation: Orientation;
 }
 
 interface UpdateImageOptions {
@@ -110,6 +113,8 @@ async function compressImage(
 }
 
 export default class App extends Component<Props, State> {
+  widthQuery = window.matchMedia('(min-width: 500px)');
+
   state: State = {
     loading: false,
     images: [
@@ -128,6 +133,7 @@ export default class App extends Component<Props, State> {
         loading: false,
       },
     ],
+    orientation: this.widthQuery.matches ? 'horizontal' : 'vertical',
   };
 
   private snackbar?: SnackBarElement;
@@ -143,6 +149,13 @@ export default class App extends Component<Props, State> {
         window.STATE = this.state;
       };
     }
+
+    this.widthQuery.addListener(this.onMobileWidthChange);
+  }
+
+  @bind
+  onMobileWidthChange() {
+    this.setState({ orientation: this.widthQuery.matches ? 'horizontal' : 'vertical' });
   }
 
   onEncoderTypeChange(index: 0 | 1, newType: EncoderType): void {
@@ -284,7 +297,7 @@ export default class App extends Component<Props, State> {
     this.snackbar.showSnackbar({ message: error });
   }
 
-  render({ }: Props, { loading, images, source }: State) {
+  render({ }: Props, { loading, images, source, orientation }: State) {
     const [leftImageBmp, rightImageBmp] = images.map(i => i.bmp);
     const anyLoading = loading || images.some(image => image.loading);
 
@@ -292,7 +305,11 @@ export default class App extends Component<Props, State> {
       <file-drop accept="image/*" onfiledrop={this.onFileDrop}>
         <div id="app" class={style.app}>
           {(leftImageBmp && rightImageBmp) ? (
-            <Output leftImg={leftImageBmp} rightImg={rightImageBmp} />
+            <Output
+              orientation={orientation}
+              leftImg={leftImageBmp}
+              rightImg={rightImageBmp}
+            />
           ) : (
             <div class={style.welcome}>
               <h1>Drop, paste or select an image</h1>
@@ -302,6 +319,8 @@ export default class App extends Component<Props, State> {
           {(leftImageBmp && rightImageBmp) && images.map((image, index) => (
             <Options
               class={index ? style.rightOptions : style.leftOptions}
+              orientation={orientation}
+              imageIndex={index}
               imageFile={image.file}
               sourceImageFile={source && source.file}
               downloadUrl={image.downloadUrl}
