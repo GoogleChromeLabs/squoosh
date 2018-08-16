@@ -103,7 +103,7 @@ export default class Output extends Component<Props, State> {
   }
 
   @bind
-  setScale(event: Event) {
+  onScaleInputChanged(event: Event) {
     const target = event.target as HTMLInputElement;
     const percent = parseInt(target.value, 10);
     if (isNaN(percent)) return;
@@ -209,7 +209,7 @@ export default class Output extends Component<Props, State> {
                 ref={linkRef(this, 'scaleInput')}
                 class={style.zoom}
                 value={Math.round(scale * 100)}
-                onInput={this.setScale}
+                onInput={this.onScaleInputChanged}
                 onBlur={this.cancelEditScale}
               />
             ) : (
