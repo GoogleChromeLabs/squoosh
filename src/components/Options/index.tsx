@@ -185,12 +185,8 @@ export default class Options extends Component<Props, State> {
             class={style.size}
             increaseClass={style.increase}
             decreaseClass={style.decrease}
-            // @todo: once we have a nice way to pass down the original image
-            // (image size?), pass compareTo prop here to show size delta.
             data={imageFile}
             compareTo={sourceImageFile}
-            // @todo determine cases for compressing and pass here
-            compress={false}
           />
         </div>
       </div>

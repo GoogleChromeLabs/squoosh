@@ -1,13 +1,11 @@
-import { h, Component, ClassAttributes } from 'preact';
+import { h, Component } from 'preact';
 import * as prettyBytes from 'pretty-bytes';
 
 type FileContents = ArrayBuffer | Blob;
 
-interface Props extends ClassAttributes<HTMLSpanElement> {
-  compress?: boolean;
+interface Props extends Pick<JSX.HTMLAttributes, Exclude<keyof JSX.HTMLAttributes, 'data'>> {
   data?: FileContents;
   compareTo?: FileContents;
-  class?: string;
   increaseClass?: string;
   decreaseClass?: string;
 }
@@ -52,7 +50,7 @@ export default class FileSize extends Component<Props, State> {
   }
 
   applyStyles() {
-    const { size, compareSize= 0 } = this.state;
+    const { size, compareSize = 0 } = this.state;
     if (size != null && this.base) {
       const delta = Math.round(size && compareSize ? (size - compareSize) / compareSize * 100 : 0);
       this.base.style.setProperty('--size', '' + size);
@@ -61,7 +59,7 @@ export default class FileSize extends Component<Props, State> {
   }
 
   computeSize(prop: keyof State, data?: FileContents) {
-    const size = data && calculateSize(data) || 0;
+    const size = data ? calculateSize(data) : 0;
     const pretty = prettyBytes(size);
     this.setState({
       [prop]: size,
