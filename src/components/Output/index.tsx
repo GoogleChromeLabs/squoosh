@@ -102,19 +102,6 @@ export default class Output extends Component<Props, State> {
     this.setState({ editingScale: false });
   }
 
-  // @bind
-  // editScaleKeyDown(event: KeyboardEvent) {
-  //   const target = event.target as HTMLInputElement;
-  //   if (event.key === 'Escape') return this.cancelEditScale();
-  //   if (event.key !== 'Enter') return;
-  //   const percent = parseInt(target.value, 10);
-  //   if (isNaN(percent)) return;
-  //   this.setState({
-  //     editingScale: false,
-  //     scale: percent / 100,
-  //   });
-  // }
-
   @bind
   setScale(event: Event) {
     const target = event.target as HTMLInputElement;
