@@ -4,14 +4,16 @@
 #include <stdio.h>
 #include <setjmp.h>
 #include <string.h>
-#include "jpeglib.h"
+#include <emscripten/bind.h>
 #include "config.h"
+#include "jpeglib.h"
+
+using namespace emscripten;
 
 // MozJPEG doesn’t expose a numeric version, so I have to do some fun C macro hackery to turn it into a string. More details here: https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html
 #define xstr(s) str(s)
 #define str(s) #s
 
-EMSCRIPTEN_KEEPALIVE
 int version() {
   char buffer[] = xstr(MOZJPEG_VERSION);
   int version = 0;
@@ -28,19 +30,18 @@ int version() {
   return version;
 }
 
-EMSCRIPTEN_KEEPALIVE
-uint8_t* create_buffer(int width, int height) {
-  return malloc(width * height * 4 * sizeof(uint8_t));
+int create_buffer(int width, int height) {
+  return (int) malloc(width * height * 4 * sizeof(uint8_t));
 }
 
-EMSCRIPTEN_KEEPALIVE
-void destroy_buffer(uint8_t* p) {
-  free(p);
+void destroy_buffer(int p) {
+  free((uint8_t*) p);
 }
 
 int result[2];
-EMSCRIPTEN_KEEPALIVE
-void encode(uint8_t* image_buffer, int image_width, int image_height, int quality) {
+void encode(int image_in, int image_width, int image_height, int quality) {
+  uint8_t* image_buffer = (uint8_t*) image_in;
+
   // Manually convert RGBA data into RGB
   for(int y = 0; y < image_height; y++) {
     for(int x = 0; x < image_width; x++) {
@@ -161,18 +162,24 @@ void encode(uint8_t* image_buffer, int image_width, int image_height, int qualit
   /* And we're done! */
 }
 
-EMSCRIPTEN_KEEPALIVE
 void free_result() {
-  free(result[0]); // not sure if this is right with mozjpeg
+  free((void*)result[0]); // not sure if this is right with mozjpeg
 }
 
-EMSCRIPTEN_KEEPALIVE
 int get_result_pointer() {
   return result[0];
 }
 
-EMSCRIPTEN_KEEPALIVE
 int get_result_size() {
   return result[1];
 }
 
+EMSCRIPTEN_BINDINGS(my_module) {
+  function("version", &version);
+  function("create_buffer", &create_buffer, allow_raw_pointers());
+  function("destroy_buffer", &destroy_buffer, allow_raw_pointers());
+  function("encode", &encode, allow_raw_pointers());
+  function("free_result", &free_result);
+  function("get_result_pointer", &get_result_pointer, allow_raw_pointers());
+  function("get_result_size", &get_result_size, allow_raw_pointers());
+}
