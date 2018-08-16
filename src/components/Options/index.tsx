@@ -35,7 +35,7 @@ import { QuantizeOptions } from '../../codecs/imagequant/quantizer';
 import { PreprocessorState } from '../../codecs/preprocessors';
 
 import FileSize from '../FileSize';
-import DownloadIcon from '../../lib/icons/Download';
+import { DownloadIcon } from '../../lib/icons';
 
 const encoderOptionsComponentMap = {
   [identity.type]: undefined,

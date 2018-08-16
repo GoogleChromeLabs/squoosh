@@ -4,7 +4,7 @@ import './custom-els/PinchZoom';
 import './custom-els/TwoUp';
 import * as style from './style.scss';
 import { bind, shallowEqual, drawBitmapToCanvas, linkRef } from '../../lib/util';
-import ToggleIcon from '../../lib/icons/Toggle';
+import { ToggleIcon, AddIcon, RemoveIcon } from '../../lib/icons';
 import { twoUpHandle } from './custom-els/TwoUp/styles.css';
 
 interface Props {
@@ -186,7 +186,7 @@ export default class Output extends Component<Props, State> {
         <div class={style.controls}>
           <div class={style.group}>
             <button class={style.button} onClick={this.zoomOut}>
-              <span class={style.icon}>−</span>
+              <RemoveIcon />
             </button>
             {editingScale ? (
               <input
@@ -207,13 +207,11 @@ export default class Output extends Component<Props, State> {
               </span>
             )}
             <button class={style.button} onClick={this.zoomIn}>
-              <span class={style.icon}>+</span>
+              <AddIcon />
             </button>
           </div>
-          <button class={`${style.button} ${style.iconLeft}`} onClick={this.toggleBackground}>
-            <span class={style.icon}>
-              <ToggleIcon />
-            </span>
+          <button class={style.button} onClick={this.toggleBackground}>
+            <ToggleIcon />
             Toggle Background
           </button>
         </div>

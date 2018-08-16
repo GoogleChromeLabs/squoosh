@@ -88,21 +88,11 @@ Note: These styles are temporary. They will be replaced before going live.
     }
   }
 
-  .icon {
-    display: inline-block;
-    flex: 1;
-    font-size: 24px;
-    fill: var(--button-fg);
-  }
-
   .button {
     text-transform: uppercase;
     color: var(--button-fg);
     cursor: pointer;
-  }
-
-  .button.icon-left .icon {
-    padding-right: 6px;
+    text-indent: 6px;
   }
 
   .button:hover {
