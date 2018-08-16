@@ -1,7 +1,7 @@
 import { h, Component, ClassAttributes } from 'preact';
 import * as prettyBytes from 'pretty-bytes';
 
-type FileContents = string | ArrayBuffer | File | Blob;
+type FileContents = ArrayBuffer | Blob;
 
 interface Props extends ClassAttributes<HTMLSpanElement> {
   compress?: boolean;
@@ -20,10 +20,6 @@ interface State {
 }
 
 function calculateSize(data: FileContents, compress = false): number | void {
-  if (typeof data === 'string') {
-    return data.length;
-  }
-
   if (data instanceof ArrayBuffer) {
     return data.byteLength;
   }
