@@ -52,9 +52,9 @@ export default class FileSize extends Component<Props, State> {
   applyStyles() {
     const { size, compareSize = 0 } = this.state;
     if (size != null && this.base) {
-      const delta = Math.round(size && compareSize ? (size - compareSize) / compareSize * 100 : 0);
+      const delta = size && compareSize ? (size - compareSize) / compareSize : 0;
       this.base.style.setProperty('--size', '' + size);
-      this.base.style.setProperty('--size-delta', '' + Math.abs(delta));
+      this.base.style.setProperty('--size-delta', '' + Math.round(Math.abs(delta * 100)));
     }
   }
 
