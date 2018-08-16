@@ -155,7 +155,6 @@ export default class Output extends Component<Props, State> {
     if (event.type !== 'wheel' && targetEl.closest('.' + twoUpHandle)) return;
     // If we've already retargeted this event, let it through.
     if (this.retargetedEvents.has(event)) return;
-    if (event.type === 'pointerdown') this.pinchZoomLeft.focus();
     // Stop the event in its tracks.
     event.stopImmediatePropagation();
     event.preventDefault();
