@@ -58,7 +58,6 @@ const titles = {
 };
 
 interface Props {
-  class?: string;
   orientation: 'horizontal' | 'vertical';
   imageIndex: number;
   sourceImageFile?: File;
@@ -116,7 +115,6 @@ export default class Options extends Component<Props, State> {
       imageIndex,
       imageFile,
       downloadUrl,
-      class: className,
       orientation,
       encoderState,
       preprocessorState,
@@ -128,7 +126,7 @@ export default class Options extends Component<Props, State> {
     const EncoderOptionComponent = encoderOptionsComponentMap[encoderState.type];
 
     return (
-      <div class={`${style.options}${className ? (' ' + className) : ''}`}>
+      <div class={`${style.options} ${style[orientation]}`}>
         <h2 class={style.title}>
           {titles[orientation][imageIndex]}
           {', '}

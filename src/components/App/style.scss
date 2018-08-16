@@ -12,21 +12,18 @@ Note: These styles are temporary. They will be replaced before going live.
   contain: strict;
   display: flex;
 
-
-
-  .leftOptions,
-  .rightOptions {
-    position: fixed;
-    bottom: 1px;
+  &.horizontal {
+    justify-content: space-between;
+    align-items: flex-end;
   }
 
-  .leftOptions { left: 0px; }
-  .rightOptions { right: 0px; }
+  &.vertical {
+    flex-direction: column-reverse;
+  }
 }
 
 .welcome {
-  flex: 1;
-  align-self: center;
+  margin: auto;
   text-align: center;
 
   h1 {

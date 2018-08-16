@@ -303,7 +303,7 @@ export default class App extends Component<Props, State> {
 
     return (
       <file-drop accept="image/*" onfiledrop={this.onFileDrop}>
-        <div id="app" class={style.app}>
+        <div id="app" class={`${style.app} ${style[orientation]}`}>
           {(leftImageBmp && rightImageBmp) ? (
             <Output
               orientation={orientation}
@@ -318,7 +318,6 @@ export default class App extends Component<Props, State> {
           )}
           {(leftImageBmp && rightImageBmp) && images.map((image, index) => (
             <Options
-              class={index ? style.rightOptions : style.leftOptions}
               orientation={orientation}
               imageIndex={index}
               imageFile={image.file}

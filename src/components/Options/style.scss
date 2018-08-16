@@ -4,11 +4,9 @@ Note: These styles are temporary. They will be replaced before going live.
 
 .options {
   box-sizing: border-box;
-  width: 250px;
   padding: 0;
-  background: rgba(40,40,40,0.9);
-  box-shadow: 0 0 3px rgba(0,0,0,0.3);
-  border-radius: 1px 1px 5px 5px;
+  background: rgba(40,40,40,0.8);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.5);
   color: #eee;
   overflow: auto;
   z-index: 1;
@@ -16,6 +14,16 @@ Note: These styles are temporary. They will be replaced before going live.
   transform-origin: 50% 140%;
   transition: opacity 300ms linear;
   animation: options-open 500ms cubic-bezier(.6,1.6,.6,1) forwards 1;
+
+  &.horizontal {
+    border-radius: 1px 1px 5px 5px;
+  }
+
+  &.vertical {
+    opacity: 1;
+    margin: 0 5px 10px;
+    border-radius: 0 0 5px 5px;
+  }
 
   &:hover, &:focus, &:focus-within {
     opacity: 1;
