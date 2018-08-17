@@ -22,7 +22,7 @@
     const image = await loadImage('../example.png');
     const p = module.create_buffer(image.width, image.height);
     module.HEAP8.set(image.data, p);
-    module.encode(p, image.width, image.height, {
+    const result = module.encode(p, image.width, image.height, {
       quality: 40,
       baseline: false,
       arithmetic: false,
@@ -36,12 +36,6 @@
       trellis_opt_table: true,
       trellis_loops: 1,
     });
-    const resultPointer = module.get_result_pointer();
-    const resultSize = module.get_result_size();
-    console.log('size', resultSize);
-    const resultView = new Uint8Array(module.HEAP8.buffer, resultPointer, resultSize);
-    const result = new Uint8Array(resultView);
-    module.free_result();
     module.destroy_buffer(p);
 
     const blob = new Blob([result], {type: 'image/jpeg'});

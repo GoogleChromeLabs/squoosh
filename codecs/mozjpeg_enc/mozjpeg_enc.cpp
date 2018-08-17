@@ -1,10 +1,10 @@
-#include "emscripten.h"
+#include <emscripten/bind.h>
+#include <emscripten/val.h>
 #include <stdlib.h>
 #include <inttypes.h>
 #include <stdio.h>
 #include <setjmp.h>
 #include <string.h>
-#include <emscripten/bind.h>
 #include "config.h"
 #include "jpeglib.h"
 #include "cdjpeg.h"
@@ -55,8 +55,7 @@ void destroy_buffer(int p) {
   free((uint8_t*) p);
 }
 
-int result[2];
-void encode(int image_in, int image_width, int image_height, MozJpegOptions opts) {
+val encode(int image_in, int image_width, int image_height, MozJpegOptions opts) {
   uint8_t* image_buffer = (uint8_t*) image_in;
 
   // The code below is basically the `write_JPEG_file` function from
@@ -191,25 +190,11 @@ void encode(int image_in, int image_width, int image_height, MozJpegOptions opts
   jpeg_finish_compress(&cinfo);
   /* Step 7: release JPEG compression object */
 
-  result[0] = (int)output;
-  result[1] = size;
-
   /* This is an important step since it will release a good deal of memory. */
   jpeg_destroy_compress(&cinfo);
 
   /* And we're done! */
-}
-
-void free_result() {
-  free((void*)result[0]); // not sure if this is right with mozjpeg
-}
-
-int get_result_pointer() {
-  return result[0];
-}
-
-int get_result_size() {
-  return result[1];
+  return val(typed_memory_view(size, output));
 }
 
 EMSCRIPTEN_BINDINGS(my_module) {
@@ -232,7 +217,4 @@ EMSCRIPTEN_BINDINGS(my_module) {
   function("create_buffer", &create_buffer, allow_raw_pointers());
   function("destroy_buffer", &destroy_buffer, allow_raw_pointers());
   function("encode", &encode, allow_raw_pointers());
-  function("free_result", &free_result);
-  function("get_result_pointer", &get_result_pointer, allow_raw_pointers());
-  function("get_result_size", &get_result_size, allow_raw_pointers());
 }
