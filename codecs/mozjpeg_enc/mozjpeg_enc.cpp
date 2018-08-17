@@ -7,12 +7,29 @@
 #include <emscripten/bind.h>
 #include "config.h"
 #include "jpeglib.h"
+#include "cdjpeg.h"
 
 using namespace emscripten;
 
-// MozJPEG doesn’t expose a numeric version, so I have to do some fun C macro hackery to turn it into a string. More details here: https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html
+// MozJPEG doesn’t expose a numeric version, so I have to do some fun C macro hackery to turn it
+// into a string. More details here: https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html
 #define xstr(s) str(s)
 #define str(s) #s
+
+struct MozJpegOptions {
+  int quality;
+  bool baseline;
+  bool arithmetic;
+  bool progressive;
+  bool optimize_coding;
+  int smoothing;
+  J_COLOR_SPACE color_space;
+  int quant_table;
+  bool trellis_multipass;
+  bool trellis_opt_zero;
+  bool trellis_opt_table;
+  int trellis_loops;
+};
 
 int version() {
   char buffer[] = xstr(MOZJPEG_VERSION);
@@ -39,17 +56,8 @@ void destroy_buffer(int p) {
 }
 
 int result[2];
-void encode(int image_in, int image_width, int image_height, int quality) {
+void encode(int image_in, int image_width, int image_height, MozJpegOptions opts) {
   uint8_t* image_buffer = (uint8_t*) image_in;
-
-  // Manually convert RGBA data into RGB
-  for(int y = 0; y < image_height; y++) {
-    for(int x = 0; x < image_width; x++) {
-      image_buffer[(y*image_width + x)*3 + 0] = image_buffer[(y*image_width + x)*4 + 0];
-      image_buffer[(y*image_width + x)*3 + 1] = image_buffer[(y*image_width + x)*4 + 1];
-      image_buffer[(y*image_width + x)*3 + 2] = image_buffer[(y*image_width + x)*4 + 2];
-    }
-  }
 
   // The code below is basically the `write_JPEG_file` function from
   // https://github.com/mozilla/mozjpeg/blob/master/example.c
@@ -110,18 +118,48 @@ void encode(int image_in, int image_width, int image_height, int quality) {
    */
   cinfo.image_width = image_width;      /* image width and height, in pixels */
   cinfo.image_height = image_height;
-  cinfo.input_components = 3;           /* # of color components per pixel */
-  cinfo.in_color_space = JCS_RGB;       /* colorspace of input image */
+  cinfo.input_components = 4;           /* # of color components per pixel */
+  cinfo.in_color_space = JCS_EXT_RGBA;  /* colorspace of input image */
   /* Now use the library's routine to set default compression parameters.
    * (You must set at least cinfo.in_color_space before calling this,
    * since the defaults depend on the source color space.)
    */
   jpeg_set_defaults(&cinfo);
+
   /* Now you can set any non-default parameters you wish to.
    * Here we just illustrate the use of quality (quantization table) scaling:
    */
-  jpeg_set_quality(&cinfo, quality, TRUE /* limit to baseline-JPEG values */);
+  jpeg_set_colorspace(&cinfo, opts.color_space);
 
+  if (opts.quant_table != -1) {
+    jpeg_c_set_int_param(&cinfo, JINT_BASE_QUANT_TBL_IDX, opts.quant_table);
+  }
+
+  cinfo.optimize_coding = opts.optimize_coding ? TRUE : FALSE;
+
+  if (opts.arithmetic) {
+    cinfo.arith_code = TRUE;
+    cinfo.optimize_coding = FALSE;
+  }
+
+  cinfo.smoothing_factor = opts.smoothing;
+
+  jpeg_c_set_bool_param(&cinfo, JBOOLEAN_USE_SCANS_IN_TRELLIS, opts.trellis_multipass ? TRUE : FALSE);
+  jpeg_c_set_bool_param(&cinfo, JBOOLEAN_TRELLIS_EOB_OPT, opts.trellis_opt_zero ? TRUE : FALSE);
+  jpeg_c_set_bool_param(&cinfo, JBOOLEAN_TRELLIS_Q_OPT, opts.trellis_opt_table ? TRUE : FALSE);
+  jpeg_c_set_int_param(&cinfo, JINT_TRELLIS_NUM_LOOPS, opts.trellis_loops);
+
+  std::string quality_str = std::to_string(opts.quality);
+  char const *pqual = quality_str.c_str();
+
+  set_quality_ratings(&cinfo, (char*) pqual, opts.baseline ? TRUE : FALSE);
+
+  if (!opts.baseline && opts.progressive) {
+    jpeg_simple_progression(&cinfo);
+  } else {
+    cinfo.num_scans = 0;
+    cinfo.scan_info = NULL;
+  }
   /* Step 4: Start compressor */
 
   /* TRUE ensures that we will write a complete interchange-JPEG file.
@@ -137,7 +175,7 @@ void encode(int image_in, int image_width, int image_height, int quality) {
    * To keep things simple, we pass one scanline per call; you can pass
    * more if you wish, though.
    */
-  row_stride = image_width * 3; /* JSAMPLEs per row in image_buffer */
+  row_stride = image_width * 4; /* JSAMPLEs per row in image_buffer */
 
   while (cinfo.next_scanline < cinfo.image_height) {
     /* jpeg_write_scanlines expects an array of pointers to scanlines.
@@ -175,6 +213,27 @@ int get_result_size() {
 }
 
 EMSCRIPTEN_BINDINGS(my_module) {
+  enum_<J_COLOR_SPACE>("J_COLOR_SPACE")
+    .value("JCS_GRAYSCALE", J_COLOR_SPACE::JCS_GRAYSCALE)
+    .value("JCS_RGB", J_COLOR_SPACE::JCS_RGB)
+    .value("JCS_YCbCr", J_COLOR_SPACE::JCS_YCbCr)
+    ;
+
+  value_object<MozJpegOptions>("MozJpegOptions")
+    .field("quality", &MozJpegOptions::quality)
+    .field("baseline", &MozJpegOptions::baseline)
+    .field("arithmetic", &MozJpegOptions::arithmetic)
+    .field("progressive", &MozJpegOptions::progressive)
+    .field("optimize_coding", &MozJpegOptions::optimize_coding)
+    .field("smoothing", &MozJpegOptions::smoothing)
+    .field("color_space", &MozJpegOptions::color_space)
+    .field("quant_table", &MozJpegOptions::quant_table)
+    .field("trellis_multipass", &MozJpegOptions::trellis_multipass)
+    .field("trellis_opt_zero", &MozJpegOptions::trellis_opt_zero)
+    .field("trellis_opt_table", &MozJpegOptions::trellis_opt_table)
+    .field("trellis_loops", &MozJpegOptions::trellis_loops)
+    ;
+
   function("version", &version);
   function("create_buffer", &create_buffer, allow_raw_pointers());
   function("destroy_buffer", &destroy_buffer, allow_raw_pointers());
