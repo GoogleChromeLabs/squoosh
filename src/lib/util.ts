@@ -157,7 +157,14 @@ export function inputFieldValueAsNumber(field: any): number {
  * @param field An HTMLInputElement, but the casting is done here to tidy up onChange.
  */
 export function inputFieldCheckedAsNumber(field: any): number {
-  return Number((field as HTMLInputElement).checked);
+  return Number(inputFieldChecked(field));
+}
+
+/**
+ * @param field An HTMLInputElement, but the casting is done here to tidy up onChange.
+ */
+export function inputFieldChecked(field: any): boolean {
+  return (field as HTMLInputElement).checked;
 }
 
 /**
