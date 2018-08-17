@@ -23,7 +23,7 @@ struct MozJpegOptions {
   bool progressive;
   bool optimize_coding;
   int smoothing;
-  J_COLOR_SPACE color_space;
+  int color_space;
   int quant_table;
   bool trellis_multipass;
   bool trellis_opt_zero;
@@ -129,7 +129,7 @@ void encode(int image_in, int image_width, int image_height, MozJpegOptions opts
   /* Now you can set any non-default parameters you wish to.
    * Here we just illustrate the use of quality (quantization table) scaling:
    */
-  jpeg_set_colorspace(&cinfo, opts.color_space);
+  jpeg_set_colorspace(&cinfo, (J_COLOR_SPACE) opts.color_space);
 
   if (opts.quant_table != -1) {
     jpeg_c_set_int_param(&cinfo, JINT_BASE_QUANT_TBL_IDX, opts.quant_table);
@@ -213,12 +213,6 @@ int get_result_size() {
 }
 
 EMSCRIPTEN_BINDINGS(my_module) {
-  enum_<J_COLOR_SPACE>("J_COLOR_SPACE")
-    .value("JCS_GRAYSCALE", J_COLOR_SPACE::JCS_GRAYSCALE)
-    .value("JCS_RGB", J_COLOR_SPACE::JCS_RGB)
-    .value("JCS_YCbCr", J_COLOR_SPACE::JCS_YCbCr)
-    ;
-
   value_object<MozJpegOptions>("MozJpegOptions")
     .field("quality", &MozJpegOptions::quality)
     .field("baseline", &MozJpegOptions::baseline)
