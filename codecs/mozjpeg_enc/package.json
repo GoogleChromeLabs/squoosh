@@ -4,7 +4,7 @@
     "install": "napa",
     "build": "npm run build:library && npm run build:wasm",
     "build:library": "cd node_modules/mozjpeg && autoreconf -fiv && docker run --rm -v $(pwd):/src trzeci/emscripten emconfigure ./configure --without-simd && docker run --rm -v $(pwd):/src trzeci/emscripten emmake make libjpeg.la",
-    "build:wasm": "docker run --rm -v $(pwd):/src trzeci/emscripten emcc -O3 -s WASM=1 -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"cwrap\"]' -s ALLOW_MEMORY_GROWTH=1 -s MODULARIZE=1 -s 'EXPORT_NAME=\"mozjpeg_enc\"' -I node_modules/mozjpeg -o ./mozjpeg_enc.js mozjpeg_enc.c node_modules/mozjpeg/.libs/libjpeg.a"
+    "build:wasm": "docker run --rm -v $(pwd):/src trzeci/emscripten emcc --bind -O3 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s MODULARIZE=1 -s 'EXPORT_NAME=\"mozjpeg_enc\"' -I node_modules/mozjpeg -o ./mozjpeg_enc.js -Wno-deprecated-register -Wno-writable-strings node_modules/mozjpeg/rdswitch.c -x c++ -std=c++11 mozjpeg_enc.cpp node_modules/mozjpeg/.libs/libjpeg.a"
   },
   "napa": {
     "mozjpeg": "mozilla/mozjpeg#v3.3.1"
