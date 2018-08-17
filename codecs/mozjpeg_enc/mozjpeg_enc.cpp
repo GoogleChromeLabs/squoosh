@@ -135,7 +135,7 @@ void encode(int image_in, int image_width, int image_height, MozJpegOptions opts
     jpeg_c_set_int_param(&cinfo, JINT_BASE_QUANT_TBL_IDX, opts.quant_table);
   }
 
-  cinfo.optimize_coding = opts.optimize_coding ? TRUE : FALSE;
+  cinfo.optimize_coding = opts.optimize_coding;
 
   if (opts.arithmetic) {
     cinfo.arith_code = TRUE;
@@ -144,15 +144,15 @@ void encode(int image_in, int image_width, int image_height, MozJpegOptions opts
 
   cinfo.smoothing_factor = opts.smoothing;
 
-  jpeg_c_set_bool_param(&cinfo, JBOOLEAN_USE_SCANS_IN_TRELLIS, opts.trellis_multipass ? TRUE : FALSE);
-  jpeg_c_set_bool_param(&cinfo, JBOOLEAN_TRELLIS_EOB_OPT, opts.trellis_opt_zero ? TRUE : FALSE);
-  jpeg_c_set_bool_param(&cinfo, JBOOLEAN_TRELLIS_Q_OPT, opts.trellis_opt_table ? TRUE : FALSE);
+  jpeg_c_set_bool_param(&cinfo, JBOOLEAN_USE_SCANS_IN_TRELLIS, opts.trellis_multipass);
+  jpeg_c_set_bool_param(&cinfo, JBOOLEAN_TRELLIS_EOB_OPT, opts.trellis_opt_zero);
+  jpeg_c_set_bool_param(&cinfo, JBOOLEAN_TRELLIS_Q_OPT, opts.trellis_opt_table);
   jpeg_c_set_int_param(&cinfo, JINT_TRELLIS_NUM_LOOPS, opts.trellis_loops);
 
   std::string quality_str = std::to_string(opts.quality);
   char const *pqual = quality_str.c_str();
 
-  set_quality_ratings(&cinfo, (char*) pqual, opts.baseline ? TRUE : FALSE);
+  set_quality_ratings(&cinfo, (char*) pqual, opts.baseline);
 
   if (!opts.baseline && opts.progressive) {
     jpeg_simple_progression(&cinfo);
