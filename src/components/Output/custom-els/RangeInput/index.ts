@@ -1,13 +1,13 @@
 import './styles.css';
 
-const EVENTS = [
+const RETARGETED_EVENTS = [
   'input',
   'change',
   'focus',
   'blur',
 ];
 
-const PROPERTIES = [
+const REFLECTED_PROPERTIES = [
   'name',
   'value',
   'min',
@@ -34,11 +34,11 @@ class RangeInputElement extends HTMLElement {
     this._update = this._update.bind(this);
     this._handleEvent = this._handleEvent.bind(this);
 
-    for (const event of EVENTS) {
+    for (const event of RETARGETED_EVENTS) {
       this._input.addEventListener(event, this._handleEvent, true);
     }
 
-    for (const property of PROPERTIES) {
+    for (const property of REFLECTED_PROPERTIES) {
       Object.defineProperty(this, property, {
         configurable: true,
         get() {
