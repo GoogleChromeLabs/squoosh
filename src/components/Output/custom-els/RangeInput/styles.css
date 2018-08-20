@@ -18,8 +18,7 @@ range-input input {
   background: none;
   appearance: none;
   -webkit-appearance: none;
-  outline-color: #2d9ac2;
-  outline-offset: 2px;
+  outline: none;
 }
 
 range-input input::-webkit-slider-runnable-track,
@@ -31,7 +30,7 @@ range-input input::-ms-track {
   -webkit-appearance: none;
 }
 
-range-input:before {
+range-input::before {
   content: '';
   display: block;
   position: absolute;
@@ -64,7 +63,7 @@ range-input input:focus::-webkit-slider-thumb {
   box-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
 
-range-input > aside {
+range-input > div {
   position: absolute;
   left: 6px;
   right: 6px;
@@ -73,7 +72,7 @@ range-input > aside {
   overflow: visible;
 }
 
-range-input > aside > span {
+range-input > div > span {
   background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="62" fill="none"><path fill="#34B9EB" d="M27.3 27.3C25 29.6 17 35.8 17 43v3c0 3 2.5 5 3.2 5.8a6 6 0 1 1-8.5 0C12.6 51 15 49 15 46v-3c0-7.2-8-13.4-10.3-15.7A16 16 0 0 1 16 0a16 16 0 0 1 11.3 27.3z"/><circle cx="16" cy="56" r="1" fill="#5D509E"/></svg>') top center no-repeat;
   position: absolute;
   box-sizing: border-box;
@@ -86,17 +85,18 @@ range-input > aside > span {
   margin: 0 0 0 -16px;
   filter: drop-shadow(0 1px 3px rgba(0,0,0,0.3));
   transform-origin: 50% 90%;
-  opacity: 0;
+  opacity: 0.0001;
   transform: scale(.2);
   color: #fff;
   font: inherit;
   text-overflow: clip;
   text-shadow: 0 -.5px 0 rgba(0,0,0,0.4);
   transition: transform 200ms ease, opacity 200ms ease;
+  will-change: transform;
   pointer-events: none;
   overflow: hidden;
 }
-range-input input:focus + aside span {
+range-input input:focus + div span {
   opacity: 1;
   transform: scale(1);
 }

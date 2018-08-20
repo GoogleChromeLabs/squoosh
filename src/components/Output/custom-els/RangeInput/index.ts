@@ -1,3 +1,4 @@
+import { bind } from '../../../../lib/util';
 import './styles.css';
 
 const RETARGETED_EVENTS = [
@@ -17,22 +18,20 @@ const REFLECTED_PROPERTIES = [
 
 interface RangeInputElement {
   value: string;
-  min?: string;
-  max?: string;
-  step?: string;
-  precision?: number | string;
+  min: string;
+  max: string;
+  step: string;
 }
 
 class RangeInputElement extends HTMLElement {
   private _input = document.createElement('input');
-  private _valueDisplayWrapper = document.createElement('aside');
+  private _valueDisplayWrapper = document.createElement('div');
   private _valueDisplay = document.createElement('span');
+  private _precision = 0;
 
   constructor() {
     super();
     this._input.type = 'range';
-    this._update = this._update.bind(this);
-    this._handleEvent = this._handleEvent.bind(this);
 
     for (const event of RETARGETED_EVENTS) {
       this._input.addEventListener(event, this._handleEvent, true);
@@ -60,32 +59,46 @@ class RangeInputElement extends HTMLElement {
     }
   }
 
+  set valueDisplayPrecision(precision: string) {
+    this._precision = parseInt(precision, 10) || 0;
+  }
+
+  get valueDisplayPrecision() {
+    return '' + this._precision;
+  }
+
+  @bind
   private _handleEvent(event: Event) {
     this._update();
     event.stopImmediatePropagation();
-    const retargetted = new (event.constructor as typeof Event)(event.type, event);
+    const retargetted = new Event(event.type, event);
     this.dispatchEvent(retargetted);
   }
 
+  @bind
   private _update() {
+    this._reflectAttributes();
     const value = parseFloat(this.value || '0');
     const min = parseFloat(this._input.min || '0');
     const max = parseFloat(this._input.max || '100');
     const percent = 100 * (value - min) / (max - min);
     this.style.setProperty('--value-percent', percent + '%');
     let displayValue = '' + value;
-    let precision = this.precision;
-    if (typeof precision === 'string') {
-      precision = parseInt(precision, 10) || 0;
-    }
-    if (precision) {
-      displayValue = parseFloat(displayValue).toPrecision(precision);
+    if (this._precision) {
+      displayValue = parseFloat(displayValue).toPrecision(this._precision);
+    } else {
+      displayValue = '' + Math.round(parseFloat(displayValue));
     }
     this._valueDisplay.textContent = '' + displayValue;
   }
 
-  attributeChangedCallback (name: string, value: string) {
-    if (name === 'value') this.value = value;
+  private _reflectAttributes() {
+    for (const property of REFLECTED_PROPERTIES) {
+      const attributeValue = this._input.getAttribute(property);
+      if (this.getAttribute(property) !== attributeValue) {
+        this.setAttribute(property, attributeValue || '');
+      }
+    }
   }
 }
 
