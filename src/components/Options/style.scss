@@ -154,26 +154,5 @@ Note: These styles are temporary. They will be replaced before going live.
     position: relative;
     align-content: center;
     font-size: 14px;
-
-    input {
-      appearance: none;
-      -webkit-appearance: none;
-      width: 0;
-      height: 0;
-      margin-top: 6px;
-      border-top: 7px solid #fff;
-      border-right: 7px solid transparent;
-      border-left: 7px solid transparent;
-      transition: transform 300ms ease;
-
-      &:focus {
-        outline: none;
-        border-top-color: var(--button-fg);
-      }
-
-      &:not(:checked) {
-        transform: rotate(-90deg);
-      }
-    }
   }
 }
