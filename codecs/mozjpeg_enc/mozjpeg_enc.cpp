@@ -55,8 +55,8 @@ void destroy_buffer(int p) {
   free((uint8_t*) p);
 }
 
-val encode(int image_in, int image_width, int image_height, MozJpegOptions opts) {
-  uint8_t* image_buffer = (uint8_t*) image_in;
+val encode(std::string image_in, int image_width, int image_height, MozJpegOptions opts) {
+  uint8_t* image_buffer = (uint8_t*) &image_in;
 
   // The code below is basically the `write_JPEG_file` function from
   // https://github.com/mozilla/mozjpeg/blob/master/example.c
