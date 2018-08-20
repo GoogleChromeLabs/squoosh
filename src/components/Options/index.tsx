@@ -192,7 +192,7 @@ export default class Options extends Component<Props, State> {
             class={style.size}
             increaseClass={style.increase}
             decreaseClass={style.decrease}
-            data={imageFile}
+            file={imageFile}
             compareTo={imageFile === sourceImageFile ? undefined : sourceImageFile}
           />
         </div>

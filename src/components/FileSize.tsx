@@ -4,7 +4,7 @@ import * as prettyBytes from 'pretty-bytes';
 type FileContents = ArrayBuffer | Blob;
 
 interface Props extends Pick<JSX.HTMLAttributes, Exclude<keyof JSX.HTMLAttributes, 'data'>> {
-  data?: FileContents;
+  file?: FileContents;
   compareTo?: FileContents;
   increaseClass?: string;
   decreaseClass?: string;
@@ -24,17 +24,17 @@ function calculateSize(data: FileContents): number {
 export default class FileSize extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    if (props.data) {
-      this.computeSize('size', props.data);
+    if (props.file) {
+      this.computeSize('size', props.file);
     }
     if (props.compareTo) {
       this.computeSize('compareSize', props.compareTo);
     }
   }
 
-  componentWillReceiveProps({ data, compareTo }: Props) {
-    if (data !== this.props.data) {
-      this.computeSize('size', data);
+  componentWillReceiveProps({ file, compareTo }: Props) {
+    if (file !== this.props.file) {
+      this.computeSize('size', file);
     }
     if (compareTo !== this.props.compareTo) {
       this.computeSize('compareSize', compareTo);
@@ -68,7 +68,7 @@ export default class FileSize extends Component<Props, State> {
   }
 
   render(
-    { data, compareTo, increaseClass, decreaseClass, ...props }: Props,
+    { file, compareTo, increaseClass, decreaseClass, ...props }: Props,
     { size, sizeFormatted = '', compareSize }: State,
   ) {
     const delta = size && compareSize ? (size - compareSize) / compareSize : 0;
