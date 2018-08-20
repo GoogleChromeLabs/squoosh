@@ -27,7 +27,7 @@ class RangeInputElement extends HTMLElement {
   private _input = document.createElement('input');
   private _valueDisplayWrapper = document.createElement('div');
   private _valueDisplay = document.createElement('span');
-  private _precision = 0;
+  private _precision?: number;
 
   constructor() {
     super();
@@ -60,11 +60,11 @@ class RangeInputElement extends HTMLElement {
   }
 
   set valueDisplayPrecision(precision: string) {
-    this._precision = parseInt(precision, 10) || 0;
+    this._precision = precision === '' ? undefined : parseInt(precision, 10) || 0;
   }
 
   get valueDisplayPrecision() {
-    return '' + this._precision;
+    return this._precision == null ? '' : '' + this._precision;
   }
 
   @bind
@@ -84,10 +84,10 @@ class RangeInputElement extends HTMLElement {
     const percent = 100 * (value - min) / (max - min);
     this.style.setProperty('--value-percent', percent + '%');
     let displayValue = '' + value;
-    if (this._precision) {
-      displayValue = parseFloat(displayValue).toPrecision(this._precision);
-    } else {
+    if (this._precision === 0) {
       displayValue = '' + Math.round(parseFloat(displayValue));
+    } else if (this._precision !== undefined) {
+      displayValue = parseFloat(displayValue).toPrecision(this._precision);
     }
     this._valueDisplay.textContent = '' + displayValue;
   }
