@@ -162,7 +162,6 @@ export default class Output extends Component<Props, State> {
           onWheelCapture={this.onRetargetableEvent}
         >
           <pinch-zoom
-            tabIndex={-1}
             onChange={this.onPinchZoomLeftChange}
             ref={linkRef(this, 'pinchZoomLeft')}
           >
