@@ -75,7 +75,7 @@ export default class FileSize extends Component<Props, State> {
     return (
       <span {...props}>
         {sizeFormatted}
-        {Math.abs(delta) >= 0.01 && (
+        {compareTo && (
           <span class={delta > 0 ? increaseClass : decreaseClass}>
             {delta > 0 && '+'}
             {Math.round(delta * 100)}%
