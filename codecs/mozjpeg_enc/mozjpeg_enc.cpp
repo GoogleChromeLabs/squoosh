@@ -47,13 +47,7 @@ int version() {
   return version;
 }
 
-int create_buffer(int width, int height) {
-  return (int) malloc(width * height * 4 * sizeof(uint8_t));
-}
-
-void destroy_buffer(int p) {
-  free((uint8_t*) p);
-}
+uint8_t* last_result;
 
 val encode(std::string image_in, int image_width, int image_height, MozJpegOptions opts) {
   uint8_t* image_buffer = (uint8_t*) image_in.c_str();
@@ -193,8 +187,14 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
   /* This is an important step since it will release a good deal of memory. */
   jpeg_destroy_compress(&cinfo);
 
+  last_result = output;
+
   /* And we're done! */
   return val(typed_memory_view(size, output));
+}
+
+void free_result() {
+  free(last_result); // not sure if this is right with mozjpeg
 }
 
 EMSCRIPTEN_BINDINGS(my_module) {
@@ -214,7 +214,6 @@ EMSCRIPTEN_BINDINGS(my_module) {
     ;
 
   function("version", &version);
-  function("create_buffer", &create_buffer, allow_raw_pointers());
-  function("destroy_buffer", &destroy_buffer, allow_raw_pointers());
-  function("encode", &encode, allow_raw_pointers());
+  function("encode", &encode);
+  function("free_result", &free_result);
 }
