@@ -98,7 +98,7 @@ export default class Output extends Component<Props, State> {
   @bind
   onScaleInputChanged(event: Event) {
     const target = event.target as HTMLInputElement;
-    const percent = parseInt(target.value, 10);
+    const percent = parseFloat(target.value);
     if (isNaN(percent)) return;
     this.setState({
       scale: percent / 100,
