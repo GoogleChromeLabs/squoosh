@@ -1,4 +1,5 @@
-#include "emscripten.h"
+#include "emscripten/bind.h"
+#include "emscripten/val.h"
 #include <stdlib.h>
 #include <inttypes.h>
 #include <limits.h>
@@ -6,29 +7,31 @@
 
 #include "libimagequant.h"
 
-EMSCRIPTEN_KEEPALIVE
+using namespace emscripten;
+
 int version() {
   return (((LIQ_VERSION/10000) % 100) << 16) |
          (((LIQ_VERSION/100  ) % 100) << 8) |
          (((LIQ_VERSION/1    ) % 100) << 0);
 }
 
-EMSCRIPTEN_KEEPALIVE
-uint8_t* create_buffer(int width, int height) {
-  return malloc(width * height * 4 * sizeof(uint8_t));
-}
+class RawImage {
+public:
+  val buffer;
+  int width;
+  int height;
 
-EMSCRIPTEN_KEEPALIVE
-void destroy_buffer(uint8_t* p) {
-  free(p);
-}
+  RawImage(val b, int w, int h)
+    : buffer(b), width(w), height(h) {}
+};
+
 
 liq_attr *attr;
 liq_image *image;
 liq_result *res;
-int result;
-EMSCRIPTEN_KEEPALIVE
-void quantize(uint8_t* image_buffer, int image_width, int image_height, int num_colors, float dithering) {
+uint8_t* result;
+RawImage quantize(std::string rawimage, int image_width, int image_height, int num_colors, float dithering) {
+  const uint8_t* image_buffer = (uint8_t*)rawimage.c_str();
   int size = image_width * image_height;
   attr = liq_attr_create();
   image = liq_image_create_rgba(attr, image_buffer, image_width, image_height, 0);
@@ -36,20 +39,25 @@ void quantize(uint8_t* image_buffer, int image_width, int image_height, int num_
   liq_image_quantize(image, attr, &res);
   liq_set_dithering_level(res, dithering);
   uint8_t* image8bit = (uint8_t*) malloc(size);
-  result = (int) malloc(size * 4);
+  result = (uint8_t*) malloc(size * 4);
   liq_write_remapped_image(res, image, image8bit, size);
   const liq_palette *pal = liq_get_palette(res);
   // Turn palletted image back into an RGBA image
   for(int i = 0; i < size; i++) {
-    ((uint8_t*)result)[i * 4 + 0] = pal->entries[image8bit[i]].r;
-    ((uint8_t*)result)[i * 4 + 1] = pal->entries[image8bit[i]].g;
-    ((uint8_t*)result)[i * 4 + 2] = pal->entries[image8bit[i]].b;
-    ((uint8_t*)result)[i * 4 + 3] = pal->entries[image8bit[i]].a;
+    result[i * 4 + 0] = pal->entries[image8bit[i]].r;
+    result[i * 4 + 1] = pal->entries[image8bit[i]].g;
+    result[i * 4 + 2] = pal->entries[image8bit[i]].b;
+    result[i * 4 + 3] = pal->entries[image8bit[i]].a;
   }
   free(image8bit);
   liq_result_destroy(res);
   liq_image_destroy(image);
   liq_attr_destroy(attr);
+  return {
+    val(typed_memory_view(image_width*image_height*4, result)),
+    image_width,
+    image_height
+  };
 }
 
 const liq_color zx_colors[] = {
@@ -76,11 +84,11 @@ uint8_t block[8 * 8 * 4];
  * The ZX has one bit per pixel, but can assign two colours to an 8x8 block. The two colours must
  * both be 'regular' or 'bright'. Black exists as both regular and bright.
  */
-EMSCRIPTEN_KEEPALIVE
-void zx_quantize(uint8_t* image_buffer, int image_width, int image_height, float dithering) {
+RawImage zx_quantize(std::string rawimage, int image_width, int image_height, float dithering) {
+  const uint8_t* image_buffer = (uint8_t*) rawimage.c_str();
   int size = image_width * image_height;
   int bytes_per_pixel = 4;
-  result = (int) malloc(size * bytes_per_pixel);
+  result = (uint8_t*) malloc(size * bytes_per_pixel);
   uint8_t* image8bit = (uint8_t*) malloc(8 * 8);
 
   // For each 8x8 grid
@@ -199,10 +207,10 @@ void zx_quantize(uint8_t* image_buffer, int image_width, int image_height, float
         for(int x = 0; x < block_width; x++) {
           int image8BitPos = y * block_width + x;
           int resultStartPos = ((block_start_y + y) * bytes_per_pixel * image_width) + ((block_start_x + x) * bytes_per_pixel);
-          ((uint8_t*)result)[resultStartPos + 0] = pal->entries[image8bit[image8BitPos]].r;
-          ((uint8_t*)result)[resultStartPos + 1] = pal->entries[image8bit[image8BitPos]].g;
-          ((uint8_t*)result)[resultStartPos + 2] = pal->entries[image8bit[image8BitPos]].b;
-          ((uint8_t*)result)[resultStartPos + 3] = pal->entries[image8bit[image8BitPos]].a;
+          result[resultStartPos + 0] = pal->entries[image8bit[image8BitPos]].r;
+          result[resultStartPos + 1] = pal->entries[image8bit[image8BitPos]].g;
+          result[resultStartPos + 2] = pal->entries[image8bit[image8BitPos]].b;
+          result[resultStartPos + 3] = pal->entries[image8bit[image8BitPos]].a;
         }
       }
 
@@ -213,14 +221,25 @@ void zx_quantize(uint8_t* image_buffer, int image_width, int image_height, float
   }
 
   free(image8bit);
+  return {
+    val(typed_memory_view(image_width*image_height*4, result)),
+    image_width,
+    image_height
+  };
 }
 
-EMSCRIPTEN_KEEPALIVE
 void free_result() {
   free(result);
 }
 
-EMSCRIPTEN_KEEPALIVE
-int get_result_pointer() {
-  return result;
+EMSCRIPTEN_BINDINGS(my_module) {
+  class_<RawImage>("RawImage")
+    .property("buffer", &RawImage::buffer)
+    .property("width", &RawImage::width)
+    .property("height", &RawImage::height);
+
+  function("quantize", &quantize);
+  function("zx_quantize", &zx_quantize);
+  function("version", &version);
+  function("free_result", &free_result);
 }

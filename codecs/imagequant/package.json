@@ -3,7 +3,10 @@
   "scripts": {
     "install": "napa",
     "build": "npm run build:wasm",
-    "build:wasm": "docker run --rm -v $(pwd):/src trzeci/emscripten emcc -O3 -s WASM=1 -s EXTRA_EXPORTED_RUNTIME_METHODS='[\"cwrap\"]' -s ALLOW_MEMORY_GROWTH=1 -s MODULARIZE=1 -s 'EXPORT_NAME=\"imagequant\"' -I node_modules/libimagequant -o ./imagequant.js imagequant.c node_modules/libimagequant/{libimagequant,pam,mediancut,blur,mempool,kmeans,nearest}.c"
+    "build:wasm:lib": "docker run --rm -v $(pwd):/src trzeci/emscripten emcc --bind -O3 -s ALLOW_MEMORY_GROWTH=1 -s MODULARIZE=1 -s 'EXPORT_NAME=\"imagequant\"' -I node_modules/libimagequant --std=c99 node_modules/libimagequant/{libimagequant,pam,mediancut,blur,mempool,kmeans,nearest}.c -c ",
+    "build:wasm:module": "docker run --rm -v $(pwd):/src trzeci/emscripten emcc --bind -O3 -s ALLOW_MEMORY_GROWTH=1 -s MODULARIZE=1 -s 'EXPORT_NAME=\"imagequant\"' -I node_modules/libimagequant -o ./imagequant.js --std=c++11 *.o -x c++ imagequant.cpp",
+    "build:wasm": "npm run build:wasm:lib && npm run build:wasm:module"
+
   },
   "napa": {
     "libimagequant": "ImageOptim/libimagequant#2.12.1"
