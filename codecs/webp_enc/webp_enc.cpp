@@ -1,7 +1,9 @@
-#include "emscripten.h"
+#include <emscripten/bind.h>
+#include <emscripten/val.h>
 #include "src/webp/encode.h"
 #include <stdlib.h>
-#include <emscripten/bind.h>
+#include <string.h>
+#include <stdexcept>
 
 using namespace emscripten;
 
@@ -9,23 +11,19 @@ int version() {
   return WebPGetEncoderVersion();
 }
 
-int create_buffer(int width, int height) {
-  return (int) malloc(width * height * 4 * sizeof(uint8_t));
-}
+uint8_t* last_result;
 
-void destroy_buffer(int p) {
-  free((uint8_t*) p);
-}
+val encode(std::string img, int width, int height, WebPConfig config) {
+  uint8_t* img_in = (uint8_t*) img.c_str();
 
-int result[2];
-void encode(int img_in, int width, int height, WebPConfig config) {
   // A lot of this is duplicated from Encode in picture_enc.c
   WebPPicture pic;
   WebPMemoryWriter wrt;
   int ok;
 
   if (!WebPPictureInit(&pic)) {
-    return;  // shouldn't happen, except if system installation is broken
+    // shouldn't happen, except if system installation is broken
+    throw std::runtime_error("Unexpected error");
   }
 
   pic.use_argb = !!config.lossless;
@@ -40,23 +38,18 @@ void encode(int img_in, int width, int height, WebPConfig config) {
   WebPPictureFree(&pic);
   if (!ok) {
     WebPMemoryWriterClear(&wrt);
-    return;
+    throw std::runtime_error("Encode failed");
   }
-  result[0] = (int)wrt.mem;
-  result[1] = wrt.size;
+
+  last_result = wrt.mem;
+
+  return val(typed_memory_view(wrt.size, wrt.mem));
 }
 
 void free_result() {
-  WebPFree((void*)result[0]);
+  WebPFree(last_result);
 }
 
-int get_result_pointer() {
-  return result[0];
-}
-
-int get_result_size() {
-  return result[1];
-}
 
 EMSCRIPTEN_BINDINGS(my_module) {
   enum_<WebPImageHint>("WebPImageHint")
@@ -97,10 +90,6 @@ EMSCRIPTEN_BINDINGS(my_module) {
     ;
 
   function("version", &version);
-  function("create_buffer", &create_buffer, allow_raw_pointers());
-  function("destroy_buffer", &destroy_buffer, allow_raw_pointers());
-  function("encode", &encode, allow_raw_pointers());
+  function("encode", &encode);
   function("free_result", &free_result);
-  function("get_result_pointer", &get_result_pointer, allow_raw_pointers());
-  function("get_result_size", &get_result_size, allow_raw_pointers());
 }

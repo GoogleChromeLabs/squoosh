@@ -19,26 +19,27 @@ See `example.html`
 
 Returns the version of MozJPEG as a number. va.b.c is encoded as 0x0a0b0c
 
-### `uint8_t* create_buffer(int width, int height)`
-
-Allocates an RGBA buffer for an image with the given dimension.
-
-### `void destroy_buffer(uint8_t* p)`
-
-Frees a buffer created with `create_buffer`.
-
-### `void encode(uint8_t* image_buffer, int image_width, int image_height, int quality)`
-
-Encodes the given image with given dimension to JPEG. `quality` is a number between 0 and 100. The higher the number, the better the quality of the encoded image. The result is implicitly stored and can be accessed using the `get_result_*()` functions.
-
 ### `void free_result()`
 
 Frees the result created by `encode()`.
 
-### `int get_result_pointer()`
+### `Uint8Array encode(std::string image_in, int image_width, int image_height, MozJpegOptions opts)`
 
-Returns the pointer to the start of the buffer holding the encoded data.
+Encodes the given image with given dimension to JPEG. Options looks like this:
 
-### `int get_result_size()`
-
-Returns the length of the buffer holding the encoded data.
+```c++
+struct MozJpegOptions {
+  int quality;
+  bool baseline;
+  bool arithmetic;
+  bool progressive;
+  bool optimize_coding;
+  int smoothing;
+  int color_space;
+  int quant_table;
+  bool trellis_multipass;
+  bool trellis_opt_zero;
+  bool trellis_opt_table;
+  int trellis_loops;
+};
+```

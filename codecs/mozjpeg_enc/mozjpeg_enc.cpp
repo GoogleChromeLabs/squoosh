@@ -1,10 +1,10 @@
-#include "emscripten.h"
+#include <emscripten/bind.h>
+#include <emscripten/val.h>
 #include <stdlib.h>
 #include <inttypes.h>
 #include <stdio.h>
 #include <setjmp.h>
 #include <string.h>
-#include <emscripten/bind.h>
 #include "config.h"
 #include "jpeglib.h"
 #include "cdjpeg.h"
@@ -47,17 +47,10 @@ int version() {
   return version;
 }
 
-int create_buffer(int width, int height) {
-  return (int) malloc(width * height * 4 * sizeof(uint8_t));
-}
+uint8_t* last_result;
 
-void destroy_buffer(int p) {
-  free((uint8_t*) p);
-}
-
-int result[2];
-void encode(int image_in, int image_width, int image_height, MozJpegOptions opts) {
-  uint8_t* image_buffer = (uint8_t*) image_in;
+val encode(std::string image_in, int image_width, int image_height, MozJpegOptions opts) {
+  uint8_t* image_buffer = (uint8_t*) image_in.c_str();
 
   // The code below is basically the `write_JPEG_file` function from
   // https://github.com/mozilla/mozjpeg/blob/master/example.c
@@ -191,25 +184,17 @@ void encode(int image_in, int image_width, int image_height, MozJpegOptions opts
   jpeg_finish_compress(&cinfo);
   /* Step 7: release JPEG compression object */
 
-  result[0] = (int)output;
-  result[1] = size;
-
   /* This is an important step since it will release a good deal of memory. */
   jpeg_destroy_compress(&cinfo);
 
+  last_result = output;
+
   /* And we're done! */
+  return val(typed_memory_view(size, output));
 }
 
 void free_result() {
-  free((void*)result[0]); // not sure if this is right with mozjpeg
-}
-
-int get_result_pointer() {
-  return result[0];
-}
-
-int get_result_size() {
-  return result[1];
+  free(last_result); // not sure if this is right with mozjpeg
 }
 
 EMSCRIPTEN_BINDINGS(my_module) {
@@ -229,10 +214,6 @@ EMSCRIPTEN_BINDINGS(my_module) {
     ;
 
   function("version", &version);
-  function("create_buffer", &create_buffer, allow_raw_pointers());
-  function("destroy_buffer", &destroy_buffer, allow_raw_pointers());
-  function("encode", &encode, allow_raw_pointers());
+  function("encode", &encode);
   function("free_result", &free_result);
-  function("get_result_pointer", &get_result_pointer, allow_raw_pointers());
-  function("get_result_size", &get_result_size, allow_raw_pointers());
 }
