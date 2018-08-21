@@ -1,22 +1,11 @@
-import webp_dec from '../../../codecs/webp_dec/webp_dec';
+import webp_dec, { WebPModule } from '../../../codecs/webp_dec/webp_dec';
 // Using require() so TypeScript doesn’t complain about this not being a module.
 const wasmBinaryUrl = require('../../../codecs/webp_dec/webp_dec.wasm');
 
 // API exposed by wasm module. Details in the codec’s README.
-interface ModuleAPI {
-  version(): number;
-  create_buffer(size: number): number;
-  destroy_buffer(pointer: number): void;
-  decode(buffer: number, size: number): void;
-  free_result(): void;
-  get_result_pointer(): number;
-  get_result_width(): number;
-  get_result_height(): number;
-}
 
 export default class WebpDecoder {
-  private emscriptenModule: Promise<EmscriptenWasm.Module>;
-  private api: Promise<ModuleAPI>;
+  private emscriptenModule: Promise<WebPModule>;
 
   constructor() {
     this.emscriptenModule = new Promise((resolve) => {
@@ -41,44 +30,17 @@ export default class WebpDecoder {
         },
       });
     });
-
-    this.api = (async () => {
-      // Not sure why, but TypeScript complains that I am using
-      // `emscriptenModule` before it’s getting assigned, which is clearly not
-      // true :shrug: Using `any`
-      const m = await (this as any).emscriptenModule;
-      return {
-        version: m.cwrap('version', 'number', []),
-        create_buffer: m.cwrap('create_buffer', 'number', ['number']),
-        destroy_buffer: m.cwrap('destroy_buffer', '', ['number']),
-        decode: m.cwrap('decode', '', ['number', 'number']),
-        free_result: m.cwrap('free_result', '', []),
-        get_result_pointer: m.cwrap('get_result_pointer', 'number', []),
-        get_result_height: m.cwrap('get_result_height', 'number', []),
-        get_result_width: m.cwrap('get_result_width', 'number', []),
-      };
-    })();
   }
 
   async decode(data: ArrayBuffer): Promise<ImageData> {
     const m = await this.emscriptenModule;
-    const api = await this.api;
+    const rawImage = m.decode(data);
+    m.free_result();
 
-    const p = api.create_buffer(data.byteLength);
-    m.HEAP8.set(new Uint8Array(data), p);
-    api.decode(p, data.byteLength);
-    const resultPointer = api.get_result_pointer();
-    const resultWidth = api.get_result_width();
-    const resultHeight = api.get_result_height();
-    const resultView = new Uint8Array(
-      m.HEAP8.buffer,
-      resultPointer,
-      resultWidth * resultHeight * 4,
+    return new ImageData(
+      new Uint8ClampedArray(rawImage.buffer),
+      rawImage.width,
+      rawImage.height,
     );
-    const result = new Uint8ClampedArray(resultView);
-    api.free_result();
-    api.destroy_buffer(p);
-
-    return new ImageData(result, resultWidth, resultHeight);
   }
 }

@@ -23,29 +23,14 @@
   }
 
   Module.onRuntimeInitialized = async _ => {
-    const api = {
-      version: Module.cwrap('version', 'number', []),
-      create_buffer: Module.cwrap('create_buffer', 'number', ['number', 'number']),
-      destroy_buffer: Module.cwrap('destroy_buffer', '', ['number']),
-      quantize: Module.cwrap('quantize', '', ['number', 'number', 'number', 'number', 'number']),
-      zx_quantize: Module.cwrap('zx_quantize', '', ['number', 'number', 'number', 'number']),
-      free_result: Module.cwrap('free_result', '', ['number']),
-      get_result_pointer: Module.cwrap('get_result_pointer', 'number', []),
-    };
-    console.log('Version:', api.version().toString(16));
+    console.log('Version:', Module.version().toString(16));
     const image = await loadImage('../example.png');
-    const p = api.create_buffer(image.width, image.height);
-    Module.HEAP8.set(image.data, p);
-    //api.quantize(p, image.width, image.height, 256, 1.0);
-    api.zx_quantize(p, image.width, image.height, 1);
+    // const rawImage = Module.quantize(image.data, image.width, image.height, 256, 1.0);
+    const rawImage = Module.zx_quantize(image.data, image.width, image.height, 1.0);
     console.log('done');
-    const resultPointer = api.get_result_pointer();
-    const resultView = new Uint8Array(Module.HEAP8.buffer, resultPointer, image.width * image.height * 4);
-    const result = new Uint8ClampedArray(resultView);
-    api.free_result();
-    api.destroy_buffer(p);
+    Module.free_result();
 
-    const imageData = new ImageData(result, image.width, image.height);
+    const imageData = new ImageData(new Uint8ClampedArray(rawImage.buffer), rawImage.width, rawImage.height);
     const canvas = document.createElement('canvas');
     canvas.width = image.width;
     canvas.height = image.height;
