@@ -284,7 +284,7 @@ export default class App extends Component<Props, State> {
           });
         }
       } catch (err) {
-        this.showError(`Encoding error (type=${image.encoderState.type}): ${err}`);
+        this.showError(`Processing error (type=${image.encoderState.type}): ${err}`);
         throw err;
       }
     }
