@@ -218,6 +218,14 @@ export default class App extends Component<Props, State> {
     await this.updateFile(file);
   }
 
+  onCopyToOtherClick(index: 0 | 1) {
+    const otherIndex = (index + 1) % 2;
+
+    this.setState({
+      images: cleanSet(this.state.images, otherIndex, this.state.images[index]),
+    });
+  }
+
   async updateFile(file: File) {
     this.setState({ loading: true });
     try {
@@ -342,6 +350,7 @@ export default class App extends Component<Props, State> {
               onEncoderTypeChange={this.onEncoderTypeChange.bind(this, index)}
               onEncoderOptionsChange={this.onEncoderOptionsChange.bind(this, index)}
               onPreprocessorOptionsChange={this.onPreprocessorOptionsChange.bind(this, index)}
+              onCopyToOtherClick={this.onCopyToOtherClick.bind(this, index)}
             />
           ))}
           {anyLoading && <span style={{ position: 'fixed', top: 0, left: 0 }}>Loading...</span>}

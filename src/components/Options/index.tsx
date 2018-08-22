@@ -68,6 +68,7 @@ interface Props {
   onEncoderTypeChange(newType: EncoderType): void;
   onEncoderOptionsChange(newOptions: EncoderOptions): void;
   onPreprocessorOptionsChange(newOptions: PreprocessorState): void;
+  onCopyToOtherClick(): void;
 }
 
 interface State {
@@ -107,6 +108,12 @@ export default class Options extends Component<Props, State> {
     this.props.onPreprocessorOptionsChange(
       cleanMerge(this.props.preprocessorState, 'quantizer', opts),
     );
+  }
+
+  @bind
+  onCopyToOtherClick(event: Event) {
+    event.preventDefault();
+    this.props.onCopyToOtherClick();
   }
 
   render(
@@ -181,11 +188,15 @@ export default class Options extends Component<Props, State> {
             options={
               // Casting options, as encoderOptionsComponentMap[encodeData.type] ensures the correct
               // type, but typescript isn't smart enough.
-              encoderState.options as typeof EncoderOptionComponent['prototype']['props']['options']
+              encoderState.options as typeof EncoderOptionComponent.prototype.props.options
             }
             onChange={onEncoderOptionsChange}
           />
         }
+
+        <div class={style.row}>
+          <button onClick={this.onCopyToOtherClick}>Copy settings to other side</button>
+        </div>
 
         <div class={style.sizeDetails}>
           <FileSize
