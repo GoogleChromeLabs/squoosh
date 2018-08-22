@@ -2,6 +2,11 @@
 Note: These styles are temporary. They will be replaced before going live.
 */
 
+.row {
+  padding: 5px;
+  margin: 0 10px;
+}
+
 .options {
   box-sizing: border-box;
   padding: 0;
@@ -44,68 +49,9 @@ Note: These styles are temporary. They will be replaced before going live.
     }
   }
 
-  .picker {
-    margin: 5px 15px;
-
-    select {
-      display: block;
-      width: 100%;
-      box-sizing: border-box;
-      -webkit-appearance: none;
-      appearance: none;
-      padding: 10px 30px 10px 10px;
-      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="25" height="5"><polygon fill="#fff" points="10,0 5,5 0,0"/></svg>') right center no-repeat;
-      background-color: var(--gray-dark);
-      opacity: 0.9;
-      border: none;
-      font: inherit;
-      color: white;
-
-      &:hover {
-        opacity: 1;
-      }
-      &:focus {
-        opacity: 1;
-        outline: none;
-        box-shadow: 0 0 0 2px var(--button-fg, #ccc);
-      }
-    }
-  }
-
-  .title {
-    display: flex;
-    align-items: center;
-    padding: 10px 15px;
-    margin: 0 0 12px;
-    background: rgba(0,0,0,0.9);
-    font: inherit;
-
-    .download {
-      flex: 0;
-      margin: 0 0 0 auto;
-      background: rgba(0,0,0,0.7);
-      border-radius: 50%;
-      padding: 5px;
-      width: 16px;
-      height: 16px;
-      text-decoration: none;
-
-      > svg {
-        width: 16px;
-        height: 16px;
-        fill: #fff;
-      }
-
-      &:hover {
-        background-color: rgba(255,255,255,0.3);
-      }
-    }
-  }
-
   label {
     display: block;
-    padding: 5px;
-    margin: 0 10px;
+    @extend .row;
 
     input {
       vertical-align: middle;
@@ -121,47 +67,104 @@ Note: These styles are temporary. They will be replaced before going live.
       width: 90%;
     }
   }
+}
 
-  .size-details {
-    padding: 5px 15px;
-    background: rgba(0,0,0,0.5);
+.picker {
+  margin: 5px 15px;
 
-    .size {
-      font-weight: normal;
+  select {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
+    padding: 10px 30px 10px 10px;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="25" height="5"><polygon fill="#fff" points="10,0 5,5 0,0"/></svg>') right center no-repeat;
+    background-color: var(--gray-dark);
+    opacity: 0.9;
+    border: none;
+    font: inherit;
+    color: white;
 
-      .increase,
-      .decrease {
-        font-style: italic;
-        filter: #{"grayscale(calc(50% - var(--size-delta, 50) * 0.5%))"};
-
-        &:before {
-          content: ' (';
-        }
-        &:after {
-          content: ')';
-        }
-      }
-
-      .increase {
-        color: var(--negative);
-      }
-      .decrease {
-        color: var(--positive);
-      }
+    &:hover {
+      opacity: 1;
+    }
+    &:focus {
+      opacity: 1;
+      outline: none;
+      box-shadow: 0 0 0 2px var(--button-fg, #ccc);
     }
   }
 }
 
+.title {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  margin: 0 0 12px;
+  background: rgba(0,0,0,0.9);
+  font: inherit;
+}
+
+.download {
+  flex: 0;
+  margin: 0 0 0 auto;
+  background: rgba(0,0,0,0.7);
+  border-radius: 50%;
+  padding: 5px;
+  width: 16px;
+  height: 16px;
+  text-decoration: none;
+
+  > svg {
+    width: 16px;
+    height: 16px;
+    fill: #fff;
+  }
+
+  &:hover {
+    background-color: rgba(255,255,255,0.3);
+  }
+}
+
+.size-details {
+  padding: 5px 15px;
+  background: rgba(0,0,0,0.5);
+}
+
+.size {
+  font-weight: normal;
+}
+
+.increase,
+.decrease {
+  font-style: italic;
+  filter: #{"grayscale(calc(50% - var(--size-delta, 50) * 0.5%))"};
+
+  &:before {
+    content: ' (';
+  }
+  &:after {
+    content: ')';
+  }
+}
+
+.increase {
+  color: var(--negative);
+}
+.decrease {
+  color: var(--positive);
+}
 
 .preprocessors {
   padding: 5px 0;
   margin: 5px 0;
   box-shadow: inset 0 -.5px 0 rgba(0,0,0,0.25), 0 .5px 0 rgba(255,255,255,0.15);
+}
 
-  .toggle {
-    display: flex;
-    position: relative;
-    align-content: center;
-    font-size: 14px;
-  }
+.toggle {
+  display: flex;
+  position: relative;
+  align-content: center;
+  font-size: 14px;
 }

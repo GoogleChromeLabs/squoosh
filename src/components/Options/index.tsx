@@ -72,6 +72,7 @@ interface Props {
   onEncoderTypeChange(newType: EncoderType): void;
   onEncoderOptionsChange(newOptions: EncoderOptions): void;
   onPreprocessorOptionsChange(newOptions: PreprocessorState): void;
+  onCopyToOtherClick(): void;
 }
 
 interface State {
@@ -118,6 +119,12 @@ export default class Options extends Component<Props, State> {
     this.props.onPreprocessorOptionsChange(
       cleanMerge(this.props.preprocessorState, 'resize', opts),
     );
+  }
+
+  @bind
+  onCopyToOtherClick(event: Event) {
+    event.preventDefault();
+    this.props.onCopyToOtherClick();
   }
 
   render(
@@ -215,6 +222,10 @@ export default class Options extends Component<Props, State> {
               onChange={onEncoderOptionsChange}
             />
           }
+        </div>
+
+        <div class={style.row}>
+          <button onClick={this.onCopyToOtherClick}>Copy settings to other side</button>
         </div>
 
         <div class={style.sizeDetails}>
