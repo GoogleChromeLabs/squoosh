@@ -264,8 +264,7 @@ export default class App extends Component<Props, State> {
       try {
         // Special case for identity
         if (image.encoderState.type === identity.type) {
-          file = source.file;
-          bmp = source.bmp;
+          ({ file, bmp } = source);
         } else {
           preprocessed = (skipPreprocessing && image.preprocessed)
             ? image.preprocessed
