@@ -6,6 +6,7 @@ import Output from '../Output';
 import Options from '../Options';
 import { FileDropEvent } from './custom-els/FileDrop';
 import './custom-els/FileDrop';
+import ResultCache from './result-cache';
 
 import * as quantizer from '../../codecs/imagequant/quantizer';
 import * as mozJPEG from '../../codecs/mozjpeg/encoder';
@@ -38,7 +39,7 @@ import { cleanMerge, cleanSet } from '../../lib/clean-modify';
 
 type Orientation = 'horizontal' | 'vertical';
 
-interface SourceImage {
+export interface SourceImage {
   file: File;
   bmp: ImageBitmap;
   data: ImageData;
@@ -136,7 +137,8 @@ export default class App extends Component<Props, State> {
     orientation: this.widthQuery.matches ? 'horizontal' : 'vertical',
   };
 
-  private snackbar?: SnackBarElement;
+  snackbar?: SnackBarElement;
+  readonly encodeCache = new ResultCache();
 
   constructor() {
     super();
@@ -252,19 +254,39 @@ export default class App extends Component<Props, State> {
     const image = images[index];
 
     let file;
-    try {
-      // Special case for identity
-      if (image.encoderState.type === identity.type) {
-        file = source.file;
-      } else {
-        if (!skipPreprocessing || !image.preprocessed) {
-          image.preprocessed = await preprocessImage(source, image.preprocessorState);
+    let preprocessed;
+    let bmp;
+    const cacheResult = this.encodeCache.match(source, image.preprocessorState, image.encoderState);
+
+    if (cacheResult) {
+      ({ file, preprocessed, bmp } = cacheResult);
+    } else {
+      try {
+        // Special case for identity
+        if (image.encoderState.type === identity.type) {
+          file = source.file;
+          bmp = source.bmp;
+        } else {
+          preprocessed = (skipPreprocessing && image.preprocessed)
+            ? image.preprocessed
+            : await preprocessImage(source, image.preprocessorState);
+
+          file = await compressImage(preprocessed, image.encoderState, source.file.name);
+          bmp = await decodeImage(file);
+
+          this.encodeCache.add({
+            source,
+            bmp,
+            preprocessed,
+            file,
+            encoderState: image.encoderState,
+            preprocessorState: image.preprocessorState,
+          });
         }
-        file = await compressImage(image.preprocessed, image.encoderState, source.file.name);
+      } catch (err) {
+        this.showError(`Encoding error (type=${image.encoderState.type}): ${err}`);
+        throw err;
       }
-    } catch (err) {
-      this.showError(`Encoding error (type=${image.encoderState.type}): ${err}`);
-      throw err;
     }
 
     const latestImage = this.state.images[index];
@@ -273,17 +295,10 @@ export default class App extends Component<Props, State> {
       return;
     }
 
-    let bmp;
-    try {
-      bmp = await decodeImage(file);
-    } catch (err) {
-      this.setState({ error: `Encoding error (type=${image.encoderState.type}): ${err}` });
-      throw err;
-    }
-
-    images = cleanMerge(this.state.images, '' + index, {
+    images = cleanMerge(this.state.images, index, {
       file,
       bmp,
+      preprocessed,
       downloadUrl: URL.createObjectURL(file),
       loading: images[index].loadingCounter !== loadingCounter,
       loadedCounter: loadingCounter,
