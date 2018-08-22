@@ -5,10 +5,6 @@ import { PreprocessorState } from '../../codecs/preprocessors';
 
 import * as identity from '../../codecs/identity/encoder';
 
-interface EncodeCacheOptions {
-  size?: number;
-}
-
 interface CacheResult {
   preprocessed: ImageData;
   bmp: ImageBitmap;
@@ -21,20 +17,16 @@ interface CacheEntry extends CacheResult {
   source: SourceImage;
 }
 
+const SIZE = 5;
+
 export default class ResultCache {
   private readonly _entries: CacheEntry[] = [];
-  private _size: number;
   private _nextIndex: number = 0;
-
-  constructor(opts: EncodeCacheOptions = {}) {
-    const { size = 5 } = opts;
-    this._size = size;
-  }
 
   add(entry: CacheEntry) {
     if (entry.encoderState.type === identity.type) throw Error('Cannot cache identity encodes');
     this._entries[this._nextIndex] = entry;
-    this._nextIndex = (this._nextIndex + 1) % this._size;
+    this._nextIndex = (this._nextIndex + 1) % SIZE;
   }
 
   match(
