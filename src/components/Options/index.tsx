@@ -10,6 +10,7 @@ import WebPEncoderOptions from '../../codecs/webp/options';
 import BrowserWebPEncoderOptions from '../../codecs/browser-webp/options';
 
 import QuantizerOptionsComponent from '../../codecs/imagequant/options';
+import ResizeOptionsComponent from '../../codecs/resize/options';
 
 import * as identity from '../../codecs/identity/encoder';
 import * as optiPNG from '../../codecs/optipng/encoder';
@@ -33,9 +34,8 @@ import {
     encoderMap,
 } from '../../codecs/encoders';
 import { QuantizeOptions } from '../../codecs/imagequant/quantizer';
-
+import { ResizeOptions } from '../../codecs/resize/resize';
 import { PreprocessorState } from '../../codecs/preprocessors';
-
 import FileSize from '../FileSize';
 import { DownloadIcon } from '../../lib/icons';
 
@@ -62,6 +62,7 @@ const titles = {
 
 interface Props {
   orientation: 'horizontal' | 'vertical';
+  sourceAspect: number;
   imageIndex: number;
   sourceImageFile?: File;
   imageFile?: File;
@@ -112,9 +113,17 @@ export default class Options extends Component<Props, State> {
     );
   }
 
+  @bind
+  onResizeOptionsChange(opts: ResizeOptions) {
+    this.props.onPreprocessorOptionsChange(
+      cleanMerge(this.props.preprocessorState, 'resize', opts),
+    );
+  }
+
   render(
     {
       sourceImageFile,
+      sourceAspect,
       imageIndex,
       imageFile,
       downloadUrl,
@@ -161,7 +170,23 @@ export default class Options extends Component<Props, State> {
           </section>
 
           {encoderState.type !== 'identity' && (
-            <div key="quantization" class={style.quantization}>
+            <div key="preprocessors" class={style.preprocessors}>
+              <label class={style.toggle}>
+                <input
+                  name="resize.enable"
+                  type="checkbox"
+                  checked={!!preprocessorState.resize.enabled}
+                  onChange={this.onPreprocessorEnabledChange}
+                />
+                Resize
+              </label>
+              {preprocessorState.resize.enabled &&
+                <ResizeOptionsComponent
+                  aspect={sourceAspect}
+                  options={preprocessorState.resize}
+                  onChange={this.onResizeOptionsChange}
+                />
+              }
               <label class={style.toggle}>
                 <input
                   name="quantizer.enable"
@@ -169,7 +194,7 @@ export default class Options extends Component<Props, State> {
                   checked={!!preprocessorState.quantizer.enabled}
                   onChange={this.onPreprocessorEnabledChange}
                 />
-                Enable Quantization
+                Quantize
               </label>
               {preprocessorState.quantizer.enabled &&
                 <QuantizerOptionsComponent

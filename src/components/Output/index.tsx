@@ -11,6 +11,10 @@ interface Props {
   orientation: 'horizontal' | 'vertical';
   leftImg: ImageBitmap;
   rightImg: ImageBitmap;
+  imgWidth: number;
+  imgHeight: number;
+  leftImgContain: boolean;
+  rightImgContain: boolean;
 }
 
 interface State {
@@ -145,7 +149,7 @@ export default class Output extends Component<Props, State> {
   }
 
   render(
-    { orientation, leftImg, rightImg }: Props,
+    { orientation, leftImg, rightImg, imgWidth, imgHeight, leftImgContain, rightImgContain }: Props,
     { scale, editingScale, altBackground }: State,
   ) {
     return (
@@ -165,18 +169,26 @@ export default class Output extends Component<Props, State> {
             ref={linkRef(this, 'pinchZoomLeft')}
           >
             <canvas
-              class={style.outputCanvas}
               ref={linkRef(this, 'canvasLeft')}
               width={leftImg.width}
               height={leftImg.height}
+              style={{
+                width: imgWidth,
+                height: imgHeight,
+                objectFit: leftImgContain ? 'contain' : '',
+              }}
             />
           </pinch-zoom>
           <pinch-zoom ref={linkRef(this, 'pinchZoomRight')}>
             <canvas
-              class={style.outputCanvas}
               ref={linkRef(this, 'canvasRight')}
               width={rightImg.width}
               height={rightImg.height}
+              style={{
+                width: imgWidth,
+                height: imgHeight,
+                objectFit: rightImgContain ? 'contain' : '',
+              }}
             />
           </pinch-zoom>
         </two-up>

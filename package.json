@@ -67,6 +67,7 @@
     "comlink": "^3.0.3",
     "comlink-loader": "^1.0.0",
     "preact": "^8.3.1",
+    "linkstate": "^1.1.1",
     "pretty-bytes": "^5.1.0"
   }
 }
