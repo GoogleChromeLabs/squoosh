@@ -1,0 +1,41 @@
+<!doctype html>
+<style>
+  canvas {
+    image-rendering: pixelated;
+  }
+</style>
+<script src='imagequant.js'></script>
+<script>
+  const Module = imagequant();
+
+  async function loadImage(src) {
+    // Load image
+    const img = document.createElement('img');
+    img.src = src;
+    await new Promise(resolve => img.onload = resolve);
+    // Make canvas same size as image
+    const canvas = document.createElement('canvas');
+    [canvas.width, canvas.height] = [img.width, img.height];
+    // Draw image onto canvas
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    return ctx.getImageData(0, 0, img.width, img.height);
+  }
+
+  Module.onRuntimeInitialized = async _ => {
+    console.log('Version:', Module.version().toString(16));
+    const image = await loadImage('../example.png');
+    // const rawImage = Module.quantize(image.data, image.width, image.height, 256, 1.0);
+    const rawImage = Module.zx_quantize(image.data, image.width, image.height, 1.0);
+    console.log('done');
+    Module.free_result();
+
+    const imageData = new ImageData(new Uint8ClampedArray(rawImage.buffer), rawImage.width, rawImage.height);
+    const canvas = document.createElement('canvas');
+    canvas.width = image.width;
+    canvas.height = image.height;
+    const ctx = canvas.getContext('2d');
+    ctx.putImageData(imageData, 0, 0);
+    document.body.appendChild(canvas);
+  };
+</script>
