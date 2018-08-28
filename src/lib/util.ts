@@ -109,7 +109,7 @@ export function blobToArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
   return new Promise((resolve) => {
     const fileReader = new FileReader();
     fileReader.addEventListener('load', () => {
-      resolve(fileReader.result);
+      resolve(fileReader.result! as ArrayBuffer);
     });
     fileReader.readAsArrayBuffer(blob);
   });

@@ -9,6 +9,7 @@ import { FileDropEvent } from './custom-els/FileDrop';
 import './custom-els/FileDrop';
 
 import * as quantizer from '../../codecs/imagequant/quantizer';
+import * as optiPNG from '../../codecs/optipng/encoder';
 import * as mozJPEG from '../../codecs/mozjpeg/encoder';
 import * as webP from '../../codecs/webp/encoder';
 import * as identity from '../../codecs/identity/encoder';
@@ -89,6 +90,7 @@ async function compressImage(
 ): Promise<File> {
   const compressedData = await (() => {
     switch (encodeData.type) {
+      case optiPNG.type: return optiPNG.encode(image, encodeData.options);
       case mozJPEG.type: return mozJPEG.encode(image, encodeData.options);
       case webP.type: return webP.encode(image, encodeData.options);
       case browserPNG.type: return browserPNG.encode(image, encodeData.options);
