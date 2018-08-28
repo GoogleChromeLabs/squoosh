@@ -107,7 +107,7 @@ async function compressImage(
 
   return new File(
     [compressedData],
-    sourceFilename.replace(/\..+$/, '.' + encoder.extension),
+    sourceFilename.replace(/.[^.]*$/, `.${encoder.extension}`),
     { type: encoder.mimeType },
   );
 }
