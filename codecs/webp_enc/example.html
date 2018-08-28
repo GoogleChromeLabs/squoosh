@@ -20,14 +20,11 @@
   module.onRuntimeInitialized = async _ => {
     console.log('Version:', module.version().toString(16));
     const image = await loadImage('../example.png');
-    const p = module.create_buffer(image.width, image.height);
-    module.HEAP8.set(image.data, p);
-    module.encode(p, image.width, image.height, {
-      quality: 100,
-      image_hint: 0,
+    const result = module.encode(image.data, image.width, image.height, {
+      quality: 75,
       target_size: 0,
       target_PSNR: 0,
-      method: 6,
+      method: 4,
       sns_strength: 50,
       filter_strength: 60,
       filter_sharpness: 0,
@@ -42,7 +39,7 @@
       alpha_compression: 1,
       alpha_filtering: 1,
       alpha_quality: 100,
-      lossless: 1,
+      lossless: 0,
       exact: 0,
       image_hint: 0,
       emulate_jpeg_size: 0,
@@ -52,15 +49,11 @@
       use_delta_palette: 0,
       use_sharp_yuv: 0,
     });
-    const resultPointer = module.get_result_pointer();
-    const resultSize = module.get_result_size();
-    console.log('size', resultSize);
-    const resultView = new Uint8Array(module.HEAP8.buffer, resultPointer, resultSize);
-    const result = new Uint8Array(resultView);
-    module.free_result();
-    module.destroy_buffer(p);
-
+    console.log('size', result.length);
     const blob = new Blob([result], {type: 'image/webp'});
+
+    module.free_result();
+
     const blobURL = URL.createObjectURL(blob);
     const img = document.createElement('img');
     img.src = blobURL;

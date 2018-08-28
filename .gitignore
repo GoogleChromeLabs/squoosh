@@ -3,3 +3,4 @@ node_modules
 /*.log
 *.scss.d.ts
 *.css.d.ts
+*.o

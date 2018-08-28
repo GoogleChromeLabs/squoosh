@@ -34,17 +34,10 @@ export default class WebPEncoder {
   async encode(data: ImageData, options: EncodeOptions): Promise<ArrayBuffer> {
     const module = await this.emscriptenModule;
 
-    const p = module.create_buffer(data.width, data.height);
-    module.HEAP8.set(data.data, p);
-    module.encode(p, data.width, data.height, options);
-    const resultPointer = module.get_result_pointer();
-    const resultSize = module.get_result_size();
-    const resultView = new Uint8Array(module.HEAP8.buffer, resultPointer, resultSize);
+    const resultView = module.encode(data.data, data.width, data.height, options);
     const result = new Uint8Array(resultView);
     module.free_result();
-    module.destroy_buffer(p);
 
-    // wasm can’t run on SharedArrayBuffers, so we hard-cast to ArrayBuffer.
     return result.buffer as ArrayBuffer;
   }
 }

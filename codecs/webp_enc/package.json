@@ -2,7 +2,7 @@
   "name": "webp_enc",
   "scripts": {
     "install": "napa",
-    "build": "docker run --rm -v $(pwd):/src trzeci/emscripten emcc --bind -O3 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s MODULARIZE=1 -s 'EXPORT_NAME=\"webp_enc\"' -I node_modules/libwebp -o ./webp_enc.js -x c node_modules/libwebp/src/{dec,dsp,demux,enc,mux,utils}/*.c -x c++ -std=c++11 webp_enc.cpp "
+    "build": "docker run --rm -v $(pwd):/src trzeci/emscripten emcc --bind -O3 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -s MODULARIZE=1 -s 'EXPORT_NAME=\"webp_enc\"' -I node_modules/libwebp -o ./webp_enc.js -x c node_modules/libwebp/src/{dec,dsp,demux,enc,mux,utils}/*.c -x c++ -std=c++11 webp_enc.cpp"
   },
   "napa": {
     "libwebp": "webmproject/libwebp#v1.0.0"
