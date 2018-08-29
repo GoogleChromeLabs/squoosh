@@ -2,6 +2,10 @@ two-up {
   display: grid;
   position: relative;
   --split-point: 0;
+  --accent-color: #777;
+  --track-color: var(--accent-color);
+  --thumb-background: #fff;
+  --thumb-color: var(--accent-color);
 }
 
 two-up > * {
@@ -18,33 +22,47 @@ two-up[legacy-clip-compat] > :not(.twoUpHandle) {
   touch-action: none;
   position: relative;
   width: 10px;
-  background: red;
+  background: var(--track-color);
   transform: translateX(var(--split-point)) translateX(-50%);
+  box-shadow: inset 4px 0 0 rgba(0,0,0,0.1), 0 1px 4px rgba(0,0,0,0.4);
   will-change: transform;
+  cursor: ew-resize;
 }
 
-.twoUpHandle::after {
-  content: '';
-  display: block;
+.scrubber {
+  display: flex;
   position: absolute;
   top: 50%;
   left: 50%;
+  transform-origin: 50% 50%;
   transform: translate(-50%, -50%);
-  width: 80px;
-  height: 40px;
-  background: red;
-  border-radius: 20px;
+  width: 62px;
+  height: 56px;
+  background: var(--thumb-background);
+  border: 1px solid rgba(0,0,0,0.2);
+  border-radius: 5px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  color: var(--thumb-color);
+}
+.scrubber svg {
+  flex: 1;
+  margin: 0 10px;
 }
 
 two-up[orientation='vertical'] .twoUpHandle {
   width: auto;
-  height: 10px;
+  height: 7px;
   transform: translateY(var(--split-point)) translateY(-50%);
+  box-shadow: inset 0 3px 0 rgba(0,0,0,0.1), 0 1px 4px rgba(0,0,0,0.4);
+  cursor: ns-resize;
 }
 
-two-up[orientation='vertical'] .twoUpHandle::after {
-  width: 40px;
-  height: 80px;
+two-up[orientation='vertical'] .scrubber {
+  width: 46px;
+  height: 40px;
+  font-size: 18px;
+  box-shadow: 1px 0 4px rgba(0,0,0,0.1);
+  transform: translate(-50%, -50%) rotate(-90deg);
 }
 
 two-up > :nth-child(1):not(.twoUpHandle) {
