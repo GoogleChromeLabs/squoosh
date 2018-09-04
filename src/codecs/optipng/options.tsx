@@ -22,7 +22,7 @@ export default class OptiPNGEncoderOptions extends Component<Props, {}> {
     return (
       <form>
         <label>
-          Level:
+          Effort:
           <input
             name="level"
             type="range"
