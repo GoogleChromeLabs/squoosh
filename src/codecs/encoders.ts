@@ -1,4 +1,5 @@
 import * as identity from './identity/encoder';
+import * as optiPNG from './optipng/encoder';
 import * as mozJPEG from './mozjpeg/encoder';
 import * as webP from './webp/encoder';
 import * as browserPNG from './browser-png/encoder';
@@ -15,19 +16,38 @@ export interface EncoderSupportMap {
 }
 
 export type EncoderState =
-  identity.EncoderState | mozJPEG.EncoderState | webP.EncoderState | browserPNG.EncoderState |
-  browserJPEG.EncoderState | browserWebP.EncoderState | browserGIF.EncoderState |
-  browserTIFF.EncoderState | browserJP2.EncoderState | browserBMP.EncoderState |
+  identity.EncoderState |
+  optiPNG.EncoderState |
+  mozJPEG.EncoderState |
+  webP.EncoderState |
+  browserPNG.EncoderState |
+  browserJPEG.EncoderState |
+  browserWebP.EncoderState |
+  browserGIF.EncoderState |
+  browserTIFF.EncoderState |
+  browserJP2.EncoderState |
+  browserBMP.EncoderState |
   browserPDF.EncoderState;
+
 export type EncoderOptions =
-  identity.EncodeOptions | mozJPEG.EncodeOptions | webP.EncodeOptions | browserPNG.EncodeOptions |
-  browserJPEG.EncodeOptions | browserWebP.EncodeOptions | browserGIF.EncodeOptions |
-  browserTIFF.EncodeOptions | browserJP2.EncodeOptions | browserBMP.EncodeOptions |
+  identity.EncodeOptions |
+  optiPNG.EncodeOptions |
+  mozJPEG.EncodeOptions |
+  webP.EncodeOptions |
+  browserPNG.EncodeOptions |
+  browserJPEG.EncodeOptions |
+  browserWebP.EncodeOptions |
+  browserGIF.EncodeOptions |
+  browserTIFF.EncodeOptions |
+  browserJP2.EncodeOptions |
+  browserBMP.EncodeOptions |
   browserPDF.EncodeOptions;
+
 export type EncoderType = keyof typeof encoderMap;
 
 export const encoderMap = {
   [identity.type]: identity,
+  [optiPNG.type]: optiPNG,
   [mozJPEG.type]: mozJPEG,
   [webP.type]: webP,
   [browserPNG.type]: browserPNG,
