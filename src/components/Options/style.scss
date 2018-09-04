@@ -18,6 +18,14 @@ Note: These styles are temporary. They will be replaced before going live.
   &.horizontal {
     border-radius: 1px 1px 5px 5px;
     width: 230px;
+
+    > .inner {
+      max-height: 80vh;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      -ms-touch-action: pan-y;
+      touch-action: pan-y;
+    }
   }
 
   &.vertical {
