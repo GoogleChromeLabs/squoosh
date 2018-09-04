@@ -34,8 +34,8 @@ export default class OptiPng {
   async compress(data: BufferSource, opts: EncodeOptions): Promise<ArrayBuffer> {
     const m = await this.emscriptenModule;
     const result = m.compress(data, opts);
+    const copy = new Uint8Array(result).buffer as ArrayBuffer;
     m.free_result();
-
-    return new Uint8Array(result).buffer as ArrayBuffer;
+    return copy;
   }
 }
