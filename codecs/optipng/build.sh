@@ -42,7 +42,7 @@ echo "Compiling optipng"
 echo "============================================="
 (
   emcc \
-    -o3 \
+    -O3 \
     -Wno-implicit-function-declaration \
     -I ${PREFIX}/include \
     -I node_modules/optipng/src/opngreduc \
@@ -60,7 +60,7 @@ echo "============================================="
     node_modules/optipng/src/optipng/*.c
 
   emcc \
-    --bind -o3 \
+    --bind -O3 \
     -s ALLOW_MEMORY_GROWTH=1 -s MODULARIZE=1 -s 'EXPORT_NAME="optipng"' \
     -I ${PREFIX}/include \
     -I node_modules/optipng/src/opngreduc \
