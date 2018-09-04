@@ -21,12 +21,15 @@ const SIZE = 5;
 
 export default class ResultCache {
   private readonly _entries: CacheEntry[] = [];
-  private _nextIndex: number = 0;
 
   add(entry: CacheEntry) {
     if (entry.encoderState.type === identity.type) throw Error('Cannot cache identity encodes');
-    this._entries[this._nextIndex] = entry;
-    this._nextIndex = (this._nextIndex + 1) % SIZE;
+    // Shift all entries 1 to the right, dropping the last one.
+    let i = SIZE - 1;
+    while (i > 0) {
+      this._entries[i] = this._entries[i -= 1];
+    }
+    this._entries[0] = entry;
   }
 
   match(
@@ -34,7 +37,7 @@ export default class ResultCache {
     preprocessorState: PreprocessorState,
     encoderState: EncoderState,
   ): CacheResult | undefined {
-    const matchingEntry = this._entries.find((entry) => {
+    const matchingIndex = this._entries.findIndex((entry) => {
       // Check for quick exits:
       if (entry.source !== source) return false;
       if (entry.encoderState.type !== encoderState.type) return false;
@@ -55,7 +58,15 @@ export default class ResultCache {
       return true;
     });
 
-    if (matchingEntry) {
+    if (matchingIndex !== -1) {
+      const matchingEntry = this._entries[matchingIndex];
+
+      if (matchingIndex !== 0) {
+        // Move the matched result to 1st position (LRU)
+        this._entries[matchingIndex] = this._entries[0];
+        this._entries[0] = matchingEntry;
+      }
+
       return {
         bmp: matchingEntry.bmp,
         preprocessed: matchingEntry.preprocessed,
