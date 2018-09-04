@@ -144,48 +144,51 @@ export default class Options extends Component<Props, State> {
           )}
         </h2>
 
-        <section class={style.picker}>
-          {encoderSupportMap ?
-            <select value={encoderState.type} onChange={this.onEncoderTypeChange}>
-              {encoders.filter(encoder => encoderSupportMap[encoder.type]).map(encoder => (
-                <option value={encoder.type}>{encoder.label}</option>
-              ))}
-            </select>
-            :
-            <select><option>Loading…</option></select>
+        <div class={style.inner}>
+          <section class={style.picker}>
+            {encoderSupportMap ?
+              <select value={encoderState.type} onChange={this.onEncoderTypeChange}>
+                {encoders.filter(encoder => encoderSupportMap[encoder.type]).map(encoder => (
+                  <option value={encoder.type}>{encoder.label}</option>
+                ))}
+              </select>
+              :
+              <select><option>Loading…</option></select>
+            }
+          </section>
+
+          {encoderState.type !== 'identity' && (
+            <div key="quantization" class={style.quantization}>
+              <label class={style.toggle}>
+                <input
+                  name="quantizer.enable"
+                  type="checkbox"
+                  checked={!!preprocessorState.quantizer.enabled}
+                  onChange={this.onPreprocessorEnabledChange}
+                />
+                Enable Quantization
+              </label>
+              {preprocessorState.quantizer.enabled &&
+                <QuantizerOptionsComponent
+                  options={preprocessorState.quantizer}
+                  onChange={this.onQuantizerOptionsChange}
+                />
+              }
+            </div>
+          )}
+
+          {EncoderOptionComponent &&
+            <EncoderOptionComponent
+              options={
+                // Casting options, as encoderOptionsComponentMap[encodeData.type] ensures
+                // the correct type, but typescript isn't smart enough.
+                encoderState.options as
+                  typeof EncoderOptionComponent['prototype']['props']['options']
+              }
+              onChange={onEncoderOptionsChange}
+            />
           }
-        </section>
-
-        {encoderState.type !== 'identity' && (
-          <div key="quantization" class={style.quantization}>
-            <label class={style.toggle}>
-              <input
-                name="quantizer.enable"
-                type="checkbox"
-                checked={!!preprocessorState.quantizer.enabled}
-                onChange={this.onPreprocessorEnabledChange}
-              />
-              Enable Quantization
-            </label>
-            {preprocessorState.quantizer.enabled &&
-              <QuantizerOptionsComponent
-                options={preprocessorState.quantizer}
-                onChange={this.onQuantizerOptionsChange}
-              />
-            }
-          </div>
-        )}
-
-        {EncoderOptionComponent &&
-          <EncoderOptionComponent
-            options={
-              // Casting options, as encoderOptionsComponentMap[encodeData.type] ensures the correct
-              // type, but typescript isn't smart enough.
-              encoderState.options as typeof EncoderOptionComponent['prototype']['props']['options']
-            }
-            onChange={onEncoderOptionsChange}
-          />
-        }
+        </div>
 
         <div class={style.sizeDetails}>
           <FileSize
