@@ -1,0 +1,19 @@
+<!doctype html>
+<script src='optipng.js'></script>
+<script>
+  const Module = optipng();
+
+  Module.onRuntimeInitialized = async _ => {
+    console.log('Version:', Module.version().toString(16));
+    const image = await fetch('../example_palette.png').then(r => r.arrayBuffer());
+    const newImage = Module.compress(image, {level: 3});
+    console.log('done');
+    Module.free_result();
+
+    console.log(`Old size: ${image.byteLength}, new size: ${newImage.byteLength} (${newImage.byteLength/image.byteLength*100}%)`);
+    const blobURL = URL.createObjectURL(new Blob([newImage], {type: 'image/png'}));
+    const img = document.createElement('img');
+    img.src = blobURL;
+    document.body.appendChild(img);
+  };
+</script>

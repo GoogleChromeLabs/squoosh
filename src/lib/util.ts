@@ -115,10 +115,13 @@ export function canDecodeImage(data: string): Promise<boolean> {
 }
 
 export function blobToArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const fileReader = new FileReader();
     fileReader.addEventListener('load', () => {
-      resolve(fileReader.result);
+      if (fileReader.result instanceof ArrayBuffer) {
+        return resolve(fileReader.result);
+      }
+      reject(Error('Unexpected return type'));
     });
     fileReader.readAsArrayBuffer(blob);
   });

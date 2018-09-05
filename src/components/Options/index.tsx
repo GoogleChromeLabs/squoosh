@@ -3,6 +3,7 @@ import { h, Component } from 'preact';
 import * as style from './style.scss';
 import { bind } from '../../lib/util';
 import { cleanSet, cleanMerge } from '../../lib/clean-modify';
+import OptiPNGEncoderOptions from '../../codecs/optipng/options';
 import MozJpegEncoderOptions from '../../codecs/mozjpeg/options';
 import BrowserJPEGEncoderOptions from '../../codecs/browser-jpeg/options';
 import WebPEncoderOptions from '../../codecs/webp/options';
@@ -11,6 +12,7 @@ import BrowserWebPEncoderOptions from '../../codecs/browser-webp/options';
 import QuantizerOptionsComponent from '../../codecs/imagequant/options';
 
 import * as identity from '../../codecs/identity/encoder';
+import * as optiPNG from '../../codecs/optipng/encoder';
 import * as mozJPEG from '../../codecs/mozjpeg/encoder';
 import * as webP from '../../codecs/webp/encoder';
 import * as browserPNG from '../../codecs/browser-png/encoder';
@@ -39,6 +41,7 @@ import { DownloadIcon } from '../../lib/icons';
 
 const encoderOptionsComponentMap = {
   [identity.type]: undefined,
+  [optiPNG.type]: OptiPNGEncoderOptions,
   [mozJPEG.type]: MozJpegEncoderOptions,
   [webP.type]: WebPEncoderOptions,
   [browserPNG.type]: undefined,
@@ -182,8 +185,7 @@ export default class Options extends Component<Props, State> {
               options={
                 // Casting options, as encoderOptionsComponentMap[encodeData.type] ensures
                 // the correct type, but typescript isn't smart enough.
-                encoderState.options as
-                  typeof EncoderOptionComponent['prototype']['props']['options']
+                encoderState.options as any
               }
               onChange={onEncoderOptionsChange}
             />
