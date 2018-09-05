@@ -18,19 +18,19 @@ export default class QuantizerOptions extends Component<Props, State> {
     maintainAspect: true,
   };
 
-  form: HTMLFormElement = undefined as any as HTMLFormElement;
+  form?: HTMLFormElement;
 
   reportOptions() {
-    const width = this.form.width as HTMLInputElement;
-    const height = this.form.height as HTMLInputElement;
+    const width = this.form!.width as HTMLInputElement;
+    const height = this.form!.height as HTMLInputElement;
 
     if (!width.checkValidity() || !height.checkValidity()) return;
 
     const options: ResizeOptions = {
       width: inputFieldValueAsNumber(width),
       height: inputFieldValueAsNumber(height),
-      method: this.form.resizeMethod.value,
-      fitMethod: this.form.fitMethod.value,
+      method: this.form!.resizeMethod.value,
+      fitMethod: this.form!.fitMethod.value,
     };
     this.props.onChange(options);
   }
@@ -42,7 +42,7 @@ export default class QuantizerOptions extends Component<Props, State> {
 
   componentDidUpdate(prevProps: Props, prevState: State) {
     if (!prevState.maintainAspect && this.state.maintainAspect) {
-      this.form.height.value = Math.round(Number(this.form.width.value) / this.props.aspect);
+      this.form!.height.value = Math.round(Number(this.form!.width.value) / this.props.aspect);
       this.reportOptions();
     }
   }
@@ -51,16 +51,16 @@ export default class QuantizerOptions extends Component<Props, State> {
   onWidthInput(event: Event) {
     if (!this.state.maintainAspect) return;
 
-    const width = inputFieldValueAsNumber(this.form.width);
-    this.form.height.value = Math.round(width / this.props.aspect);
+    const width = inputFieldValueAsNumber(this.form!.width);
+    this.form!.height.value = Math.round(width / this.props.aspect);
   }
 
   @bind
   onHeightInput(event: Event) {
     if (!this.state.maintainAspect) return;
 
-    const height = inputFieldValueAsNumber(this.form.height);
-    this.form.width.value = Math.round(height * this.props.aspect);
+    const height = inputFieldValueAsNumber(this.form!.height);
+    this.form!.width.value = Math.round(height * this.props.aspect);
   }
 
   render({ options, aspect }: Props, { maintainAspect }: State) {
