@@ -1,5 +1,5 @@
 import { h, Component } from 'preact';
-import PinchZoom from './custom-els/PinchZoom';
+import PinchZoom, { ScaleToOpts } from './custom-els/PinchZoom';
 import './custom-els/PinchZoom';
 import './custom-els/TwoUp';
 import * as style from './style.scss';
@@ -18,6 +18,13 @@ interface State {
   editingScale: boolean;
   altBackground: boolean;
 }
+
+const scaleToOpts: ScaleToOpts = {
+  originX: '50%',
+  originY: '50%',
+  relativeTo: 'container',
+  allowChangeEvent: true,
+};
 
 export default class Output extends Component<Props, State> {
   state: State = {
@@ -48,14 +55,6 @@ export default class Output extends Component<Props, State> {
     if (prevProps.rightImg !== this.props.rightImg && this.canvasRight) {
       drawBitmapToCanvas(this.canvasRight, this.props.rightImg);
     }
-
-    const { scale } = this.state;
-    if (scale !== prevState.scale && this.pinchZoomLeft && this.pinchZoomRight) {
-      // @TODO it would be nice if PinchZoom exposed a variant of setTransform() that
-      // preserved translation. It currently only does this for mouse wheel events.
-      this.pinchZoomLeft.setTransform({ scale });
-      this.pinchZoomRight.setTransform({ scale });
-    }
   }
 
   shouldComponentUpdate(nextProps: Props, nextState: State) {
@@ -71,16 +70,16 @@ export default class Output extends Component<Props, State> {
 
   @bind
   zoomIn() {
-    this.setState({
-      scale: Math.min(this.state.scale * 1.25, 100),
-    });
+    if (!this.pinchZoomLeft) throw Error('Missing pinch-zoom element');
+
+    this.pinchZoomLeft.scaleTo(this.state.scale * 1.25, scaleToOpts);
   }
 
   @bind
   zoomOut() {
-    this.setState({
-      scale: Math.max(this.state.scale / 1.25, 0.0001),
-    });
+    if (!this.pinchZoomLeft) throw Error('Missing pinch-zoom element');
+
+    this.pinchZoomLeft.scaleTo(this.state.scale / 1.25, scaleToOpts);
   }
 
   @bind
@@ -100,9 +99,9 @@ export default class Output extends Component<Props, State> {
     const target = event.target as HTMLInputElement;
     const percent = parseFloat(target.value);
     if (isNaN(percent)) return;
-    this.setState({
-      scale: percent / 100,
-    });
+    if (!this.pinchZoomLeft) throw Error('Missing pinch-zoom element');
+
+    this.pinchZoomLeft.scaleTo(percent / 100, scaleToOpts);
   }
 
   @bind
