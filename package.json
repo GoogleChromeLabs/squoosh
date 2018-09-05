@@ -18,6 +18,7 @@
   },
   "devDependencies": {
     "@types/node": "^9.6.23",
+    "@types/pretty-bytes": "^5.1.0",
     "@types/webassembly-js-api": "0.0.1",
     "babel-loader": "^7.1.5",
     "babel-plugin-jsx-pragmatic": "^1.0.2",
@@ -62,15 +63,10 @@
     "webpack-plugin-replace": "^1.1.1"
   },
   "dependencies": {
-    "@types/filesize": "^3.6.0",
     "classnames": "^2.2.6",
     "comlink": "^3.0.3",
     "comlink-loader": "^1.0.0",
-    "filesize": "^3.6.1",
-    "material-components-web": "^0.32.0",
     "preact": "^8.3.1",
-    "preact-i18n": "^1.2.2",
-    "preact-material-components": "^1.4.7",
-    "preact-router": "^2.6.1"
+    "pretty-bytes": "^5.1.0"
   }
 }

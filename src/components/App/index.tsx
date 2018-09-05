@@ -1,5 +1,4 @@
 import { h, Component } from 'preact';
-import { partial } from 'filesize';
 
 import { bind, linkRef, bitmapToImageData } from '../../lib/util';
 import * as style from './style.scss';
@@ -38,6 +37,8 @@ import {
 import { decodeImage } from '../../codecs/decoders';
 import { cleanMerge, cleanSet } from '../../lib/clean-modify';
 
+type Orientation = 'horizontal' | 'vertical';
+
 interface SourceImage {
   file: File;
   bmp: ImageBitmap;
@@ -65,13 +66,12 @@ interface State {
   images: [EncodedImage, EncodedImage];
   loading: boolean;
   error?: string;
+  orientation: Orientation;
 }
 
 interface UpdateImageOptions {
   skipPreprocessing?: boolean;
 }
-
-const filesize = partial({});
 
 async function preprocessImage(
   source: SourceImage,
@@ -115,6 +115,8 @@ async function compressImage(
 }
 
 export default class App extends Component<Props, State> {
+  widthQuery = window.matchMedia('(min-width: 500px)');
+
   state: State = {
     loading: false,
     images: [
@@ -133,6 +135,7 @@ export default class App extends Component<Props, State> {
         loading: false,
       },
     ],
+    orientation: this.widthQuery.matches ? 'horizontal' : 'vertical',
   };
 
   private snackbar?: SnackBarElement;
@@ -148,6 +151,13 @@ export default class App extends Component<Props, State> {
         window.STATE = this.state;
       };
     }
+
+    this.widthQuery.addListener(this.onMobileWidthChange);
+  }
+
+  @bind
+  onMobileWidthChange() {
+    this.setState({ orientation: this.widthQuery.matches ? 'horizontal' : 'vertical' });
   }
 
   onEncoderTypeChange(index: 0 | 1, newType: EncoderType): void {
@@ -289,33 +299,32 @@ export default class App extends Component<Props, State> {
     this.snackbar.showSnackbar({ message: error });
   }
 
-  render({ }: Props, { loading, images }: State) {
+  render({ }: Props, { loading, images, source, orientation }: State) {
     const [leftImageBmp, rightImageBmp] = images.map(i => i.bmp);
     const anyLoading = loading || images.some(image => image.loading);
 
     return (
       <file-drop accept="image/*" onfiledrop={this.onFileDrop}>
-        <div id="app" class={style.app}>
+        <div id="app" class={`${style.app} ${style[orientation]}`}>
           {(leftImageBmp && rightImageBmp) ? (
-            <Output leftImg={leftImageBmp} rightImg={rightImageBmp} />
+            <Output
+              orientation={orientation}
+              leftImg={leftImageBmp}
+              rightImg={rightImageBmp}
+            />
           ) : (
-              <div class={style.welcome}>
-                <h1>Select an image</h1>
-                <input type="file" onChange={this.onFileChange} />
-              </div>
-            )}
-          {images.map((image, index) => (
-            <span class={index ? style.rightLabel : style.leftLabel}>
-              {encoderMap[image.encoderState.type].label}
-              {(image.downloadUrl && image.file) && (
-                <a href={image.downloadUrl} download={image.file.name}>🔻</a>
-              )}
-              {image.file && ` - ${filesize(image.file.size)}`}
-            </span>
-          ))}
-          {images.map((image, index) => (
+            <div class={style.welcome}>
+              <h1>Drop, paste or select an image</h1>
+              <input type="file" onChange={this.onFileChange} />
+            </div>
+          )}
+          {(leftImageBmp && rightImageBmp) && images.map((image, index) => (
             <Options
-              class={index ? style.rightOptions : style.leftOptions}
+              orientation={orientation}
+              imageIndex={index}
+              imageFile={image.file}
+              sourceImageFile={source && source.file}
+              downloadUrl={image.downloadUrl}
               preprocessorState={image.preprocessorState}
               encoderState={image.encoderState}
               onEncoderTypeChange={this.onEncoderTypeChange.bind(this, index)}

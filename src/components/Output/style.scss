@@ -14,13 +14,124 @@ Note: These styles are temporary. They will be replaced before going live.
 
 .output {
   @extend %fill;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"><path fill="rgba(0,0,0,0.05)" d="M0 0h10v10H0zM10 10h10v10H10z"/></svg>') center repeat;
+
+  &:before {
+    content: '';
+    @extend %fill;
+    background: #000;
+    opacity: 0;
+    transition: opacity 500ms ease;
+  }
+  &.altBackground:before {
+    opacity: .6;
+  }
 
   > two-up {
     @extend %fill;
+    --accent-color: var(--button-fg);
 
     > pinch-zoom {
       @extend %fill;
+      outline: none;
     }
+  }
+}
+
+.controls {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  left: 220px;
+  right: 220px;
+  bottom: 0;
+  padding: 9px;
+  overflow: hidden;
+  flex-wrap: wrap;
+  contain: content;
+
+  @media (max-width: 680px) {
+    top: 0;
+    bottom: auto;
+    left: 0;
+    right: 0;
+  }
+
+  > * {
+    z-index: 2;
+  }
+
+  .group {
+    display: flex;
+  }
+
+  .button,
+  .zoom {
+    display: flex;
+    align-items: center;
+    flex: 0;
+    box-sizing: border-box;
+    height: 48px;
+    padding: 0 16px;
+    margin: 4px;
+    background-color: #fff;
+    border: 1px solid rgba(0,0,0,0.2);
+    border-radius: 5px;
+    line-height: 1;
+    font-size: 110%;
+    white-space: nowrap;
+
+    &:focus {
+      box-shadow: 0 0 0 2px var(--button-fg);
+      outline: none;
+      z-index: 1;
+    }
+  }
+
+  .button {
+    text-transform: uppercase;
+    color: var(--button-fg);
+    cursor: pointer;
+    text-indent: 6px;
+  }
+
+  .button:hover {
+    background-color: #eee;
+  }
+
+  .zoom {
+    flex: 0 0 6em;
+    color: #625E80;
+    font: inherit;
+    cursor: text;
+    width: 6em;
+    text-align: center;
+    justify-content: center;
+
+    &:focus {
+      box-shadow: inset 0 1px 4px rgba(0,0,0,0.2), 0 0 0 2px var(--button-fg);
+    }
+
+    strong {
+      position: relative;
+      top: 1px;
+      margin: 0 3px 0 0;
+      color: #888;
+      font-weight: normal;
+      border-bottom: 1px dashed #999;
+    }
+  }
+
+  .group > :not(:first-child) {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    margin-left: 0;
+  }
+  .group > :not(:last-child) {
+    margin-right: 0;
+    border-right-width: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
   }
 }
 

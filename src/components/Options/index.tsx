@@ -30,10 +30,14 @@ import {
     encoders,
     encodersSupported,
     EncoderSupportMap,
+    encoderMap,
 } from '../../codecs/encoders';
 import { QuantizeOptions } from '../../codecs/imagequant/quantizer';
 
 import { PreprocessorState } from '../../codecs/preprocessors';
+
+import FileSize from '../FileSize';
+import { DownloadIcon } from '../../lib/icons';
 
 const encoderOptionsComponentMap = {
   [identity.type]: undefined,
@@ -51,8 +55,17 @@ const encoderOptionsComponentMap = {
   [browserPDF.type]: undefined,
 };
 
+const titles = {
+  horizontal: ['Left Image', 'Right Image'],
+  vertical: ['Top Image', 'Bottom Image'],
+};
+
 interface Props {
-  class?: string;
+  orientation: 'horizontal' | 'vertical';
+  imageIndex: number;
+  sourceImageFile?: File;
+  imageFile?: File;
+  downloadUrl?: string;
   encoderState: EncoderState;
   preprocessorState: PreprocessorState;
   onEncoderTypeChange(newType: EncoderType): void;
@@ -100,57 +113,94 @@ export default class Options extends Component<Props, State> {
   }
 
   render(
-    { class: className, encoderState, preprocessorState, onEncoderOptionsChange }: Props,
+    {
+      sourceImageFile,
+      imageIndex,
+      imageFile,
+      downloadUrl,
+      orientation,
+      encoderState,
+      preprocessorState,
+      onEncoderOptionsChange,
+    }: Props,
     { encoderSupportMap }: State,
   ) {
     // tslint:disable variable-name
     const EncoderOptionComponent = encoderOptionsComponentMap[encoderState.type];
 
     return (
-      <div class={`${style.options}${className ? (' ' + className) : ''}`}>
-        {encoderState.type !== 'identity' && (
-          <div>
-            <p>Quantization</p>
-            <label>
-              <input
-                name="quantizer.enable"
-                type="checkbox"
-                checked={!!preprocessorState.quantizer.enabled}
-                onChange={this.onPreprocessorEnabledChange}
-              />
-              Enable
-            </label>
-            {preprocessorState.quantizer.enabled &&
-              <QuantizerOptionsComponent
-                options={preprocessorState.quantizer}
-                onChange={this.onQuantizerOptionsChange}
-              />
+      <div class={`${style.options} ${style[orientation]}`}>
+        <h2 class={style.title}>
+          {titles[orientation][imageIndex]}
+          {', '}
+          {encoderMap[encoderState.type].label}
+
+          {(downloadUrl && imageFile) && (
+            <a
+              class={style.download}
+              href={downloadUrl}
+              download={imageFile.name}
+              title="Download"
+            >
+              <DownloadIcon />
+            </a>
+          )}
+        </h2>
+
+        <div class={style.inner}>
+          <section class={style.picker}>
+            {encoderSupportMap ?
+              <select value={encoderState.type} onChange={this.onEncoderTypeChange}>
+                {encoders.filter(encoder => encoderSupportMap[encoder.type]).map(encoder => (
+                  <option value={encoder.type}>{encoder.label}</option>
+                ))}
+              </select>
+              :
+              <select><option>Loading…</option></select>
             }
-            <hr/>
-          </div>
-        )}
-        <label>
-          Mode:
-          {encoderSupportMap ?
-            <select value={encoderState.type} onChange={this.onEncoderTypeChange}>
-              {encoders.filter(encoder => encoderSupportMap[encoder.type]).map(encoder => (
-                <option value={encoder.type}>{encoder.label}</option>
-              ))}
-            </select>
-            :
-            <select><option>Loading…</option></select>
+          </section>
+
+          {encoderState.type !== 'identity' && (
+            <div key="quantization" class={style.quantization}>
+              <label class={style.toggle}>
+                <input
+                  name="quantizer.enable"
+                  type="checkbox"
+                  checked={!!preprocessorState.quantizer.enabled}
+                  onChange={this.onPreprocessorEnabledChange}
+                />
+                Enable Quantization
+              </label>
+              {preprocessorState.quantizer.enabled &&
+                <QuantizerOptionsComponent
+                  options={preprocessorState.quantizer}
+                  onChange={this.onQuantizerOptionsChange}
+                />
+              }
+            </div>
+          )}
+
+          {EncoderOptionComponent &&
+            <EncoderOptionComponent
+              options={
+                // Casting options, as encoderOptionsComponentMap[encodeData.type] ensures
+                // the correct type, but typescript isn't smart enough.
+                encoderState.options as any
+              }
+              onChange={onEncoderOptionsChange}
+            />
           }
-        </label>
-        {EncoderOptionComponent &&
-          <EncoderOptionComponent
-            options={
-              // Casting options, as encoderOptionsComponentMap[encodeData.type] ensures the correct
-              // type, but typescript isn't smart enough.
-              encoderState.options as any
-            }
-            onChange={onEncoderOptionsChange}
+        </div>
+
+        <div class={style.sizeDetails}>
+          <FileSize
+            class={style.size}
+            increaseClass={style.increase}
+            decreaseClass={style.decrease}
+            file={imageFile}
+            compareTo={imageFile === sourceImageFile ? undefined : sourceImageFile}
           />
-        }
+        </div>
       </div>
     );
   }

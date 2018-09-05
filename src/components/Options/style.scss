@@ -3,36 +3,165 @@ Note: These styles are temporary. They will be replaced before going live.
 */
 
 .options {
-    width: 180px;
-    padding: 10px;
-    background: rgba(50,50,50,0.8);
-    border: 1px solid #222;
-    box-shadow: inset 0 0 1px #fff, 0 0 1px #fff;
-    border-radius: 3px;
-    color: #eee;
-    overflow: auto;
-    z-index: 1;
-    transition: opacity 300ms ease;
+  box-sizing: border-box;
+  padding: 0;
+  background: rgba(40,40,40,0.8);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  color: #eee;
+  overflow: auto;
+  z-index: 1;
+  opacity: 0.9;
+  transform-origin: 50% 140%;
+  transition: opacity 300ms linear;
+  animation: options-open 500ms cubic-bezier(.6,1.6,.6,1) forwards 1;
 
-    &:not(:hover) {
-        opacity: .6;
+  &.horizontal {
+    border-radius: 1px 1px 5px 5px;
+    width: 230px;
+
+    > .inner {
+      max-height: 80vh;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      -ms-touch-action: pan-y;
+      touch-action: pan-y;
+    }
+  }
+
+  &.vertical {
+    opacity: 1;
+    margin: 0 5px 10px;
+    border-radius: 0 0 5px 5px;
+  }
+
+  &:hover, &:focus, &:focus-within {
+    opacity: 1;
+  }
+
+  @keyframes options-open {
+    from {
+      transform: translateY(100px) scale(.8);
+    }
+  }
+
+  .picker {
+    margin: 5px 15px;
+
+    select {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      -webkit-appearance: none;
+      appearance: none;
+      padding: 10px 30px 10px 10px;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="25" height="5"><polygon fill="#fff" points="10,0 5,5 0,0"/></svg>') right center no-repeat;
+      background-color: var(--gray-dark);
+      opacity: 0.9;
+      border: none;
+      font: inherit;
+      color: white;
+
+      &:hover {
+        opacity: 1;
+      }
+      &:focus {
+        opacity: 1;
+        outline: none;
+        box-shadow: 0 0 0 2px var(--button-fg, #ccc);
+      }
+    }
+  }
+
+  .title {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    margin: 0 0 12px;
+    background: rgba(0,0,0,0.9);
+    font: inherit;
+
+    .download {
+      flex: 0;
+      margin: 0 0 0 auto;
+      background: rgba(0,0,0,0.7);
+      border-radius: 50%;
+      padding: 5px;
+      width: 16px;
+      height: 16px;
+      text-decoration: none;
+
+      > svg {
+        width: 16px;
+        height: 16px;
+        fill: #fff;
+      }
+
+      &:hover {
+        background-color: rgba(255,255,255,0.3);
+      }
+    }
+  }
+
+  label {
+    display: block;
+    padding: 5px;
+    margin: 0 10px;
+
+    input {
+      vertical-align: middle;
     }
 
-    label {
-        display: block;
-        padding: 5px;
-        font-weight: bold;
+    input[type=checkbox],
+    input[type=radio] {
+      margin-right: 8px;
+    }
 
-        select {
-            margin-left: 5px;
+    range-input {
+      display: block;
+      width: 90%;
+    }
+  }
+
+  .size-details {
+    padding: 5px 15px;
+    background: rgba(0,0,0,0.5);
+
+    .size {
+      font-weight: normal;
+
+      .increase,
+      .decrease {
+        font-style: italic;
+        filter: #{"grayscale(calc(50% - var(--size-delta, 50) * 0.5%))"};
+
+        &:before {
+          content: ' (';
         }
-
-        input {
-            vertical-align: middle;
+        &:after {
+          content: ')';
         }
-    }
+      }
 
-    pre {
-        font-size: 10px;
+      .increase {
+        color: var(--negative);
+      }
+      .decrease {
+        color: var(--positive);
+      }
     }
+  }
+}
+
+
+.quantization {
+  padding: 5px 0;
+  margin: 5px 0;
+  box-shadow: inset 0 -.5px 0 rgba(0,0,0,0.25), 0 .5px 0 rgba(255,255,255,0.15);
+
+  .toggle {
+    display: flex;
+    position: relative;
+    align-content: center;
+    font-size: 14px;
+  }
 }
