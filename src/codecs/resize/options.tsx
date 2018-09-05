@@ -13,7 +13,7 @@ interface State {
   maintainAspect: boolean;
 }
 
-export default class QuantizerOptions extends Component<Props, State> {
+export default class ResizerOptions extends Component<Props, State> {
   state: State = {
     maintainAspect: true,
   };
