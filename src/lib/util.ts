@@ -154,8 +154,35 @@ export async function sniffMimeType(blob: Blob): Promise<string> {
   return '';
 }
 
-export function createImageBitmapPolyfill(blob: Blob): Promise<ImageBitmap> {
-  return createImageBitmap(blob);
+type CreateImageBitmapInput = HTMLImageElement | SVGImageElement | HTMLVideoElement |
+  HTMLCanvasElement | ImageBitmap | ImageData | Blob;
+
+export function createImageBitmapPolyfill(
+  image: CreateImageBitmapInput,
+  options?: ImageBitmapOptions,
+): Promise<ImageBitmap>;
+export function createImageBitmapPolyfill(
+  image: CreateImageBitmapInput,
+  sx: number,
+  sy: number,
+  sw: number,
+  sh: number,
+  options?: ImageBitmapOptions,
+): Promise<ImageBitmap>;
+export function createImageBitmapPolyfill(
+  image: CreateImageBitmapInput,
+  sxOrOptions?: number | ImageBitmapOptions,
+  sy?: number,
+  sw?: number,
+  sh?: number,
+  options?: ImageBitmapOptions,
+): Promise<ImageBitmap> {
+  if (sxOrOptions === undefined || typeof sxOrOptions !== 'number') {
+    // sxOrOptions is absent or an options object
+    return createImageBitmap(image, sxOrOptions);
+  }
+  // sxOrOptions is a number
+  return createImageBitmap(image, sxOrOptions, sy!, sw!, sh!, options);
 }
 
 /**
