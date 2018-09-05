@@ -6,7 +6,14 @@ interface Point {
   clientY: number;
 }
 
-interface ApplyChangeOpts {
+interface ChangeOptions {
+  /**
+   * Fire a 'change' event if values are different to current values
+   */
+  allowChangeEvent?: boolean;
+}
+
+interface ApplyChangeOpts extends ChangeOptions {
   panX?: number;
   panY?: number;
   scaleDiff?: number;
@@ -14,14 +21,21 @@ interface ApplyChangeOpts {
   originY?: number;
 }
 
-interface SetTransformOpts {
+interface SetTransformOpts extends ChangeOptions {
   scale?: number;
   x?: number;
   y?: number;
-  /**
-   * Fire a 'change' event if values are different to current values
-   */
-  allowChangeEvent?: boolean;
+}
+
+type ScaleRelativeToValues = 'container' | 'content';
+
+export interface ScaleToOpts extends ChangeOptions {
+  /** Transform origin. Can be a number, or string percent, eg "50%" */
+  originX?: number | string;
+  /** Transform origin. Can be a number, or string percent, eg "50%" */
+  originY?: number | string;
+  /** Should the transform origin be relative to the container, or content? */
+  relativeTo?: ScaleRelativeToValues;
 }
 
 function getDistance(a: Point, b?: Point): number {
@@ -36,6 +50,15 @@ function getMidpoint(a: Point, b?: Point): Point {
     clientX: (a.clientX + b.clientX) / 2,
     clientY: (a.clientY + b.clientY) / 2,
   };
+}
+
+function getAbsoluteValue(value: string | number, max: number): number {
+  if (typeof value === 'number') return value;
+
+  if (value.trimRight().endsWith('%')) {
+    return max * parseFloat(value) / 100;
+  }
+  return parseFloat(value);
 }
 
 // I'd rather use DOMMatrix/DOMPoint here, but the browser support isn't good enough.
@@ -53,6 +76,8 @@ function createMatrix(): SVGMatrix {
 function createPoint(): SVGPoint {
   return getSVG().createSVGPoint();
 }
+
+const MIN_SCALE = 0.01;
 
 export default class PinchZoom extends HTMLElement {
   // The element that we'll transform.
@@ -101,6 +126,45 @@ export default class PinchZoom extends HTMLElement {
 
   get scale() {
     return this._transform.a;
+  }
+
+  /**
+   * Change the scale, adjusting x/y by a given transform origin.
+   */
+  scaleTo(scale: number, opts: ScaleToOpts = {}) {
+    let {
+      originX = 0,
+      originY = 0,
+    } = opts;
+
+    const {
+      relativeTo = 'content',
+      allowChangeEvent = false,
+    } = opts;
+
+    const relativeToEl = (relativeTo === 'content' ? this._positioningEl : this);
+
+    // No content element? Fall back to just setting scale
+    if (!relativeToEl) {
+      this.setTransform({ scale, allowChangeEvent });
+      return;
+    }
+
+    const rect = relativeToEl.getBoundingClientRect();
+    originX = getAbsoluteValue(originX, rect.width);
+    originY = getAbsoluteValue(originY, rect.height);
+
+    if (relativeTo === 'content') {
+      originX += this.x;
+      originY += this.y;
+    }
+
+    this._applyChange({
+      allowChangeEvent,
+      originX,
+      originY,
+      scaleDiff: scale / this.scale,
+    });
   }
 
   /**
@@ -175,6 +239,9 @@ export default class PinchZoom extends HTMLElement {
    * Update transform values without checking bounds. This is only called in setTransform.
    */
   _updateTransform(scale: number, x: number, y: number, allowChangeEvent: boolean) {
+    // Avoid scaling to zero
+    if (scale < MIN_SCALE) return;
+
     // Return if there's no change
     if (
       scale === this.scale &&
@@ -217,7 +284,7 @@ export default class PinchZoom extends HTMLElement {
     }
 
     // Do a bounds check
-    this.setTransform();
+    this.setTransform({ allowChangeEvent: true });
   }
 
   private _onWheel(event: WheelEvent) {
@@ -240,6 +307,7 @@ export default class PinchZoom extends HTMLElement {
       scaleDiff,
       originX: event.clientX - thisRect.left,
       originY: event.clientY - thisRect.top,
+      allowChangeEvent: true,
     });
   }
 
@@ -264,6 +332,7 @@ export default class PinchZoom extends HTMLElement {
       originX, originY, scaleDiff,
       panX: newMidpoint.clientX - prevMidpoint.clientX,
       panY: newMidpoint.clientY - prevMidpoint.clientY,
+      allowChangeEvent: true,
     });
   }
 
@@ -273,6 +342,7 @@ export default class PinchZoom extends HTMLElement {
       panX = 0, panY = 0,
       originX = 0, originY = 0,
       scaleDiff = 1,
+      allowChangeEvent = false,
     } = opts;
 
     const matrix = createMatrix()
@@ -287,10 +357,10 @@ export default class PinchZoom extends HTMLElement {
 
     // Convert the transform into basic translate & scale.
     this.setTransform({
+      allowChangeEvent,
       scale: matrix.a,
       x: matrix.e,
       y: matrix.f,
-      allowChangeEvent: true,
     });
   }
 }
