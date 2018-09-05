@@ -2,7 +2,7 @@ import { bitmapToImageData } from '../../lib/util';
 
 type CreateImageBitmapResize = 'pixelated' | 'low' | 'medium' | 'high';
 
-export async function quantize(data: ImageData, opts: ResizeOptions): Promise<ImageData> {
+export async function resize(data: ImageData, opts: ResizeOptions): Promise<ImageData> {
   let sx = 0;
   let sy = 0;
   let sw = data.width;
