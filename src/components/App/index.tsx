@@ -81,7 +81,7 @@ async function preprocessImage(
 ): Promise<ImageData> {
   let result = source.data;
   if (preprocessData.resize.enabled) {
-    result = await resizer.quantize(result, preprocessData.resize);
+    result = await resizer.resize(result, preprocessData.resize);
   }
   if (preprocessData.quantizer.enabled) {
     result = await quantizer.quantize(result, preprocessData.quantizer);
