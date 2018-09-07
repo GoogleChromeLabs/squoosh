@@ -24,12 +24,10 @@ export default class ResultCache {
 
   add(entry: CacheEntry) {
     if (entry.encoderState.type === identity.type) throw Error('Cannot cache identity encodes');
-    // Shift all entries 1 to the right, dropping the last one.
-    let i = SIZE - 1;
-    while (i > 0) {
-      this._entries[i] = this._entries[i -= 1];
-    }
-    this._entries[0] = entry;
+    // Add the new entry to the start
+    this._entries.unshift(entry);
+    // Remove the last entry if we're now bigger than SIZE
+    if (this._entries.length > SIZE) this._entries.pop();
   }
 
   match(
@@ -58,22 +56,20 @@ export default class ResultCache {
       return true;
     });
 
-    if (matchingIndex !== -1) {
-      const matchingEntry = this._entries[matchingIndex];
+    if (matchingIndex === -1) return undefined;
 
-      if (matchingIndex !== 0) {
-        // Move the matched result to 1st position (LRU)
-        this._entries[matchingIndex] = this._entries[0];
-        this._entries[0] = matchingEntry;
-      }
+    const matchingEntry = this._entries[matchingIndex];
 
-      return {
-        bmp: matchingEntry.bmp,
-        preprocessed: matchingEntry.preprocessed,
-        file: matchingEntry.file,
-      };
+    if (matchingIndex !== 0) {
+      // Move the matched result to 1st position (LRU)
+      this._entries.splice(matchingIndex, 1);
+      this._entries.unshift(matchingEntry);
     }
 
-    return undefined;
+    return {
+      bmp: matchingEntry.bmp,
+      preprocessed: matchingEntry.preprocessed,
+      file: matchingEntry.file,
+    };
   }
 }
