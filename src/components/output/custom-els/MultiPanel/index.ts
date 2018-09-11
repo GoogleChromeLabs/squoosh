@@ -33,7 +33,7 @@ export default class MultiPanel extends HTMLElement {
 
   // Click event handler
   private _onClick(event: MouseEvent) {
-    const el: Element = event.target as Element;
+    const el = event.target as Element;
     const heading = getClosestHeading(el);
     if (!heading) return;
     this._expand(heading);
@@ -43,7 +43,6 @@ export default class MultiPanel extends HTMLElement {
   private _onKeyDown(event: KeyboardEvent) {
     const selectedEl = document.activeElement;
     const heading = getClosestHeading(selectedEl);
-
     // if keydown event is not on heading element, ignore
     if (!heading) return;
 
@@ -70,6 +69,7 @@ export default class MultiPanel extends HTMLElement {
         newHeading = this._lastHeading();
         break;
 
+      // this has 3 cases listed to support IEs and FF before 37
       case 'Enter':
       case ' ':
       case 'Spacebar':
