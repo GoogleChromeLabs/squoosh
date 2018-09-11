@@ -7,5 +7,5 @@ multi-panel > .panel-content {
   transition: height 1s;
 }
 multi-panel > .panel-content[expanded] {
-  height:30px;
+  height:auto;
 }
