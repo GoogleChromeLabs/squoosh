@@ -43,8 +43,12 @@ export default class MultiPanel extends HTMLElement {
   private _onKeyDown(event: KeyboardEvent) {
     const selectedEl = document.activeElement;
     const heading = getClosestHeading(selectedEl);
+    
     // if keydown event is not on heading element, ignore
     if (!heading) return;
+
+    // if something inside of heading has focus, ignore
+    if (selectedEl !== heading) return;
 
     // don’t handle modifier shortcuts used by assistive technology.
     if (event.altKey) return;
