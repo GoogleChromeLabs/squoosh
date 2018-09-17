@@ -38,8 +38,12 @@ export default class TwoUp extends HTMLElement {
       .observe(this, { childList: true });
 
     // Watch for element size changes.
-    new ResizeObserver(() => this._resetPosition())
-      .observe(this);
+    if (window.hasOwnProperty('ResizeObserver')) {
+      new ResizeObserver(() => this._resetPosition())
+        .observe(this);
+    } else {
+      window.addEventListener('resize', () => this._resetPosition());
+    }
 
     // Watch for pointers on the handle.
     const pointerTracker: PointerTracker = new PointerTracker(this._handle, {
