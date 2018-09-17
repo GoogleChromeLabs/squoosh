@@ -37,6 +37,10 @@ export default class TwoUp extends HTMLElement {
     new MutationObserver(() => this._childrenChange())
       .observe(this, { childList: true });
 
+    // Watch for element size changes.
+    new ResizeObserver(() => this._resetPosition())
+      .observe(this);
+
     // Watch for pointers on the handle.
     const pointerTracker: PointerTracker = new PointerTracker(this._handle, {
       start: (_, event) => {
@@ -57,7 +61,7 @@ export default class TwoUp extends HTMLElement {
 
   connectedCallback() {
     this._handle.innerHTML = `<div class="${styles.scrubber}">${
-      `<svg viewBox="0 0 20 10" fill="currentColor"><path d="M8 0v10L0 5zM12 0v10l8-5z"/></svg>`
+      '<svg viewBox="0 0 20 10" fill="currentColor"><path d="M8 0v10L0 5zM12 0v10l8-5z"/></svg>'
     }</div>`;
 
     this._childrenChange();
