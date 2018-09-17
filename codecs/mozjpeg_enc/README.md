@@ -6,8 +6,6 @@
 ## Dependencies
 
 - Docker
-- Automake
-- pkg-config
 
 ## Example
 
