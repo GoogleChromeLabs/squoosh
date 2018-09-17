@@ -42,7 +42,7 @@ export default class TwoUp extends HTMLElement {
       .observe(this, { childList: true });
 
     // Watch for element size changes.
-    if (window.hasOwnProperty('ResizeObserver')) {
+    if ('ResizeObserver' in window) {
       new ResizeObserver(() => this._resetPosition())
         .observe(this);
     } else {
