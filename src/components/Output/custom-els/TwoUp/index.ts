@@ -19,6 +19,10 @@ export default class TwoUp extends HTMLElement {
    */
   private _position = 0;
   /**
+   * The position of the split in %.
+   */
+  private _relativePosition = 0.5;
+  /**
    * The value of _position when the pointer went down.
    */
   private _positionOnPointerStart = 0;
@@ -85,7 +89,8 @@ export default class TwoUp extends HTMLElement {
     // Set the initial position of the handle.
     requestAnimationFrame(() => {
       const bounds = this.getBoundingClientRect();
-      this._position = (this.orientation === 'vertical' ? bounds.height : bounds.width) / 2;
+      this._position = (this.orientation === 'vertical' ?
+          bounds.height : bounds.width) * this._relativePosition;
       this._setPosition();
     });
   }
@@ -146,6 +151,7 @@ export default class TwoUp extends HTMLElement {
 
     // Clamp position to element bounds.
     this._position = Math.max(0, Math.min(this._position, bounds[dimensionAxis]));
+    this._relativePosition = this._position / bounds[dimensionAxis];
     this._setPosition();
   }
 
