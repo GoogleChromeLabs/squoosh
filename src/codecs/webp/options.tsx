@@ -74,9 +74,8 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
       <div>
         <label>
           Effort:
-          <input
+          <range-input
             name="lossless_preset"
-            type="range"
             min="0"
             max="9"
             value={'' + determineLosslessQuality(options.quality)}
@@ -85,10 +84,9 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
         </label>
         <label>
           Slight loss:
-          <input
+          <range-input
             class={styles.flipRange}
             name="near_lossless"
-            type="range"
             min="0"
             max="100"
             value={'' + options.near_lossless}
@@ -119,9 +117,8 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
       <div>
         <label>
           Effort:
-          <input
+          <range-input
             name="method_input"
-            type="range"
             min="0"
             max="6"
             value={'' + options.method}
@@ -130,9 +127,8 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
         </label>
         <label>
           Quality:
-          <input
+          <range-input
             name="quality"
-            type="range"
             min="0"
             max="100"
             step="0.01"
@@ -151,9 +147,8 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
         </label>
         <label>
           Alpha quality:
-          <input
+          <range-input
             name="alpha_quality"
-            type="range"
             min="0"
             max="100"
             value={'' + options.alpha_quality}
@@ -162,9 +157,8 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
         </label>
         <label>
           Alpha filter quality:
-          <input
+          <range-input
             name="alpha_filtering"
-            type="range"
             min="0"
             max="2"
             value={'' + options.alpha_filtering}
@@ -173,9 +167,8 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
         </label>
         <label>
           Spacial noise shaping:
-          <input
+          <range-input
             name="sns_strength"
-            type="range"
             min="0"
             max="100"
             value={'' + options.sns_strength}
@@ -193,9 +186,8 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
         </label>
         <label>
           Filter strength:
-          <input
+          <range-input
             name="filter_strength"
-            type="range"
             min="0"
             max="100"
             disabled={!!options.autofilter}
@@ -214,10 +206,9 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
         </label>
         <label>
           Filter sharpness:
-          <input
+          <range-input
             class={styles.flipRange}
             name="filter_sharpness"
-            type="range"
             min="0"
             max="7"
             value={'' + options.filter_sharpness}
@@ -235,9 +226,8 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
         </label>
         <label>
           Passes:
-          <input
+          <range-input
             name="pass"
-            type="range"
             min="1"
             max="10"
             value={'' + options.pass}
@@ -258,9 +248,8 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
         </label>
         <label>
           Segments:
-          <input
+          <range-input
             name="segments"
-            type="range"
             min="1"
             max="4"
             value={'' + options.segments}
@@ -269,9 +258,8 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
         </label>
         <label>
           Partitions:
-          <input
+          <range-input
             name="partitions"
-            type="range"
             min="0"
             max="3"
             value={'' + options.partitions}

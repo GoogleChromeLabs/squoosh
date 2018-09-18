@@ -35,9 +35,8 @@ export default function qualityOption(opts: QualityOptionArg = {}) {
         <div>
           <label>
             Quality:
-            <input
+            <range-input
               name="quality"
-              type="range"
               min={min}
               max={max}
               step={step || 'any'}
