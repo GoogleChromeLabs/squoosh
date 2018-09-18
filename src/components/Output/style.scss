@@ -34,6 +34,9 @@ Note: These styles are temporary. They will be replaced before going live.
     > pinch-zoom {
       @extend %fill;
       outline: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
   }
 }
