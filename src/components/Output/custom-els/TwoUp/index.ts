@@ -89,8 +89,8 @@ export default class TwoUp extends HTMLElement {
     // Set the initial position of the handle.
     requestAnimationFrame(() => {
       const bounds = this.getBoundingClientRect();
-      this._position = (this.orientation === 'vertical' ?
-          bounds.height : bounds.width) * this._relativePosition;
+      const dimensionAxis = this.orientation === 'vertical' ? 'height' : 'width';
+      this._position = bounds[dimensionAxis] * this._relativePosition;
       this._setPosition();
     });
   }
