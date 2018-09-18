@@ -8,26 +8,29 @@ const RETARGETED_EVENTS = [
   'blur',
 ];
 
-const REFLECTED_PROPERTIES = [
-  'name',
-  'value',
-  'min',
-  'max',
-  'step',
-];
+type REFLECTED_PROPERTIES = 'name' | 'min' | 'max' | 'step' | 'value' | 'disabled';
 
-interface RangeInputElement {
-  value: string;
-  min: string;
-  max: string;
-  step: string;
-}
+const REFLECTED_ATTRIBUTES = ['name', 'min', 'max', 'step', 'disabled'];
+
+const OBSERVED_ATTRIBUTES : ({ [key: string]: string; }) = {
+  name: 'name',
+  min: 'min',
+  max: 'max',
+  step: 'step',
+  value: 'value',
+  disabled: 'disabled',
+  labelPrecision: 'label-precision',
+};
 
 class RangeInputElement extends HTMLElement {
   private _input = document.createElement('input');
   private _valueDisplayWrapper = document.createElement('div');
   private _valueDisplay = document.createElement('span');
-  private _precision?: number;
+  private _fireChange = true;
+
+  static get observedAttributes() {
+    return Object.values(OBSERVED_ATTRIBUTES);
+  }
 
   constructor() {
     super();
@@ -36,19 +39,45 @@ class RangeInputElement extends HTMLElement {
     for (const event of RETARGETED_EVENTS) {
       this._input.addEventListener(event, this._handleEvent, true);
     }
+  }
 
-    for (const property of REFLECTED_PROPERTIES) {
-      Object.defineProperty(this, property, {
-        configurable: true,
-        get() {
-          return this._input[property];
-        },
-        set(value) {
-          this._input[property] = value;
-          this._update();
-        },
-      });
+  private _reflect(property: REFLECTED_PROPERTIES, value: any) {
+    this._input[property] = value;
+    const attributeValue = this._input.getAttribute(property);
+    if (this.getAttribute(property) !== attributeValue) {
+      this._fireChange = false;
+      if (attributeValue === null) this.removeAttribute(property);
+      else this.setAttribute(property, attributeValue);
+      this._fireChange = true;
     }
+    this._update();
+  }
+
+  get name() { return this._input.name; }
+  set name(value) { this._reflect('name', value); }
+
+  get min() { return this._input.min; }
+  set min(value) { this._reflect('min', value); }
+
+  get max() { return this._input.max; }
+  set max(value) { this._reflect('max', value); }
+
+  get step() { return this._input.step; }
+  set step(value) { this._reflect('step', value); }
+
+  get value() { return this._input.value; }
+  set value(value) { this._reflect('value', value); }
+
+  get disabled() { return this._input.disabled; }
+  set disabled(value) { this._reflect('disabled', value); }
+
+  get labelPrecision() {
+    const precision = this.getAttribute('label-precision');
+    return precision ? (parseInt(precision, 10) || 0) : undefined;
+  }
+  set labelPrecision(precision: string | number | null | undefined) {
+    const coercedPrecision = precision == null ? '' : '' + precision;
+    this.setAttribute('label-precision', coercedPrecision);
   }
 
   connectedCallback() {
@@ -59,12 +88,23 @@ class RangeInputElement extends HTMLElement {
     }
   }
 
-  set valueDisplayPrecision(precision: string) {
-    this._precision = precision === '' ? undefined : parseInt(precision, 10) || 0;
-  }
-
-  get valueDisplayPrecision() {
-    return this._precision == null ? '' : '' + this._precision;
+  attributeChangedCallback(name: string, oldValue: string, newValue: string) {
+    if (this._fireChange === false) return;
+    if (name === 'label-precision') {
+      this.labelPrecision = newValue;
+    } else if (name === 'value') {
+      this.value = newValue;
+    } else {
+      for (const propertyName in OBSERVED_ATTRIBUTES) {
+        if (OBSERVED_ATTRIBUTES[propertyName] === name) {
+          if (this[propertyName as REFLECTED_PROPERTIES] !== newValue) {
+            this._input.setAttribute(name, newValue);
+            this._update();
+          }
+          return;
+        }
+      }
+    }
   }
 
   @bind
@@ -83,20 +123,21 @@ class RangeInputElement extends HTMLElement {
     const max = parseFloat(this._input.max || '100');
     const percent = 100 * (value - min) / (max - min);
     this.style.setProperty('--value-percent', percent + '%');
+    const labelPrecision = this.labelPrecision;
     let displayValue = '' + value;
-    if (this._precision === 0) {
-      displayValue = '' + Math.round(parseFloat(displayValue));
-    } else if (this._precision !== undefined) {
-      displayValue = parseFloat(displayValue).toPrecision(this._precision);
+    if (labelPrecision === 0) {
+      displayValue = '' + Math.round(parseFloat('' + displayValue));
+    } else if (labelPrecision != null) {
+      displayValue = parseFloat('' + displayValue).toPrecision(this.labelPrecision as number | 0);
     }
-    this._valueDisplay.textContent = '' + displayValue;
+    this._valueDisplay.textContent = displayValue;
   }
 
   private _reflectAttributes() {
-    for (const property of REFLECTED_PROPERTIES) {
-      const attributeValue = this._input.getAttribute(property);
-      if (this.getAttribute(property) !== attributeValue) {
-        this.setAttribute(property, attributeValue || '');
+    for (const attributeName in REFLECTED_ATTRIBUTES) {
+      const attributeValue = this._input.getAttribute(attributeName);
+      if (this.getAttribute(attributeName) !== attributeValue) {
+        this.setAttribute(attributeName, attributeValue || '');
       }
     }
   }
