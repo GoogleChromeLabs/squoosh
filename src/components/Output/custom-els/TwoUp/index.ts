@@ -19,6 +19,10 @@ export default class TwoUp extends HTMLElement {
    */
   private _position = 0;
   /**
+   * The position of the split in %.
+   */
+  private _relativePosition = 0.5;
+  /**
    * The value of _position when the pointer went down.
    */
   private _positionOnPointerStart = 0;
@@ -36,6 +40,14 @@ export default class TwoUp extends HTMLElement {
     // so _childrenChange is also called in connectedCallback.
     new MutationObserver(() => this._childrenChange())
       .observe(this, { childList: true });
+
+    // Watch for element size changes.
+    if ('ResizeObserver' in window) {
+      new ResizeObserver(() => this._resetPosition())
+        .observe(this);
+    } else {
+      window.addEventListener('resize', () => this._resetPosition());
+    }
 
     // Watch for pointers on the handle.
     const pointerTracker: PointerTracker = new PointerTracker(this._handle, {
@@ -57,7 +69,7 @@ export default class TwoUp extends HTMLElement {
 
   connectedCallback() {
     this._handle.innerHTML = `<div class="${styles.scrubber}">${
-      `<svg viewBox="0 0 20 10" fill="currentColor"><path d="M8 0v10L0 5zM12 0v10l8-5z"/></svg>`
+      '<svg viewBox="0 0 20 10" fill="currentColor"><path d="M8 0v10L0 5zM12 0v10l8-5z"/></svg>'
     }</div>`;
 
     this._childrenChange();
@@ -77,7 +89,8 @@ export default class TwoUp extends HTMLElement {
     // Set the initial position of the handle.
     requestAnimationFrame(() => {
       const bounds = this.getBoundingClientRect();
-      this._position = (this.orientation === 'vertical' ? bounds.height : bounds.width) / 2;
+      const dimensionAxis = this.orientation === 'vertical' ? 'height' : 'width';
+      this._position = bounds[dimensionAxis] * this._relativePosition;
       this._setPosition();
     });
   }
@@ -138,6 +151,7 @@ export default class TwoUp extends HTMLElement {
 
     // Clamp position to element bounds.
     this._position = Math.max(0, Math.min(this._position, bounds[dimensionAxis]));
+    this._relativePosition = this._position / bounds[dimensionAxis];
     this._setPosition();
   }
 
