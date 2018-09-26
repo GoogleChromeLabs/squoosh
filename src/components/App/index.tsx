@@ -74,6 +74,26 @@ interface UpdateImageOptions {
   skipPreprocessing?: boolean;
 }
 
+let createFile = (function () {
+  // Edge doesn't support `new File`, so here's a hacky alternative.
+  // https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/9551546/
+  function createFileEdge(data: ArrayBuffer | Blob, filename: string, type: string): File {
+    const blob = new Blob([data], { type });
+    (blob as any).name = filename;
+    return blob as File;
+  }
+
+  return function (data: ArrayBuffer | Blob, filename: string, type: string): File {
+    try {
+      return new File([data], filename, { type });
+    } catch (err) {
+      // Fall back to the hack.
+      createFile = createFileEdge;
+      return createFile(data, filename, type);
+    }
+  };
+})();
+
 async function preprocessImage(
   source: SourceImage,
   preprocessData: PreprocessorState,
@@ -87,6 +107,7 @@ async function preprocessImage(
   }
   return result;
 }
+
 async function compressImage(
   image: ImageData,
   encodeData: EncoderState,
@@ -111,10 +132,10 @@ async function compressImage(
 
   const encoder = encoderMap[encodeData.type];
 
-  return new File(
-    [compressedData],
+  return createFile(
+    compressedData,
     sourceFilename.replace(/.[^.]*$/, `.${encoder.extension}`),
-    { type: encoder.mimeType },
+    encoder.mimeType,
   );
 }
 
