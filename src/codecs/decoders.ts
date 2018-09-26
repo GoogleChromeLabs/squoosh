@@ -1,11 +1,11 @@
 import * as wasmWebp from './webp/decoder';
 import * as browserWebp from './webp/decoder';
 
-import { createImageBitmapPolyfill, sniffMimeType } from '../lib/util';
+import { nativeDecode, sniffMimeType } from '../lib/util';
 
 export interface Decoder {
   name: string;
-  decode(blob: Blob): Promise<ImageBitmap>;
+  decode(blob: Blob): Promise<ImageData>;
   isSupported(): Promise<boolean>;
   canHandleMimeType(mimeType: string): boolean;
 }
@@ -31,12 +31,12 @@ async function findDecodersByMimeType(mimeType: string): Promise<Decoder[]> {
   return decoders.filter(decoder => decoder.canHandleMimeType(mimeType));
 }
 
-export async function decodeImage(blob: Blob): Promise<ImageBitmap> {
+export async function decodeImage(blob: Blob): Promise<ImageData> {
   const mimeType = await sniffMimeType(blob);
   const decoders = await findDecodersByMimeType(mimeType);
   if (decoders.length <= 0) {
-    // If we can’t find a decoder, hailmary with createImageBitmap
-    return createImageBitmapPolyfill(blob);
+    // If we can’t find a decoder, hailmary with the browser's decoders
+    return nativeDecode(blob);
   }
   for (const decoder of decoders) {
     try {

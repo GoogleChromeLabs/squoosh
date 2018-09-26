@@ -50,48 +50,22 @@ export function linkRef<T>(obj: any, name: string) {
   return ref;
 }
 
-/**
- * Turns a given `ImageBitmap` into `ImageData`.
- */
-export async function bitmapToImageData(bitmap: ImageBitmap): Promise<ImageData> {
-  // Make canvas same size as image
-  // TODO: Move this off-thread if possible with `OffscreenCanvas` or iFrames?
-  const canvas = document.createElement('canvas');
-  canvas.width = bitmap.width;
-  canvas.height = bitmap.height;
-  // Draw image onto canvas
-  const ctx = canvas.getContext('2d');
-  if (!ctx) {
-    throw new Error('Could not create canvas context');
-  }
-  ctx.drawImage(bitmap, 0, 0);
-  return ctx.getImageData(0, 0, bitmap.width, bitmap.height);
-}
-
-export async function imageDataToBitmap(data: ImageData): Promise<ImageBitmap> {
-  // Make canvas same size as image
-  // TODO: Move this off-thread if possible with `OffscreenCanvas` or iFrames?
-  const canvas = document.createElement('canvas');
-  canvas.width = data.width;
-  canvas.height = data.height;
-  // Draw image onto canvas
-  const ctx = canvas.getContext('2d');
-  if (!ctx) {
-    throw new Error('Could not create canvas context');
-  }
-  ctx.putImageData(data, 0, 0);
-  return createImageBitmap(canvas);
-}
-
-/** Replace the contents of a canvas with the given bitmap */
-export function drawBitmapToCanvas(canvas: HTMLCanvasElement, bitmap: ImageBitmap) {
+/** Replace the contents of a canvas with the given data */
+export function drawDataToCanvas(canvas: HTMLCanvasElement, data: ImageData) {
   const ctx = canvas.getContext('2d');
   if (!ctx) throw Error('Canvas not initialized');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(bitmap, 0, 0);
+  ctx.putImageData(data, 0, 0);
 }
 
-export async function canvasEncode(data: ImageData, type: string, quality?: number) {
+/**
+ * Encode some image data in a given format using the browser's encoders
+ *
+ * @param {ImageData} data
+ * @param {string} type A mime type, eg image/jpeg.
+ * @param {number} [quality] Between 0-1.
+ */
+export async function canvasEncode(data: ImageData, type: string, quality?: number): Promise<Blob> {
   const canvas = document.createElement('canvas');
   canvas.width = data.width;
   canvas.height = data.height;
@@ -105,6 +79,9 @@ export async function canvasEncode(data: ImageData, type: string, quality?: numb
   return blob;
 }
 
+/**
+ * Attempts to load the given URL as an image.
+ */
 export function canDecodeImage(data: string): Promise<boolean> {
   return new Promise((resolve) => {
     const img = document.createElement('img');
@@ -115,16 +92,7 @@ export function canDecodeImage(data: string): Promise<boolean> {
 }
 
 export function blobToArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
-  return new Promise((resolve, reject) => {
-    const fileReader = new FileReader();
-    fileReader.addEventListener('load', () => {
-      if (fileReader.result instanceof ArrayBuffer) {
-        return resolve(fileReader.result);
-      }
-      reject(Error('Unexpected return type'));
-    });
-    fileReader.readAsArrayBuffer(blob);
-  });
+  return new Response(blob).arrayBuffer();
 }
 
 const magicNumberToMimeType = new Map<RegExp, string>([
@@ -154,35 +122,78 @@ export async function sniffMimeType(blob: Blob): Promise<string> {
   return '';
 }
 
-type CreateImageBitmapInput = HTMLImageElement | SVGImageElement | HTMLVideoElement |
-  HTMLCanvasElement | ImageBitmap | ImageData | Blob;
+async function blobToImg(blob: Blob): Promise<HTMLImageElement> {
+  const url = URL.createObjectURL(blob);
 
-export function createImageBitmapPolyfill(
-  image: CreateImageBitmapInput,
-  options?: ImageBitmapOptions,
-): Promise<ImageBitmap>;
-export function createImageBitmapPolyfill(
-  image: CreateImageBitmapInput,
-  sx: number,
-  sy: number,
-  sw: number,
-  sh: number,
-  options?: ImageBitmapOptions,
-): Promise<ImageBitmap>;
-export function createImageBitmapPolyfill(
-  image: CreateImageBitmapInput,
-  sxOrOptions?: number | ImageBitmapOptions,
-  sy?: number,
-  sw?: number,
-  sh?: number,
-  options?: ImageBitmapOptions,
-): Promise<ImageBitmap> {
-  if (sxOrOptions === undefined || typeof sxOrOptions !== 'number') {
-    // sxOrOptions is absent or an options object
-    return createImageBitmap(image, sxOrOptions);
+  try {
+    const img = new Image();
+    img.decoding = 'async';
+    img.src = url;
+
+    if (img.decode) {
+      // Nice off-thread way supported in at least Safari.
+      await img.decode();
+    } else {
+      // Main thread decoding :(
+      await new Promise((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(Error('Image loading error'));
+      });
+    }
+
+    return img;
+  } finally {
+    URL.revokeObjectURL(url);
   }
-  // sxOrOptions is a number
-  return createImageBitmap(image, sxOrOptions, sy!, sw!, sh!, options);
+}
+
+function drawableToImageData(drawable: ImageBitmap | HTMLImageElement): ImageData {
+  // Make canvas same size as image
+  const canvas = document.createElement('canvas');
+  canvas.width = drawable.width;
+  canvas.height = drawable.height;
+  // Draw image onto canvas
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Could not create canvas context');
+  ctx.drawImage(drawable, 0, 0);
+  return ctx.getImageData(0, 0, drawable.width, drawable.height);
+}
+
+export async function nativeDecode(blob: Blob): Promise<ImageData> {
+  // Prefer createImageBitmap as it's the off-thread option for Firefox.
+  const drawable = 'createImageBitmap' in self ?
+    await createImageBitmap(blob) : await blobToImg(blob);
+
+  return drawableToImageData(drawable);
+}
+
+export type NativeResizeMethod = 'pixelated' | 'low' | 'medium' | 'high';
+
+export function nativeResize(
+  data: ImageData,
+  sx: number, sy: number, sw: number, sh: number,
+  dw: number, dh: number,
+  method: NativeResizeMethod,
+): ImageData {
+  const canvasSource = document.createElement('canvas');
+  canvasSource.width = data.width;
+  canvasSource.height = data.height;
+  drawDataToCanvas(canvasSource, data);
+
+  const canvasDest = document.createElement('canvas');
+  canvasDest.width = dw;
+  canvasDest.height = dh;
+  const ctx = canvasDest.getContext('2d');
+  if (!ctx) throw new Error('Could not create canvas context');
+
+  if (method === 'pixelated') {
+    ctx.imageSmoothingEnabled = false;
+  } else {
+    ctx.imageSmoothingQuality = method;
+  }
+
+  ctx.drawImage(canvasSource, sx, sy, sw, sh, 0, 0, dw, dh);
+  return ctx.getImageData(0, 0, dw, dh);
 }
 
 /**

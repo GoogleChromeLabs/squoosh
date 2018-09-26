@@ -1,11 +1,10 @@
-import { blobToArrayBuffer, imageDataToBitmap } from '../../lib/util';
+import { blobToArrayBuffer } from '../../lib/util';
 import DecoderWorker  from './Decoder.worker';
 
 export const name = 'WASM WebP Decoder';
-export async function decode(blob: Blob): Promise<ImageBitmap> {
+export async function decode(blob: Blob): Promise<ImageData> {
   const decoder = await new DecoderWorker();
-  const imageData = await decoder.decode(await blobToArrayBuffer(blob));
-  return imageDataToBitmap(imageData);
+  return decoder.decode(await blobToArrayBuffer(blob));
 }
 
 export async function isSupported(): Promise<boolean> {

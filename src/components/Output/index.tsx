@@ -3,14 +3,14 @@ import PinchZoom, { ScaleToOpts } from './custom-els/PinchZoom';
 import './custom-els/PinchZoom';
 import './custom-els/TwoUp';
 import * as style from './style.scss';
-import { bind, shallowEqual, drawBitmapToCanvas, linkRef } from '../../lib/util';
+import { bind, shallowEqual, drawDataToCanvas, linkRef } from '../../lib/util';
 import { ToggleIcon, AddIcon, RemoveIcon } from '../../lib/icons';
 import { twoUpHandle } from './custom-els/TwoUp/styles.css';
 
 interface Props {
   orientation: 'horizontal' | 'vertical';
-  leftImg: ImageBitmap;
-  rightImg: ImageBitmap;
+  leftImg: ImageData;
+  rightImg: ImageData;
   imgWidth: number;
   imgHeight: number;
   leftImgContain: boolean;
@@ -45,19 +45,19 @@ export default class Output extends Component<Props, State> {
 
   componentDidMount() {
     if (this.canvasLeft) {
-      drawBitmapToCanvas(this.canvasLeft, this.props.leftImg);
+      drawDataToCanvas(this.canvasLeft, this.props.leftImg);
     }
     if (this.canvasRight) {
-      drawBitmapToCanvas(this.canvasRight, this.props.rightImg);
+      drawDataToCanvas(this.canvasRight, this.props.rightImg);
     }
   }
 
   componentDidUpdate(prevProps: Props, prevState: State) {
     if (prevProps.leftImg !== this.props.leftImg && this.canvasLeft) {
-      drawBitmapToCanvas(this.canvasLeft, this.props.leftImg);
+      drawDataToCanvas(this.canvasLeft, this.props.leftImg);
     }
     if (prevProps.rightImg !== this.props.rightImg && this.canvasRight) {
-      drawBitmapToCanvas(this.canvasRight, this.props.rightImg);
+      drawDataToCanvas(this.canvasRight, this.props.rightImg);
     }
   }
 
@@ -135,7 +135,7 @@ export default class Output extends Component<Props, State> {
     if (!this.pinchZoomLeft) throw Error('Missing pinch-zoom element');
     // If the event is on the handle of the two-up, let it through,
     // unless it's a wheel event, in which case always let it through.
-    if (event.type !== 'wheel' && targetEl.closest('.' + twoUpHandle)) return;
+    if (event.type !== 'wheel' && targetEl.closest(`.${twoUpHandle}`)) return;
     // If we've already retargeted this event, let it through.
     if (this.retargetedEvents.has(event)) return;
     // Stop the event in its tracks.
