@@ -7,7 +7,7 @@ import * as identity from '../../codecs/identity/encoder';
 
 interface CacheResult {
   preprocessed: ImageData;
-  bmp: ImageBitmap;
+  data: ImageData;
   file: File;
 }
 
@@ -67,7 +67,7 @@ export default class ResultCache {
     }
 
     return {
-      bmp: matchingEntry.bmp,
+      data: matchingEntry.data,
       preprocessed: matchingEntry.preprocessed,
       file: matchingEntry.file,
     };

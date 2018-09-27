@@ -1,8 +1,6 @@
-import { bitmapToImageData, createImageBitmapPolyfill } from '../../lib/util';
+import { nativeResize, NativeResizeMethod } from '../../lib/util';
 
-type CreateImageBitmapResize = 'pixelated' | 'low' | 'medium' | 'high';
-
-export async function resize(data: ImageData, opts: ResizeOptions): Promise<ImageData> {
+export function resize(data: ImageData, opts: ResizeOptions): ImageData {
   let sx = 0;
   let sy = 0;
   let sw = data.width;
@@ -20,13 +18,10 @@ export async function resize(data: ImageData, opts: ResizeOptions): Promise<Imag
     }
   }
 
-  const bmp = await createImageBitmapPolyfill(data, sx, sy, sw, sh, {
-    resizeQuality: opts.method.slice('browser-'.length) as CreateImageBitmapResize,
-    resizeWidth: opts.width,
-    resizeHeight: opts.height,
-  });
-
-  return bitmapToImageData(bmp);
+  return nativeResize(
+    data, sx, sy, sw, sh, opts.width, opts.height,
+    opts.method.slice('browser-'.length) as NativeResizeMethod,
+  );
 }
 
 export interface ResizeOptions {

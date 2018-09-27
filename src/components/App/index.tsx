@@ -1,6 +1,6 @@
 import { h, Component } from 'preact';
 
-import { bind, linkRef, bitmapToImageData } from '../../lib/util';
+import { bind, linkRef } from '../../lib/util';
 import * as style from './style.scss';
 import Output from '../Output';
 import Options from '../Options';
@@ -43,15 +43,14 @@ type Orientation = 'horizontal' | 'vertical';
 
 export interface SourceImage {
   file: File;
-  bmp: ImageBitmap;
   data: ImageData;
 }
 
 interface EncodedImage {
   preprocessed?: ImageData;
-  bmp?: ImageBitmap;
   file?: File;
   downloadUrl?: string;
+  data?: ImageData;
   preprocessorState: PreprocessorState;
   encoderState: EncoderState;
   loading: boolean;
@@ -81,7 +80,7 @@ async function preprocessImage(
 ): Promise<ImageData> {
   let result = source.data;
   if (preprocessData.resize.enabled) {
-    result = await resizer.resize(result, preprocessData.resize);
+    result = resizer.resize(result, preprocessData.resize);
   }
   if (preprocessData.quantizer.enabled) {
     result = await quantizer.quantize(result, preprocessData.quantizer);
@@ -196,8 +195,8 @@ export default class App extends Component<Props, State> {
       const encoderChanged = image.encoderState !== prevImage.encoderState;
       const preprocessorChanged = image.preprocessorState !== prevImage.preprocessorState;
 
-      // The image only needs updated if the encoder settings have changed, or the source has
-      // changed.
+      // The image only needs updated if the encoder/preprocessor settings have changed, or the
+      // source has changed.
       if (sourceChanged || encoderChanged || preprocessorChanged) {
         if (prevImage.downloadUrl) URL.revokeObjectURL(prevImage.downloadUrl);
         this.updateImage(i, {
@@ -235,13 +234,11 @@ export default class App extends Component<Props, State> {
   async updateFile(file: File) {
     this.setState({ loading: true });
     try {
-      const bmp = await decodeImage(file);
-      // compute the corresponding ImageData once since it only changes when the file changes:
-      const data = await bitmapToImageData(bmp);
+      const data = await decodeImage(file);
 
       let newState = {
         ...this.state,
-        source: { data, bmp, file },
+        source: { data, file },
         loading: false,
       };
 
@@ -256,7 +253,7 @@ export default class App extends Component<Props, State> {
       this.setState(newState);
     } catch (err) {
       console.error(err);
-      this.showError(`Invalid image`);
+      this.showError('Invalid image');
       this.setState({ loading: false });
     }
   }
@@ -278,29 +275,29 @@ export default class App extends Component<Props, State> {
 
     const image = images[index];
 
-    let file;
-    let preprocessed;
-    let bmp;
+    let file: File | undefined;
+    let preprocessed: ImageData | undefined;
+    let data: ImageData | undefined;
     const cacheResult = this.encodeCache.match(source, image.preprocessorState, image.encoderState);
 
     if (cacheResult) {
-      ({ file, preprocessed, bmp } = cacheResult);
+      ({ file, preprocessed, data } = cacheResult);
     } else {
       try {
         // Special case for identity
         if (image.encoderState.type === identity.type) {
-          ({ file, bmp } = source);
+          ({ file, data } = source);
         } else {
           preprocessed = (skipPreprocessing && image.preprocessed)
             ? image.preprocessed
             : await preprocessImage(source, image.preprocessorState);
 
           file = await compressImage(preprocessed, image.encoderState, source.file.name);
-          bmp = await decodeImage(file);
+          data = await decodeImage(file);
 
           this.encodeCache.add({
             source,
-            bmp,
+            data,
             preprocessed,
             file,
             encoderState: image.encoderState,
@@ -321,7 +318,7 @@ export default class App extends Component<Props, State> {
 
     images = cleanMerge(this.state.images, index, {
       file,
-      bmp,
+      data,
       preprocessed,
       downloadUrl: URL.createObjectURL(file),
       loading: images[index].loadingCounter !== loadingCounter,
@@ -338,19 +335,19 @@ export default class App extends Component<Props, State> {
 
   render({ }: Props, { loading, images, source, orientation }: State) {
     const [leftImage, rightImage] = images;
-    const [leftImageBmp, rightImageBmp] = images.map(i => i.bmp);
+    const [leftImageData, rightImageData] = images.map(i => i.data);
     const anyLoading = loading || images.some(image => image.loading);
 
     return (
       <file-drop accept="image/*" onfiledrop={this.onFileDrop}>
         <div id="app" class={`${style.app} ${style[orientation]}`}>
-          {(leftImageBmp && rightImageBmp && source) ? (
+          {(leftImageData && rightImageData && source) ? (
             <Output
               orientation={orientation}
-              imgWidth={source.bmp.width}
-              imgHeight={source.bmp.height}
-              leftImg={leftImageBmp}
-              rightImg={rightImageBmp}
+              imgWidth={source.data.width}
+              imgHeight={source.data.height}
+              leftImg={leftImageData}
+              rightImg={rightImageData}
               leftImgContain={leftImage.preprocessorState.resize.fitMethod === 'cover'}
               rightImgContain={rightImage.preprocessorState.resize.fitMethod === 'cover'}
             />
@@ -360,10 +357,10 @@ export default class App extends Component<Props, State> {
               <input type="file" onChange={this.onFileChange} />
             </div>
           )}
-          {(leftImageBmp && rightImageBmp && source) && images.map((image, index) => (
+          {(leftImageData && rightImageData && source) && images.map((image, index) => (
             <Options
               orientation={orientation}
-              sourceAspect={source.bmp.width / source.bmp.height}
+              sourceAspect={source.data.width / source.data.height}
               imageIndex={index}
               imageFile={image.file}
               sourceImageFile={source && source.file}
