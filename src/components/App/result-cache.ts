@@ -1,5 +1,5 @@
 import { EncoderState } from '../../codecs/encoders';
-import { shallowEqual } from '../../lib/util';
+import { shallowEqual, Fileish } from '../../lib/util';
 import { SourceImage } from '.';
 import { PreprocessorState } from '../../codecs/preprocessors';
 
@@ -8,7 +8,7 @@ import * as identity from '../../codecs/identity/encoder';
 interface CacheResult {
   preprocessed: ImageData;
   data: ImageData;
-  file: File;
+  file: Fileish;
 }
 
 interface CacheEntry extends CacheResult {

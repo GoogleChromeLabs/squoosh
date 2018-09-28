@@ -1,7 +1,7 @@
 import { h, Component } from 'preact';
 
 import * as style from './style.scss';
-import { bind } from '../../lib/util';
+import { bind, Fileish } from '../../lib/util';
 import { cleanSet, cleanMerge } from '../../lib/clean-modify';
 import OptiPNGEncoderOptions from '../../codecs/optipng/options';
 import MozJpegEncoderOptions from '../../codecs/mozjpeg/options';
@@ -65,7 +65,7 @@ interface Props {
   sourceAspect: number;
   imageIndex: number;
   sourceImageFile?: File;
-  imageFile?: File;
+  imageFile?: Fileish;
   downloadUrl?: string;
   encoderState: EncoderState;
   preprocessorState: PreprocessorState;

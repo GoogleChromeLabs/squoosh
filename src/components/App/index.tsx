@@ -1,6 +1,6 @@
 import { h, Component } from 'preact';
 
-import { bind, linkRef } from '../../lib/util';
+import { bind, linkRef, Fileish } from '../../lib/util';
 import * as style from './style.scss';
 import Output from '../Output';
 import Options from '../Options';
@@ -48,7 +48,7 @@ export interface SourceImage {
 
 interface EncodedImage {
   preprocessed?: ImageData;
-  file?: File;
+  file?: Fileish;
   downloadUrl?: string;
   data?: ImageData;
   preprocessorState: PreprocessorState;
@@ -74,26 +74,6 @@ interface UpdateImageOptions {
   skipPreprocessing?: boolean;
 }
 
-let createFile = (function () {
-  // Edge doesn't support `new File`, so here's a hacky alternative.
-  // https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/9551546/
-  function createFileEdge(data: ArrayBuffer | Blob, filename: string, type: string): File {
-    const blob = new Blob([data], { type });
-    (blob as any).name = filename;
-    return blob as File;
-  }
-
-  return function (data: ArrayBuffer | Blob, filename: string, type: string): File {
-    try {
-      return new File([data], filename, { type });
-    } catch (err) {
-      // Fall back to the hack.
-      createFile = createFileEdge;
-      return createFile(data, filename, type);
-    }
-  };
-})();
-
 async function preprocessImage(
   source: SourceImage,
   preprocessData: PreprocessorState,
@@ -112,7 +92,7 @@ async function compressImage(
   image: ImageData,
   encodeData: EncoderState,
   sourceFilename: string,
-): Promise<File> {
+): Promise<Fileish> {
   const compressedData = await (() => {
     switch (encodeData.type) {
       case optiPNG.type: return optiPNG.encode(image, encodeData.options);
@@ -132,10 +112,10 @@ async function compressImage(
 
   const encoder = encoderMap[encodeData.type];
 
-  return createFile(
-    compressedData,
+  return new Fileish(
+    [compressedData],
     sourceFilename.replace(/.[^.]*$/, `.${encoder.extension}`),
-    encoder.mimeType,
+    { type: encoder.mimeType },
   );
 }
 
@@ -296,7 +276,7 @@ export default class App extends Component<Props, State> {
 
     const image = images[index];
 
-    let file: File | undefined;
+    let file: File | Fileish | undefined;
     let preprocessed: ImageData | undefined;
     let data: ImageData | undefined;
     const cacheResult = this.encodeCache.match(source, image.preprocessorState, image.encoderState);
