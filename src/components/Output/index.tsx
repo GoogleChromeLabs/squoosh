@@ -155,6 +155,7 @@ export default class Output extends Component<Props, State> {
     return (
       <div class={`${style.output} ${altBackground ? style.altBackground : ''}`}>
         <two-up
+          legacy-clip-compat
           orientation={orientation}
           // Event redirecting. See onRetargetableEvent.
           onTouchStartCapture={this.onRetargetableEvent}

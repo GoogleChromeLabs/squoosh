@@ -1,6 +1,6 @@
 import { h, Component } from 'preact';
 
-import { bind, linkRef } from '../../lib/util';
+import { bind, linkRef, Fileish } from '../../lib/util';
 import * as style from './style.scss';
 import Output from '../Output';
 import Options from '../Options';
@@ -48,7 +48,7 @@ export interface SourceImage {
 
 interface EncodedImage {
   preprocessed?: ImageData;
-  file?: File;
+  file?: Fileish;
   downloadUrl?: string;
   data?: ImageData;
   preprocessorState: PreprocessorState;
@@ -87,11 +87,12 @@ async function preprocessImage(
   }
   return result;
 }
+
 async function compressImage(
   image: ImageData,
   encodeData: EncoderState,
   sourceFilename: string,
-): Promise<File> {
+): Promise<Fileish> {
   const compressedData = await (() => {
     switch (encodeData.type) {
       case optiPNG.type: return optiPNG.encode(image, encodeData.options);
@@ -111,7 +112,7 @@ async function compressImage(
 
   const encoder = encoderMap[encodeData.type];
 
-  return new File(
+  return new Fileish(
     [compressedData],
     sourceFilename.replace(/.[^.]*$/, `.${encoder.extension}`),
     { type: encoder.mimeType },
@@ -275,7 +276,7 @@ export default class App extends Component<Props, State> {
 
     const image = images[index];
 
-    let file: File | undefined;
+    let file: File | Fileish | undefined;
     let preprocessed: ImageData | undefined;
     let data: ImageData | undefined;
     const cacheResult = this.encodeCache.match(source, image.preprocessorState, image.encoderState);
