@@ -288,9 +288,10 @@ export default class PinchZoom extends HTMLElement {
   }
 
   private _onWheel(event: WheelEvent) {
+    if (!this._positioningEl) return;
     event.preventDefault();
 
-    const thisRect = this.getBoundingClientRect();
+    const currentRect = this._positioningEl.getBoundingClientRect();
     let { deltaY } = event;
     const { ctrlKey, deltaMode } = event;
 
@@ -305,23 +306,25 @@ export default class PinchZoom extends HTMLElement {
 
     this._applyChange({
       scaleDiff,
-      originX: event.clientX - thisRect.left,
-      originY: event.clientY - thisRect.top,
+      originX: event.clientX - currentRect.left,
+      originY: event.clientY - currentRect.top,
       allowChangeEvent: true,
     });
   }
 
   private _onPointerMove(previousPointers: Pointer[], currentPointers: Pointer[]) {
+    if (!this._positioningEl) return;
+
     // Combine next points with previous points
-    const thisRect = this.getBoundingClientRect();
+    const currentRect = this._positioningEl.getBoundingClientRect();
 
     // For calculating panning movement
     const prevMidpoint = getMidpoint(previousPointers[0], previousPointers[1]);
     const newMidpoint = getMidpoint(currentPointers[0], currentPointers[1]);
 
     // Midpoint within the element
-    const originX = prevMidpoint.clientX - thisRect.left;
-    const originY = prevMidpoint.clientY - thisRect.top;
+    const originX = prevMidpoint.clientX - currentRect.left;
+    const originY = prevMidpoint.clientY - currentRect.top;
 
     // Calculate the desired change in scale
     const prevDistance = getDistance(previousPointers[0], previousPointers[1]);
@@ -350,10 +353,12 @@ export default class PinchZoom extends HTMLElement {
       .translate(panX, panY)
       // Scale about the origin.
       .translate(originX, originY)
+      // Apply current translate
+      .translate(this.x, this.y)
       .scale(scaleDiff)
       .translate(-originX, -originY)
-      // Apply current transform.
-      .multiply(this._transform);
+      // Apply current scale.
+      .scale(this.scale);
 
     // Convert the transform into basic translate & scale.
     this.setTransform({
