@@ -43,7 +43,7 @@ export default class MultiPanel extends HTMLElement {
   private _onKeyDown(event: KeyboardEvent) {
     const selectedEl = document.activeElement;
     const heading = getClosestHeading(selectedEl);
-    
+
     // if keydown event is not on heading element, ignore
     if (!heading) return;
 
