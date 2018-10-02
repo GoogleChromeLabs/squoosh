@@ -50,9 +50,8 @@ export default class QuantizerOptions extends Component<Props, State> {
         </label>
         <label style={{ display: options.zx ? 'none' : '' }}>
           Palette Colors:
-          <input
+          <range-input
             name="maxNumColors"
-            type="range"
             min="2"
             max="256"
             value={'' + options.maxNumColors}
@@ -61,9 +60,8 @@ export default class QuantizerOptions extends Component<Props, State> {
         </label>
         <label>
           Dithering:
-          <input
+          <range-input
             name="dither"
-            type="range"
             min="0"
             max="1"
             step="0.01"

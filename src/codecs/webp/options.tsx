@@ -55,12 +55,12 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
       filter_type: inputFieldCheckedAsNumber(form.filter_type),
       use_sharp_yuv: inputFieldCheckedAsNumber(form.use_sharp_yuv),
       // .value
-      near_lossless: inputFieldValueAsNumber(form.near_lossless),
+      near_lossless: 100 - inputFieldValueAsNumber(form.near_lossless),
       alpha_quality: inputFieldValueAsNumber(form.alpha_quality),
       alpha_filtering: inputFieldValueAsNumber(form.alpha_filtering),
       sns_strength: inputFieldValueAsNumber(form.sns_strength),
       filter_strength: inputFieldValueAsNumber(form.filter_strength),
-      filter_sharpness: inputFieldValueAsNumber(form.filter_sharpness),
+      filter_sharpness: 7 - inputFieldValueAsNumber(form.filter_sharpness),
       pass: inputFieldValueAsNumber(form.pass),
       preprocessing: inputFieldValueAsNumber(form.preprocessing),
       segments: inputFieldValueAsNumber(form.segments),
@@ -74,9 +74,8 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
       <div>
         <label>
           Effort:
-          <input
+          <range-input
             name="lossless_preset"
-            type="range"
             min="0"
             max="9"
             value={'' + determineLosslessQuality(options.quality)}
@@ -85,13 +84,11 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
         </label>
         <label>
           Slight loss:
-          <input
-            class={styles.flipRange}
+          <range-input
             name="near_lossless"
-            type="range"
             min="0"
             max="100"
-            value={'' + options.near_lossless}
+            value={'' + (100 - options.near_lossless)}
             onChange={this.onChange}
           />
         </label>
@@ -119,9 +116,8 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
       <div>
         <label>
           Effort:
-          <input
+          <range-input
             name="method_input"
-            type="range"
             min="0"
             max="6"
             value={'' + options.method}
@@ -130,9 +126,8 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
         </label>
         <label>
           Quality:
-          <input
+          <range-input
             name="quality"
-            type="range"
             min="0"
             max="100"
             step="0.01"
@@ -151,9 +146,8 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
         </label>
         <label>
           Alpha quality:
-          <input
+          <range-input
             name="alpha_quality"
-            type="range"
             min="0"
             max="100"
             value={'' + options.alpha_quality}
@@ -162,9 +156,8 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
         </label>
         <label>
           Alpha filter quality:
-          <input
+          <range-input
             name="alpha_filtering"
-            type="range"
             min="0"
             max="2"
             value={'' + options.alpha_filtering}
@@ -173,9 +166,8 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
         </label>
         <label>
           Spacial noise shaping:
-          <input
+          <range-input
             name="sns_strength"
-            type="range"
             min="0"
             max="100"
             value={'' + options.sns_strength}
@@ -193,9 +185,8 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
         </label>
         <label>
           Filter strength:
-          <input
+          <range-input
             name="filter_strength"
-            type="range"
             min="0"
             max="100"
             disabled={!!options.autofilter}
@@ -214,13 +205,11 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
         </label>
         <label>
           Filter sharpness:
-          <input
-            class={styles.flipRange}
+          <range-input
             name="filter_sharpness"
-            type="range"
             min="0"
             max="7"
-            value={'' + options.filter_sharpness}
+            value={'' + (7 - options.filter_sharpness)}
             onChange={this.onChange}
           />
         </label>
@@ -235,9 +224,8 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
         </label>
         <label>
           Passes:
-          <input
+          <range-input
             name="pass"
-            type="range"
             min="1"
             max="10"
             value={'' + options.pass}
@@ -258,9 +246,8 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
         </label>
         <label>
           Segments:
-          <input
+          <range-input
             name="segments"
-            type="range"
             min="1"
             max="4"
             value={'' + options.segments}
@@ -269,9 +256,8 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
         </label>
         <label>
           Partitions:
-          <input
+          <range-input
             name="partitions"
-            type="range"
             min="0"
             max="3"
             value={'' + options.partitions}
