@@ -105,7 +105,7 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
             value={'' + WebPImageHint.WEBP_HINT_GRAPH}
             onChange={this.onChange}
           />
-          Discrete tone image (graph, map-tile etc)
+          <span>Discrete tone image (graph, map-tile etc)</span>
         </label>
       </div>
     );
@@ -135,6 +135,7 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
             onChange={this.onChange}
           />
         </label>
+        <hr />
         <label>
           <input
             name="alpha_compression"
@@ -164,16 +165,7 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
             onChange={this.onChange}
           />
         </label>
-        <label>
-          Spacial noise shaping:
-          <range-input
-            name="sns_strength"
-            min="0"
-            max="100"
-            value={'' + options.sns_strength}
-            onChange={this.onChange}
-          />
-        </label>
+        <hr />
         <label>
           <input
             name="autofilter"
@@ -181,7 +173,7 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
             checked={!!options.autofilter}
             onChange={this.onChange}
           />
-          Auto adjust filter strength
+          <span>Auto adjust filter strength</span>
         </label>
         <label>
           Filter strength:
@@ -222,6 +214,7 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
           />
           Sharp RGB->YUV conversion
         </label>
+        <hr />
         <label>
           Passes:
           <range-input
@@ -229,6 +222,16 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
             min="1"
             max="10"
             value={'' + options.pass}
+            onChange={this.onChange}
+          />
+        </label>
+        <label>
+          Spacial noise shaping:
+          <range-input
+            name="sns_strength"
+            min="0"
+            max="100"
+            value={'' + options.sns_strength}
             onChange={this.onChange}
           />
         </label>
@@ -295,7 +298,9 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
             checked={!!options.exact}
             onChange={this.onChange}
           />
-          Preserve transparent data. Otherwise, pixels with zero alpha will have RGB also zeroed.
+          <span>
+            Preserve transparent data. Otherwise, pixels with zero alpha will have RGB also zeroed.
+          </span>
         </label>
       </form>
     );

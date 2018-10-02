@@ -73,8 +73,9 @@ class RangeInputElement extends HTMLElement {
     const displayValue = labelPrecision ? value.toPrecision(labelPrecision) :
       Math.round(value).toString();
 
-    this.style.setProperty('--value-percent', percent + '%');
     this._valueDisplay.textContent = displayValue;
+    this.style.setProperty('--value-percent', percent + '%');
+    this.style.setProperty('--value-width', '' + displayValue.length);
   }
 
   private _reflectAttributes() {

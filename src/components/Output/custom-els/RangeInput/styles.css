@@ -9,9 +9,29 @@ range-input {
   overflow: visible;
 }
 
+/* Disabled inputs are greyed out */
+range-input[disabled] {
+  filter: grayscale(1);
+}
+
+/* Reversed Variant */
+range-input[reversed] input,
+range-input[reversed]::before,
+range-input[reversed] > div {
+  transform: scaleX(-1);
+}
+range-input[reversed] > div > span {
+  transform: scaleX(-1) scale(.2);
+}
+range-input[reversed] input:focus + div span {
+  transform: scaleX(-1) scale(1);
+}
+
+
 range-input input {
   position: relative;
   flex: 1;
+  vertical-align: middle;
   width: 100%;
   padding: 0 !important;
   margin: 0 !important;
@@ -20,7 +40,6 @@ range-input input {
   -webkit-appearance: none;
   outline: none;
 }
-
 range-input input::-webkit-slider-runnable-track,
 range-input input::-moz-range-track,
 range-input input::-ms-track {
@@ -45,9 +64,6 @@ range-input::before {
   box-shadow: 0 -.5px 0 rgba(0,0,0,0.3), inset 0 .5px 0 rgba(255,255,255,0.2), 0 .5px 0 rgba(255,255,255,0.3);
   background: linear-gradient(#34B9EB, #218ab1) 0/ var(--value-percent, 0%) 100% no-repeat #eee;
 }
-range-input[disabled]::before {
-  background: linear-gradient(#aaa, #888) 0/ var(--value-percent, 0%) 100% no-repeat #eee;
-}
 
 range-input input::-webkit-slider-thumb {
   appearance: none;
@@ -60,10 +76,6 @@ range-input input::-webkit-slider-thumb {
   border: none;
   box-shadow: 0 0.5px 2px rgba(0,0,0,0.3);
   outline: none;
-}
-
-range-input[disabled] input::-webkit-slider-thumb {
-  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><circle cx="5" cy="5" r="1" fill="#666" /></svg>') center no-repeat #999;
 }
 
 range-input input:focus::-webkit-slider-thumb {
@@ -96,6 +108,7 @@ range-input > div > span {
   transform: scale(.2);
   color: #fff;
   font: inherit;
+  font-size: calc(100% - var(--value-width, 3) / 5 * .2em);
   text-overflow: clip;
   text-shadow: 0 -.5px 0 rgba(0,0,0,0.4);
   transition: transform 200ms ease, opacity 200ms ease;

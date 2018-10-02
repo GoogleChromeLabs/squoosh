@@ -49,22 +49,73 @@ Note: These styles are temporary. They will be replaced before going live.
     }
   }
 
+  .content {
+    max-height: calc(75vh - 100px);
+    overflow: auto;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .picker {
+    margin: 5px 15px;
+
+    select {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      -webkit-appearance: none;
+      appearance: none;
+      padding: 10px 30px 10px 10px;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="25" height="5"><polygon fill="#fff" points="10,0 5,5 0,0"/></svg>') right center no-repeat;
+      background-color: var(--gray-dark);
+      opacity: 0.9;
+      border: none;
+      font: inherit;
+      color: white;
+      transition: box-shadow 150ms ease;
+
+      &:hover {
+        opacity: 1;
+      }
+      &:focus {
+        opacity: 1;
+        outline: none;
+        box-shadow: 0 0 0 2px var(--button-fg, #ccc);
+      }
+    }
+  }
+
+  .title {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    margin: 0 0 12px;
+    background: rgba(0,0,0,0.9);
+    font: inherit;
+  }
+
   label {
     display: block;
-    @extend .row;
+    padding: 5px;
+    margin: 0 10px;
+    display: flex;
+    flex-wrap: wrap;
 
-    input {
-      vertical-align: middle;
+    // prevent labels from wrapping below checkboxes
+    > span {
+      flex: 1;
     }
 
     input[type=checkbox],
     input[type=radio] {
-      margin-right: 8px;
+      flex: 0;
+      margin: 2px 8px 0 0;
     }
 
     range-input {
       display: block;
-      width: 90%;
+      flex: 1 0 100%;
+      margin: 2px 0;
     }
   }
 }
@@ -85,31 +136,27 @@ Note: These styles are temporary. They will be replaced before going live.
     border: none;
     font: inherit;
     color: white;
+  }
 
-    &:hover {
-      opacity: 1;
-    }
-    &:focus {
-      opacity: 1;
-      outline: none;
-      box-shadow: 0 0 0 2px var(--button-fg, #ccc);
-    }
+  hr {
+    height: 1px;
+    border: none;
+    margin: 5px 0;
+    box-shadow: inset 0 0.5px 0 rgba(0, 0, 0, 0.4), inset 0 -0.5px 0 rgba(255, 255, 255, 0.2);
   }
 }
 
-.title {
+.size-details {
   display: flex;
   align-items: center;
-  padding: 10px 15px;
-  margin: 0 0 12px;
-  background: rgba(0,0,0,0.9);
-  font: inherit;
+  padding: 5px 15px;
+  background: rgba(0,0,0,0.5);
 }
 
 .download {
   flex: 0;
   margin: 0 0 0 auto;
-  background: rgba(0,0,0,0.7);
+  background: rgba(255,255,255,0.1);
   border-radius: 50%;
   padding: 5px;
   width: 16px;
@@ -127,44 +174,8 @@ Note: These styles are temporary. They will be replaced before going live.
   }
 }
 
-.size-details {
-  padding: 5px 15px;
-  background: rgba(0,0,0,0.5);
-}
-
-.size {
-  font-weight: normal;
-}
-
-.increase,
-.decrease {
-  font-style: italic;
-  filter: #{"grayscale(calc(50% - var(--size-delta, 50) * 0.5%))"};
-
-  &:before {
-    content: ' (';
-  }
-  &:after {
-    content: ')';
-  }
-}
-
-.increase {
-  color: var(--negative);
-}
-.decrease {
-  color: var(--positive);
-}
-
 .preprocessors {
   padding: 5px 0;
   margin: 5px 0;
-  box-shadow: inset 0 -.5px 0 rgba(0,0,0,0.25), 0 .5px 0 rgba(255,255,255,0.15);
-}
-
-.toggle {
-  display: flex;
-  position: relative;
-  align-content: center;
-  font-size: 14px;
+  box-shadow: inset 0 -.5px 0 rgba(0,0,0,0.4), 0 .5px 0 rgba(255,255,255,0.2);
 }
