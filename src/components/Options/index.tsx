@@ -25,13 +25,13 @@ import * as browserJP2 from '../../codecs/browser-jp2/encoder';
 import * as browserBMP from '../../codecs/browser-bmp/encoder';
 import * as browserPDF from '../../codecs/browser-pdf/encoder';
 import {
-    EncoderState,
-    EncoderType,
-    EncoderOptions,
-    encoders,
-    encodersSupported,
-    EncoderSupportMap,
-    encoderMap,
+  EncoderState,
+  EncoderType,
+  EncoderOptions,
+  encoders,
+  encodersSupported,
+  EncoderSupportMap,
+  encoderMap,
 } from '../../codecs/encoders';
 import { QuantizeOptions } from '../../codecs/imagequant/quantizer';
 import { ResizeOptions } from '../../codecs/resize/resize';
@@ -150,20 +150,9 @@ export default class Options extends Component<Props, State> {
           {titles[orientation][imageIndex]}
           {', '}
           {encoderMap[encoderState.type].label}
-
-          {(downloadUrl && imageFile) && (
-            <a
-              class={style.download}
-              href={downloadUrl}
-              download={imageFile.name}
-              title="Download"
-            >
-              <DownloadIcon />
-            </a>
-          )}
         </h2>
 
-        <div class={style.inner}>
+        <div class={style.content}>
           <section class={style.picker}>
             {encoderSupportMap ?
               <select value={encoderState.type} onChange={this.onEncoderTypeChange}>
@@ -236,6 +225,17 @@ export default class Options extends Component<Props, State> {
             file={imageFile}
             compareTo={imageFile === sourceImageFile ? undefined : sourceImageFile}
           />
+
+          {(downloadUrl && imageFile) && (
+            <a
+              class={style.download}
+              href={downloadUrl}
+              download={imageFile.name}
+              title="Download"
+            >
+              <DownloadIcon />
+            </a>
+          )}
         </div>
       </div>
     );
