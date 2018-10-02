@@ -1,6 +1,7 @@
 import { h, Component } from 'preact';
 import { bind, inputFieldChecked, inputFieldValueAsNumber } from '../../lib/util';
 import { EncodeOptions, MozJpegColorSpace } from './encoder';
+import '../../components/output/custom-els/RangeInput';
 
 type Props = {
   options: EncodeOptions,
@@ -40,9 +41,8 @@ export default class MozJPEGEncoderOptions extends Component<Props, {}> {
       <form>
         <label>
           Quality:
-          <input
+          <range-input
             name="quality"
-            type="range"
             min="0"
             max="100"
             value={'' + options.quality}
@@ -56,7 +56,7 @@ export default class MozJPEGEncoderOptions extends Component<Props, {}> {
             checked={options.baseline}
             onChange={this.onChange}
           />
-          Baseline (worse but legacy-compatible)
+          <span>Baseline (worse but legacy-compatible)</span>
         </label>
         <label style={{ display: options.baseline ? 'none' : '' }}>
           <input
@@ -65,7 +65,7 @@ export default class MozJPEGEncoderOptions extends Component<Props, {}> {
             checked={options.progressive}
             onChange={this.onChange}
           />
-          Progressive multi-pass rendering
+          <span>Progressive multi-pass rendering</span>
         </label>
         <label style={{ display: options.baseline ? '' : 'none' }}>
           <input
@@ -74,13 +74,12 @@ export default class MozJPEGEncoderOptions extends Component<Props, {}> {
             checked={options.optimize_coding}
             onChange={this.onChange}
           />
-          Optimize Huffman table
+          <span>Optimize Huffman table</span>
         </label>
         <label>
           Smoothing:
-          <input
+          <range-input
             name="smoothing"
-            type="range"
             min="0"
             max="100"
             value={'' + options.smoothing}
@@ -124,7 +123,7 @@ export default class MozJPEGEncoderOptions extends Component<Props, {}> {
             checked={options.trellis_multipass}
             onChange={this.onChange}
           />
-          Consider multiple scans during trellis quantization
+          <span>Consider multiple scans during trellis quantization</span>
         </label>
         <label style={{ display: options.trellis_multipass ? '' : 'none' }}>
           <input
@@ -133,7 +132,7 @@ export default class MozJPEGEncoderOptions extends Component<Props, {}> {
             checked={options.trellis_opt_zero}
             onChange={this.onChange}
           />
-          Optimize runs of zero blocks
+          <span>Optimize runs of zero blocks</span>
         </label>
         <label>
           <input
@@ -142,13 +141,12 @@ export default class MozJPEGEncoderOptions extends Component<Props, {}> {
             checked={options.trellis_opt_table}
             onChange={this.onChange}
           />
-          Optimize after trellis quantization
+          <span>Optimize after trellis quantization</span>
         </label>
         <label>
           Trellis quantization passes:
-          <input
+          <range-input
             name="trellis_loops"
-            type="range"
             min="1"
             max="50"
             value={'' + options.trellis_loops}

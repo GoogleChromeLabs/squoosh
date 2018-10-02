@@ -118,6 +118,13 @@ Note: These styles are temporary. They will be replaced before going live.
       margin: 2px 0;
     }
   }
+
+  hr {
+    height: 1px;
+    border: none;
+    margin: 5px 0;
+    box-shadow: inset 0 0.5px 0 rgba(0, 0, 0, 0.4), inset 0 -0.5px 0 rgba(255, 255, 255, 0.2);
+  }
 }
 
 .picker {
@@ -174,8 +181,45 @@ Note: These styles are temporary. They will be replaced before going live.
   }
 }
 
+.size-details {
+  padding: 5px 15px;
+  background: rgba(0,0,0,0.5);
+}
+
+.size {
+  font-weight: normal;
+}
+
+.increase,
+.decrease {
+  font-style: italic;
+  filter: #{"grayscale(calc(50% - var(--size-delta, 50) * 0.5%))"};
+
+  &:before {
+    content: ' (';
+  }
+  &:after {
+    content: ')';
+  }
+}
+
+.increase {
+  color: var(--negative);
+}
+.decrease {
+  color: var(--positive);
+}
+
 .preprocessors {
   padding: 5px 0;
   margin: 5px 0;
+  box-shadow: inset 0 -.5px 0 rgba(0,0,0,0.4), 0 .5px 0 rgba(255,255,255,0.2);
+}
+
+.toggle {
+  display: flex;
+  position: relative;
+  align-content: center;
+  font-size: 14px;
   box-shadow: inset 0 -.5px 0 rgba(0,0,0,0.4), 0 .5px 0 rgba(255,255,255,0.2);
 }
