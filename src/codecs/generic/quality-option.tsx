@@ -1,5 +1,6 @@
 import { h, Component } from 'preact';
 import { bind } from '../../lib/util';
+import '../../components/output/custom-els/RangeInput';
 
 interface EncodeOptions {
   quality: number;
@@ -35,9 +36,8 @@ export default function qualityOption(opts: QualityOptionArg = {}) {
         <div>
           <label>
             Quality:
-            <input
+            <range-input
               name="quality"
-              type="range"
               min={min}
               max={max}
               step={step || 'any'}
