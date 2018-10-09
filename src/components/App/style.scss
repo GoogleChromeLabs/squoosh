@@ -11,16 +11,6 @@ Note: These styles are temporary. They will be replaced before going live.
   overflow: hidden;
   contain: strict;
   display: flex;
-  justify-content: flex-end;
-
-  &.horizontal {
-    justify-content: space-between;
-    align-items: flex-end;
-  }
-
-  &.vertical {
-    flex-direction: column;
-  }
 }
 
 :global {
@@ -62,5 +52,20 @@ Note: These styles are temporary. They will be replaced before going live.
       background-color:rgba(119, 85, 85, 0.2);
       border-color:rgba(129, 63, 63, 0.5);
     }
+  }
+}
+
+.option-pair {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+
+  &.horizontal {
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  &.vertical {
+    flex-direction: column;
   }
 }
