@@ -38,6 +38,7 @@ import {
 
 import { decodeImage } from '../../codecs/decoders';
 import { cleanMerge, cleanSet } from '../../lib/clean-modify';
+import Intro from '../intro';
 
 type Orientation = 'horizontal' | 'vertical';
 
@@ -210,14 +211,6 @@ export default class App extends Component<Props, State> {
   }
 
   @bind
-  async onFileChange(event: Event): Promise<void> {
-    const fileInput = event.target as HTMLInputElement;
-    const file = fileInput.files && fileInput.files[0];
-    if (!file) return;
-    await this.updateFile(file);
-  }
-
-  @bind
   async onFileDrop(event: FileDropEvent) {
     const { file } = event;
     if (!file) return;
@@ -353,10 +346,7 @@ export default class App extends Component<Props, State> {
               rightImgContain={rightImage.preprocessorState.resize.fitMethod === 'cover'}
             />
           ) : (
-            <div class={style.welcome}>
-              <h1>Drop, paste or select an image</h1>
-              <input type="file" onChange={this.onFileChange} />
-            </div>
+            <Intro onFile={this.updateFile} />
           )}
           {(leftImageData && rightImageData && source) && images.map((image, index) => (
             <Options
