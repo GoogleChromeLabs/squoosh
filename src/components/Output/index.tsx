@@ -170,6 +170,7 @@ export default class Output extends Component<Props, State> {
             ref={linkRef(this, 'pinchZoomLeft')}
           >
             <canvas
+              class={style.outputCanvas}
               ref={linkRef(this, 'canvasLeft')}
               width={leftImg.width}
               height={leftImg.height}
@@ -182,6 +183,7 @@ export default class Output extends Component<Props, State> {
           </pinch-zoom>
           <pinch-zoom ref={linkRef(this, 'pinchZoomRight')}>
             <canvas
+              class={style.outputCanvas}
               ref={linkRef(this, 'canvasRight')}
               width={rightImg.width}
               height={rightImg.height}
