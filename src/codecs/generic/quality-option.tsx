@@ -1,6 +1,6 @@
 import { h, Component } from 'preact';
 import { bind } from '../../lib/util';
-import '../../components/output/custom-els/RangeInput';
+import '../../custom-els/RangeInput';
 
 interface EncodeOptions {
   quality: number;

@@ -2,7 +2,7 @@ import { h, Component } from 'preact';
 import { bind, inputFieldCheckedAsNumber, inputFieldValueAsNumber } from '../../lib/util';
 import { EncodeOptions, WebPImageHint } from './encoder';
 import * as styles from './styles.scss';
-import '../../components/output/custom-els/RangeInput';
+import '../../custom-els/RangeInput';
 
 type Props = {
   options: EncodeOptions,
