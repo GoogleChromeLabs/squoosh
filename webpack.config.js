@@ -156,6 +156,10 @@ module.exports = function (_, env) {
           // See https://github.com/webpack/webpack/issues/6725
           type: 'javascript/auto',
           loader: 'file-loader'
+        },
+        {
+          test: /\.(png|svg|jpg|gif)$/,
+          loader: 'file-loader'
         }
       ]
     },

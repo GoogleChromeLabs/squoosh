@@ -14,7 +14,6 @@ Note: These styles are temporary. They will be replaced before going live.
 
 .output {
   @extend %fill;
-  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none"><path fill="rgba(0,0,0,0.05)" d="M0 0h10v10H0zM10 10h10v10H10z"/></svg>') center repeat;
 
   &:before {
     content: '';

@@ -10,7 +10,6 @@ Note: These styles are temporary. They will be replaced before going live.
   height: 100%;
   overflow: hidden;
   contain: strict;
-  display: flex;
 }
 
 :global {
@@ -59,6 +58,7 @@ Note: These styles are temporary. They will be replaced before going live.
   display: flex;
   justify-content: flex-end;
   width: 100%;
+  height: 100%;
 
   &.horizontal {
     justify-content: space-between;
