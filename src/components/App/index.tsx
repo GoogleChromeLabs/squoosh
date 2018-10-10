@@ -1,6 +1,6 @@
 import { h, Component } from 'preact';
 
-import { bind, linkRef, Fileish, blobToImg, drawableToImageData } from '../../lib/util';
+import { bind, linkRef, Fileish, blobToImg, drawableToImageData, blobToText } from '../../lib/util';
 import * as style from './style.scss';
 import Output from '../Output';
 import Options from '../Options';
@@ -128,6 +128,31 @@ async function compressImage(
   );
 }
 
+async function processSvg(blob: Blob): Promise<HTMLImageElement> {
+  // Firefox throws if you try to draw an SVG to canvas that doesn't have width/height.
+  // In Chrome it loads, but drawImage behaves weirdly.
+  // This function sets width/height if it isn't already set.
+  const parser = new DOMParser();
+  const text = await blobToText(blob);
+  const document = parser.parseFromString(text, 'image/svg+xml');
+  const svg = document.documentElement;
+
+  if (svg.hasAttribute('width') && svg.hasAttribute('height')) {
+    return blobToImg(blob);
+  }
+
+  const viewBox = svg.getAttribute('viewBox');
+  if (viewBox === null) throw Error('SVG must have width/height or viewBox');
+
+  const viewboxParts = viewBox.split(/\s+/);
+  svg.setAttribute('width', viewboxParts[2]);
+  svg.setAttribute('height', viewboxParts[3]);
+
+  const serializer = new XMLSerializer();
+  const newSource = serializer.serializeToString(document);
+  return blobToImg(new Blob([newSource], { type: 'image/svg+xml' }));
+}
+
 export default class App extends Component<Props, State> {
   widthQuery = window.matchMedia('(min-width: 500px)');
 
@@ -236,14 +261,14 @@ export default class App extends Component<Props, State> {
   async updateFile(file: File) {
     this.setState({ loading: true });
     try {
-      let data;
-      let vectorImage;
+      let data: ImageData;
+      let vectorImage: HTMLImageElement | undefined;
 
       // Special-case SVG. We need to avoid createImageBitmap because of
       // https://bugs.chromium.org/p/chromium/issues/detail?id=606319.
       // Also, we cache the HTMLImageElement so we can perform vector resizing later.
       if (file.type === 'image/svg+xml') {
-        vectorImage = await blobToImg(file);
+        vectorImage = await processSvg(file);
         data = drawableToImageData(vectorImage);
       } else {
         data = await decodeImage(file);

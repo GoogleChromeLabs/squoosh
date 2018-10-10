@@ -95,6 +95,10 @@ export function blobToArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
   return new Response(blob).arrayBuffer();
 }
 
+export function blobToText(blob: Blob): Promise<string> {
+  return new Response(blob).text();
+}
+
 const magicNumberToMimeType = new Map<RegExp, string>([
   [/^%PDF-/, 'application/pdf'],
   [/^GIF87a/, 'image/gif'],
