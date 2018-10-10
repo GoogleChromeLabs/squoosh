@@ -38,6 +38,7 @@ import { ResizeOptions } from '../../codecs/resize/resize';
 import { PreprocessorState } from '../../codecs/preprocessors';
 import FileSize from '../FileSize';
 import { DownloadIcon } from '../../lib/icons';
+import { SourceImage } from '../app';
 
 const encoderOptionsComponentMap = {
   [identity.type]: undefined,
@@ -62,9 +63,8 @@ const titles = {
 
 interface Props {
   orientation: 'horizontal' | 'vertical';
-  sourceAspect: number;
+  source: SourceImage;
   imageIndex: number;
-  sourceImageFile?: File;
   imageFile?: Fileish;
   downloadUrl?: string;
   encoderState: EncoderState;
@@ -129,8 +129,7 @@ export default class Options extends Component<Props, State> {
 
   render(
     {
-      sourceImageFile,
-      sourceAspect,
+      source,
       imageIndex,
       imageFile,
       downloadUrl,
@@ -178,7 +177,8 @@ export default class Options extends Component<Props, State> {
               </label>
               {preprocessorState.resize.enabled &&
                 <ResizeOptionsComponent
-                  aspect={sourceAspect}
+                  isVector={Boolean(source.vectorImage)}
+                  aspect={source.data.width / source.data.height}
                   options={preprocessorState.resize}
                   onChange={this.onResizeOptionsChange}
                 />
@@ -223,7 +223,7 @@ export default class Options extends Component<Props, State> {
             increaseClass={style.increase}
             decreaseClass={style.decrease}
             file={imageFile}
-            compareTo={imageFile === sourceImageFile ? undefined : sourceImageFile}
+            compareTo={imageFile === source.file ? undefined : source.file}
           />
 
           {(downloadUrl && imageFile) && (
