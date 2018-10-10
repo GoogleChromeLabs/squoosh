@@ -122,7 +122,7 @@ export async function sniffMimeType(blob: Blob): Promise<string> {
   return '';
 }
 
-async function blobToImg(blob: Blob): Promise<HTMLImageElement> {
+export async function blobToImg(blob: Blob): Promise<HTMLImageElement> {
   const url = URL.createObjectURL(blob);
 
   try {
@@ -147,16 +147,37 @@ async function blobToImg(blob: Blob): Promise<HTMLImageElement> {
   }
 }
 
-function drawableToImageData(drawable: ImageBitmap | HTMLImageElement): ImageData {
+interface DrawableToImageDataOptions {
+  width?: number;
+  height?: number;
+  sx?: number;
+  sy?: number;
+  sw?: number;
+  sh?: number;
+}
+
+export function drawableToImageData(
+  drawable: ImageBitmap | HTMLImageElement,
+  opts: DrawableToImageDataOptions = {},
+): ImageData {
+  const {
+    width = drawable.width,
+    height = drawable.height,
+    sx = 0,
+    sy = 0,
+    sw = drawable.width,
+    sh = drawable.height,
+  } = opts;
+
   // Make canvas same size as image
   const canvas = document.createElement('canvas');
-  canvas.width = drawable.width;
-  canvas.height = drawable.height;
+  canvas.width = width;
+  canvas.height = height;
   // Draw image onto canvas
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Could not create canvas context');
-  ctx.drawImage(drawable, 0, 0);
-  return ctx.getImageData(0, 0, drawable.width, drawable.height);
+  ctx.drawImage(drawable, sx, sy, sw, sh, 0, 0, width, height);
+  return ctx.getImageData(0, 0, width, height);
 }
 
 export async function nativeDecode(blob: Blob): Promise<ImageData> {
