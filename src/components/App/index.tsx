@@ -43,7 +43,7 @@ import Intro from '../intro';
 type Orientation = 'horizontal' | 'vertical';
 
 export interface SourceImage {
-  file: File;
+  file: File | Fileish;
   data: ImageData;
   vectorImage?: HTMLImageElement;
 }
@@ -259,7 +259,7 @@ export default class App extends Component<Props, State> {
   }
 
   @bind
-  async updateFile(file: File) {
+  async updateFile(file: File | Fileish) {
     this.setState({ loading: true });
     try {
       let data: ImageData;

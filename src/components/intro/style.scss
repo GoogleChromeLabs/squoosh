@@ -19,6 +19,11 @@
   display: grid;
   align-items: center;
   background: rgba(255, 255, 255, 0.5);
+  text-align: center;
+  font-size: 2rem;
+  -webkit-overflow-scrolling: touch;
+  overflow: auto;
+  padding: 20px 0;
 }
 
 .logo-container {
@@ -38,14 +43,13 @@
 
 .open-image-guide {
   font: 300 11vw intro-text;
-  text-align: center;
+  margin-bottom: 0;
 
   @media (min-width: 460px) {
     font-size: 50.6px;
     padding: 0 40px;
   }
 }
-
 
 .select-button {
   all: unset;
@@ -60,6 +64,81 @@
 }
 
 .hide {
-  background: red;
   display: none;
+}
+
+.demos {
+  display: block;
+  padding: 0;
+  border-top: 1px solid #e8e8e8;
+  margin: 0 auto;
+
+  @media (min-width: 400px) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  @media (min-width: 580px) {
+    border-top: none;
+    width: 523px;
+  }
+
+  @media (min-width: 900px) {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    width: 773px;
+  }
+}
+
+.demo-item {
+  background: #fff;
+  display: flex;
+  border-bottom: 1px solid #e8e8e8;
+  overflow: hidden;
+
+  @media (min-width: 580px) {
+    border: 1px solid #e8e8e8;
+    border-radius: 4px;
+    margin: 3px;
+  }
+}
+
+.demo-button {
+  all: unset;
+  cursor: pointer;
+  flex: 1;
+
+  &:hover,
+  &:focus {
+    background: #f5f5f5;
+  }
+}
+
+.demo {
+  display: flex;
+  align-items: center;
+  padding: 7px;
+  font-size: 1.3rem;
+}
+
+.demo-img-container {
+  display: block;
+  width: 47px;
+  background: #ccc;
+  border-radius: 3px;
+  flex: 0 0 auto;
+}
+
+.demo-img-aspect {
+  position: relative;
+  padding-top: 100%;
+}
+
+.demo-description {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  flex: 1;
+  padding: 0 10px;
 }
