@@ -268,7 +268,7 @@ export default class App extends Component<Props, State> {
       // Special-case SVG. We need to avoid createImageBitmap because of
       // https://bugs.chromium.org/p/chromium/issues/detail?id=606319.
       // Also, we cache the HTMLImageElement so we can perform vector resizing later.
-      if (file.type === 'image/svg+xml') {
+      if (file.type.startsWith('image/svg+xml')) {
         vectorImage = await processSvg(file);
         data = drawableToImageData(vectorImage);
       } else {

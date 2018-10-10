@@ -6,6 +6,10 @@ import logo from './imgs/logo.svg';
 import largePhoto from './imgs/demos/large-photo.jpg';
 import artwork from './imgs/demos/artwork.jpg';
 import deviceScreen from './imgs/demos/device-screen.png';
+import largePhotoIcon from './imgs/demos/large-photo-icon.jpg';
+import artworkIcon from './imgs/demos/artwork-icon.jpg';
+import deviceScreenIcon from './imgs/demos/device-screen-icon.jpg';
+import logoIcon from './imgs/demos/logo-icon.png';
 import * as style from './style.scss';
 
 const demos = [
@@ -13,21 +17,25 @@ const demos = [
     description: 'Large photo (2.8mb)',
     filename: 'photo.jpg',
     url: largePhoto,
+    iconUrl: largePhotoIcon,
   },
   {
     description: 'Artwork (2.9mb)',
     filename: 'art.jpg',
     url: artwork,
+    iconUrl: artworkIcon,
   },
   {
     description: 'Device screen (1.6mb)',
     filename: 'pixel3.png',
     url: deviceScreen,
+    iconUrl: deviceScreenIcon,
   },
   {
     description: 'SVG icon (13k)',
     filename: 'squoosh.svg',
     url: logo,
+    iconUrl: logoIcon,
   },
 ];
 
@@ -56,7 +64,11 @@ export default class Intro extends Component<Props, State> {
   private async onDemoClick(index: number, event: Event) {
     const demo = demos[index];
     const blob = await fetch(demo.url).then(r => r.blob());
-    const file = new Fileish([blob], demo.filename, { type: blob.type });
+
+    // Firefox doesn't like content types like 'image/png; charset=UTF-8', which Webpack's dev
+    // server returns. https://bugzilla.mozilla.org/show_bug.cgi?id=1497925.
+    const type = /[^;]*/.exec(blob.type)![0];
+    const file = new Fileish([blob], demo.filename, { type });
     this.props.onFile(file);
   }
 
@@ -66,7 +78,7 @@ export default class Intro extends Component<Props, State> {
         <div>
           <div class={style.logoSizer}>
             <div class={style.logoContainer}>
-              <img src={logo} class={style.logo} />
+              <img src={logo} class={style.logo} alt="Squoosh" />
             </div>
           </div>
           <p class={style.openImageGuide}>
@@ -86,7 +98,9 @@ export default class Intro extends Component<Props, State> {
                 <button class={style.demoButton} onClick={this.onDemoClick.bind(this, i)}>
                   <div class={style.demo}>
                     <div class={style.demoImgContainer}>
-                      <div class={style.demoImgAspect}/>
+                      <div class={style.demoImgAspect}>
+                        <img class={style.demoIcon} src={demo.iconUrl} alt=""/>
+                      </div>
                     </div>
                     <div class={style.demoDescription}>{demo.description}</div>
                   </div>

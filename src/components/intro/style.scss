@@ -94,7 +94,6 @@
   background: #fff;
   display: flex;
   border-bottom: 1px solid #e8e8e8;
-  overflow: hidden;
 
   @media (min-width: 580px) {
     border: 1px solid #e8e8e8;
@@ -122,6 +121,7 @@
 }
 
 .demo-img-container {
+  overflow: hidden;
   display: block;
   width: 47px;
   background: #ccc;
@@ -132,6 +132,11 @@
 .demo-img-aspect {
   position: relative;
   padding-top: 100%;
+
+}
+
+.demo-icon {
+  composes: abs-fill from '../../lib/util.scss';
 }
 
 .demo-description {
