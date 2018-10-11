@@ -38,7 +38,7 @@ import { ResizeOptions } from '../../codecs/resize/resize';
 import { PreprocessorState } from '../../codecs/preprocessors';
 import FileSize from '../FileSize';
 import { DownloadIcon } from '../../lib/icons';
-import { SourceImage } from '../app';
+import { SourceImage } from '../App';
 
 const encoderOptionsComponentMap = {
   [identity.type]: undefined,
