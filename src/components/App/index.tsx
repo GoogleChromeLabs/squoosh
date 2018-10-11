@@ -368,6 +368,7 @@ export default class App extends Component<Props, State> {
     this.setState({ images });
   }
 
+  @bind
   showError (error: string) {
     if (!this.snackbar) throw Error('Snackbar missing');
     this.snackbar.showSnackbar({ message: error });
@@ -410,7 +411,7 @@ export default class App extends Component<Props, State> {
                 ))}
               </div>
             :
-              <Intro onFile={this.updateFile} />
+              <Intro onFile={this.updateFile} onError={this.showError} />
           }
           {anyLoading && <span style={{ position: 'fixed', top: 0, left: 0 }}>Loading...</span>}
           <snack-bar ref={linkRef(this, 'snackbar')} />

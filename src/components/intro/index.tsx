@@ -1,6 +1,7 @@
 import { h, Component } from 'preact';
 
 import { bind, linkRef, Fileish } from '../../lib/util';
+import '../custom-els/LoadingSpinner';
 
 import logo from './imgs/logo.svg';
 import largePhoto from './imgs/demos/large-photo.jpg';
@@ -41,10 +42,14 @@ const demos = [
 
 interface Props {
   onFile: (file: File | Fileish) => void;
+  onError: (error: string) => void;
 }
-interface State {}
+interface State {
+  fetchingDemoIndex?: number;
+}
 
 export default class Intro extends Component<Props, State> {
+  state: State = {};
   private fileInput?: HTMLInputElement;
 
   @bind
@@ -62,17 +67,23 @@ export default class Intro extends Component<Props, State> {
 
   @bind
   private async onDemoClick(index: number, event: Event) {
-    const demo = demos[index];
-    const blob = await fetch(demo.url).then(r => r.blob());
+    try {
+      this.setState({ fetchingDemoIndex: index });
+      const demo = demos[index];
+      const blob = await fetch(demo.url).then(r => r.blob());
 
-    // Firefox doesn't like content types like 'image/png; charset=UTF-8', which Webpack's dev
-    // server returns. https://bugzilla.mozilla.org/show_bug.cgi?id=1497925.
-    const type = /[^;]*/.exec(blob.type)![0];
-    const file = new Fileish([blob], demo.filename, { type });
-    this.props.onFile(file);
+      // Firefox doesn't like content types like 'image/png; charset=UTF-8', which Webpack's dev
+      // server returns. https://bugzilla.mozilla.org/show_bug.cgi?id=1497925.
+      const type = /[^;]*/.exec(blob.type)![0];
+      const file = new Fileish([blob], demo.filename, { type });
+      this.props.onFile(file);
+    } catch (err) {
+      this.setState({ fetchingDemoIndex: undefined });
+      this.props.onError("Couldn't fetch demo image");
+    }
   }
 
-  render({ }: Props, { }: State) {
+  render({ }: Props, { fetchingDemoIndex }: State) {
     return (
       <div class={style.intro}>
         <div>
@@ -100,6 +111,11 @@ export default class Intro extends Component<Props, State> {
                     <div class={style.demoImgContainer}>
                       <div class={style.demoImgAspect}>
                         <img class={style.demoIcon} src={demo.iconUrl} alt=""/>
+                        {fetchingDemoIndex === i &&
+                          <div class={style.demoLoading}>
+                            <loading-spinner class={style.demoLoadingSpinner}/>
+                          </div>
+                        }
                       </div>
                     </div>
                     <div class={style.demoDescription}>{demo.description}</div>
@@ -109,6 +125,10 @@ export default class Intro extends Component<Props, State> {
             )}
           </ul>
         </div>
+        <ul class={style.relatedLinks}>
+          <li><a href="https://github.com/GoogleChromeLabs/squoosh/">View the code</a></li>
+          <li><a href="https://github.com/GoogleChromeLabs/squoosh/issues">Report a bug</a></li>
+        </ul>
       </div>
     );
   }
