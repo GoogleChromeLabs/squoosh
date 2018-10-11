@@ -5,12 +5,12 @@ function getCoverOffsets(sw: number, sh: number, dw: number, dh: number) {
   const endAspect = dw / dh;
 
   if (endAspect > currentAspect) {
-    const newSh = dh / (dw / sw);
+    const newSh = sw / endAspect;
     const newSy = (sh - newSh) / 2;
     return { sw, sh: newSh, sx: 0, sy: newSy };
   }
 
-  const newSw = dw / (dh / sh);
+  const newSw = sh * endAspect;
   const newSx = (sw - newSw) / 2;
   return { sh, sw: newSw, sx: newSx, sy: 0 };
 }
