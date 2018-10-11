@@ -1,6 +1,6 @@
 import { h, Component } from 'preact';
 
-import { bind, linkRef, Fileish } from '../../lib/util';
+import { bind, linkRef, Fileish, blobToImg, drawableToImageData, blobToText } from '../../lib/util';
 import * as style from './style.scss';
 import Output from '../Output';
 import Options from '../Options';
@@ -45,6 +45,7 @@ type Orientation = 'horizontal' | 'vertical';
 export interface SourceImage {
   file: File;
   data: ImageData;
+  vectorImage?: HTMLImageElement;
 }
 
 interface EncodedImage {
@@ -81,7 +82,14 @@ async function preprocessImage(
 ): Promise<ImageData> {
   let result = source.data;
   if (preprocessData.resize.enabled) {
-    result = resizer.resize(result, preprocessData.resize);
+    if (preprocessData.resize.method === 'vector' && source.vectorImage) {
+      result = resizer.vectorResize(
+        source.vectorImage,
+        preprocessData.resize as resizer.VectorResizeOptions,
+      );
+    } else {
+      result = resizer.resize(result, preprocessData.resize as resizer.BitmapResizeOptions);
+    }
   }
   if (preprocessData.quantizer.enabled) {
     result = await quantizer.quantize(result, preprocessData.quantizer);
@@ -118,6 +126,31 @@ async function compressImage(
     sourceFilename.replace(/.[^.]*$/, `.${encoder.extension}`),
     { type: encoder.mimeType },
   );
+}
+
+async function processSvg(blob: Blob): Promise<HTMLImageElement> {
+  // Firefox throws if you try to draw an SVG to canvas that doesn't have width/height.
+  // In Chrome it loads, but drawImage behaves weirdly.
+  // This function sets width/height if it isn't already set.
+  const parser = new DOMParser();
+  const text = await blobToText(blob);
+  const document = parser.parseFromString(text, 'image/svg+xml');
+  const svg = document.documentElement;
+
+  if (svg.hasAttribute('width') && svg.hasAttribute('height')) {
+    return blobToImg(blob);
+  }
+
+  const viewBox = svg.getAttribute('viewBox');
+  if (viewBox === null) throw Error('SVG must have width/height or viewBox');
+
+  const viewboxParts = viewBox.split(/\s+/);
+  svg.setAttribute('width', viewboxParts[2]);
+  svg.setAttribute('height', viewboxParts[3]);
+
+  const serializer = new XMLSerializer();
+  const newSource = serializer.serializeToString(document);
+  return blobToImg(new Blob([newSource], { type: 'image/svg+xml' }));
 }
 
 export default class App extends Component<Props, State> {
@@ -228,11 +261,22 @@ export default class App extends Component<Props, State> {
   async updateFile(file: File) {
     this.setState({ loading: true });
     try {
-      const data = await decodeImage(file);
+      let data: ImageData;
+      let vectorImage: HTMLImageElement | undefined;
 
-      let newState = {
+      // Special-case SVG. We need to avoid createImageBitmap because of
+      // https://bugs.chromium.org/p/chromium/issues/detail?id=606319.
+      // Also, we cache the HTMLImageElement so we can perform vector resizing later.
+      if (file.type === 'image/svg+xml') {
+        vectorImage = await processSvg(file);
+        data = drawableToImageData(vectorImage);
+      } else {
+        data = await decodeImage(file);
+      }
+
+      let newState: State = {
         ...this.state,
-        source: { data, file },
+        source: { data, file, vectorImage },
         loading: false,
       };
 
@@ -241,6 +285,7 @@ export default class App extends Component<Props, State> {
         newState = cleanMerge(newState, `images.${i}.preprocessorState.resize`, {
           width: data.width,
           height: data.height,
+          method: vectorImage ? 'vector' : 'browser-high',
         });
       }
 
@@ -349,11 +394,10 @@ export default class App extends Component<Props, State> {
                 />
                 {images.map((image, index) => (
                   <Options
+                    source={source}
                     orientation={orientation}
-                    sourceAspect={source.data.width / source.data.height}
                     imageIndex={index}
                     imageFile={image.file}
-                    sourceImageFile={source && source.file}
                     downloadUrl={image.downloadUrl}
                     preprocessorState={image.preprocessorState}
                     encoderState={image.encoderState}

@@ -4,6 +4,7 @@ import { bind, inputFieldValueAsNumber } from '../../lib/util';
 import { ResizeOptions } from './resize';
 
 interface Props {
+  isVector: Boolean;
   options: ResizeOptions;
   aspect: number;
   onChange(newOptions: ResizeOptions): void;
@@ -63,7 +64,7 @@ export default class ResizerOptions extends Component<Props, State> {
     this.form!.width.value = Math.round(height * this.props.aspect);
   }
 
-  render({ options, aspect }: Props, { maintainAspect }: State) {
+  render({ options, aspect, isVector }: Props, { maintainAspect }: State) {
     return (
       <form ref={el => this.form = el}>
         <label>
@@ -73,6 +74,7 @@ export default class ResizerOptions extends Component<Props, State> {
             value={options.method}
             onChange={this.onChange}
           >
+            {isVector && <option value="vector">Vector</option>}
             <option value="browser-pixelated">Browser pixelated</option>
             <option value="browser-low">Browser low quality</option>
             <option value="browser-medium">Browser medium quality</option>
