@@ -38,6 +38,7 @@ import {
 
 import { decodeImage } from '../../codecs/decoders';
 import { cleanMerge, cleanSet } from '../../lib/clean-modify';
+import Intro from '../intro';
 
 type Orientation = 'horizontal' | 'vertical';
 
@@ -210,14 +211,6 @@ export default class App extends Component<Props, State> {
   }
 
   @bind
-  async onFileChange(event: Event): Promise<void> {
-    const fileInput = event.target as HTMLInputElement;
-    const file = fileInput.files && fileInput.files[0];
-    if (!file) return;
-    await this.updateFile(file);
-  }
-
-  @bind
   async onFileDrop(event: FileDropEvent) {
     const { file } = event;
     if (!file) return;
@@ -342,38 +335,38 @@ export default class App extends Component<Props, State> {
     return (
       <file-drop accept="image/*" onfiledrop={this.onFileDrop}>
         <div id="app" class={`${style.app} ${style[orientation]}`}>
-          {(leftImageData && rightImageData && source) ? (
-            <Output
-              orientation={orientation}
-              imgWidth={source.data.width}
-              imgHeight={source.data.height}
-              leftImg={leftImageData}
-              rightImg={rightImageData}
-              leftImgContain={leftImage.preprocessorState.resize.fitMethod === 'cover'}
-              rightImgContain={rightImage.preprocessorState.resize.fitMethod === 'cover'}
-            />
-          ) : (
-            <div class={style.welcome}>
-              <h1>Drop, paste or select an image</h1>
-              <input type="file" onChange={this.onFileChange} />
-            </div>
-          )}
-          {(leftImageData && rightImageData && source) && images.map((image, index) => (
-            <Options
-              orientation={orientation}
-              sourceAspect={source.data.width / source.data.height}
-              imageIndex={index}
-              imageFile={image.file}
-              sourceImageFile={source && source.file}
-              downloadUrl={image.downloadUrl}
-              preprocessorState={image.preprocessorState}
-              encoderState={image.encoderState}
-              onEncoderTypeChange={this.onEncoderTypeChange.bind(this, index)}
-              onEncoderOptionsChange={this.onEncoderOptionsChange.bind(this, index)}
-              onPreprocessorOptionsChange={this.onPreprocessorOptionsChange.bind(this, index)}
-              onCopyToOtherClick={this.onCopyToOtherClick.bind(this, index)}
-            />
-          ))}
+          {source
+            ?
+              <div class={`${style.optionPair} ${style[orientation]}`}>
+                <Output
+                  orientation={orientation}
+                  imgWidth={source.data.width}
+                  imgHeight={source.data.height}
+                  leftImg={leftImageData || source.data}
+                  rightImg={rightImageData || source.data}
+                  leftImgContain={leftImage.preprocessorState.resize.fitMethod === 'cover'}
+                  rightImgContain={rightImage.preprocessorState.resize.fitMethod === 'cover'}
+                />
+                {images.map((image, index) => (
+                  <Options
+                    orientation={orientation}
+                    sourceAspect={source.data.width / source.data.height}
+                    imageIndex={index}
+                    imageFile={image.file}
+                    sourceImageFile={source && source.file}
+                    downloadUrl={image.downloadUrl}
+                    preprocessorState={image.preprocessorState}
+                    encoderState={image.encoderState}
+                    onEncoderTypeChange={this.onEncoderTypeChange.bind(this, index)}
+                    onEncoderOptionsChange={this.onEncoderOptionsChange.bind(this, index)}
+                    onPreprocessorOptionsChange={this.onPreprocessorOptionsChange.bind(this, index)}
+                    onCopyToOtherClick={this.onCopyToOtherClick.bind(this, index)}
+                  />
+                ))}
+              </div>
+            :
+              <Intro onFile={this.updateFile} />
+          }
           {anyLoading && <span style={{ position: 'fixed', top: 0, left: 0 }}>Loading...</span>}
           <snack-bar ref={linkRef(this, 'snackbar')} />
         </div>
