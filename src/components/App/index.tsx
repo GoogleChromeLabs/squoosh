@@ -37,6 +37,8 @@ export default class App extends Component<Props, State> {
 
     import('../compress').then((module) => {
       this.setState({ Compress: module.default });
+    }).catch(() => {
+      this.showError('Failed to load app');
     });
 
     // In development, persist application state across hot reloads:
