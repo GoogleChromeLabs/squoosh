@@ -1,3 +1,4 @@
+import { expose } from 'comlink';
 import webp_dec, { WebPModule } from '../../../codecs/webp_dec/webp_dec';
 // Using require() so TypeScript doesn’t complain about this not being a module.
 const wasmBinaryUrl = require('../../../codecs/webp_dec/webp_dec.wasm');
@@ -44,3 +45,5 @@ export default class WebpDecoder {
     );
   }
 }
+
+expose(WebpDecoder, self);
