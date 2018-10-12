@@ -2,7 +2,7 @@
   "name": "webp_dec",
   "scripts": {
     "install": "napa",
-    "build": "docker run --rm -v $(pwd):/src trzeci/emscripten emcc -O3 --bind -s ALLOW_MEMORY_GROWTH=1 -s MODULARIZE=1 -s 'EXPORT_NAME=\"webp_dec\"' --std=c++11 -I node_modules/libwebp -o ./webp_dec.js node_modules/libwebp/src/{dec,dsp,demux,enc,mux,utils}/*.c -x c++ webp_dec.cpp"
+    "build": "docker run --rm -v $(pwd):/src trzeci/emscripten ./build.sh"
   },
   "napa": {
     "libwebp": "webmproject/libwebp#v1.0.0"

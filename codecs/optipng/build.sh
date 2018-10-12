@@ -2,10 +2,11 @@
 
 set -e
 
+export OPTIMIZE="-Os"
 export PREFIX="/src/build"
-export CFLAGS="-I${PREFIX}/include/"
-export CPPFLAGS="-I${PREFIX}/include/"
-export LDFLAGS="-L${PREFIX}/lib/"
+export CFLAGS="${OPTIMIZE} -I${PREFIX}/include/"
+export CPPFLAGS="${OPTIMIZE} -I${PREFIX}/include/"
+export LDFLAGS="${OPTIMIZE} -L${PREFIX}/lib/"
 
 apt-get update
 apt-get install -qqy autoconf libtool
@@ -42,7 +43,7 @@ echo "Compiling optipng"
 echo "============================================="
 (
   emcc \
-    -O3 \
+    ${OPTIMIZE} \
     -Wno-implicit-function-declaration \
     -I ${PREFIX}/include \
     -I node_modules/optipng/src/opngreduc \
@@ -60,7 +61,8 @@ echo "============================================="
     node_modules/optipng/src/optipng/*.c
 
   emcc \
-    --bind -O3 \
+    --bind \
+    ${OPTIMIZE} \
     -s ALLOW_MEMORY_GROWTH=1 -s MODULARIZE=1 -s 'EXPORT_NAME="optipng"' \
     -I ${PREFIX}/include \
     -I node_modules/optipng/src/opngreduc \
@@ -78,3 +80,8 @@ echo "============================================="
 echo "============================================="
 echo "Compiling optipng done"
 echo "============================================="
+
+echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+echo "Did you update your docker image?"
+echo "Run \`docker pull trzeci/emscripten\`"
+echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
