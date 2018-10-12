@@ -3,16 +3,16 @@ import PinchZoom, { ScaleToOpts } from './custom-els/PinchZoom';
 import './custom-els/PinchZoom';
 import './custom-els/TwoUp';
 import * as style from './style.scss';
-import { bind, shallowEqual, drawDataToCanvas, linkRef } from '../../lib/util';
+import { bind, linkRef } from '../../lib/initial-util';
+import { shallowEqual, drawDataToCanvas } from '../../lib/util';
 import { ToggleIcon, AddIcon, RemoveIcon } from '../../lib/icons';
 import { twoUpHandle } from './custom-els/TwoUp/styles.css';
 
 interface Props {
+  originalImage?: ImageData;
   orientation: 'horizontal' | 'vertical';
-  leftImg: ImageData;
-  rightImg: ImageData;
-  imgWidth: number;
-  imgHeight: number;
+  leftCompressed?: ImageData;
+  rightCompressed?: ImageData;
   leftImgContain: boolean;
   rightImgContain: boolean;
 }
@@ -44,20 +44,38 @@ export default class Output extends Component<Props, State> {
   retargetedEvents = new WeakSet<Event>();
 
   componentDidMount() {
-    if (this.canvasLeft) {
-      drawDataToCanvas(this.canvasLeft, this.props.leftImg);
+    const leftDraw = this.leftDrawable();
+    const rightDraw = this.rightDrawable();
+
+    if (this.canvasLeft && leftDraw) {
+      drawDataToCanvas(this.canvasLeft, leftDraw);
     }
-    if (this.canvasRight) {
-      drawDataToCanvas(this.canvasRight, this.props.rightImg);
+    if (this.canvasRight && rightDraw) {
+      drawDataToCanvas(this.canvasRight, rightDraw);
     }
   }
 
   componentDidUpdate(prevProps: Props, prevState: State) {
-    if (prevProps.leftImg !== this.props.leftImg && this.canvasLeft) {
-      drawDataToCanvas(this.canvasLeft, this.props.leftImg);
+    const prevLeftDraw = this.leftDrawable(prevProps);
+    const prevRightDraw = this.rightDrawable(prevProps);
+    const leftDraw = this.leftDrawable();
+    const rightDraw = this.rightDrawable();
+
+    if (leftDraw && leftDraw !== prevLeftDraw && this.canvasLeft) {
+      drawDataToCanvas(this.canvasLeft, leftDraw);
     }
-    if (prevProps.rightImg !== this.props.rightImg && this.canvasRight) {
-      drawDataToCanvas(this.canvasRight, this.props.rightImg);
+    if (rightDraw && rightDraw !== prevRightDraw && this.canvasRight) {
+      drawDataToCanvas(this.canvasRight, rightDraw);
+    }
+
+    if (this.props.originalImage !== prevProps.originalImage && this.pinchZoomLeft) {
+      // New image? Reset the pinch-zoom.
+      this.pinchZoomLeft.setTransform({
+        allowChangeEvent: true,
+        x: 0,
+        y: 0,
+        scale: 1,
+      });
     }
   }
 
@@ -65,41 +83,49 @@ export default class Output extends Component<Props, State> {
     return !shallowEqual(this.props, nextProps) || !shallowEqual(this.state, nextState);
   }
 
+  private leftDrawable(props: Props = this.props): ImageData | undefined {
+    return props.leftCompressed || props.originalImage;
+  }
+
+  private rightDrawable(props: Props = this.props): ImageData | undefined {
+    return props.rightCompressed || props.originalImage;
+  }
+
   @bind
-  toggleBackground() {
+  private toggleBackground() {
     this.setState({
       altBackground: !this.state.altBackground,
     });
   }
 
   @bind
-  zoomIn() {
+  private zoomIn() {
     if (!this.pinchZoomLeft) throw Error('Missing pinch-zoom element');
 
     this.pinchZoomLeft.scaleTo(this.state.scale * 1.25, scaleToOpts);
   }
 
   @bind
-  zoomOut() {
+  private zoomOut() {
     if (!this.pinchZoomLeft) throw Error('Missing pinch-zoom element');
 
     this.pinchZoomLeft.scaleTo(this.state.scale / 1.25, scaleToOpts);
   }
 
   @bind
-  editScale() {
+  private editScale() {
     this.setState({ editingScale: true }, () => {
       if (this.scaleInput) this.scaleInput.focus();
     });
   }
 
   @bind
-  cancelEditScale() {
+  private cancelEditScale() {
     this.setState({ editingScale: false });
   }
 
   @bind
-  onScaleInputChanged(event: Event) {
+  private onScaleInputChanged(event: Event) {
     const target = event.target as HTMLInputElement;
     const percent = parseFloat(target.value);
     if (isNaN(percent)) return;
@@ -109,7 +135,7 @@ export default class Output extends Component<Props, State> {
   }
 
   @bind
-  onPinchZoomLeftChange(event: Event) {
+  private onPinchZoomLeftChange(event: Event) {
     if (!this.pinchZoomRight || !this.pinchZoomLeft) throw Error('Missing pinch-zoom element');
     this.setState({
       scale: this.pinchZoomLeft.scale,
@@ -130,7 +156,7 @@ export default class Output extends Component<Props, State> {
    * @param event Event to redirect
    */
   @bind
-  onRetargetableEvent(event: Event) {
+  private onRetargetableEvent(event: Event) {
     const targetEl = event.target as HTMLElement;
     if (!this.pinchZoomLeft) throw Error('Missing pinch-zoom element');
     // If the event is on the handle of the two-up, let it through,
@@ -149,9 +175,15 @@ export default class Output extends Component<Props, State> {
   }
 
   render(
-    { orientation, leftImg, rightImg, imgWidth, imgHeight, leftImgContain, rightImgContain }: Props,
+    {
+      orientation, leftCompressed, rightCompressed, leftImgContain, rightImgContain,
+      originalImage,
+    }: Props,
     { scale, editingScale, altBackground }: State,
   ) {
+    const leftDraw = this.leftDrawable();
+    const rightDraw = this.leftDrawable();
+
     return (
       <div class={`${style.output} ${altBackground ? style.altBackground : ''}`}>
         <two-up
@@ -172,11 +204,11 @@ export default class Output extends Component<Props, State> {
             <canvas
               class={style.outputCanvas}
               ref={linkRef(this, 'canvasLeft')}
-              width={leftImg.width}
-              height={leftImg.height}
+              width={leftDraw && leftDraw.width}
+              height={leftDraw && leftDraw.height}
               style={{
-                width: imgWidth,
-                height: imgHeight,
+                width: originalImage && originalImage.width,
+                height: originalImage && originalImage.height,
                 objectFit: leftImgContain ? 'contain' : '',
               }}
             />
@@ -185,11 +217,11 @@ export default class Output extends Component<Props, State> {
             <canvas
               class={style.outputCanvas}
               ref={linkRef(this, 'canvasRight')}
-              width={rightImg.width}
-              height={rightImg.height}
+              width={rightDraw && rightDraw.width}
+              height={rightDraw && rightDraw.height}
               style={{
-                width: imgWidth,
-                height: imgHeight,
+                width: originalImage && originalImage.width,
+                height: originalImage && originalImage.height,
                 objectFit: rightImgContain ? 'contain' : '',
               }}
             />

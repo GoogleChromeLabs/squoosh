@@ -1,6 +1,6 @@
 import { h, Component } from 'preact';
 
-import { bind, linkRef, Fileish } from '../../lib/util';
+import { bind, linkRef, Fileish } from '../../lib/initial-util';
 import '../custom-els/LoadingSpinner';
 
 import logo from './imgs/logo.svg';

@@ -1,5 +1,6 @@
 import { h, Component } from 'preact';
-import { bind, inputFieldValueAsNumber } from '../../lib/util';
+import { bind } from '../../lib/initial-util';
+import { inputFieldValueAsNumber } from '../../lib/util';
 import { EncodeOptions } from './encoder';
 
 type Props = {

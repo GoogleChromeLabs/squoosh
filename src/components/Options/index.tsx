@@ -1,7 +1,7 @@
 import { h, Component } from 'preact';
 
 import * as style from './style.scss';
-import { bind, Fileish } from '../../lib/util';
+import { bind, Fileish } from '../../lib/initial-util';
 import { cleanSet, cleanMerge } from '../../lib/clean-modify';
 import OptiPNGEncoderOptions from '../../codecs/optipng/options';
 import MozJpegEncoderOptions from '../../codecs/mozjpeg/options';
@@ -63,7 +63,7 @@ const titles = {
 
 interface Props {
   orientation: 'horizontal' | 'vertical';
-  source: SourceImage;
+  source?: SourceImage;
   imageIndex: number;
   imageFile?: Fileish;
   downloadUrl?: string;
@@ -177,8 +177,8 @@ export default class Options extends Component<Props, State> {
               </label>
               {preprocessorState.resize.enabled &&
                 <ResizeOptionsComponent
-                  isVector={Boolean(source.vectorImage)}
-                  aspect={source.data.width / source.data.height}
+                  isVector={Boolean(source && source.vectorImage)}
+                  aspect={source ? (source.data.width / source.data.height) : 1}
                   options={preprocessorState.resize}
                   onChange={this.onResizeOptionsChange}
                 />
@@ -223,7 +223,7 @@ export default class Options extends Component<Props, State> {
             increaseClass={style.increase}
             decreaseClass={style.decrease}
             file={imageFile}
-            compareTo={imageFile === source.file ? undefined : source.file}
+            compareTo={(source && imageFile !== source.file) ? source.file : undefined}
           />
 
           {(downloadUrl && imageFile) && (
