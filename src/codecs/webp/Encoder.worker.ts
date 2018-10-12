@@ -1,3 +1,4 @@
+import { expose } from 'comlink';
 import webp_enc, { WebPModule } from '../../../codecs/webp_enc/webp_enc';
 // Using require() so TypeScript doesn’t complain about this not being a module.
 import { EncodeOptions } from './encoder';
@@ -41,3 +42,5 @@ export default class WebPEncoder {
     return result.buffer as ArrayBuffer;
   }
 }
+
+expose(WebPEncoder, self);

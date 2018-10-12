@@ -12,6 +12,7 @@ const ReplacePlugin = require('webpack-plugin-replace');
 const CopyPlugin = require('copy-webpack-plugin');
 const WatchTimestampsPlugin = require('./config/watch-timestamps-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+const WorkerPlugin = require('worker-plugin');
 
 function readJson (filename) {
   return JSON.parse(fs.readFileSync(filename));
@@ -131,10 +132,6 @@ module.exports = function (_, env) {
           ]
         },
         {
-          test: /\.worker.[tj]sx?$/,
-          loader: 'comlink-loader'
-        },
-        {
           test: /\.tsx?$/,
           exclude: nodeModules,
           loader: 'ts-loader'
@@ -178,6 +175,8 @@ module.exports = function (_, env) {
         verbose: false,
         beforeEmit: true
       }),
+
+      new WorkerPlugin(),
 
       // Automatically split code into async chunks.
       // See: https://medium.com/webpack/webpack-4-code-splitting-chunk-graph-and-the-splitchunks-optimization-be739a861366

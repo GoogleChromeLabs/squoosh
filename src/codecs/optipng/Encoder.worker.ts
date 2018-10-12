@@ -1,3 +1,4 @@
+import { expose } from 'comlink';
 import optipng, { OptiPngModule } from '../../../codecs/optipng/optipng';
 // Using require() so TypeScript doesn’t complain about this not being a module.
 import { EncodeOptions } from './encoder';
@@ -39,3 +40,5 @@ export default class OptiPng {
     return copy;
   }
 }
+
+expose(OptiPng, self);

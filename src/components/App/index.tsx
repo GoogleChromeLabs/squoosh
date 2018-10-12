@@ -38,6 +38,7 @@ import {
 
 import { decodeImage } from '../../codecs/decoders';
 import { cleanMerge, cleanSet } from '../../lib/clean-modify';
+import { EncoderWorker, CancellationError } from '../../codecs/codec-worker';
 
 type Orientation = 'horizontal' | 'vertical';
 
@@ -88,35 +89,57 @@ async function preprocessImage(
   return result;
 }
 
-async function compressImage(
-  image: ImageData,
-  encodeData: EncoderState,
-  sourceFilename: string,
-): Promise<Fileish> {
-  const compressedData = await (() => {
-    switch (encodeData.type) {
-      case optiPNG.type: return optiPNG.encode(image, encodeData.options);
-      case mozJPEG.type: return mozJPEG.encode(image, encodeData.options);
-      case webP.type: return webP.encode(image, encodeData.options);
-      case browserPNG.type: return browserPNG.encode(image, encodeData.options);
-      case browserJPEG.type: return browserJPEG.encode(image, encodeData.options);
-      case browserWebP.type: return browserWebP.encode(image, encodeData.options);
-      case browserGIF.type: return browserGIF.encode(image, encodeData.options);
-      case browserTIFF.type: return browserTIFF.encode(image, encodeData.options);
-      case browserJP2.type: return browserJP2.encode(image, encodeData.options);
-      case browserBMP.type: return browserBMP.encode(image, encodeData.options);
-      case browserPDF.type: return browserPDF.encode(image, encodeData.options);
-      default: throw Error(`Unexpected encoder ${JSON.stringify(encodeData)}`);
+class EncoderManager {
+  lastType?: EncoderType;
+  encoderInstance?: EncoderWorker<ImageData, EncoderOptions>;
+
+  async compressImage(
+    image: ImageData,
+    encodeData: EncoderState,
+    sourceFilename: string,
+  ): Promise<Fileish> {
+    let instance = this.encoderInstance;
+
+    if (this.lastType && this.lastType !== encodeData.type) {
+      if (instance) {
+        instance.terminate();
+      }
+      instance = this.encoderInstance = undefined;
     }
-  })();
 
-  const encoder = encoderMap[encodeData.type];
+    const compressedData = (() => {
+      switch (encodeData.type) {
+        case optiPNG.type:
+          if (!instance) instance = new optiPNG.Encoder();
+          return instance.encode(image, encodeData.options);
+        case mozJPEG.type:
+          if (!instance) instance = new mozJPEG.Encoder();
+          return instance.encode(image, encodeData.options);
+        case webP.type:
+          if (!instance) instance = new webP.Encoder();
+          return instance.encode(image, encodeData.options);
+        case browserPNG.type: return browserPNG.encode(image, encodeData.options);
+        case browserJPEG.type: return browserJPEG.encode(image, encodeData.options);
+        case browserWebP.type: return browserWebP.encode(image, encodeData.options);
+        case browserGIF.type: return browserGIF.encode(image, encodeData.options);
+        case browserTIFF.type: return browserTIFF.encode(image, encodeData.options);
+        case browserJP2.type: return browserJP2.encode(image, encodeData.options);
+        case browserBMP.type: return browserBMP.encode(image, encodeData.options);
+        case browserPDF.type: return browserPDF.encode(image, encodeData.options);
+        default: throw Error(`Unexpected encoder ${JSON.stringify(encodeData)}`);
+      }
+    })();
 
-  return new Fileish(
-    [compressedData],
-    sourceFilename.replace(/.[^.]*$/, `.${encoder.extension}`),
-    { type: encoder.mimeType },
-  );
+    const encoder = encoderMap[encodeData.type];
+    this.lastType = encodeData.type;
+    this.encoderInstance = instance;
+
+    return new Fileish(
+      [await compressedData],
+      sourceFilename.replace(/.[^.]*$/, `.${encoder.extension}`),
+      { type: encoder.mimeType },
+    );
+  }
 }
 
 export default class App extends Component<Props, State> {
@@ -145,6 +168,11 @@ export default class App extends Component<Props, State> {
 
   snackbar?: SnackBarElement;
   readonly encodeCache = new ResultCache();
+
+  encoders: EncoderManager[] = [
+    new EncoderManager(),
+    new EncoderManager(),
+  ];
 
   constructor() {
     super();
@@ -280,6 +308,7 @@ export default class App extends Component<Props, State> {
     let preprocessed: ImageData | undefined;
     let data: ImageData | undefined;
     const cacheResult = this.encodeCache.match(source, image.preprocessorState, image.encoderState);
+    const encoder = this.encoders[index];
 
     if (cacheResult) {
       ({ file, preprocessed, data } = cacheResult);
@@ -293,7 +322,7 @@ export default class App extends Component<Props, State> {
             ? image.preprocessed
             : await preprocessImage(source, image.preprocessorState);
 
-          file = await compressImage(preprocessed, image.encoderState, source.file.name);
+          file = await encoder.compressImage(preprocessed, image.encoderState, source.file.name);
           data = await decodeImage(file);
 
           this.encodeCache.add({
@@ -306,6 +335,9 @@ export default class App extends Component<Props, State> {
           });
         }
       } catch (err) {
+        if (err instanceof CancellationError) {
+          return;
+        }
         this.showError(`Processing error (type=${image.encoderState.type}): ${err}`);
         throw err;
       }

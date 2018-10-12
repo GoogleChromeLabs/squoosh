@@ -1,5 +1,5 @@
+import { EncoderWorker } from '../codec-worker';
 import { canvasEncode, blobToArrayBuffer } from '../../lib/util';
-import EncodeWorker from './Encoder.worker';
 
 export interface EncodeOptions {
   level: number;
@@ -15,9 +15,17 @@ export const defaultOptions: EncodeOptions = {
   level: 2,
 };
 
-export async function encode(data: ImageData, opts: EncodeOptions): Promise<ArrayBuffer> {
-  const pngBlob = await canvasEncode(data, mimeType);
-  const pngBuffer = await blobToArrayBuffer(pngBlob);
-  const encodeWorker = await new EncodeWorker();
-  return encodeWorker.compress(pngBuffer, opts);
+export class Encoder extends EncoderWorker<ImageData, EncodeOptions> {
+  protected load(): Worker {
+    // TS definitions for Worker incorrectly omit the initialization options dictionary argument.
+    // @ts-ignore
+    return new Worker('./Encoder.worker', { type: 'module' });
+  }
+
+  // convert image data to PNG first.
+  protected async preprocess(data: ImageData): Promise<ArrayBuffer> {
+    const pngBlob = await canvasEncode(data, mimeType);
+    const pngBuffer = await blobToArrayBuffer(pngBlob);
+    return pngBuffer;
+  }
 }

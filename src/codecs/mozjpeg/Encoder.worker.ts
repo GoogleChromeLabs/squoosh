@@ -1,3 +1,4 @@
+import { expose } from 'comlink';
 import mozjpeg_enc, { MozJPEGModule } from '../../../codecs/mozjpeg_enc/mozjpeg_enc';
 // Using require() so TypeScript doesn’t complain about this not being a module.
 import { EncodeOptions } from './encoder';
@@ -41,3 +42,5 @@ export default class MozJpegEncoder {
     return result.buffer as ArrayBuffer;
   }
 }
+
+expose(MozJpegEncoder, self);

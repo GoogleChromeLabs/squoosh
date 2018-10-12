@@ -1,4 +1,4 @@
-import EncoderWorker from './Encoder.worker';
+import { EncoderWorker } from '../codec-worker';
 
 export enum MozJpegColorSpace {
   GRAYSCALE = 1,
@@ -42,8 +42,10 @@ export const defaultOptions: EncodeOptions = {
   trellis_loops: 1,
 };
 
-export async function encode(data: ImageData, options: EncodeOptions) {
-  // We need to await this because it's been comlinked.
-  const encoder = await new EncoderWorker();
-  return encoder.encode(data, options);
+export class Encoder extends EncoderWorker<ImageData, EncodeOptions> {
+  protected load(): Worker {
+    // TS definitions for Worker incorrectly omit the initialization options dictionary argument.
+    // @ts-ignore
+    return new Worker('./Encoder.worker', { type: 'module' });
+  }
 }
