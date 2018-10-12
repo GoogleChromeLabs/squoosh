@@ -1,21 +1,28 @@
-import { nativeResize, NativeResizeMethod } from '../../lib/util';
+import { nativeResize, NativeResizeMethod, drawableToImageData } from '../../lib/util';
 
-export function resize(data: ImageData, opts: ResizeOptions): ImageData {
+function getCoverOffsets(sw: number, sh: number, dw: number, dh: number) {
+  const currentAspect = sw / sh;
+  const endAspect = dw / dh;
+
+  if (endAspect > currentAspect) {
+    const newSh = sw / endAspect;
+    const newSy = (sh - newSh) / 2;
+    return { sw, sh: newSh, sx: 0, sy: newSy };
+  }
+
+  const newSw = sh * endAspect;
+  const newSx = (sw - newSw) / 2;
+  return { sh, sw: newSw, sx: newSx, sy: 0 };
+}
+
+export function resize(data: ImageData, opts: BitmapResizeOptions): ImageData {
   let sx = 0;
   let sy = 0;
   let sw = data.width;
   let sh = data.height;
 
   if (opts.fitMethod === 'cover') {
-    const currentAspect = data.width / data.height;
-    const endAspect = opts.width / opts.height;
-    if (endAspect > currentAspect) {
-      sh = opts.height / (opts.width / data.width);
-      sy = (data.height - sh) / 2;
-    } else {
-      sw = opts.width / (opts.height / data.height);
-      sx = (data.width - sw) / 2;
-    }
+    ({ sx, sy, sw, sh } = getCoverOffsets(sw, sh, opts.width, opts.height));
   }
 
   return nativeResize(
@@ -24,11 +31,37 @@ export function resize(data: ImageData, opts: ResizeOptions): ImageData {
   );
 }
 
+export function vectorResize(data: HTMLImageElement, opts: VectorResizeOptions): ImageData {
+  let sx = 0;
+  let sy = 0;
+  let sw = data.width;
+  let sh = data.height;
+
+  if (opts.fitMethod === 'cover') {
+    ({ sx, sy, sw, sh } = getCoverOffsets(sw, sh, opts.width, opts.height));
+  }
+
+  return drawableToImageData(data, {
+    sx, sy, sw, sh,
+    width: opts.width, height: opts.height,
+  });
+}
+
+type BitmapResizeMethods = 'browser-pixelated' | 'browser-low' | 'browser-medium' | 'browser-high';
+
 export interface ResizeOptions {
   width: number;
   height: number;
-  method: 'browser-pixelated' | 'browser-low' | 'browser-medium' | 'browser-high';
+  method: 'vector' | BitmapResizeMethods;
   fitMethod: 'stretch' | 'cover';
+}
+
+export interface BitmapResizeOptions extends ResizeOptions {
+  method: BitmapResizeMethods;
+}
+
+export interface VectorResizeOptions extends ResizeOptions {
+  method: 'vector';
 }
 
 export const defaultOptions: ResizeOptions = {
@@ -36,6 +69,7 @@ export const defaultOptions: ResizeOptions = {
   // This is set elsewhere.
   width: 1,
   height: 1,
+  // This will be set to 'vector' if the input is SVG.
   method: 'browser-high',
   fitMethod: 'stretch',
 };

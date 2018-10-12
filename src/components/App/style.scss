@@ -11,39 +11,6 @@ Note: These styles are temporary. They will be replaced before going live.
   overflow: hidden;
   contain: strict;
   display: flex;
-  justify-content: flex-end;
-
-  &.horizontal {
-    justify-content: space-between;
-    align-items: flex-end;
-  }
-
-  &.vertical {
-    flex-direction: column;
-  }
-}
-
-.welcome {
-  margin: auto;
-  text-align: center;
-
-  h1 {
-    font-weight: inherit;
-    font-size: 150%;
-    text-align: center;
-  }
-
-  input {
-    display: inline-block;
-    width: 16em;
-    padding: 10px;
-    margin: 0 auto;
-    -webkit-appearance: none;
-    border: 1px solid var(--button-fg);
-    background: rgba(var(--button-fg-color), 0.1);
-    border-radius: 3px;
-    cursor: pointer;
-  }
 }
 
 :global {
@@ -85,5 +52,20 @@ Note: These styles are temporary. They will be replaced before going live.
       background-color:rgba(119, 85, 85, 0.2);
       border-color:rgba(129, 63, 63, 0.5);
     }
+  }
+}
+
+.option-pair {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+
+  &.horizontal {
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  &.vertical {
+    flex-direction: column;
   }
 }
