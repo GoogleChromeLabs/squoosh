@@ -53,14 +53,14 @@ export default class App extends Component<Props, State> {
   }
 
   @bind
-  private async onFileDrop(event: FileDropEvent) {
+  private onFileDrop(event: FileDropEvent) {
     const { file } = event;
     if (!file) return;
     this.setState({ file });
   }
 
   @bind
-  private async onIntroPickFile(file: File | Fileish) {
+  private onIntroPickFile(file: File | Fileish) {
     this.setState({ file });
   }
 
