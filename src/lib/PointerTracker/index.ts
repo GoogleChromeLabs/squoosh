@@ -1,4 +1,4 @@
-import { bind } from '../util';
+import { bind } from '../../lib/initial-util';
 const enum Button { Left }
 
 export class Pointer {

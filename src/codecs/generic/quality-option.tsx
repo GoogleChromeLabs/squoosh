@@ -1,5 +1,5 @@
 import { h, Component } from 'preact';
-import { bind } from '../../lib/util';
+import { bind } from '../../lib/initial-util';
 import '../../custom-els/RangeInput';
 
 interface EncodeOptions {

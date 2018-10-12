@@ -1,4 +1,4 @@
-import { bind } from '../../lib/util';
+import { bind } from '../../lib/initial-util';
 import './styles.css';
 
 const RETARGETED_EVENTS = ['focus', 'blur'];

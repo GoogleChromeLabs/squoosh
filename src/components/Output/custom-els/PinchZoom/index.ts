@@ -272,10 +272,7 @@ export default class PinchZoom extends HTMLElement {
   private _stageElChange() {
     this._positioningEl = undefined;
 
-    if (this.children.length === 0) {
-      console.warn('There should be at least one child in <pinch-zoom>.');
-      return;
-    }
+    if (this.children.length === 0) return;
 
     this._positioningEl = this.children[0];
 
