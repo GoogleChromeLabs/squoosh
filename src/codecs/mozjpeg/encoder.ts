@@ -1,49 +1,40 @@
-import EncoderWorker from './Encoder.worker';
+import mozjpeg_enc, { MozJPEGModule } from '../../../codecs/mozjpeg_enc/mozjpeg_enc';
+import wasmUrl from '../../../codecs/mozjpeg_enc/mozjpeg_enc.wasm';
+import { EncodeOptions } from './encoder-meta';
 
-export enum MozJpegColorSpace {
-  GRAYSCALE = 1,
-  RGB,
-  YCbCr,
+let emscriptenModule: Promise<MozJPEGModule>;
+
+function initModule(): Promise<MozJPEGModule> {
+  return new Promise((resolve) => {
+    const m = mozjpeg_enc({
+      // Just to be safe, don’t automatically invoke any wasm functions
+      noInitialRun: false,
+      locateFile(url: string): string {
+        // Redirect the request for the wasm binary to whatever webpack gave us.
+        if (url.endsWith('.wasm')) return wasmUrl;
+        return url;
+      },
+      onRuntimeInitialized() {
+        // An Emscripten is a then-able that, for some reason, `then()`s itself,
+        // causing an infite loop when you wrap it in a real promise. Deleten the `then`
+        // prop solves this for now.
+        // See: https://github.com/kripken/emscripten/blob/incoming/src/postamble.js#L129
+        // TODO(surma@): File a bug with Emscripten on this.
+        delete (m as any).then;
+        resolve(m);
+      },
+    });
+  });
 }
 
-export interface EncodeOptions {
-  quality: number;
-  baseline: boolean;
-  arithmetic: boolean;
-  progressive: boolean;
-  optimize_coding: boolean;
-  smoothing: number;
-  color_space: MozJpegColorSpace;
-  quant_table: number;
-  trellis_multipass: boolean;
-  trellis_opt_zero: boolean;
-  trellis_opt_table: boolean;
-  trellis_loops: number;
-}
+export async function encode(data: ImageData, options: EncodeOptions): Promise<ArrayBuffer> {
+  if (!emscriptenModule) emscriptenModule = initModule();
 
-export interface EncoderState { type: typeof type; options: EncodeOptions; }
+  const module = await emscriptenModule;
+  const resultView = module.encode(data.data, data.width, data.height, options);
+  const result = new Uint8Array(resultView);
+  module.free_result();
 
-export const type = 'mozjpeg';
-export const label = 'MozJPEG';
-export const mimeType = 'image/jpeg';
-export const extension = 'jpg';
-export const defaultOptions: EncodeOptions = {
-  quality: 75,
-  baseline: false,
-  arithmetic: false,
-  progressive: true,
-  optimize_coding: true,
-  smoothing: 0,
-  color_space: MozJpegColorSpace.YCbCr,
-  quant_table: 3,
-  trellis_multipass: false,
-  trellis_opt_zero: false,
-  trellis_opt_table: false,
-  trellis_loops: 1,
-};
-
-export async function encode(data: ImageData, options: EncodeOptions) {
-  // We need to await this because it's been comlinked.
-  const encoder = await new EncoderWorker();
-  return encoder.encode(data, options);
+  // wasm can’t run on SharedArrayBuffers, so we hard-cast to ArrayBuffer.
+  return result.buffer as ArrayBuffer;
 }

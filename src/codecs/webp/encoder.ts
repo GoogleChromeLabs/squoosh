@@ -1,80 +1,40 @@
-import EncoderWorker from './Encoder.worker';
+import webp_enc, { WebPModule } from '../../../codecs/webp_enc/webp_enc';
+import wasmUrl from '../../../codecs/webp_enc/webp_enc.wasm';
+import { EncodeOptions } from './encoder-meta';
 
-export enum WebPImageHint {
-  WEBP_HINT_DEFAULT, // default preset.
-  WEBP_HINT_PICTURE, // digital picture, like portrait, inner shot
-  WEBP_HINT_PHOTO,   // outdoor photograph, with natural lighting
-  WEBP_HINT_GRAPH,   // Discrete tone image (graph, map-tile etc).
+let emscriptenModule: Promise<WebPModule>;
+
+function initModule(): Promise<WebPModule> {
+  return new Promise((resolve) => {
+    const m = webp_enc({
+      // Just to be safe, don’t automatically invoke any wasm functions
+      noInitialRun: false,
+      locateFile(url: string): string {
+        // Redirect the request for the wasm binary to whatever webpack gave us.
+        if (url.endsWith('.wasm')) return wasmUrl;
+        return url;
+      },
+      onRuntimeInitialized() {
+        // An Emscripten is a then-able that, for some reason, `then()`s itself,
+        // causing an infite loop when you wrap it in a real promise. Deleten the `then`
+        // prop solves this for now.
+        // See: https://github.com/kripken/emscripten/blob/incoming/src/postamble.js#L129
+        // TODO(surma@): File a bug with Emscripten on this.
+        delete (m as any).then;
+        resolve(m);
+      },
+    });
+  });
 }
 
-export interface EncodeOptions {
-  quality: number;
-  target_size: number;
-  target_PSNR: number;
-  method: number;
-  sns_strength: number;
-  filter_strength: number;
-  filter_sharpness: number;
-  filter_type: number;
-  partitions: number;
-  segments: number;
-  pass: number;
-  show_compressed: number;
-  preprocessing: number;
-  autofilter: number;
-  partition_limit: number;
-  alpha_compression: number;
-  alpha_filtering: number;
-  alpha_quality: number;
-  lossless: number;
-  exact: number;
-  image_hint: number;
-  emulate_jpeg_size: number;
-  thread_level: number;
-  low_memory: number;
-  near_lossless: number;
-  use_delta_palette: number;
-  use_sharp_yuv: number;
-}
-export interface EncoderState { type: typeof type; options: EncodeOptions; }
+export async function encode(data: ImageData, options: EncodeOptions): Promise<ArrayBuffer> {
+  if (!emscriptenModule) emscriptenModule = initModule();
 
-export const type = 'webp';
-export const label = 'WebP';
-export const mimeType = 'image/webp';
-export const extension = 'webp';
-// These come from struct WebPConfig in encode.h.
-export const defaultOptions: EncodeOptions = {
-  quality: 75,
-  target_size: 0,
-  target_PSNR: 0,
-  method: 4,
-  sns_strength: 50,
-  filter_strength: 60,
-  filter_sharpness: 0,
-  filter_type: 1,
-  partitions: 0,
-  segments: 4,
-  pass: 1,
-  show_compressed: 0,
-  preprocessing: 0,
-  autofilter: 0,
-  partition_limit: 0,
-  alpha_compression: 1,
-  alpha_filtering: 1,
-  alpha_quality: 100,
-  lossless: 0,
-  exact: 0,
-  image_hint: 0,
-  emulate_jpeg_size: 0,
-  thread_level: 0,
-  low_memory: 0,
-  near_lossless: 100,
-  use_delta_palette: 0,
-  use_sharp_yuv: 0,
-};
+  const module = await emscriptenModule;
+  const resultView = module.encode(data.data, data.width, data.height, options);
+  const result = new Uint8Array(resultView);
+  module.free_result();
 
-export async function encode(data: ImageData, options: EncodeOptions) {
-  // We need to await this because it's been comlinked.
-  const encoder = await new EncoderWorker();
-  return encoder.encode(data, options);
+  // wasm can’t run on SharedArrayBuffers, so we hard-cast to ArrayBuffer.
+  return result.buffer as ArrayBuffer;
 }

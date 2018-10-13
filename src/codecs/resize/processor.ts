@@ -1,4 +1,5 @@
 import { nativeResize, NativeResizeMethod, drawableToImageData } from '../../lib/util';
+import { BitmapResizeOptions, VectorResizeOptions } from './processor-meta';
 
 function getCoverOffsets(sw: number, sh: number, dw: number, dh: number) {
   const currentAspect = sw / sh;
@@ -46,30 +47,3 @@ export function vectorResize(data: HTMLImageElement, opts: VectorResizeOptions):
     width: opts.width, height: opts.height,
   });
 }
-
-type BitmapResizeMethods = 'browser-pixelated' | 'browser-low' | 'browser-medium' | 'browser-high';
-
-export interface ResizeOptions {
-  width: number;
-  height: number;
-  method: 'vector' | BitmapResizeMethods;
-  fitMethod: 'stretch' | 'cover';
-}
-
-export interface BitmapResizeOptions extends ResizeOptions {
-  method: BitmapResizeMethods;
-}
-
-export interface VectorResizeOptions extends ResizeOptions {
-  method: 'vector';
-}
-
-export const defaultOptions: ResizeOptions = {
-  // Width and height will always default to the image size.
-  // This is set elsewhere.
-  width: 1,
-  height: 1,
-  // This will be set to 'vector' if the input is SVG.
-  method: 'browser-high',
-  fitMethod: 'stretch',
-};

@@ -1,11 +1,12 @@
-import webp_dec, { WebPModule } from '../../../codecs/webp_dec/webp_dec';
-import wasmUrl from '../../../codecs/webp_dec/webp_dec.wasm';
+import imagequant, { QuantizerModule } from '../../../codecs/imagequant/imagequant';
+import wasmUrl from '../../../codecs/imagequant/imagequant.wasm';
+import { QuantizeOptions } from './processor-meta';
 
-let emscriptenModule: Promise<WebPModule>;
+let emscriptenModule: Promise<QuantizerModule>;
 
-function initModule(): Promise<WebPModule> {
+function initModule(): Promise<QuantizerModule> {
   return new Promise((resolve) => {
-    const m = webp_dec({
+    const m = imagequant({
       // Just to be safe, don’t automatically invoke any wasm functions
       noInitialRun: false,
       locateFile(url: string): string {
@@ -26,17 +27,17 @@ function initModule(): Promise<WebPModule> {
   });
 }
 
-export async function decode(data: ArrayBuffer): Promise<ImageData> {
+export async function process(data: ImageData, opts: QuantizeOptions): Promise<ImageData> {
   if (!emscriptenModule) emscriptenModule = initModule();
 
   const module = await emscriptenModule;
-  const rawImage = module.decode(data);
-  const result = new ImageData(
-    new Uint8ClampedArray(rawImage.buffer),
-    rawImage.width,
-    rawImage.height,
-  );
+
+  const result = opts.zx ?
+      module.zx_quantize(data.data, data.width, data.height, opts.dither)
+    :
+      module.quantize(data.data, data.width, data.height, opts.maxNumColors, opts.dither);
 
   module.free_result();
-  return result;
+
+  return new ImageData(new Uint8ClampedArray(result.buffer), result.width, result.height);
 }

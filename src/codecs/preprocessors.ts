@@ -1,5 +1,7 @@
-import { QuantizeOptions, defaultOptions as quantizerDefaultOptions } from './imagequant/quantizer';
-import { ResizeOptions, defaultOptions as resizeDefaultOptions } from './resize/resize';
+import {
+  QuantizeOptions, defaultOptions as quantizerDefaultOptions,
+} from './imagequant/processor-meta';
+import { ResizeOptions, defaultOptions as resizeDefaultOptions } from './resize/processor-meta';
 
 interface Enableable {
   enabled: boolean;
