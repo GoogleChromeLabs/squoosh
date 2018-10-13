@@ -13,7 +13,7 @@ export async function decodeImage(blob: Blob, processor: Processor): Promise<Ima
       return await processor.webpDecode(blob);
     }
 
-    // If we can’t find a decoder, hailmary with the browser's decoders
+    // Otherwise, just throw it at the browser's decoder.
     return await nativeDecode(blob);
   } catch (err) {
     throw Error("Couldn't decode image");
