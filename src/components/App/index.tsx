@@ -286,6 +286,7 @@ export default class App extends Component<Props, State> {
     });
   }
 
+  @bind
   async updateFile(file: File) {
     this.setState({ loading: true });
     try {
