@@ -29,6 +29,7 @@ export default class Processor {
   private _abortRejector?: (err: Error) => void;
   private _busy = false;
   private _latestJobId: number = 0;
+  private _workerTimeout: number = 0;
 
   /**
    * Decorator that manages the (re)starting of the worker and aborting existing jobs. Not all
@@ -37,6 +38,7 @@ export default class Processor {
    */
   private static _processingJob(options: ProcessingJobOptions = {}) {
     const { needsWorker = false } = options;
+
     return (target: Processor, propertyKey: string, descriptor: PropertyDescriptor): void => {
       const processingFunc = descriptor.value;
 
@@ -44,6 +46,8 @@ export default class Processor {
         this._latestJobId += 1;
         const jobId = this._latestJobId;
         this.abortCurrent();
+
+        if (needsWorker) self.clearTimeout(this._workerTimeout);
 
         if (!this._worker && needsWorker) {
           // Webpack's worker loader does magic here.
@@ -65,7 +69,22 @@ export default class Processor {
         // Wait for the operation to settle.
         await returnVal.catch(() => {});
 
-        if (jobId === this._latestJobId) this._busy = false;
+        if (jobId === this._latestJobId) {
+          this._busy = false;
+
+          if (needsWorker) {
+            // If the worker is unused for 10 seconds, remove it to save memory.
+            this._workerTimeout = self.setTimeout(
+              () => {
+                if (this._busy) throw Error("Worker shouldn't be busy");
+                if (!this._worker) return;
+                this._worker.terminate();
+                this._worker = undefined;
+              },
+              10000,
+            );
+          }
+        }
         return returnVal;
       };
     };
@@ -81,6 +100,7 @@ export default class Processor {
     this._worker.terminate();
     this._worker = undefined;
     this._abortRejector = undefined;
+    this._busy = false;
   }
 
   // Off main thread jobs:

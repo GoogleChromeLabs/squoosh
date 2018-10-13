@@ -331,6 +331,10 @@ export default class Compress extends Component<Props, State> {
     const cacheResult = this.encodeCache.match(source, image.preprocessorState, image.encoderState);
     const processor = (index === 0) ? this.leftProcessor : this.rightProcessor;
 
+    // Abort anything the processor is currently doing.
+    // Although the processor will abandon current tasks when a new one is called
+    processor.abortCurrent();
+
     if (cacheResult) {
       ({ file, preprocessed, data } = cacheResult);
     } else {
