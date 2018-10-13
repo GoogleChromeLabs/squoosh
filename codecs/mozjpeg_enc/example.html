@@ -20,25 +20,32 @@
   module.onRuntimeInitialized = async _ => {
     console.log('Version:', module.version().toString(16));
     const image = await loadImage('../example.png');
-    const result = module.encode(image.data, image.width, image.height, {
-      quality: 40,
-      baseline: false,
-      arithmetic: false,
-      progressive: true,
-      optimize_coding: true,
-      smoothing: 0,
-      color_space: 3,
-      quant_table: 3,
-      trellis_multipass: true,
-      trellis_opt_zero: true,
-      trellis_opt_table: true,
-      trellis_loops: 1,
-    });
 
-    const blob = new Blob([result], {type: 'image/jpeg'});
-    const blobURL = URL.createObjectURL(blob);
-    const img = document.createElement('img');
-    img.src = blobURL;
-    document.body.appendChild(img);
+    for (let i = 0; i < 10; i++) {
+      const result = module.encode(image.data, image.width, image.height, {
+        quality: 40 + i,
+        baseline: false,
+        arithmetic: false,
+        progressive: true,
+        optimize_coding: true,
+        smoothing: 0,
+        color_space: 3,
+        quant_table: 3,
+        trellis_multipass: true,
+        trellis_opt_zero: true,
+        trellis_opt_table: true,
+        trellis_loops: 1,
+      });
+
+      const resultCopy = new Uint8Array(result);
+      module.free_result();
+
+      const blob = new Blob([resultCopy], {type: 'image/jpeg'});
+      const blobURL = URL.createObjectURL(blob);
+      const img = document.createElement('img');
+      img.src = blobURL;
+      document.body.appendChild(img);
+      console.log('done');
+    }
   };
 </script>
