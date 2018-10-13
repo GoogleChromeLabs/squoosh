@@ -332,7 +332,8 @@ export default class Compress extends Component<Props, State> {
     const processor = (index === 0) ? this.leftProcessor : this.rightProcessor;
 
     // Abort anything the processor is currently doing.
-    // Although the processor will abandon current tasks when a new one is called
+    // Although the processor will abandon current tasks when a new one is called,
+    // we might not call another task here. Eg, we might get the result from the cache.
     processor.abortCurrent();
 
     if (cacheResult) {
