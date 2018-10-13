@@ -27,14 +27,3 @@ declare module '*.wasm' {
   const content: string;
   export default content;
 }
-
-interface WorkerOptions {
-  type?: 'classic' | 'module';
-}
-
-interface Window {
-  Worker: {
-    prototype: Worker;
-    new(stringUrl: string, options?: WorkerOptions): Worker;
-  };
-}

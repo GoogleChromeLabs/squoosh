@@ -40,15 +40,17 @@ export default class Processor {
     return (target: Processor, propertyKey: string, descriptor: PropertyDescriptor): void => {
       const processingFunc = descriptor.value;
 
-      descriptor.value = async function (this: Processor, options: ProcessingJobOptions = {}) {
+      descriptor.value = async function (this: Processor, ...args: any[]) {
         this._latestJobId += 1;
         const jobId = this._latestJobId;
         this.abortCurrent();
 
         if (!this._worker && needsWorker) {
           // Webpack's worker loader does magic here.
-          // Having to use self.Worker so TypeScript picks up the right type definition
-          this._worker = new self.Worker('./processor-worker.ts', { type: 'module' });
+          // Typescript doesn't know about the 2nd param to new Worker, and the definition can't
+          // be overwritten.
+          // @ts-ignore
+          this._worker = new Worker('./processor-worker.ts', { type: 'module' }) as Worker;
           // Need to do some TypeScript trickery to make the type match.
           this._workerApi = proxy(this._worker) as any as ProcessorWorkerApi;
         }
@@ -56,7 +58,7 @@ export default class Processor {
         this._busy = true;
 
         const returnVal = Promise.race([
-          processingFunc(),
+          processingFunc.call(this, ...args),
           new Promise((_, reject) => { this._abortRejector = reject; }),
         ]);
 
