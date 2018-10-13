@@ -6,21 +6,18 @@ import * as style from './style.scss';
 import Output from '../Output';
 import Options from '../Options';
 import ResultCache from './result-cache';
-
-import * as quantizer from '../../codecs/imagequant/quantizer';
-import * as optiPNG from '../../codecs/optipng/encoder';
-import * as resizer from '../../codecs/resize/resize';
-import * as mozJPEG from '../../codecs/mozjpeg/encoder';
-import * as webP from '../../codecs/webp/encoder';
-import * as identity from '../../codecs/identity/encoder';
-import * as browserPNG from '../../codecs/browser-png/encoder';
-import * as browserJPEG from '../../codecs/browser-jpeg/encoder';
-import * as browserWebP from '../../codecs/browser-webp/encoder';
-import * as browserGIF from '../../codecs/browser-gif/encoder';
-import * as browserTIFF from '../../codecs/browser-tiff/encoder';
-import * as browserJP2 from '../../codecs/browser-jp2/encoder';
-import * as browserBMP from '../../codecs/browser-bmp/encoder';
-import * as browserPDF from '../../codecs/browser-pdf/encoder';
+import * as identity from '../../codecs/identity/encoder-meta';
+import * as optiPNG from '../../codecs/optipng/encoder-meta';
+import * as mozJPEG from '../../codecs/mozjpeg/encoder-meta';
+import * as webP from '../../codecs/webp/encoder-meta';
+import * as browserPNG from '../../codecs/browser-png/encoder-meta';
+import * as browserJPEG from '../../codecs/browser-jpeg/encoder-meta';
+import * as browserWebP from '../../codecs/browser-webp/encoder-meta';
+import * as browserGIF from '../../codecs/browser-gif/encoder-meta';
+import * as browserTIFF from '../../codecs/browser-tiff/encoder-meta';
+import * as browserJP2 from '../../codecs/browser-jp2/encoder-meta';
+import * as browserBMP from '../../codecs/browser-bmp/encoder-meta';
+import * as browserPDF from '../../codecs/browser-pdf/encoder-meta';
 import {
     EncoderState,
     EncoderType,
@@ -35,6 +32,8 @@ import {
 
 import { decodeImage } from '../../codecs/decoders';
 import { cleanMerge, cleanSet } from '../../lib/clean-modify';
+import Processor from '../../codecs/processor';
+import { VectorResizeOptions, BitmapResizeOptions } from '../../codecs/resize/processor-meta';
 
 type Orientation = 'horizontal' | 'vertical';
 
@@ -78,20 +77,21 @@ interface UpdateImageOptions {
 async function preprocessImage(
   source: SourceImage,
   preprocessData: PreprocessorState,
+  processor: Processor,
 ): Promise<ImageData> {
   let result = source.data;
   if (preprocessData.resize.enabled) {
     if (preprocessData.resize.method === 'vector' && source.vectorImage) {
-      result = resizer.vectorResize(
+      result = processor.vectorResize(
         source.vectorImage,
-        preprocessData.resize as resizer.VectorResizeOptions,
+        preprocessData.resize as VectorResizeOptions,
       );
     } else {
-      result = resizer.resize(result, preprocessData.resize as resizer.BitmapResizeOptions);
+      result = processor.resize(result, preprocessData.resize as BitmapResizeOptions);
     }
   }
   if (preprocessData.quantizer.enabled) {
-    result = await quantizer.quantize(result, preprocessData.quantizer);
+    result = await processor.imageQuant(result, preprocessData.quantizer);
   }
   return result;
 }
@@ -100,20 +100,21 @@ async function compressImage(
   image: ImageData,
   encodeData: EncoderState,
   sourceFilename: string,
+  processor: Processor,
 ): Promise<Fileish> {
   const compressedData = await (() => {
     switch (encodeData.type) {
-      case optiPNG.type: return optiPNG.encode(image, encodeData.options);
-      case mozJPEG.type: return mozJPEG.encode(image, encodeData.options);
-      case webP.type: return webP.encode(image, encodeData.options);
-      case browserPNG.type: return browserPNG.encode(image, encodeData.options);
-      case browserJPEG.type: return browserJPEG.encode(image, encodeData.options);
-      case browserWebP.type: return browserWebP.encode(image, encodeData.options);
-      case browserGIF.type: return browserGIF.encode(image, encodeData.options);
-      case browserTIFF.type: return browserTIFF.encode(image, encodeData.options);
-      case browserJP2.type: return browserJP2.encode(image, encodeData.options);
-      case browserBMP.type: return browserBMP.encode(image, encodeData.options);
-      case browserPDF.type: return browserPDF.encode(image, encodeData.options);
+      case optiPNG.type: return processor.optiPngEncode(image, encodeData.options);
+      case mozJPEG.type: return processor.mozjpegEncode(image, encodeData.options);
+      case webP.type: return processor.webpEncode(image, encodeData.options);
+      case browserPNG.type: return processor.browserPngEncode(image);
+      case browserJPEG.type: return processor.browserJpegEncode(image, encodeData.options);
+      case browserWebP.type: return processor.browserWebpEncode(image, encodeData.options);
+      case browserGIF.type: return processor.browserGifEncode(image);
+      case browserTIFF.type: return processor.browserTiffEncode(image);
+      case browserJP2.type: return processor.browserJp2Encode(image);
+      case browserBMP.type: return processor.browserBmpEncode(image);
+      case browserPDF.type: return processor.browserPdfEncode(image);
       default: throw Error(`Unexpected encoder ${JSON.stringify(encodeData)}`);
     }
   })();
@@ -177,7 +178,9 @@ export default class Compress extends Component<Props, State> {
     orientation: this.widthQuery.matches ? 'horizontal' : 'vertical',
   };
 
-  readonly encodeCache = new ResultCache();
+  private readonly encodeCache = new ResultCache();
+  private readonly leftProcessor = new Processor();
+  private readonly rightProcessor = new Processor();
 
   constructor(props: Props) {
     super(props);
@@ -251,6 +254,10 @@ export default class Compress extends Component<Props, State> {
   private async updateFile(file: File | Fileish) {
     this.setState({ loading: true });
 
+    // Abort any current encode jobs, as they're redundant now.
+    this.leftProcessor.abortCurrent();
+    this.rightProcessor.abortCurrent();
+
     try {
       let data: ImageData;
       let vectorImage: HTMLImageElement | undefined;
@@ -262,7 +269,8 @@ export default class Compress extends Component<Props, State> {
         vectorImage = await processSvg(file);
         data = drawableToImageData(vectorImage);
       } else {
-        data = await decodeImage(file);
+        // Either processor is good enough here.
+        data = await decodeImage(file, this.leftProcessor);
       }
 
       let newState: State = {
@@ -293,6 +301,7 @@ export default class Compress extends Component<Props, State> {
 
       this.setState(newState);
     } catch (err) {
+      if (err.name === 'AbortError') return;
       console.error(err);
       this.props.onError('Invalid image');
       this.setState({ loading: false });
@@ -320,6 +329,7 @@ export default class Compress extends Component<Props, State> {
     let preprocessed: ImageData | undefined;
     let data: ImageData | undefined;
     const cacheResult = this.encodeCache.match(source, image.preprocessorState, image.encoderState);
+    const processor = (index === 0) ? this.leftProcessor : this.rightProcessor;
 
     if (cacheResult) {
       ({ file, preprocessed, data } = cacheResult);
@@ -331,10 +341,10 @@ export default class Compress extends Component<Props, State> {
         } else {
           preprocessed = (skipPreprocessing && image.preprocessed)
             ? image.preprocessed
-            : await preprocessImage(source, image.preprocessorState);
+            : await preprocessImage(source, image.preprocessorState, processor);
 
-          file = await compressImage(preprocessed, image.encoderState, source.file.name);
-          data = await decodeImage(file);
+          file = await compressImage(preprocessed, image.encoderState, source.file.name, processor);
+          data = await decodeImage(file, processor);
 
           this.encodeCache.add({
             source,
@@ -346,6 +356,7 @@ export default class Compress extends Component<Props, State> {
           });
         }
       } catch (err) {
+        if (err.name === 'AbortError') return;
         this.props.onError(`Processing error (type=${image.encoderState.type}): ${err}`);
         throw err;
       }

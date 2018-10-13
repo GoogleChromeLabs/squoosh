@@ -5,6 +5,22 @@ import { canvasEncode, blobToArrayBuffer } from '../lib/util';
 import { EncodeOptions as MozJPEGEncoderOptions } from './mozjpeg/encoder-meta';
 import { EncodeOptions as OptiPNGEncoderOptions } from './optipng/encoder-meta';
 import { EncodeOptions as WebPEncoderOptions } from './webp/encoder-meta';
+import { EncodeOptions as BrowserJPEGOptions } from './browser-jpeg/encoder-meta';
+import { EncodeOptions as BrowserWebpEncodeOptions } from './browser-webp/encoder-meta';
+import { BitmapResizeOptions, VectorResizeOptions } from './resize/processor-meta';
+import { resize, vectorResize } from './resize/processor';
+import * as browserBMP from './browser-bmp/encoder';
+import * as browserPNG from './browser-png/encoder';
+import * as browserJPEG from './browser-jpeg/encoder';
+import * as browserWebP from './browser-webp/encoder';
+import * as browserGIF from './browser-gif/encoder';
+import * as browserTIFF from './browser-tiff/encoder';
+import * as browserJP2 from './browser-jp2/encoder';
+import * as browserPDF from './browser-pdf/encoder';
+
+interface ProcessingJobOptions {
+  needsWorker?: boolean;
+}
 
 export default class Processor {
   private _worker?: Worker;
@@ -14,63 +30,72 @@ export default class Processor {
   private _busy = false;
   private _latestJobId: number = 0;
 
-  /** Decorator that manages the (re)starting of the worker and aborting existing jobs */
-  private static _processingJob(
-    target: Processor, propertyKey: string, descriptor: PropertyDescriptor,
-  ): void {
-    const processingFunc = descriptor.value;
+  /**
+   * Decorator that manages the (re)starting of the worker and aborting existing jobs. Not all
+   * processing jobs require a worker (e.g. the main thread canvas encodes), use the needsWorker
+   * option to control this.
+   */
+  private static _processingJob(options: ProcessingJobOptions = {}) {
+    const { needsWorker = false } = options;
+    return (target: Processor, propertyKey: string, descriptor: PropertyDescriptor): void => {
+      const processingFunc = descriptor.value;
 
-    descriptor.value = async function (this: Processor) {
-      this._latestJobId += 1;
-      const jobId = this._latestJobId;
+      descriptor.value = async function (this: Processor, options: ProcessingJobOptions = {}) {
+        this._latestJobId += 1;
+        const jobId = this._latestJobId;
+        this.abortCurrent();
 
-      if (this._busy) {
-        // Abort the current job.
-        if (!this._worker || !this._abortRejector) {
-          throw Error("There must be a worker/rejector if it's busy");
+        if (!this._worker && needsWorker) {
+          // Webpack's worker loader does magic here.
+          // Having to use self.Worker so TypeScript picks up the right type definition
+          this._worker = new self.Worker('./processor-worker.ts', { type: 'module' });
+          // Need to do some TypeScript trickery to make the type match.
+          this._workerApi = proxy(this._worker) as any as ProcessorWorkerApi;
         }
-        this._abortRejector(new DOMException('Aborted', 'AbortError'));
-        this._worker.terminate();
-        this._worker = undefined;
-        this._abortRejector = undefined;
-      }
 
-      if (!this._worker) {
-        // Webpack's worker loader does magic here.
-        // Having to use self.Worker so TypeScript picks up the right type definition
-        this._worker = new self.Worker('./processor-worker.ts', { type: 'module' });
-        // Need to do some TypeScript trickery to make the type match.
-        this._workerApi = proxy(this._worker) as any as ProcessorWorkerApi;
-      }
+        this._busy = true;
 
-      this._busy = true;
+        const returnVal = Promise.race([
+          processingFunc(),
+          new Promise((_, reject) => { this._abortRejector = reject; }),
+        ]);
 
-      const returnVal = Promise.race([
-        processingFunc(),
-        new Promise((_, reject) => { this._abortRejector = reject; }),
-      ]);
+        // Wait for the operation to settle.
+        await returnVal.catch(() => {});
 
-      // Wait for the operation to settle.
-      await returnVal.catch(() => {});
-
-      if (jobId === this._latestJobId) this._busy = false;
-      return returnVal;
+        if (jobId === this._latestJobId) this._busy = false;
+        return returnVal;
+      };
     };
   }
 
-  @Processor._processingJob
+  /** Abort the current job, if any */
+  abortCurrent() {
+    if (!this._busy) return;
+    if (!this._worker || !this._abortRejector) {
+      throw Error("There must be a worker/rejector if it's busy");
+    }
+    this._abortRejector(new DOMException('Aborted', 'AbortError'));
+    this._worker.terminate();
+    this._worker = undefined;
+    this._abortRejector = undefined;
+  }
+
+  // Off main thread jobs:
+
+  @Processor._processingJob({ needsWorker: true })
   imageQuant(data: ImageData, opts: QuantizeOptions): Promise<ImageData> {
     return this._workerApi!.quantize(data, opts);
   }
 
-  @Processor._processingJob
+  @Processor._processingJob({ needsWorker: true })
   mozjpegEncode(
     data: ImageData, opts: MozJPEGEncoderOptions,
   ): Promise<ArrayBuffer> {
     return this._workerApi!.mozjpegEncode(data, opts);
   }
 
-  @Processor._processingJob
+  @Processor._processingJob({ needsWorker: true })
   async optiPngEncode(
     data: ImageData, opts: OptiPNGEncoderOptions,
   ): Promise<ArrayBuffer> {
@@ -80,14 +105,68 @@ export default class Processor {
     return this._workerApi!.optiPngEncode(pngBuffer, opts);
   }
 
-  @Processor._processingJob
+  @Processor._processingJob({ needsWorker: true })
   webpEncode(data: ImageData, opts: WebPEncoderOptions): Promise<ArrayBuffer> {
     return this._workerApi!.webpEncode(data, opts);
   }
 
-  @Processor._processingJob
+  @Processor._processingJob({ needsWorker: true })
   async webpDecode(blob: Blob): Promise<ImageData> {
     const data = await blobToArrayBuffer(blob);
     return this._workerApi!.webpDecode(data);
+  }
+
+  // Not-worker jobs:
+
+  @Processor._processingJob()
+  browserBmpEncode(data: ImageData): Promise<Blob> {
+    return browserBMP.encode(data);
+  }
+
+  @Processor._processingJob()
+  browserPngEncode(data: ImageData): Promise<Blob> {
+    return browserPNG.encode(data);
+  }
+
+  @Processor._processingJob()
+  browserJpegEncode(data: ImageData, opts: BrowserJPEGOptions): Promise<Blob> {
+    return browserJPEG.encode(data, opts);
+  }
+
+  @Processor._processingJob()
+  browserWebpEncode(data: ImageData, opts: BrowserWebpEncodeOptions): Promise<Blob> {
+    return browserWebP.encode(data, opts);
+  }
+
+  @Processor._processingJob()
+  browserGifEncode(data: ImageData): Promise<Blob> {
+    return browserGIF.encode(data);
+  }
+
+  @Processor._processingJob()
+  browserTiffEncode(data: ImageData): Promise<Blob> {
+    return browserTIFF.encode(data);
+  }
+
+  @Processor._processingJob()
+  browserJp2Encode(data: ImageData): Promise<Blob> {
+    return browserJP2.encode(data);
+  }
+
+  @Processor._processingJob()
+  browserPdfEncode(data: ImageData): Promise<Blob> {
+    return browserPDF.encode(data);
+  }
+
+  // Synchronous jobs
+
+  resize(data: ImageData, opts: BitmapResizeOptions) {
+    this.abortCurrent();
+    return resize(data, opts);
+  }
+
+  vectorResize(data: HTMLImageElement, opts: VectorResizeOptions) {
+    this.abortCurrent();
+    return vectorResize(data, opts);
   }
 }

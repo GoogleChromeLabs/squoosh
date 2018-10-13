@@ -12,18 +12,18 @@ import BrowserWebPEncoderOptions from '../../codecs/browser-webp/options';
 import QuantizerOptionsComponent from '../../codecs/imagequant/options';
 import ResizeOptionsComponent from '../../codecs/resize/options';
 
-import * as identity from '../../codecs/identity/encoder';
-import * as optiPNG from '../../codecs/optipng/encoder';
-import * as mozJPEG from '../../codecs/mozjpeg/encoder';
-import * as webP from '../../codecs/webp/encoder';
-import * as browserPNG from '../../codecs/browser-png/encoder';
-import * as browserJPEG from '../../codecs/browser-jpeg/encoder';
-import * as browserWebP from '../../codecs/browser-webp/encoder';
-import * as browserGIF from '../../codecs/browser-gif/encoder';
-import * as browserTIFF from '../../codecs/browser-tiff/encoder';
-import * as browserJP2 from '../../codecs/browser-jp2/encoder';
-import * as browserBMP from '../../codecs/browser-bmp/encoder';
-import * as browserPDF from '../../codecs/browser-pdf/encoder';
+import * as identity from '../../codecs/identity/encoder-meta';
+import * as optiPNG from '../../codecs/optipng/encoder-meta';
+import * as mozJPEG from '../../codecs/mozjpeg/encoder-meta';
+import * as webP from '../../codecs/webp/encoder-meta';
+import * as browserPNG from '../../codecs/browser-png/encoder-meta';
+import * as browserJPEG from '../../codecs/browser-jpeg/encoder-meta';
+import * as browserWebP from '../../codecs/browser-webp/encoder-meta';
+import * as browserGIF from '../../codecs/browser-gif/encoder-meta';
+import * as browserTIFF from '../../codecs/browser-tiff/encoder-meta';
+import * as browserJP2 from '../../codecs/browser-jp2/encoder-meta';
+import * as browserBMP from '../../codecs/browser-bmp/encoder-meta';
+import * as browserPDF from '../../codecs/browser-pdf/encoder-meta';
 import {
   EncoderState,
   EncoderType,
@@ -33,8 +33,8 @@ import {
   EncoderSupportMap,
   encoderMap,
 } from '../../codecs/encoders';
-import { QuantizeOptions } from '../../codecs/imagequant/quantizer';
-import { ResizeOptions } from '../../codecs/resize/resize';
+import { QuantizeOptions } from '../../codecs/imagequant/processor-meta';
+import { ResizeOptions } from '../../codecs/resize/processor-meta';
 import { PreprocessorState } from '../../codecs/preprocessors';
 import FileSize from '../FileSize';
 import { DownloadIcon } from '../../lib/icons';
