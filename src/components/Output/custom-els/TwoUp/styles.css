@@ -89,7 +89,7 @@ two-up[orientation='vertical'] > :nth-child(2):not(.twoUpHandle) {
   Even in legacy-clip-compat, prefer clip-path if it's supported.
   It performs way better in Safari.
  */
-@supports not ((clip-path: inset(0 0 0 var(--split-point))) or (-webkit-clip-path: inset(0 0 0 var(--split-point)))) {
+@supports not ((clip-path: inset(0 0 0 0)) or (-webkit-clip-path: inset(0 0 0 0))) {
   two-up[legacy-clip-compat] > :nth-child(1):not(.twoUpHandle) {
     clip: rect(auto var(--split-point) auto auto);
   }
