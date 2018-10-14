@@ -48,6 +48,7 @@ int version() {
 }
 
 uint8_t* last_result;
+struct jpeg_compress_struct cinfo;
 
 val encode(std::string image_in, int image_width, int image_height, MozJpegOptions opts) {
   uint8_t* image_buffer = (uint8_t*) image_in.c_str();
@@ -63,7 +64,6 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
    * compression/decompression processes, in existence at once.  We refer
    * to any one struct (and its associated working data) as a "JPEG object".
    */
-  struct jpeg_compress_struct cinfo;
   /* This struct represents a JPEG error handler.  It is declared separately
    * because applications often want to supply a specialized error handler
    * (see the second half of this file for an example).  But here we just
@@ -184,9 +184,6 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
   jpeg_finish_compress(&cinfo);
   /* Step 7: release JPEG compression object */
 
-  /* This is an important step since it will release a good deal of memory. */
-  jpeg_destroy_compress(&cinfo);
-
   last_result = output;
 
   /* And we're done! */
@@ -194,7 +191,8 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
 }
 
 void free_result() {
-  free(last_result); // not sure if this is right with mozjpeg
+  /* This is an important step since it will release a good deal of memory. */
+  jpeg_destroy_compress(&cinfo);
 }
 
 EMSCRIPTEN_BINDINGS(my_module) {
