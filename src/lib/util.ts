@@ -90,16 +90,22 @@ export async function blobToImg(blob: Blob): Promise<HTMLImageElement> {
     const img = new Image();
     img.decoding = 'async';
     img.src = url;
+    const loaded = new Promise((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject(Error('Image loading error'));
+    });
 
     if (img.decode) {
-      // Nice off-thread way supported in at least Safari.
-      await img.decode();
+      // Nice off-thread way supported in Safari/Chrome.
+      try {
+        await img.decode();
+      } catch (err) {
+        // Safari throws on decode if the source is SVG. Fallback to onload.
+        // https://bugs.webkit.org/show_bug.cgi?id=188347
+        await loaded;
+      }
     } else {
-      // Main thread decoding :(
-      await new Promise((resolve, reject) => {
-        img.onload = () => resolve();
-        img.onerror = () => reject(Error('Image loading error'));
-      });
+      await loaded;
     }
 
     return img;
