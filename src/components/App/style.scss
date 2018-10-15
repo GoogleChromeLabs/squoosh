@@ -18,7 +18,7 @@ Note: These styles are temporary. They will be replaced before going live.
   height:100%;
   width:100%;
 
-  &:after {
+  &::after {
     content: '';
     position: absolute;
     display: block;
@@ -34,19 +34,19 @@ Note: These styles are temporary. They will be replaced before going live.
     pointer-events: none;
   }
 
-  &.drop-valid:after,
-  &.drop-invalid:after {
+  &.drop-valid::after,
+  &.drop-invalid::after {
     opacity: 1;
     transform: scale(1);
     transition: opacity 300ms ease, transform 300ms cubic-bezier(.6,2,.6,1);
   }
 
-  &.drop-valid:after {
+  &.drop-valid::after {
     background-color:rgba(88, 116, 88, 0.2);
     border-color: rgba(65, 129, 65, 0.5);
   }
 
-  &.drop-invalid:after {
+  &.drop-invalid::after {
     background-color:rgba(119, 85, 85, 0.2);
     border-color:rgba(129, 63, 63, 0.5);
   }
