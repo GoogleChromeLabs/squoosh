@@ -50,10 +50,9 @@ export default class Processor {
         if (needsWorker) self.clearTimeout(this._workerTimeout);
 
         if (!this._worker && needsWorker) {
-          // Webpack's worker loader does magic here.
-          // Typescript doesn't know about the 2nd param to new Worker, and the definition can't
-          // be overwritten.
-          // @ts-ignore
+          // worker-loader does magic here.
+          // @ts-ignore - Typescript doesn't know about the 2nd param to new Worker, and the
+          // definition can't be overwritten.
           this._worker = new Worker('./processor-worker.ts', { type: 'module' }) as Worker;
           // Need to do some TypeScript trickery to make the type match.
           this._workerApi = proxy(this._worker) as any as ProcessorWorkerApi;
