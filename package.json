@@ -66,6 +66,6 @@
     "preact": "^8.3.1",
     "pretty-bytes": "^5.1.0",
     "worker-plugin": "^1.1.1",
-    "file-drop-element": "0.0.6"
+    "file-drop-element": "0.0.7"
   }
 }
