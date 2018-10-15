@@ -33,7 +33,6 @@ export async function encode(data: ImageData, options: EncodeOptions): Promise<A
   const module = await emscriptenModule;
   const resultView = module.encode(data.data, data.width, data.height, options);
   const result = new Uint8Array(resultView);
-  // TODO: Something is going wrong here
   module.free_result();
 
   // wasm can’t run on SharedArrayBuffers, so we hard-cast to ArrayBuffer.
