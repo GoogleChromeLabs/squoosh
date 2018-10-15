@@ -113,14 +113,19 @@ export default class Output extends Component<Props, State> {
   }
 
   @bind
-  private editScale() {
+  private onScaleValueFocus() {
     this.setState({ editingScale: true }, () => {
-      if (this.scaleInput) this.scaleInput.focus();
+      if (this.scaleInput) {
+        // Firefox unfocuses the input straight away unless I force a style calculation here. I have
+        // no idea why, but it's late and I'm quite tired.
+        getComputedStyle(this.scaleInput).transform;
+        this.scaleInput.focus();
+      }
     });
   }
 
   @bind
-  private cancelEditScale() {
+  private onScaleInputBlur() {
     this.setState({ editingScale: false });
   }
 
@@ -245,10 +250,10 @@ export default class Output extends Component<Props, State> {
                 class={style.zoom}
                 value={Math.round(scale * 100)}
                 onInput={this.onScaleInputChanged}
-                onBlur={this.cancelEditScale}
+                onBlur={this.onScaleInputBlur}
               />
             ) : (
-              <span class={style.zoom} tabIndex={0} onFocus={this.editScale}>
+              <span class={style.zoom} tabIndex={0} onFocus={this.onScaleValueFocus}>
                 <span class={style.zoomValue}>{Math.round(scale * 100)}</span>
                 %
               </span>
