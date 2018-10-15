@@ -102,8 +102,6 @@ declare namespace EmscriptenWasm {
 
     // Augmentations below by @surma.
     onRuntimeInitialized: () => void | null;
-    // Augmentations below by @jakearchibald.
-    then: (callback: (value: any) => void) => Module;
   }
 }
 
