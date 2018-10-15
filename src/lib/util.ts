@@ -36,7 +36,7 @@ export async function canvasEncode(data: ImageData, type: string, quality?: numb
     blob = await new Promise<Blob | null>(r => canvas.toBlob(r, type, quality));
   } else {
     // Welcome to Edge.
-    // TypeScript things `canvas` is 'never', so it needs casting.
+    // TypeScript thinks `canvas` is 'never', so it needs casting.
     const dataUrl = (canvas as HTMLCanvasElement).toDataURL(type, quality);
     const result = /data:([^;]+);base64,(.*)$/.exec(dataUrl);
 
