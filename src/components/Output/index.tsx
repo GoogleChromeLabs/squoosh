@@ -182,7 +182,7 @@ export default class Output extends Component<Props, State> {
     { scale, editingScale, altBackground }: State,
   ) {
     const leftDraw = this.leftDrawable();
-    const rightDraw = this.leftDrawable();
+    const rightDraw = this.rightDrawable();
 
     return (
       <div class={`${style.output} ${altBackground ? style.altBackground : ''}`}>
