@@ -18,8 +18,7 @@ export function initWasmModule<T extends EmscriptenWasm.Module>(
       onRuntimeInitialized() {
         // An Emscripten is a then-able that resolves with itself, causing an infite loop when you
         // wrap it in a real promise. Delete the `then` prop solves this for now.
-        // See: https://github.com/kripken/emscripten/blob/incoming/src/postamble.js#L129
-        // TODO(surma@): File a bug with Emscripten on this.
+        // https://github.com/kripken/emscripten/issues/5820
         delete (module as any).then;
         resolve(module);
       },
