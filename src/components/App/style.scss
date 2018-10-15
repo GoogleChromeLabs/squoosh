@@ -69,3 +69,12 @@ Note: These styles are temporary. They will be replaced before going live.
     flex-direction: column;
   }
 }
+
+.app-loader {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  --size: 225px;
+  --stroke-width: 26px;
+}
