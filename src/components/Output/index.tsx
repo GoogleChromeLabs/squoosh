@@ -188,6 +188,7 @@ export default class Output extends Component<Props, State> {
       <div class={`${style.output} ${altBackground ? style.altBackground : ''}`}>
         <two-up
           legacy-clip-compat
+          class={style.twoUp}
           orientation={orientation}
           // Event redirecting. See onRetargetableEvent.
           onTouchStartCapture={this.onRetargetableEvent}
@@ -198,6 +199,7 @@ export default class Output extends Component<Props, State> {
           onWheelCapture={this.onRetargetableEvent}
         >
           <pinch-zoom
+            class={style.pinchZoom}
             onChange={this.onPinchZoomLeftChange}
             ref={linkRef(this, 'pinchZoomLeft')}
           >
@@ -213,7 +215,7 @@ export default class Output extends Component<Props, State> {
               }}
             />
           </pinch-zoom>
-          <pinch-zoom ref={linkRef(this, 'pinchZoomRight')}>
+          <pinch-zoom class={style.pinchZoom} ref={linkRef(this, 'pinchZoomRight')}>
             <canvas
               class={style.outputCanvas}
               ref={linkRef(this, 'canvasRight')}
@@ -229,7 +231,7 @@ export default class Output extends Component<Props, State> {
         </two-up>
 
         <div class={style.controls}>
-          <div class={style.group}>
+          <div class={style.zoomControls}>
             <button class={style.button} onClick={this.zoomOut}>
               <RemoveIcon />
             </button>
@@ -247,7 +249,7 @@ export default class Output extends Component<Props, State> {
               />
             ) : (
               <span class={style.zoom} tabIndex={0} onFocus={this.editScale}>
-                <strong>{Math.round(scale * 100)}</strong>
+                <span class={style.zoomValue}>{Math.round(scale * 100)}</span>
                 %
               </span>
             )}
