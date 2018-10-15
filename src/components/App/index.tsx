@@ -2,7 +2,7 @@ import { h, Component } from 'preact';
 
 import { bind, linkRef, Fileish } from '../../lib/initial-util';
 import * as style from './style.scss';
-import * as FileDropElement from 'file-drop-element';
+import { FileDropEvent } from 'file-drop-element';
 import 'file-drop-element';
 import SnackBarElement from '../../lib/SnackBar';
 import '../../lib/SnackBar';
@@ -53,7 +53,7 @@ export default class App extends Component<Props, State> {
   }
 
   @bind
-  private onFileDrop(event: FileDropElement.FileDropEvent) {
+  private onFileDrop(event: FileDropEvent) {
     const { file } = event;
     if (!file) return;
     this.setState({ file });
