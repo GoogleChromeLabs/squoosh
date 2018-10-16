@@ -31,7 +31,6 @@ import {
   encoders,
   encodersSupported,
   EncoderSupportMap,
-  encoderMap,
 } from '../../codecs/encoders';
 import { QuantizeOptions } from '../../codecs/imagequant/processor-meta';
 import { ResizeOptions } from '../../codecs/resize/processor-meta';
@@ -39,6 +38,7 @@ import { PreprocessorState } from '../../codecs/preprocessors';
 import FileSize from '../FileSize';
 import { DownloadIcon } from '../../lib/icons';
 import { SourceImage } from '../App';
+import Checkbox from './checkbox';
 
 const encoderOptionsComponentMap = {
   [identity.type]: undefined,
@@ -54,11 +54,6 @@ const encoderOptionsComponentMap = {
   [browserTIFF.type]: undefined,
   [browserJP2.type]: undefined,
   [browserPDF.type]: undefined,
-};
-
-const titles = {
-  horizontal: ['Left Image', 'Right Image'],
-  vertical: ['Top Image', 'Bottom Image'],
 };
 
 interface Props {
@@ -144,74 +139,64 @@ export default class Options extends Component<Props, State> {
     const EncoderOptionComponent = encoderOptionsComponentMap[encoderState.type];
 
     return (
-      <div class={`${style.options} ${style[orientation]}`}>
-        <h2 class={style.title}>
-          {titles[orientation][imageIndex]}
-          {', '}
-          {encoderMap[encoderState.type].label}
-        </h2>
+      <div class={style.options}>
+        <h2 class={style.optionsTitle}>Process</h2>
+        <label class={style.sectionEnabler}>
+          <Checkbox
+            name="resize.enable"
+            checked={!!preprocessorState.resize.enabled}
+            onChange={this.onPreprocessorEnabledChange}
+          />
+          <span class={style.sectionEnablerLabel}>Resize</span>
+        </label>
+        {/*
+        {preprocessorState.resize.enabled &&
+          <ResizeOptionsComponent
+            isVector={Boolean(source && source.vectorImage)}
+            aspect={source ? (source.data.width / source.data.height) : 1}
+            options={preprocessorState.resize}
+            onChange={this.onResizeOptionsChange}
+          />
+        }
+        <label class={style.toggle}>
+          <input
+            name="quantizer.enable"
+            type="checkbox"
+            checked={!!preprocessorState.quantizer.enabled}
+            onChange={this.onPreprocessorEnabledChange}
+          />
+          Quantize
+        </label>
+        {preprocessorState.quantizer.enabled &&
+          <QuantizerOptionsComponent
+            options={preprocessorState.quantizer}
+            onChange={this.onQuantizerOptionsChange}
+          />
+        }
+        */}
 
-        <div class={style.content}>
-          <section class={style.picker}>
-            {encoderSupportMap ?
-              <select value={encoderState.type} onChange={this.onEncoderTypeChange}>
-                {encoders.filter(encoder => encoderSupportMap[encoder.type]).map(encoder => (
-                  <option value={encoder.type}>{encoder.label}</option>
-                ))}
-              </select>
-              :
-              <select><option>Loading…</option></select>
-            }
-          </section>
-
-          {encoderState.type !== 'identity' && (
-            <div key="preprocessors" class={style.preprocessors}>
-              <label class={style.toggle}>
-                <input
-                  name="resize.enable"
-                  type="checkbox"
-                  checked={!!preprocessorState.resize.enabled}
-                  onChange={this.onPreprocessorEnabledChange}
-                />
-                Resize
-              </label>
-              {preprocessorState.resize.enabled &&
-                <ResizeOptionsComponent
-                  isVector={Boolean(source && source.vectorImage)}
-                  aspect={source ? (source.data.width / source.data.height) : 1}
-                  options={preprocessorState.resize}
-                  onChange={this.onResizeOptionsChange}
-                />
-              }
-              <label class={style.toggle}>
-                <input
-                  name="quantizer.enable"
-                  type="checkbox"
-                  checked={!!preprocessorState.quantizer.enabled}
-                  onChange={this.onPreprocessorEnabledChange}
-                />
-                Quantize
-              </label>
-              {preprocessorState.quantizer.enabled &&
-                <QuantizerOptionsComponent
-                  options={preprocessorState.quantizer}
-                  onChange={this.onQuantizerOptionsChange}
-                />
-              }
-            </div>
-          )}
-
-          {EncoderOptionComponent &&
-            <EncoderOptionComponent
-              options={
-                // Casting options, as encoderOptionsComponentMap[encodeData.type] ensures
-                // the correct type, but typescript isn't smart enough.
-                encoderState.options as any
-              }
-              onChange={onEncoderOptionsChange}
-            />
+        {/*<section class={style.picker}>
+          {encoderSupportMap ?
+            <select value={encoderState.type} onChange={this.onEncoderTypeChange}>
+              {encoders.filter(encoder => encoderSupportMap[encoder.type]).map(encoder => (
+                <option value={encoder.type}>{encoder.label}</option>
+              ))}
+            </select>
+            :
+            <select><option>Loading…</option></select>
           }
-        </div>
+        </section>
+
+        {EncoderOptionComponent &&
+          <EncoderOptionComponent
+            options={
+              // Casting options, as encoderOptionsComponentMap[encodeData.type] ensures
+              // the correct type, but typescript isn't smart enough.
+              encoderState.options as any
+            }
+            onChange={onEncoderOptionsChange}
+          />
+        }
 
         <div class={style.row}>
           <button onClick={this.onCopyToOtherClick}>Copy settings to other side</button>
@@ -237,6 +222,7 @@ export default class Options extends Component<Props, State> {
             </a>
           )}
         </div>
+        */}
       </div>
     );
   }

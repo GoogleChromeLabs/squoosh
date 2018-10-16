@@ -29,3 +29,15 @@ export const RemoveIcon = (props: JSX.HTMLAttributes) => (
     <path d="M19 13H5v-2h14v2z"/>
   </Icon>
 );
+
+export const UncheckedIcon = (props: JSX.HTMLAttributes) => (
+  <Icon {...props}>
+    <path d="M19 5v14H5V5h14m0-2H5a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/>
+  </Icon>
+);
+
+export const CheckedIcon = (props: JSX.HTMLAttributes) => (
+  <Icon {...props}>
+    <path d="M19 3H5a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-9 14l-5-5 1.4-1.4 3.6 3.6 7.6-7.6L19 8l-9 9z"/>
+  </Icon>
+);

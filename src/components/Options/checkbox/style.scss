@@ -1,0 +1,21 @@
+.checkbox {
+  display: inline-block;
+  position: relative;
+  --size: 24px;
+}
+
+.real-checkbox {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.icon {
+  display: block;
+  width: var(--size);
+  height: var(--size);
+}
+
+.checked {
+  fill: #34B9EB;
+}
