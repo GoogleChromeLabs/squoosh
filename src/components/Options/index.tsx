@@ -3,7 +3,7 @@ import { h, Component } from 'preact';
 import * as style from './style.scss';
 import { bind, Fileish } from '../../lib/initial-util';
 import { cleanSet, cleanMerge } from '../../lib/clean-modify';
-import OptiPNGEncoderOptions from '../../codecs/optipng/options';
+/*import OptiPNGEncoderOptions from '../../codecs/optipng/options';
 import MozJpegEncoderOptions from '../../codecs/mozjpeg/options';
 import BrowserJPEGEncoderOptions from '../../codecs/browser-jpeg/options';
 import WebPEncoderOptions from '../../codecs/webp/options';
@@ -23,23 +23,24 @@ import * as browserGIF from '../../codecs/browser-gif/encoder-meta';
 import * as browserTIFF from '../../codecs/browser-tiff/encoder-meta';
 import * as browserJP2 from '../../codecs/browser-jp2/encoder-meta';
 import * as browserBMP from '../../codecs/browser-bmp/encoder-meta';
-import * as browserPDF from '../../codecs/browser-pdf/encoder-meta';
+import * as browserPDF from '../../codecs/browser-pdf/encoder-meta';*/
 import {
   EncoderState,
   EncoderType,
   EncoderOptions,
-  encoders,
+  // encoders,
   encodersSupported,
   EncoderSupportMap,
 } from '../../codecs/encoders';
 import { QuantizeOptions } from '../../codecs/imagequant/processor-meta';
 import { ResizeOptions } from '../../codecs/resize/processor-meta';
 import { PreprocessorState } from '../../codecs/preprocessors';
-import FileSize from '../FileSize';
-import { DownloadIcon } from '../../lib/icons';
+// import FileSize from '../FileSize';
+// import { DownloadIcon } from '../../lib/icons';
 import { SourceImage } from '../App';
 import Checkbox from './checkbox';
 
+/*
 const encoderOptionsComponentMap = {
   [identity.type]: undefined,
   [optiPNG.type]: OptiPNGEncoderOptions,
@@ -54,7 +55,7 @@ const encoderOptionsComponentMap = {
   [browserTIFF.type]: undefined,
   [browserJP2.type]: undefined,
   [browserPDF.type]: undefined,
-};
+};*/
 
 interface Props {
   orientation: 'horizontal' | 'vertical';
@@ -124,19 +125,19 @@ export default class Options extends Component<Props, State> {
 
   render(
     {
-      source,
+      /*source,
       imageIndex,
       imageFile,
       downloadUrl,
       orientation,
-      encoderState,
+      encoderState,*/
       preprocessorState,
-      onEncoderOptionsChange,
+      // onEncoderOptionsChange,
     }: Props,
-    { encoderSupportMap }: State,
+    // { encoderSupportMap }: State,
   ) {
     // tslint:disable variable-name
-    const EncoderOptionComponent = encoderOptionsComponentMap[encoderState.type];
+    // const EncoderOptionComponent = encoderOptionsComponentMap[encoderState.type];
 
     return (
       <div class={style.options}>
