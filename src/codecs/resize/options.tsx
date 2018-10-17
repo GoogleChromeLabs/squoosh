@@ -1,8 +1,11 @@
 import { h, Component } from 'preact';
 import linkState from 'linkstate';
-import { bind } from '../../lib/initial-util';
+import { bind, linkRef } from '../../lib/initial-util';
 import { inputFieldValueAsNumber } from '../../lib/util';
 import { ResizeOptions } from './processor-meta';
+import * as style from '../../components/options/style.scss';
+import Checkbox from '../../components/checkbox';
+import Expander from '../../components/expander';
 
 interface Props {
   isVector: Boolean;
@@ -32,7 +35,7 @@ export default class ResizerOptions extends Component<Props, State> {
       width: inputFieldValueAsNumber(width),
       height: inputFieldValueAsNumber(height),
       method: this.form!.resizeMethod.value,
-      fitMethod: this.form!.fitMethod.value,
+      fitMethod: this.form!.fitMethod ? this.form!.fitMethod.value : this.props.options.fitMethod,
     };
     this.props.onChange(options);
   }
@@ -65,10 +68,10 @@ export default class ResizerOptions extends Component<Props, State> {
     this.form!.width.value = Math.round(height * this.props.aspect);
   }
 
-  render({ options, aspect, isVector }: Props, { maintainAspect }: State) {
+  render({ options, isVector }: Props, { maintainAspect }: State) {
     return (
-      <form ref={el => this.form = el}>
-        <label>
+      <form ref={linkRef(this, 'form')} class={style.optionsSection}>
+        <label class={style.optionTextFirst}>
           Method:
           <select
             name="resizeMethod"
@@ -82,7 +85,7 @@ export default class ResizerOptions extends Component<Props, State> {
             <option value="browser-high">Browser high quality</option>
           </select>
         </label>
-        <label>
+        <label class={style.optionTextFirst}>
           Width:
           <input
             required
@@ -94,7 +97,7 @@ export default class ResizerOptions extends Component<Props, State> {
             onInput={this.onWidthInput}
           />
         </label>
-        <label>
+        <label class={style.optionTextFirst}>
           Height:
           <input
             required
@@ -105,26 +108,29 @@ export default class ResizerOptions extends Component<Props, State> {
             onChange={this.onChange}
           />
         </label>
-        <label>
-          <input
+        <label class={style.optionInputFirst}>
+          <Checkbox
             name="maintainAspect"
-            type="checkbox"
             checked={maintainAspect}
             onChange={linkState(this, 'maintainAspect')}
           />
           Maintain aspect ratio
         </label>
-        <label style={{ display: maintainAspect ? 'none' : '' }}>
-          Fit method:
-          <select
-            name="fitMethod"
-            value={options.fitMethod}
-            onChange={this.onChange}
-          >
-            <option value="stretch">Stretch</option>
-            <option value="cover">Cover</option>
-          </select>
-        </label>
+        <Expander>
+          {maintainAspect ? null :
+            <label class={style.optionTextFirst}>
+              Fit method:
+              <select
+                name="fitMethod"
+                value={options.fitMethod}
+                onChange={this.onChange}
+              >
+                <option value="stretch">Stretch</option>
+                <option value="cover">Cover</option>
+              </select>
+            </label>
+          }
+        </Expander>
       </form>
     );
   }

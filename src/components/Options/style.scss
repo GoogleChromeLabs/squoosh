@@ -16,15 +16,29 @@ $horizontalPadding: 15px;
   border-bottom: 1px solid #000;
 }
 
-.section-enabler {
-  cursor: pointer;
-  background: rgba(0, 0, 0, 0.8);
+.option-text-first {
   display: grid;
-  grid-template-columns: auto 1fr;
-  grid-gap: 0.5em;
-  padding: 6px $horizontalPadding;
+  grid-template-columns: 87px 1fr;
+  grid-gap: 0.7em;
+  padding: 10px $horizontalPadding;
 }
 
-.section-enabler-label {
-  padding-top: 3px;
+.option-input-first,
+.section-enabler {
+  cursor: pointer;
+  display: grid;
+  align-items: center;
+  grid-template-columns: auto 1fr;
+  grid-gap: 0.7em;
+  padding: 10px $horizontalPadding;
 }
+
+.section-enabler {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.options-section {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+
