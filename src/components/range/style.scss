@@ -1,0 +1,45 @@
+.range {
+  display: grid;
+  grid-template-columns: 1fr auto;
+}
+
+.label-text {
+  color: #fff; /* TEMP */
+}
+
+.range-wc-container {
+  grid-column: 1 / 3;
+}
+
+.range-wc {
+  width: 100%;
+}
+
+.text-input {
+  text-align: right;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  border: none;
+  padding: 2px 5px;
+  box-sizing: border-box;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  width: 48px;
+  position: relative;
+  left: 5px;
+
+  &:focus {
+    background: #fff;
+    color: #000;
+  }
+
+
+  // Remove the number controls
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -moz-appearance: none;
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}

@@ -5,6 +5,7 @@ import { QuantizeOptions } from './processor-meta';
 import * as style from '../../components/options/style.scss';
 import Expander from '../../components/expander';
 import Select from '../../components/select';
+import Range from '../../components/range';
 
 const konamiPromise = konami();
 
@@ -60,29 +61,31 @@ export default class QuantizerOptions extends Component<Props, State> {
         </Expander>
         <Expander>
           {options.zx ? null :
-            <label class={style.optionTextFirst}>
-              Colors:
-              <range-input
+            <div class={style.optionOneCell}>
+              <Range
                 name="maxNumColors"
                 min="2"
                 max="256"
-                value={'' + options.maxNumColors}
-                onChange={this.onChange}
-              />
-            </label>
+                value={options.maxNumColors}
+                onInput={this.onChange}
+              >
+                Colors:
+              </Range>
+            </div>
           }
         </Expander>
-        <label class={style.optionTextFirst}>
-          Dithering:
-          <range-input
+        <div class={style.optionOneCell}>
+          <Range
             name="dither"
             min="0"
             max="1"
             step="0.01"
-            value={'' + options.dither}
-            onChange={this.onChange}
-          />
-        </label>
+            value={options.dither}
+            onInput={this.onChange}
+          >
+            Dithering:
+          </Range>
+        </div>
       </form>
     );
   }
