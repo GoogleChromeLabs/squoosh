@@ -26,7 +26,7 @@ export default class ResizerOptions extends Component<Props, State> {
 
   form?: HTMLFormElement;
 
-  reportOptions() {
+  private reportOptions() {
     const width = this.form!.width as HTMLInputElement;
     const height = this.form!.height as HTMLInputElement;
 
@@ -42,7 +42,7 @@ export default class ResizerOptions extends Component<Props, State> {
   }
 
   @bind
-  onChange(event: Event) {
+  private onChange() {
     this.reportOptions();
   }
 
@@ -54,19 +54,23 @@ export default class ResizerOptions extends Component<Props, State> {
   }
 
   @bind
-  onWidthInput(event: Event) {
-    if (!this.state.maintainAspect) return;
+  private onWidthInput() {
+    if (this.state.maintainAspect) {
+      const width = inputFieldValueAsNumber(this.form!.width);
+      this.form!.height.value = Math.round(width / this.props.aspect);
+    }
 
-    const width = inputFieldValueAsNumber(this.form!.width);
-    this.form!.height.value = Math.round(width / this.props.aspect);
+    this.reportOptions();
   }
 
   @bind
-  onHeightInput(event: Event) {
-    if (!this.state.maintainAspect) return;
+  private onHeightInput() {
+    if (this.state.maintainAspect) {
+      const height = inputFieldValueAsNumber(this.form!.height);
+      this.form!.width.value = Math.round(height * this.props.aspect);
+    }
 
-    const height = inputFieldValueAsNumber(this.form!.height);
-    this.form!.width.value = Math.round(height * this.props.aspect);
+    this.reportOptions();
   }
 
   render({ options, isVector }: Props, { maintainAspect }: State) {
@@ -95,7 +99,6 @@ export default class ResizerOptions extends Component<Props, State> {
             type="number"
             min="1"
             value={'' + options.width}
-            onChange={this.onChange}
             onInput={this.onWidthInput}
           />
         </label>
@@ -108,7 +111,7 @@ export default class ResizerOptions extends Component<Props, State> {
             type="number"
             min="1"
             value={'' + options.height}
-            onChange={this.onChange}
+            onInput={this.onHeightInput}
           />
         </label>
         <label class={style.optionInputFirst}>

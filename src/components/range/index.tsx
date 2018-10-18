@@ -2,13 +2,21 @@ import { h, Component } from 'preact';
 import * as style from './style.scss';
 import RangeInputElement from '../../custom-els/RangeInput';
 import '../../custom-els/RangeInput';
-import { linkRef } from '../../lib/initial-util';
+import { linkRef, bind } from '../../lib/initial-util';
 
 interface Props extends JSX.HTMLAttributes {}
 interface State {}
 
 export default class Range extends Component<Props, State> {
   rangeWc?: RangeInputElement;
+
+  @bind
+  private onTextInput(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.rangeWc!.value = input.value;
+    const { onInput } = this.props;
+    if (onInput) onInput(event);
+  }
 
   render(props: Props) {
     const {
@@ -17,7 +25,7 @@ export default class Range extends Component<Props, State> {
     } = props;
 
     const {
-      value, min, max, onInput,
+      value, min, max,
     } = props;
 
     return (
@@ -29,7 +37,7 @@ export default class Range extends Component<Props, State> {
           value={value}
           min={min}
           max={max}
-          onInput={onInput}
+          onInput={this.onTextInput}
         />
         <div class={style.rangeWcContainer}>
           <range-input
