@@ -22,3 +22,12 @@
   fill: #fff;
   width: 10px;
 }
+
+.large {
+  padding: 10px 35px 10px 10px;
+  background: #151515;
+
+  & .arrow {
+    right: 13px;
+  }
+}

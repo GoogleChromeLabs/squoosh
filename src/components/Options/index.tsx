@@ -40,6 +40,7 @@ import { DownloadIcon } from '../../lib/icons';
 import { SourceImage } from '../App';
 import Checkbox from '../checkbox';
 import Expander from '../expander';
+import Select from '../select';
 
 const encoderOptionsComponentMap = {
   [identity.type]: undefined,
@@ -177,17 +178,22 @@ export default class Options extends Component<Props, State> {
           : null}
         </Expander>
 
-        {/*<section class={style.picker}>
+        <h2 class={style.optionsTitle}>Compress</h2>
+
+        <section class={`${style.optionOneCell} ${style.optionsSection}`}>
           {encoderSupportMap ?
-            <select value={encoderState.type} onChange={this.onEncoderTypeChange}>
+            <Select value={encoderState.type} onChange={this.onEncoderTypeChange} large>
               {encoders.filter(encoder => encoderSupportMap[encoder.type]).map(encoder => (
                 <option value={encoder.type}>{encoder.label}</option>
               ))}
-            </select>
+            </Select>
             :
-            <select><option>Loading…</option></select>
+            <Select large><option>Loading…</option></Select>
           }
         </section>
+
+
+        {/*
 
         {EncoderOptionComponent &&
           <EncoderOptionComponent
