@@ -31,6 +31,15 @@ export default class Range extends Component<Props, State> {
     return (
       <label class={style.range}>
         <span class={style.labelText}>{children}</span>
+        {/* On interaction, Safari gives focus to the first element in the label, so the
+        <range-input> is deliberately first. */}
+        <div class={style.rangeWcContainer}>
+          <range-input
+            ref={linkRef(this, 'rangeWc')}
+            class={style.rangeWc}
+            {...otherProps}
+          />
+        </div>
         <input
           type="number"
           class={style.textInput}
@@ -39,13 +48,6 @@ export default class Range extends Component<Props, State> {
           max={max}
           onInput={this.onTextInput}
         />
-        <div class={style.rangeWcContainer}>
-          <range-input
-            ref={linkRef(this, 'rangeWc')}
-            class={style.rangeWc}
-            {...otherProps}
-          />
-        </div>
       </label>
     );
   }
