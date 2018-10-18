@@ -30,15 +30,14 @@ export default class QuantizerOptions extends Component<Props, State> {
   @bind
   onChange(event: Event) {
     const form = (event.currentTarget as HTMLInputElement).closest('form') as HTMLFormElement;
+    const { options } = this.props;
 
-    const options: QuantizeOptions = {
-      zx: form.zx ? inputFieldValueAsNumber(form.zx) : this.props.options.zx,
-      maxNumColors: form.maxNumColors
-        ? inputFieldValueAsNumber(form.maxNumColors)
-        : this.props.options.maxNumColors,
+    const newOptions: QuantizeOptions = {
+      zx: inputFieldValueAsNumber(form.zx, options.zx),
+      maxNumColors: inputFieldValueAsNumber(form.maxNumColors, options.maxNumColors),
       dither: inputFieldValueAsNumber(form.dither),
     };
-    this.props.onChange(options);
+    this.props.onChange(newOptions);
   }
 
   render({ options }: Props, { extendedSettings }: State) {

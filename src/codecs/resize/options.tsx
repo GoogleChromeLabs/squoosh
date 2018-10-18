@@ -1,7 +1,7 @@
 import { h, Component } from 'preact';
 import linkState from 'linkstate';
 import { bind, linkRef } from '../../lib/initial-util';
-import { inputFieldValueAsNumber } from '../../lib/util';
+import { inputFieldValueAsNumber, inputFieldValue } from '../../lib/util';
 import { ResizeOptions } from './processor-meta';
 import * as style from '../../components/options/style.scss';
 import Checkbox from '../../components/checkbox';
@@ -27,18 +27,21 @@ export default class ResizerOptions extends Component<Props, State> {
   form?: HTMLFormElement;
 
   private reportOptions() {
-    const width = this.form!.width as HTMLInputElement;
-    const height = this.form!.height as HTMLInputElement;
+    const form = this.form!;
+    const width = form.width as HTMLInputElement;
+    const height = form.height as HTMLInputElement;
+    const { options } = this.props;
 
     if (!width.checkValidity() || !height.checkValidity()) return;
 
-    const options: ResizeOptions = {
+    const newOptions: ResizeOptions = {
       width: inputFieldValueAsNumber(width),
       height: inputFieldValueAsNumber(height),
-      method: this.form!.resizeMethod.value,
-      fitMethod: this.form!.fitMethod ? this.form!.fitMethod.value : this.props.options.fitMethod,
+      method: form.resizeMethod.value,
+      // Casting, as the formfield only returns the correct values.
+      fitMethod: inputFieldValue(form.fitMethod, options.fitMethod) as ResizeOptions['fitMethod'],
     };
-    this.props.onChange(options);
+    this.props.onChange(newOptions);
   }
 
   @bind

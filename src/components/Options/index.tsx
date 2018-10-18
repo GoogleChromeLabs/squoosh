@@ -192,8 +192,6 @@ export default class Options extends Component<Props, State> {
           }
         </section>
 
-        {/*
-
         {EncoderOptionComponent &&
           <EncoderOptionComponent
             options={
@@ -204,6 +202,8 @@ export default class Options extends Component<Props, State> {
             onChange={onEncoderOptionsChange}
           />
         }
+
+        {/*
 
         <div class={style.row}>
           <button onClick={this.onCopyToOtherClick}>Copy settings to other side</button>
