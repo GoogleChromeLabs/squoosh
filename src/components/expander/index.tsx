@@ -55,14 +55,16 @@ export default class Expander extends Component<Props, State> {
     // Set the currently rendered height absolutely.
     this.el!.style.height = this.lastElHeight + 'px';
     this.el!.style.transition = '';
+    this.el!.style.overflow = 'hidden';
     // Force a style calc so the browser picks up the start value.
     getComputedStyle(this.el!).height;
     // Animate to the new height.
     this.el!.style.height = newHeight + 'px';
 
     const listener = () => {
-      // Unset the height, so element changes do the right thing.
+      // Unset the height & overflow, so element changes do the right thing.
       this.el!.style.height = '';
+      this.el!.style.overflow = '';
       this.el!.removeEventListener('transitionend', listener);
       this.el!.removeEventListener('transitioncancel', listener);
       if (this.state.outgoingChildren[0]) {

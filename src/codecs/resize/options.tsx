@@ -6,6 +6,7 @@ import { ResizeOptions } from './processor-meta';
 import * as style from '../../components/options/style.scss';
 import Checkbox from '../../components/checkbox';
 import Expander from '../../components/expander';
+import Select from '../../components/select';
 
 interface Props {
   isVector: Boolean;
@@ -73,7 +74,7 @@ export default class ResizerOptions extends Component<Props, State> {
       <form ref={linkRef(this, 'form')} class={style.optionsSection}>
         <label class={style.optionTextFirst}>
           Method:
-          <select
+          <Select
             name="resizeMethod"
             value={options.method}
             onChange={this.onChange}
@@ -83,12 +84,13 @@ export default class ResizerOptions extends Component<Props, State> {
             <option value="browser-low">Browser low quality</option>
             <option value="browser-medium">Browser medium quality</option>
             <option value="browser-high">Browser high quality</option>
-          </select>
+          </Select>
         </label>
         <label class={style.optionTextFirst}>
           Width:
           <input
             required
+            class={style.textField}
             name="width"
             type="number"
             min="1"
@@ -101,6 +103,7 @@ export default class ResizerOptions extends Component<Props, State> {
           Height:
           <input
             required
+            class={style.textField}
             name="height"
             type="number"
             min="1"
@@ -120,14 +123,14 @@ export default class ResizerOptions extends Component<Props, State> {
           {maintainAspect ? null :
             <label class={style.optionTextFirst}>
               Fit method:
-              <select
+              <Select
                 name="fitMethod"
                 value={options.fitMethod}
                 onChange={this.onChange}
               >
                 <option value="stretch">Stretch</option>
                 <option value="cover">Cover</option>
-              </select>
+              </Select>
             </label>
           }
         </Expander>

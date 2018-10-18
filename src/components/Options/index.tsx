@@ -141,7 +141,7 @@ export default class Options extends Component<Props, State> {
 
     return (
       <div class={style.options}>
-        <h2 class={style.optionsTitle}>Process</h2>
+        <h2 class={style.optionsTitle}>Edit</h2>
         <label class={style.sectionEnabler}>
           <Checkbox
             name="resize.enable"
@@ -151,34 +151,31 @@ export default class Options extends Component<Props, State> {
           Resize
         </label>
         <Expander>
-          {preprocessorState.resize.enabled
-            ?
-              <ResizeOptionsComponent
-                isVector={Boolean(source && source.vectorImage)}
-                aspect={source ? (source.data.width / source.data.height) : 1}
-                options={preprocessorState.resize}
-                onChange={this.onResizeOptionsChange}
-              />
-            : null
-          }
+          {preprocessorState.resize.enabled ?
+            <ResizeOptionsComponent
+              isVector={Boolean(source && source.vectorImage)}
+              aspect={source ? (source.data.width / source.data.height) : 1}
+              options={preprocessorState.resize}
+              onChange={this.onResizeOptionsChange}
+            />
+          : null}
         </Expander>
-        {/*
-        <label class={style.toggle}>
-          <input
+        <label class={style.sectionEnabler}>
+          <Checkbox
             name="quantizer.enable"
-            type="checkbox"
             checked={!!preprocessorState.quantizer.enabled}
             onChange={this.onPreprocessorEnabledChange}
           />
-          Quantize
+          Reduce palette
         </label>
-        {preprocessorState.quantizer.enabled &&
-          <QuantizerOptionsComponent
-            options={preprocessorState.quantizer}
-            onChange={this.onQuantizerOptionsChange}
-          />
-        }
-        */}
+        <Expander>
+          {preprocessorState.quantizer.enabled ?
+            <QuantizerOptionsComponent
+              options={preprocessorState.quantizer}
+              onChange={this.onQuantizerOptionsChange}
+            />
+          : null}
+        </Expander>
 
         {/*<section class={style.picker}>
           {encoderSupportMap ?
