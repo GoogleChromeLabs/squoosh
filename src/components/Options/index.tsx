@@ -192,7 +192,6 @@ export default class Options extends Component<Props, State> {
           }
         </section>
 
-
         {/*
 
         {EncoderOptionComponent &&
