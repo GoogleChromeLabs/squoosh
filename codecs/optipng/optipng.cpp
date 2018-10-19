@@ -18,6 +18,8 @@ struct OptiPngOpts {
 
 uint8_t* result;
 val compress(std::string png, OptiPngOpts opts) {
+  remove("input.png");
+  remove("output.png");
   FILE* infile = fopen("input.png", "wb");
   fwrite(png.c_str(), png.length(), 1, infile);
   fflush(infile);
