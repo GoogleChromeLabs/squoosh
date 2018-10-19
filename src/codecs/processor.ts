@@ -92,7 +92,6 @@ export default class Processor {
     // If the worker is unused for 10 seconds, remove it to save memory.
     this._workerTimeoutId = self.setTimeout(
       () => {
-        if (this._busy) throw Error("Worker shouldn't be busy");
         if (!this._worker) return;
         this._worker.terminate();
         this._worker = undefined;
@@ -104,14 +103,14 @@ export default class Processor {
   /** Abort the current job, if any */
   abortCurrent() {
     if (!this._busy) return;
-    if (!this._worker || !this._abortRejector) {
-      throw Error("There must be a worker/rejector if it's busy");
-    }
+    if (!this._abortRejector) throw Error("There must be a rejector if it's busy");
     this._abortRejector(new DOMException('Aborted', 'AbortError'));
-    this._worker.terminate();
-    this._worker = undefined;
     this._abortRejector = undefined;
     this._busy = false;
+
+    if (!this._worker) return;
+    this._worker.terminate();
+    this._worker = undefined;
   }
 
   // Off main thread jobs:
