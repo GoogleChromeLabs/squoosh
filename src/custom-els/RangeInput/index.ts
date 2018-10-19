@@ -80,10 +80,13 @@ class RangeInputElement extends HTMLElement {
 
   private _reflectAttributes() {
     this._ignoreChange = true;
-    for (const attributeName in REFLECTED_ATTRIBUTES) {
+    for (const attributeName of REFLECTED_ATTRIBUTES) {
       const attributeValue = this._input.getAttribute(attributeName);
-      if (attributeValue === null) continue;
-      this.setAttribute(attributeName, attributeValue);
+      if (attributeValue === null) {
+        this.removeAttribute(attributeName);
+      } else {
+        this.setAttribute(attributeName, attributeValue);
+      }
     }
     this._ignoreChange = false;
   }
