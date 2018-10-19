@@ -3,8 +3,8 @@ import './styles.css';
 
 const RETARGETED_EVENTS = ['focus', 'blur'];
 const UPDATE_EVENTS = ['input', 'change'];
-const REFLECTED_PROPERTIES = ['name', 'min', 'max', 'step', 'value'];
-const REFLECTED_ATTRIBUTES = ['name', 'min', 'max', 'step', 'value'];
+const REFLECTED_PROPERTIES = ['name', 'min', 'max', 'step', 'value', 'disabled'];
+const REFLECTED_ATTRIBUTES = ['name', 'min', 'max', 'step', 'value', 'disabled'];
 
 class RangeInputElement extends HTMLElement {
   private _input = document.createElement('input');
@@ -35,18 +35,6 @@ class RangeInputElement extends HTMLElement {
 
   set labelPrecision(precision: string) {
     this.setAttribute('label-precision', precision);
-  }
-
-  get disabled(): boolean {
-    return this.hasAttribute('disabled');
-  }
-
-  set disabled(disabled: boolean) {
-    if (disabled) {
-      this.setAttribute('disabled', '');
-    } else {
-      this.removeAttribute('disabled');
-    }
   }
 
   connectedCallback() {
