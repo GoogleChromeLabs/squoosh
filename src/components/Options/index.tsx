@@ -35,7 +35,7 @@ import {
 import { QuantizeOptions } from '../../codecs/imagequant/processor-meta';
 import { ResizeOptions } from '../../codecs/resize/processor-meta';
 import { PreprocessorState } from '../../codecs/preprocessors';
-import FileSize from '../FileSize';
+import FileSize from './FileSize';
 import { DownloadIcon } from '../../lib/icons';
 import { SourceImage } from '../App';
 import Checkbox from '../checkbox';
@@ -145,7 +145,7 @@ export default class Options extends Component<Props, State> {
         <Expander>
           {encoderState.type === identity.type ? null :
             <div>
-              <h2 class={style.optionsTitle}>Edit</h2>
+              <h3 class={style.optionsTitle}>Edit</h3>
               <label class={style.sectionEnabler}>
                 <Checkbox
                   name="resize.enable"
@@ -184,7 +184,7 @@ export default class Options extends Component<Props, State> {
           }
         </Expander>
 
-        <h2 class={style.optionsTitle}>Compress</h2>
+        <h3 class={style.optionsTitle}>Compress</h3>
 
         <div class={style.optionsScroller}>
           <section class={`${style.optionOneCell} ${style.optionsSection}`}>
@@ -214,32 +214,35 @@ export default class Options extends Component<Props, State> {
         </div>
 
         {/*
-
-        <div class={style.row}>
-          <button onClick={this.onCopyToOtherClick}>Copy settings to other side</button>
-        </div>
-
-        <div class={style.sizeDetails}>
-          <FileSize
-            class={style.size}
-            increaseClass={style.increase}
-            decreaseClass={style.decrease}
-            file={imageFile}
-            compareTo={(source && imageFile !== source.file) ? source.file : undefined}
-          />
-
-          {(downloadUrl && imageFile) && (
-            <a
-              class={style.download}
-              href={downloadUrl}
-              download={imageFile.name}
-              title="Download"
-            >
-              <DownloadIcon />
-            </a>
-          )}
+        <div class={style.optionsTitle}>
+          <button onClick={this.onCopyToOtherClick} class={style.button}>
+            {imageIndex === 1 && '← '}
+            Copy settings to other side
+            {imageIndex === 0 && ' →'}
+          </button>
         </div>
         */}
+
+        <div class={style.results}>
+          <div class={style.resultData}>
+            {!imageFile ? 'Compressing…' :
+              <FileSize
+                blob={imageFile}
+                compareTo={(source && imageFile !== source.file) ? source.file : undefined}
+              />
+            }
+          </div>
+
+          <div class={style.download}>
+            {(downloadUrl && imageFile) && (
+              <a href={downloadUrl} download={imageFile.name} title="Download">
+                <DownloadIcon class={style.downloadIcon} />
+              </a>
+            )}
+          </div>
+
+        </div>
+
       </div>
     );
   }

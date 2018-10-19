@@ -3,7 +3,7 @@ $horizontalPadding: 15px;
 .options {
   color: #fff;
   width: 300px;
-  opacity: 0.8;
+  opacity: 0.9;
   font-size: 1.2rem;
   max-height: 100%;
   display: flex;
@@ -28,6 +28,8 @@ $horizontalPadding: 15px;
 }
 
 .option-one-cell {
+  display: grid;
+  grid-template-columns: 1fr;
   padding: 10px $horizontalPadding;
 }
 
@@ -62,4 +64,60 @@ $horizontalPadding: 15px;
 .options-scroller {
   overflow-x: hidden;
   overflow-y: auto;
+}
+
+.button {
+  composes: unbutton from '../../lib/util.scss';
+  background: #151515;
+  border-radius: 4px;
+  color: #fff;
+}
+
+.results {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  background: rgba(0, 0, 0, 0.9);
+  font-size: 1.4rem;
+}
+
+.result-data {
+  display: flex;
+  align-items: center;
+  padding: 0 $horizontalPadding;
+}
+
+.download {
+  background: #34B9EB;
+  --size: 38px;
+  width: var(--size);
+  height: var(--size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.download-icon {
+  color: #fff;
+  display: block;
+  --size: 24px;
+  width: var(--size);
+  height: var(--size);
+  padding: 7px;
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.7));
+}
+
+.size-delta {
+  font-size: 1.1rem;
+  font-style: italic;
+  position: relative;
+  top: -1px;
+  margin-left: 0.3em;
+}
+
+.size-increase {
+  color: #e35050;
+}
+
+.size-decrease {
+  color: #50e3c2;
 }
