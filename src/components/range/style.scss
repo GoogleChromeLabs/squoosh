@@ -1,4 +1,6 @@
 .range {
+  position: relative;
+  z-index: 0;
   display: grid;
   grid-template-columns: 1fr auto;
 }
@@ -8,6 +10,8 @@
 }
 
 .range-wc-container {
+  position: relative;
+  z-index: 1;
   grid-row: 2 / 3;
   grid-column: 1 / 3;
 }
