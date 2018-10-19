@@ -142,40 +142,46 @@ export default class Options extends Component<Props, State> {
 
     return (
       <div class={style.options}>
-        <h2 class={style.optionsTitle}>Edit</h2>
-        <label class={style.sectionEnabler}>
-          <Checkbox
-            name="resize.enable"
-            checked={!!preprocessorState.resize.enabled}
-            onChange={this.onPreprocessorEnabledChange}
-          />
-          Resize
-        </label>
         <Expander>
-          {preprocessorState.resize.enabled ?
-            <ResizeOptionsComponent
-              isVector={Boolean(source && source.vectorImage)}
-              aspect={source ? (source.data.width / source.data.height) : 1}
-              options={preprocessorState.resize}
-              onChange={this.onResizeOptionsChange}
-            />
-          : null}
-        </Expander>
-        <label class={style.sectionEnabler}>
-          <Checkbox
-            name="quantizer.enable"
-            checked={!!preprocessorState.quantizer.enabled}
-            onChange={this.onPreprocessorEnabledChange}
-          />
-          Reduce palette
-        </label>
-        <Expander>
-          {preprocessorState.quantizer.enabled ?
-            <QuantizerOptionsComponent
-              options={preprocessorState.quantizer}
-              onChange={this.onQuantizerOptionsChange}
-            />
-          : null}
+          {encoderState.type === identity.type ? null :
+            <div>
+              <h2 class={style.optionsTitle}>Edit</h2>
+              <label class={style.sectionEnabler}>
+                <Checkbox
+                  name="resize.enable"
+                  checked={!!preprocessorState.resize.enabled}
+                  onChange={this.onPreprocessorEnabledChange}
+                />
+                Resize
+              </label>
+              <Expander>
+                {preprocessorState.resize.enabled ?
+                  <ResizeOptionsComponent
+                    isVector={Boolean(source && source.vectorImage)}
+                    aspect={source ? (source.data.width / source.data.height) : 1}
+                    options={preprocessorState.resize}
+                    onChange={this.onResizeOptionsChange}
+                  />
+                : null}
+              </Expander>
+              <label class={style.sectionEnabler}>
+                <Checkbox
+                  name="quantizer.enable"
+                  checked={!!preprocessorState.quantizer.enabled}
+                  onChange={this.onPreprocessorEnabledChange}
+                />
+                Reduce palette
+              </label>
+              <Expander>
+                {preprocessorState.quantizer.enabled ?
+                  <QuantizerOptionsComponent
+                    options={preprocessorState.quantizer}
+                    onChange={this.onQuantizerOptionsChange}
+                  />
+                : null}
+              </Expander>
+            </div>
+          }
         </Expander>
 
         <h2 class={style.optionsTitle}>Compress</h2>
@@ -193,16 +199,18 @@ export default class Options extends Component<Props, State> {
             }
           </section>
 
-          {EncoderOptionComponent &&
-            <EncoderOptionComponent
-              options={
-                // Casting options, as encoderOptionsComponentMap[encodeData.type] ensures
-                // the correct type, but typescript isn't smart enough.
-                encoderState.options as any
-              }
-              onChange={onEncoderOptionsChange}
-            />
-          }
+          <Expander>
+            {EncoderOptionComponent ?
+              <EncoderOptionComponent
+                options={
+                  // Casting options, as encoderOptionsComponentMap[encodeData.type] ensures
+                  // the correct type, but typescript isn't smart enough.
+                  encoderState.options as any
+                }
+                onChange={onEncoderOptionsChange}
+              />
+            : null}
+          </Expander>
         </div>
 
         {/*
