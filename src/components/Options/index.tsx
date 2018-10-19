@@ -180,28 +180,30 @@ export default class Options extends Component<Props, State> {
 
         <h2 class={style.optionsTitle}>Compress</h2>
 
-        <section class={`${style.optionOneCell} ${style.optionsSection}`}>
-          {encoderSupportMap ?
-            <Select value={encoderState.type} onChange={this.onEncoderTypeChange} large>
-              {encoders.filter(encoder => encoderSupportMap[encoder.type]).map(encoder => (
-                <option value={encoder.type}>{encoder.label}</option>
-              ))}
-            </Select>
-            :
-            <Select large><option>Loading…</option></Select>
-          }
-        </section>
-
-        {EncoderOptionComponent &&
-          <EncoderOptionComponent
-            options={
-              // Casting options, as encoderOptionsComponentMap[encodeData.type] ensures
-              // the correct type, but typescript isn't smart enough.
-              encoderState.options as any
+        <div class={style.optionsScroller}>
+          <section class={`${style.optionOneCell} ${style.optionsSection}`}>
+            {encoderSupportMap ?
+              <Select value={encoderState.type} onChange={this.onEncoderTypeChange} large>
+                {encoders.filter(encoder => encoderSupportMap[encoder.type]).map(encoder => (
+                  <option value={encoder.type}>{encoder.label}</option>
+                ))}
+              </Select>
+              :
+              <Select large><option>Loading…</option></Select>
             }
-            onChange={onEncoderOptionsChange}
-          />
-        }
+          </section>
+
+          {EncoderOptionComponent &&
+            <EncoderOptionComponent
+              options={
+                // Casting options, as encoderOptionsComponentMap[encodeData.type] ensures
+                // the correct type, but typescript isn't smart enough.
+                encoderState.options as any
+              }
+              onChange={onEncoderOptionsChange}
+            />
+          }
+        </div>
 
         {/*
 

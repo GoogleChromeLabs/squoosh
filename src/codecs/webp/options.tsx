@@ -2,13 +2,21 @@ import { h, Component } from 'preact';
 import { bind } from '../../lib/initial-util';
 import { inputFieldCheckedAsNumber, inputFieldValueAsNumber } from '../../lib/util';
 import { EncodeOptions, WebPImageHint } from './encoder-meta';
-import * as styles from './styles.scss';
-import '../../custom-els/RangeInput';
+import * as style from '../../components/options/style.scss';
+import Checkbox from '../../components/checkbox';
+import Expander from '../../components/expander';
+import Select from '../../components/select';
+import Range from '../../components/range';
+import linkState from 'linkstate';
 
-type Props = {
-  options: EncodeOptions,
-  onChange(newOptions: EncodeOptions): void,
-};
+interface Props {
+  options: EncodeOptions;
+  onChange(newOptions: EncodeOptions): void;
+}
+
+interface State {
+  showAdvanced: boolean;
+}
 
 // From kLosslessPresets in config_enc.c
 // The format is [method, quality].
@@ -26,249 +34,281 @@ function determineLosslessQuality(quality: number): number {
   return losslessPresetDefault;
 }
 
-export default class WebPEncoderOptions extends Component<Props, {}> {
+export default class WebPEncoderOptions extends Component<Props, State> {
+  state: State = {
+    showAdvanced: false,
+  };
+
   @bind
   onChange(event: Event) {
     const form = (event.currentTarget as HTMLInputElement).closest('form') as HTMLFormElement;
     const lossless = inputFieldCheckedAsNumber(form.lossless);
-    const losslessPresetInput = (form.lossless_preset as HTMLInputElement);
+    const { options } = this.props;
+    const losslessPresetValue = inputFieldValueAsNumber(
+      form.lossless_preset, determineLosslessQuality(options.quality),
+    );
 
-    const options: EncodeOptions = {
+    const newOptions: EncodeOptions = {
       // Copy over options the form doesn't care about, eg emulate_jpeg_size
-      ...this.props.options,
+      ...options,
       // And now stuff from the form:
       lossless,
       // Special-cased inputs:
       // In lossless mode, the quality is derived from the preset.
       quality: lossless ?
-        losslessPresets[Number(losslessPresetInput.value)][1] :
-        inputFieldValueAsNumber(form.quality),
+        losslessPresets[losslessPresetValue][1] :
+        inputFieldValueAsNumber(form.quality, options.quality),
       // In lossless mode, the method is derived from the preset.
       method: lossless ?
-        losslessPresets[Number(losslessPresetInput.value)][0] :
-        inputFieldValueAsNumber(form.method_input),
-      image_hint: (form.image_hint as HTMLInputElement).checked ?
+        losslessPresets[losslessPresetValue][0] :
+        inputFieldValueAsNumber(form.method_input, options.method),
+      image_hint: inputFieldCheckedAsNumber(form.image_hint, options.image_hint) ?
         WebPImageHint.WEBP_HINT_GRAPH :
         WebPImageHint.WEBP_HINT_DEFAULT,
       // .checked
-      exact: inputFieldCheckedAsNumber(form.exact),
-      alpha_compression: inputFieldCheckedAsNumber(form.alpha_compression),
-      autofilter: inputFieldCheckedAsNumber(form.autofilter),
-      filter_type: inputFieldCheckedAsNumber(form.filter_type),
-      use_sharp_yuv: inputFieldCheckedAsNumber(form.use_sharp_yuv),
+      exact: inputFieldCheckedAsNumber(form.exact, options.exact),
+      alpha_compression: inputFieldCheckedAsNumber(
+        form.alpha_compression, options.alpha_compression,
+      ),
+      autofilter: inputFieldCheckedAsNumber(form.autofilter, options.autofilter),
+      filter_type: inputFieldCheckedAsNumber(form.filter_type, options.filter_type),
+      use_sharp_yuv: inputFieldCheckedAsNumber(form.use_sharp_yuv, options.use_sharp_yuv),
       // .value
-      near_lossless: 100 - inputFieldValueAsNumber(form.near_lossless),
-      alpha_quality: inputFieldValueAsNumber(form.alpha_quality),
-      alpha_filtering: inputFieldValueAsNumber(form.alpha_filtering),
-      sns_strength: inputFieldValueAsNumber(form.sns_strength),
-      filter_strength: inputFieldValueAsNumber(form.filter_strength),
-      filter_sharpness: 7 - inputFieldValueAsNumber(form.filter_sharpness),
-      pass: inputFieldValueAsNumber(form.pass),
-      preprocessing: inputFieldValueAsNumber(form.preprocessing),
-      segments: inputFieldValueAsNumber(form.segments),
-      partitions: inputFieldValueAsNumber(form.partitions),
+      near_lossless: 100 - inputFieldValueAsNumber(form.near_lossless, 100 - options.near_lossless),
+      alpha_quality: inputFieldValueAsNumber(form.alpha_quality, options.alpha_quality),
+      alpha_filtering: inputFieldValueAsNumber(form.alpha_filtering, options.alpha_filtering),
+      sns_strength: inputFieldValueAsNumber(form.sns_strength, options.sns_strength),
+      filter_strength: inputFieldValueAsNumber(form.filter_strength, options.filter_strength),
+      filter_sharpness:
+        7 - inputFieldValueAsNumber(form.filter_sharpness, 7 - options.filter_sharpness),
+      pass: inputFieldValueAsNumber(form.pass, options.pass),
+      preprocessing: inputFieldValueAsNumber(form.preprocessing, options.preprocessing),
+      segments: inputFieldValueAsNumber(form.segments, options.segments),
+      partitions: inputFieldValueAsNumber(form.partitions, options.partitions),
     };
-    this.props.onChange(options);
+    this.props.onChange(newOptions);
   }
 
   private _losslessSpecificOptions(options: EncodeOptions) {
     return (
-      <div>
-        <label>
-          Effort:
-          <range-input
+      <div key="lossless">
+        <div class={style.optionOneCell}>
+          <Range
             name="lossless_preset"
             min="0"
             max="9"
-            value={'' + determineLosslessQuality(options.quality)}
-            onChange={this.onChange}
-          />
-        </label>
-        <label>
-          Slight loss:
-          <range-input
+            value={determineLosslessQuality(options.quality)}
+            onInput={this.onChange}
+          >
+            Effort:
+          </Range>
+        </div>
+        <div class={style.optionOneCell}>
+          <Range
             name="near_lossless"
             min="0"
             max="100"
             value={'' + (100 - options.near_lossless)}
-            onChange={this.onChange}
-          />
-        </label>
-        <label>
+            onInput={this.onChange}
+          >
+            Slight loss:
+          </Range>
+        </div>
+        <label class={style.optionInputFirst}>
           {/*
             Although there are 3 different kinds of image hint, webp only
             seems to do something with the 'graph' type, and I don't really
             understand what it does.
           */}
-          <input
+          <Checkbox
             name="image_hint"
-            type="checkbox"
             checked={options.image_hint === WebPImageHint.WEBP_HINT_GRAPH}
-            value={'' + WebPImageHint.WEBP_HINT_GRAPH}
             onChange={this.onChange}
           />
-          <span>Discrete tone image (graph, map-tile etc)</span>
+          Discrete tone image
         </label>
       </div>
     );
   }
 
   private _lossySpecificOptions(options: EncodeOptions) {
+    const { showAdvanced } = this.state;
+
     return (
-      <div>
-        <label>
-          Effort:
-          <range-input
+      <div key="lossy">
+        <div class={style.optionOneCell}>
+          <Range
             name="method_input"
             min="0"
             max="6"
-            value={'' + options.method}
-            onChange={this.onChange}
-          />
-        </label>
-        <label>
-          Quality:
-          <range-input
+            value={options.method}
+            onInput={this.onChange}
+          >
+            Effort:
+          </Range>
+        </div>
+        <div class={style.optionOneCell}>
+          <Range
             name="quality"
             min="0"
             max="100"
             step="0.01"
-            value={'' + options.quality}
-            onChange={this.onChange}
-          />
-        </label>
-        <hr />
-        <label>
-          <input
-            name="alpha_compression"
-            type="checkbox"
-            checked={!!options.alpha_compression}
-            onChange={this.onChange}
-          />
-          Compress alpha
-        </label>
-        <label>
-          Alpha quality:
-          <range-input
-            name="alpha_quality"
-            min="0"
-            max="100"
-            value={'' + options.alpha_quality}
-            onChange={this.onChange}
-          />
-        </label>
-        <label>
-          Alpha filter quality:
-          <range-input
-            name="alpha_filtering"
-            min="0"
-            max="2"
-            value={'' + options.alpha_filtering}
-            onChange={this.onChange}
-          />
-        </label>
-        <hr />
-        <label>
-          <input
-            name="autofilter"
-            type="checkbox"
-            checked={!!options.autofilter}
-            onChange={this.onChange}
-          />
-          <span>Auto adjust filter strength</span>
-        </label>
-        <label>
-          Filter strength:
-          <range-input
-            name="filter_strength"
-            min="0"
-            max="100"
-            disabled={!!options.autofilter}
-            value={'' + options.filter_strength}
-            onChange={this.onChange}
-          />
-        </label>
-        <label>
-          <input
-            name="filter_type"
-            type="checkbox"
-            checked={!!options.filter_type}
-            onChange={this.onChange}
-          />
-          Strong filter
-        </label>
-        <label>
-          Filter sharpness:
-          <range-input
-            name="filter_sharpness"
-            min="0"
-            max="7"
-            value={'' + (7 - options.filter_sharpness)}
-            onChange={this.onChange}
-          />
-        </label>
-        <label>
-          <input
-            name="use_sharp_yuv"
-            type="checkbox"
-            checked={!!options.use_sharp_yuv}
-            onChange={this.onChange}
-          />
-          Sharp RGB->YUV conversion
-        </label>
-        <hr />
-        <label>
-          Passes:
-          <range-input
-            name="pass"
-            min="1"
-            max="10"
-            value={'' + options.pass}
-            onChange={this.onChange}
-          />
-        </label>
-        <label>
-          Spacial noise shaping:
-          <range-input
-            name="sns_strength"
-            min="0"
-            max="100"
-            value={'' + options.sns_strength}
-            onChange={this.onChange}
-          />
-        </label>
-        <label>
-          Preprocessing type:
-          <select
-            name="preprocessing"
-            value={'' + options.preprocessing}
-            onChange={this.onChange}
+            value={options.quality}
+            onInput={this.onChange}
           >
-            <option value="0">None</option>
-            <option value="1">Segment smooth</option>
-            <option value="2">Pseudo-random dithering</option>
-          </select>
-        </label>
-        <label>
-          Segments:
-          <range-input
-            name="segments"
-            min="1"
-            max="4"
-            value={'' + options.segments}
-            onChange={this.onChange}
+            Quality:
+          </Range>
+        </div>
+        <label class={style.optionInputFirst}>
+          <Checkbox
+            checked={showAdvanced}
+            onChange={linkState(this, 'showAdvanced')}
           />
+          Show advanced settings
         </label>
-        <label>
-          Partitions:
-          <range-input
-            name="partitions"
-            min="0"
-            max="3"
-            value={'' + options.partitions}
-            onChange={this.onChange}
-          />
-        </label>
+        <Expander>
+          {showAdvanced ?
+            <div>
+              <label class={style.optionInputFirst}>
+                <Checkbox
+                  name="alpha_compression"
+                  checked={!!options.alpha_compression}
+                  onChange={this.onChange}
+                />
+                Compress alpha
+              </label>
+              <div class={style.optionOneCell}>
+                <Range
+                  name="alpha_quality"
+                  min="0"
+                  max="100"
+                  value={options.alpha_quality}
+                  onInput={this.onChange}
+                >
+                  Alpha quality:
+                </Range>
+              </div>
+              <div class={style.optionOneCell}>
+                <Range
+                  name="alpha_filtering"
+                  min="0"
+                  max="2"
+                  value={options.alpha_filtering}
+                  onInput={this.onChange}
+                >
+                  Alpha filter quality:
+                </Range>
+              </div>
+              <label class={style.optionInputFirst}>
+                <Checkbox
+                  name="autofilter"
+                  checked={!!options.autofilter}
+                  onChange={this.onChange}
+                />
+                Auto adjust filter strength
+              </label>
+              <Expander>
+                {options.autofilter ? null :
+                  <div class={style.optionOneCell}>
+                    <Range
+                      name="filter_strength"
+                      min="0"
+                      max="100"
+                      value={options.filter_strength}
+                      onInput={this.onChange}
+                    >
+                      Filter strength:
+                    </Range>
+                  </div>
+                }
+              </Expander>
+              <label class={style.optionInputFirst}>
+                <Checkbox
+                  name="filter_type"
+                  checked={!!options.filter_type}
+                  onChange={this.onChange}
+                />
+                Strong filter
+              </label>
+              <div class={style.optionOneCell}>
+                <Range
+                  name="filter_sharpness"
+                  min="0"
+                  max="7"
+                  value={7 - options.filter_sharpness}
+                  onInput={this.onChange}
+                >
+                  Filter sharpness:
+                </Range>
+              </div>
+              <label class={style.optionInputFirst}>
+                <Checkbox
+                  name="use_sharp_yuv"
+                  checked={!!options.use_sharp_yuv}
+                  onChange={this.onChange}
+                />
+                Sharp RGB→YUV conversion
+              </label>
+              <div class={style.optionOneCell}>
+                <Range
+                  name="pass"
+                  min="1"
+                  max="10"
+                  value={options.pass}
+                  onInput={this.onChange}
+                >
+                  Passes:
+                </Range>
+              </div>
+              <div class={style.optionOneCell}>
+                <Range
+                  name="sns_strength"
+                  min="0"
+                  max="100"
+                  value={options.sns_strength}
+                  onInput={this.onChange}
+                >
+                  Spacial noise shaping:
+                </Range>
+              </div>
+              <label class={style.optionTextFirst}>
+                Preprocess:
+                <Select
+                  name="preprocessing"
+                  value={options.preprocessing}
+                  onChange={this.onChange}
+                >
+                  <option value="0">None</option>
+                  <option value="1">Segment smooth</option>
+                  <option value="2">Pseudo-random dithering</option>
+                </Select>
+              </label>
+              <div class={style.optionOneCell}>
+                <Range
+                  name="segments"
+                  min="1"
+                  max="4"
+                  value={options.segments}
+                  onInput={this.onChange}
+                >
+                  Segments:
+                </Range>
+              </div>
+              <div class={style.optionOneCell}>
+                <Range
+                  name="partitions"
+                  min="0"
+                  max="3"
+                  value={options.partitions}
+                  onInput={this.onChange}
+                >
+                  Partitions:
+                </Range>
+              </div>
+            </div>
+            : null
+          }
+        </Expander>
       </div>
     );
   }
@@ -277,32 +317,26 @@ export default class WebPEncoderOptions extends Component<Props, {}> {
     // I'm rendering both lossy and lossless forms, as it becomes much easier when
     // gathering the data.
     return (
-      <form>
-        <label>
-          <input
+      <form class={style.optionsSection}>
+        <label class={style.optionInputFirst}>
+          <Checkbox
             name="lossless"
-            type="checkbox"
             checked={!!options.lossless}
             onChange={this.onChange}
           />
           Lossless
         </label>
-        <div class={options.lossless ? '' : styles.hide}>
-          {this._losslessSpecificOptions(options)}
-        </div>
-        <div class={options.lossless ? styles.hide : ''}>
-          {this._lossySpecificOptions(options)}
-        </div>
-        <label>
-          <input
+        {options.lossless
+          ? this._losslessSpecificOptions(options)
+          : this._lossySpecificOptions(options)
+        }
+        <label class={style.optionInputFirst}>
+          <Checkbox
             name="exact"
-            type="checkbox"
             checked={!!options.exact}
             onChange={this.onChange}
           />
-          <span>
-            Preserve transparent data. Otherwise, pixels with zero alpha will have RGB also zeroed.
-          </span>
+          Preserve transparent data
         </label>
       </form>
     );

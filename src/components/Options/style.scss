@@ -5,6 +5,9 @@ $horizontalPadding: 15px;
   width: 300px;
   opacity: 0.8;
   font-size: 1.2rem;
+  max-height: 100%;
+  display: flex;
+  flex-flow: column;
 }
 
 .options-title {
@@ -54,4 +57,9 @@ $horizontalPadding: 15px;
   width: 100%;
   box-sizing: border-box;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.options-scroller {
+  overflow-x: hidden;
+  overflow-y: auto;
 }
