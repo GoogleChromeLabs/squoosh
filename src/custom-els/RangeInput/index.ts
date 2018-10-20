@@ -6,6 +6,11 @@ const UPDATE_EVENTS = ['input', 'change'];
 const REFLECTED_PROPERTIES = ['name', 'min', 'max', 'step', 'value', 'disabled'];
 const REFLECTED_ATTRIBUTES = ['name', 'min', 'max', 'step', 'value', 'disabled'];
 
+function getPrescision(value: string): number {
+  const afterDecimal = value.split('.')[1];
+  return afterDecimal ? afterDecimal.length : 0;
+}
+
 class RangeInputElement extends HTMLElement {
   private _input: HTMLInputElement;
   private _valueDisplay?: HTMLDivElement;
@@ -73,9 +78,9 @@ class RangeInputElement extends HTMLElement {
     const value = Number(this.value) || 0;
     const min = Number(this.min) || 0;
     const max = Number(this.max) || 100;
-    const labelPrecision = Number(this.labelPrecision) || 0;
+    const labelPrecision = Number(this.labelPrecision) || getPrescision(this.step) || 0;
     const percent = 100 * (value - min) / (max - min);
-    const displayValue = labelPrecision ? value.toPrecision(labelPrecision) :
+    const displayValue = labelPrecision ? value.toFixed(labelPrecision) :
       Math.round(value).toString();
 
     this._valueDisplay!.textContent = displayValue;
