@@ -25,7 +25,7 @@ export default class Range extends Component<Props, State> {
     } = props;
 
     const {
-      value, min, max,
+      value, min, max, step,
     } = props;
 
     return (
@@ -46,6 +46,7 @@ export default class Range extends Component<Props, State> {
           value={value}
           min={min}
           max={max}
+          step={step}
           onInput={this.onTextInput}
         />
       </label>
