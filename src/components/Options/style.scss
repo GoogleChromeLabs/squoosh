@@ -66,13 +66,6 @@ $horizontalPadding: 15px;
   overflow-y: auto;
 }
 
-.button {
-  composes: unbutton from '../../lib/util.scss';
-  background: #151515;
-  border-radius: 4px;
-  color: #fff;
-}
-
 .results {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -120,4 +113,19 @@ $horizontalPadding: 15px;
 
 .size-decrease {
   color: #50e3c2;
+}
+
+.options-copy {
+  display: grid;
+  background: rgba(0, 0, 0, 0.9);
+  padding: 5px;
+}
+
+.copy-button {
+  composes: unbutton from '../../lib/util.scss';
+  background: #484848;
+  border-radius: 4px;
+  color: #fff;
+  text-align: left;
+  padding: 5px 10px;
 }

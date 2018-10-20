@@ -213,15 +213,13 @@ export default class Options extends Component<Props, State> {
           </Expander>
         </div>
 
-        {/*
-        <div class={style.optionsTitle}>
-          <button onClick={this.onCopyToOtherClick} class={style.button}>
+        <div class={style.optionsCopy}>
+          <button onClick={this.onCopyToOtherClick} class={style.copyButton}>
             {imageIndex === 1 && '← '}
-            Copy settings to other side
+            Copy settings across
             {imageIndex === 0 && ' →'}
           </button>
         </div>
-        */}
 
         <div class={style.results}>
           <div class={style.resultData}>
