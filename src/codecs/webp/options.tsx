@@ -152,7 +152,7 @@ export default class WebPEncoderOptions extends Component<Props, State> {
             name="quality"
             min="0"
             max="100"
-            step="0.01"
+            step="0.1"
             value={options.quality}
             onInput={this.onChange}
           >
