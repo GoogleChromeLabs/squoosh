@@ -41,6 +41,7 @@ import { SourceImage } from '../App';
 import Checkbox from '../checkbox';
 import Expander from '../expander';
 import Select from '../select';
+import '../custom-els/LoadingSpinner';
 
 const encoderOptionsComponentMap = {
   [identity.type]: undefined,
@@ -60,6 +61,7 @@ const encoderOptionsComponentMap = {
 
 interface Props {
   orientation: 'horizontal' | 'vertical';
+  loading: boolean;
   source?: SourceImage;
   imageIndex: number;
   imageFile?: Fileish;
@@ -74,14 +76,37 @@ interface Props {
 
 interface State {
   encoderSupportMap?: EncoderSupportMap;
+  showLoadingState: boolean;
 }
 
+const loadingReactionDelay = 500;
+
 export default class Options extends Component<Props, State> {
-  typeSelect?: HTMLSelectElement;
+  state: State = {
+    encoderSupportMap: undefined,
+    showLoadingState: false,
+  };
+
+  /** The timeout ID between entering the loading state, and changing UI */
+  private loadingTimeoutId: number = 0;
 
   constructor() {
     super();
     encodersSupported.then(encoderSupportMap => this.setState({ encoderSupportMap }));
+  }
+
+  componentDidUpdate(prevProps: Props, prevState: State) {
+    if (prevProps.loading && !this.props.loading) {
+      // Just stopped loading
+      clearTimeout(this.loadingTimeoutId);
+      this.setState({ showLoadingState: false });
+    } else if (!prevProps.loading && this.props.loading) {
+      // Just started loading
+      this.loadingTimeoutId = self.setTimeout(
+        () => this.setState({ showLoadingState: true }),
+        loadingReactionDelay,
+      );
+    }
   }
 
   @bind
@@ -135,7 +160,7 @@ export default class Options extends Component<Props, State> {
       preprocessorState,
       onEncoderOptionsChange,
     }: Props,
-    { encoderSupportMap }: State,
+    { encoderSupportMap, showLoadingState }: State,
   ) {
     // tslint:disable variable-name
     const EncoderOptionComponent = encoderOptionsComponentMap[encoderState.type];
@@ -223,7 +248,7 @@ export default class Options extends Component<Props, State> {
 
         <div class={style.results}>
           <div class={style.resultData}>
-            {!imageFile ? 'Compressing…' :
+            {!imageFile || showLoadingState ? 'Working…' :
               <FileSize
                 blob={imageFile}
                 compareTo={(source && imageFile !== source.file) ? source.file : undefined}
@@ -232,11 +257,15 @@ export default class Options extends Component<Props, State> {
           </div>
 
           <div class={style.download}>
-            {(downloadUrl && imageFile) && (
-              <a href={downloadUrl} download={imageFile.name} title="Download">
-                <DownloadIcon class={style.downloadIcon} />
-              </a>
-            )}
+            {(downloadUrl && imageFile && !showLoadingState)
+              ? (
+                <a href={downloadUrl} download={imageFile.name} title="Download">
+                  <DownloadIcon class={style.downloadIcon} />
+                </a>
+              ) : (
+                <loading-spinner class={style.spinner} />
+              )
+            }
           </div>
 
         </div>

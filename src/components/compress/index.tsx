@@ -65,7 +65,9 @@ interface Props {
 interface State {
   source?: SourceImage;
   images: [EncodedImage, EncodedImage];
+  /** Source image load */
   loading: boolean;
+  loadingCounter: number;
   error?: string;
   orientation: Orientation;
 }
@@ -159,6 +161,7 @@ export default class Compress extends Component<Props, State> {
   state: State = {
     source: undefined,
     loading: false,
+    loadingCounter: 0,
     images: [
       {
         preprocessorState: defaultPreprocessorState,
@@ -252,7 +255,9 @@ export default class Compress extends Component<Props, State> {
 
   @bind
   private async updateFile(file: File | Fileish) {
-    this.setState({ loading: true });
+    const loadingCounter = this.state.loadingCounter + 1;
+
+    this.setState({ loadingCounter, loading: true });
 
     // Abort any current encode jobs, as they're redundant now.
     this.leftProcessor.abortCurrent();
@@ -272,6 +277,9 @@ export default class Compress extends Component<Props, State> {
         // Either processor is good enough here.
         data = await decodeImage(file, this.leftProcessor);
       }
+
+      // Another file has been opened before this one processed.
+      if (this.state.loadingCounter !== loadingCounter) return;
 
       let newState: State = {
         ...this.state,
@@ -303,6 +311,8 @@ export default class Compress extends Component<Props, State> {
     } catch (err) {
       if (err.name === 'AbortError') return;
       console.error(err);
+      // Another file has been opened before this one processed.
+      if (this.state.loadingCounter !== loadingCounter) return;
       this.props.onError('Invalid image');
       this.setState({ loading: false });
     }
@@ -388,7 +398,6 @@ export default class Compress extends Component<Props, State> {
   render({ }: Props, { loading, images, source, orientation }: State) {
     const [leftImage, rightImage] = images;
     const [leftImageData, rightImageData] = images.map(i => i.data);
-    const anyLoading = loading || images.some(image => image.loading);
 
     return (
       <div class={style.compress}>
@@ -403,6 +412,7 @@ export default class Compress extends Component<Props, State> {
         <div class={`${style.optionPair} ${style[orientation]}`}>
           {images.map((image, index) => (
             <Options
+              loading={loading || image.loading}
               source={source}
               orientation={orientation}
               imageIndex={index}
@@ -417,7 +427,6 @@ export default class Compress extends Component<Props, State> {
             />
           ))}
         </div>
-        {anyLoading && <span style={{ position: 'fixed', top: 0, left: 0 }}>Loading...</span>}
       </div>
     );
   }
