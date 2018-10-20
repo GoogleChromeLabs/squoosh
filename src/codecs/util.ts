@@ -8,8 +8,8 @@ export function initWasmModule<T extends EmscriptenWasm.Module>(
 ): Promise<T> {
   return new Promise((resolve) => {
     const module = moduleFactory({
-      // Just to be safe, don’t automatically invoke any wasm functions
-      noInitialRun: false,
+      // Just to be safe, don't automatically invoke any wasm functions
+      noInitialRun: true,
       locateFile(url: string): string {
         // Redirect the request for the wasm binary to whatever webpack gave us.
         if (url.endsWith('.wasm')) return wasmUrl;
