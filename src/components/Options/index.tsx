@@ -257,15 +257,17 @@ export default class Options extends Component<Props, State> {
           </div>
 
           <div class={style.download}>
-            {(downloadUrl && imageFile && !showLoadingState)
-              ? (
-                <a href={downloadUrl} download={imageFile.name} title="Download">
-                  <DownloadIcon class={style.downloadIcon} />
-                </a>
-              ) : (
-                <loading-spinner class={style.spinner} />
-              )
-            }
+            {(downloadUrl && imageFile) && (
+              <a
+                class={`${style.downloadLink} ${showLoadingState ? style.downloadLinkDisable : ''}`}
+                href={downloadUrl}
+                download={imageFile.name}
+                title="Download"
+              >
+                <DownloadIcon class={style.downloadIcon} />
+              </a>
+            )}
+            {showLoadingState && <loading-spinner class={style.spinner} />}
           </div>
 
         </div>
