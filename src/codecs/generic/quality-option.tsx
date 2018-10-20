@@ -1,6 +1,6 @@
 import { h, Component } from 'preact';
 import { bind } from '../../lib/initial-util';
-import * as style from '../../components/options/style.scss';
+import * as style from '../../components/Options/style.scss';
 import Range from '../../components/range';
 
 interface EncodeOptions {

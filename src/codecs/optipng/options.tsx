@@ -3,7 +3,7 @@ import { bind } from '../../lib/initial-util';
 import { inputFieldValueAsNumber } from '../../lib/util';
 import { EncodeOptions } from './encoder-meta';
 import Range from '../../components/range';
-import * as style from '../../components/options/style.scss';
+import * as style from '../../components/Options/style.scss';
 
 type Props = {
   options: EncodeOptions;

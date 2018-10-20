@@ -3,7 +3,7 @@ import linkState from 'linkstate';
 import { bind, linkRef } from '../../lib/initial-util';
 import { inputFieldValueAsNumber, inputFieldValue } from '../../lib/util';
 import { ResizeOptions } from './processor-meta';
-import * as style from '../../components/options/style.scss';
+import * as style from '../../components/Options/style.scss';
 import Checkbox from '../../components/checkbox';
 import Expander from '../../components/expander';
 import Select from '../../components/select';

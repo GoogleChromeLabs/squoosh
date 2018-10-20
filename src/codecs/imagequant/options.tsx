@@ -2,7 +2,7 @@ import { h, Component } from 'preact';
 import { bind } from '../../lib/initial-util';
 import { inputFieldValueAsNumber, konami } from '../../lib/util';
 import { QuantizeOptions } from './processor-meta';
-import * as style from '../../components/options/style.scss';
+import * as style from '../../components/Options/style.scss';
 import Expander from '../../components/expander';
 import Select from '../../components/select';
 import Range from '../../components/range';
