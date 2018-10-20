@@ -14,41 +14,6 @@ range-input[disabled] {
   filter: grayscale(1);
 }
 
-/* Reversed Variant */
-range-input[reversed] input,
-range-input[reversed]::before,
-range-input[reversed] > div {
-  transform: scaleX(-1);
-}
-range-input[reversed] > div > span {
-  transform: scaleX(-1) scale(.2);
-}
-range-input[reversed] input:focus + div span {
-  transform: scaleX(-1) scale(1);
-}
-
-
-range-input input {
-  position: relative;
-  flex: 1;
-  vertical-align: middle;
-  width: 100%;
-  padding: 0 !important;
-  margin: 0 !important;
-  background: none;
-  appearance: none;
-  -webkit-appearance: none;
-  outline: none;
-}
-range-input input::-webkit-slider-runnable-track,
-range-input input::-moz-range-track,
-range-input input::-ms-track {
-  appearance: none;
-  -ms-appearance: none;
-  -moz-appearance: none;
-  -webkit-appearance: none;
-}
-
 range-input::before {
   content: '';
   display: block;
@@ -57,32 +22,33 @@ range-input::before {
   left: 0;
   width: 100%;
   height: 2px;
-  outline: none;
-  border: none;
-  background: #eee;
   border-radius: 1px;
   box-shadow: 0 -.5px 0 rgba(0,0,0,0.3), inset 0 .5px 0 rgba(255,255,255,0.2), 0 .5px 0 rgba(255,255,255,0.3);
   background: linear-gradient(#34B9EB, #218ab1) 0/ var(--value-percent, 0%) 100% no-repeat #eee;
 }
 
-range-input input::-webkit-slider-thumb {
-  appearance: none;
-  -webkit-appearance: none;
-  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><circle cx="5" cy="5" r="1" fill="#5D509E" /></svg>') center no-repeat #34B9EB;
-  box-sizing: content-box;
+.input {
+  position: relative;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  opacity: 0;
+}
+
+.thumb {
+  pointer-events: none;
+  position: absolute;
+  bottom: 3px;
+  left: var(--value-percent, 0%);
+  margin-left: -6px;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><circle cx="5" cy="5" r="1" fill="%235D509E" /></svg>') center no-repeat #34B9EB;
   border-radius: 50%;
   width: 12px;
   height: 12px;
-  border: none;
   box-shadow: 0 0.5px 2px rgba(0,0,0,0.3);
-  outline: none;
 }
 
-range-input input:focus::-webkit-slider-thumb {
-  box-shadow: 0 1px 3px rgba(0,0,0,0.5);
-}
-
-range-input > div {
+.thumb-wrapper {
   position: absolute;
   left: 6px;
   right: 6px;
@@ -91,8 +57,8 @@ range-input > div {
   overflow: visible;
 }
 
-range-input > div > span {
-  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="62" fill="none"><path fill="#34B9EB" d="M27.3 27.3C25 29.6 17 35.8 17 43v3c0 3 2.5 5 3.2 5.8a6 6 0 1 1-8.5 0C12.6 51 15 49 15 46v-3c0-7.2-8-13.4-10.3-15.7A16 16 0 0 1 16 0a16 16 0 0 1 11.3 27.3z"/><circle cx="16" cy="56" r="1" fill="#5D509E"/></svg>') top center no-repeat;
+.value-display {
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="62" fill="none"><path fill="%2334B9EB" d="M27.3 27.3C25 29.6 17 35.8 17 43v3c0 3 2.5 5 3.2 5.8a6 6 0 1 1-8.5 0C12.6 51 15 49 15 46v-3c0-7.2-8-13.4-10.3-15.7A16 16 0 0 1 16 0a16 16 0 0 1 11.3 27.3z"/><circle cx="16" cy="56" r="1" fill="%235D509E"/></svg>') top center no-repeat;
   position: absolute;
   box-sizing: border-box;
   left: var(--value-percent, 0%);
@@ -111,12 +77,18 @@ range-input > div > span {
   font-size: calc(100% - var(--value-width, 3) / 5 * .2em);
   text-overflow: clip;
   text-shadow: 0 -.5px 0 rgba(0,0,0,0.4);
-  transition: transform 200ms ease, opacity 200ms ease;
+  transition: all 200ms ease;
+  transition-property: opacity, transform;
   will-change: transform;
   pointer-events: none;
   overflow: hidden;
 }
-range-input input:focus + div span {
+
+.input:active + .thumb-wrapper .value-display {
   opacity: 1;
   transform: scale(1);
+}
+
+.input:active + .thumb-wrapper .thumb {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }

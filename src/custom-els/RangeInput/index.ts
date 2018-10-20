@@ -1,5 +1,5 @@
 import { bind } from '../../lib/initial-util';
-import './styles.css';
+import * as style from './styles.css';
 
 const RETARGETED_EVENTS = ['focus', 'blur'];
 const UPDATE_EVENTS = ['input', 'change'];
@@ -7,9 +7,8 @@ const REFLECTED_PROPERTIES = ['name', 'min', 'max', 'step', 'value', 'disabled']
 const REFLECTED_ATTRIBUTES = ['name', 'min', 'max', 'step', 'value', 'disabled'];
 
 class RangeInputElement extends HTMLElement {
-  private _input = document.createElement('input');
-  private _valueDisplayWrapper = document.createElement('div');
-  private _valueDisplay = document.createElement('span');
+  private _input: HTMLInputElement;
+  private _valueDisplay?: HTMLDivElement;
   private _ignoreChange = false;
 
   static get observedAttributes() {
@@ -18,7 +17,9 @@ class RangeInputElement extends HTMLElement {
 
   constructor() {
     super();
+    this._input = document.createElement('input');
     this._input.type = 'range';
+    this._input.className = style.input;
 
     for (const event of RETARGETED_EVENTS) {
       this._input.addEventListener(event, this._retargetEvent, true);
@@ -29,20 +30,24 @@ class RangeInputElement extends HTMLElement {
     }
   }
 
+  connectedCallback() {
+    if (this.contains(this._input)) return;
+    this.innerHTML =
+      `<div class="${style.thumbWrapper}">` +
+        `<div class="${style.thumb}"></div>` +
+        `<div class="${style.valueDisplay}"></div>` +
+      '</div>';
+
+    this.insertBefore(this._input, this.firstChild);
+    this._valueDisplay = this.querySelector('.' + style.valueDisplay) as HTMLDivElement;
+  }
+
   get labelPrecision(): string {
     return this.getAttribute('label-precision') || '';
   }
 
   set labelPrecision(precision: string) {
     this.setAttribute('label-precision', precision);
-  }
-
-  connectedCallback() {
-    if (this._input.parentNode !== this) {
-      this.appendChild(this._input);
-      this._valueDisplayWrapper.appendChild(this._valueDisplay);
-      this.appendChild(this._valueDisplayWrapper);
-    }
   }
 
   attributeChangedCallback(name: string, oldValue: string, newValue: string | null) {
@@ -65,15 +70,15 @@ class RangeInputElement extends HTMLElement {
 
   @bind
   private _update() {
-    const value = parseFloat(this.value || '0');
-    const min = parseFloat(this.min || '0');
-    const max = parseFloat(this.max || '100');
-    const labelPrecision = parseFloat(this.labelPrecision || '0');
+    const value = Number(this.value) || 0;
+    const min = Number(this.min) || 0;
+    const max = Number(this.max) || 100;
+    const labelPrecision = Number(this.labelPrecision) || 0;
     const percent = 100 * (value - min) / (max - min);
     const displayValue = labelPrecision ? value.toPrecision(labelPrecision) :
       Math.round(value).toString();
 
-    this._valueDisplay.textContent = displayValue;
+    this._valueDisplay!.textContent = displayValue;
     this.style.setProperty('--value-percent', percent + '%');
     this.style.setProperty('--value-width', '' + displayValue.length);
   }
