@@ -18,6 +18,8 @@ import * as browserTIFF from './browser-tiff/encoder';
 import * as browserJP2 from './browser-jp2/encoder';
 import * as browserPDF from './browser-pdf/encoder';
 
+const workerTimeout = 1000;
+
 interface ProcessingJobOptions {
   needsWorker?: boolean;
 }
@@ -80,7 +82,7 @@ export default class Processor {
                 this._worker.terminate();
                 this._worker = undefined;
               },
-              10000,
+              workerTimeout,
             );
           }
         }
