@@ -1,5 +1,5 @@
 interface HTMLImageElement {
-  decode: () => Promise<void> | undefined;
+  decode: (() => Promise<void>) | undefined;
 }
 
 interface CanvasRenderingContext2D {

@@ -97,17 +97,13 @@ export async function blobToImg(blob: Blob): Promise<HTMLImageElement> {
 
     if (img.decode) {
       // Nice off-thread way supported in Safari/Chrome.
-      try {
-        await img.decode();
-      } catch (err) {
-        // Safari throws on decode if the source is SVG. Fallback to onload.
-        // https://bugs.webkit.org/show_bug.cgi?id=188347
-        await loaded;
-      }
-    } else {
-      await loaded;
+      // Safari throws on decode if the source is SVG.
+      // https://bugs.webkit.org/show_bug.cgi?id=188347
+      await img.decode().catch(() => null);
     }
 
+    // Always await loaded, as we may have bailed due to the Safari bug above.
+    await loaded;
     return img;
   } finally {
     URL.revokeObjectURL(url);
