@@ -7,6 +7,7 @@ import './custom-els/FileDrop';
 import SnackBarElement from '../../lib/SnackBar';
 import '../../lib/SnackBar';
 import Intro from '../intro';
+import '../custom-els/LoadingSpinner';
 
 // This is imported for TypeScript only. It isn't used.
 import Compress from '../compress';
@@ -74,9 +75,11 @@ export default class App extends Component<Props, State> {
     return (
       <div id="app" class={style.app}>
         <file-drop accept="image/*" onfiledrop={this.onFileDrop}>
-          {(file && Compress)
-            ? <Compress file={file} onError={this.showError} />
-            : <Intro onFile={this.onIntroPickFile} onError={this.showError} />
+          {(!file)
+            ? <Intro onFile={this.onIntroPickFile} onError={this.showError} />
+            : (Compress)
+              ? <Compress file={file} onError={this.showError} />
+              : <loading-spinner class={style.appLoader}/>
           }
           <snack-bar ref={linkRef(this, 'snackbar')} />
         </file-drop>
