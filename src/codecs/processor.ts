@@ -76,22 +76,24 @@ export default class Processor {
         // Wait for the operation to settle.
         await returnVal.catch(() => {});
 
-        if (jobId === this._latestJobId) {
-          this._busy = false;
+        // If this job has been superseded, bail.
+        if (jobId !== this._latestJobId) return returnVal;
 
-          if (needsWorker) {
-            // If the worker is unused for 10 seconds, remove it to save memory.
-            this._workerTimeoutId = self.setTimeout(
-              () => {
-                if (this._busy) throw Error("Worker shouldn't be busy");
-                if (!this._worker) return;
-                this._worker.terminate();
-                this._worker = undefined;
-              },
-              workerTimeout,
-            );
-          }
-        }
+        this._busy = false;
+
+        if (!needsWorker) return returnVal;
+
+        // If the worker is unused for 10 seconds, remove it to save memory.
+        this._workerTimeoutId = self.setTimeout(
+          () => {
+            if (this._busy) throw Error("Worker shouldn't be busy");
+            if (!this._worker) return;
+            this._worker.terminate();
+            this._worker = undefined;
+          },
+          workerTimeout,
+        );
+
         return returnVal;
       };
     };
