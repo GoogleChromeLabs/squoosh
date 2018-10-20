@@ -18,6 +18,7 @@ import * as browserTIFF from './browser-tiff/encoder';
 import * as browserJP2 from './browser-jp2/encoder';
 import * as browserPDF from './browser-pdf/encoder';
 
+/** How long the worker should be idle before terminating. */
 const workerTimeout = 1000;
 
 interface ProcessingJobOptions {
@@ -25,13 +26,18 @@ interface ProcessingJobOptions {
 }
 
 export default class Processor {
+  /** Worker instance associated with this processor. */
   private _worker?: Worker;
-  /** Comlinked worker API */
+  /** Comlinked worker API. */
   private _workerApi?: ProcessorWorkerApi;
+  /** Rejector for a pending promise. */
   private _abortRejector?: (err: Error) => void;
+  /** Is work currently happening? */
   private _busy = false;
+  /** Incementing ID so we can tell if a job has been superseded. */
   private _latestJobId: number = 0;
-  private _workerTimeout: number = 0;
+  /** setTimeout ID for killing the worker when idle. */
+  private _workerTimeoutId: number = 0;
 
   /**
    * Decorator that manages the (re)starting of the worker and aborting existing jobs. Not all
@@ -49,7 +55,7 @@ export default class Processor {
         const jobId = this._latestJobId;
         this.abortCurrent();
 
-        if (needsWorker) self.clearTimeout(this._workerTimeout);
+        if (needsWorker) self.clearTimeout(this._workerTimeoutId);
 
         if (!this._worker && needsWorker) {
           // worker-loader does magic here.
@@ -75,7 +81,7 @@ export default class Processor {
 
           if (needsWorker) {
             // If the worker is unused for 10 seconds, remove it to save memory.
-            this._workerTimeout = self.setTimeout(
+            this._workerTimeoutId = self.setTimeout(
               () => {
                 if (this._busy) throw Error("Worker shouldn't be busy");
                 if (!this._worker) return;
