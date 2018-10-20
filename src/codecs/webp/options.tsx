@@ -1,5 +1,6 @@
 import { h, Component } from 'preact';
-import { bind, inputFieldCheckedAsNumber, inputFieldValueAsNumber } from '../../lib/util';
+import { bind } from '../../lib/initial-util';
+import { inputFieldCheckedAsNumber, inputFieldValueAsNumber } from '../../lib/util';
 import { EncodeOptions, WebPImageHint } from './encoder';
 import * as styles from './styles.scss';
 import '../../custom-els/RangeInput';

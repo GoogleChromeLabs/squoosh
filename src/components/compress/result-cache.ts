@@ -1,5 +1,6 @@
 import { EncoderState } from '../../codecs/encoders';
-import { shallowEqual, Fileish } from '../../lib/util';
+import { Fileish } from '../../lib/initial-util';
+import { shallowEqual } from '../../lib/util';
 import { SourceImage } from '.';
 import { PreprocessorState } from '../../codecs/preprocessors';
 

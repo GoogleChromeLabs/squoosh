@@ -1,6 +1,7 @@
 import { h, Component } from 'preact';
 import linkState from 'linkstate';
-import { bind, inputFieldValueAsNumber } from '../../lib/util';
+import { bind } from '../../lib/initial-util';
+import { inputFieldValueAsNumber } from '../../lib/util';
 import { ResizeOptions } from './resize';
 
 interface Props {
