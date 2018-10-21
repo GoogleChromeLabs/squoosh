@@ -400,7 +400,7 @@ export default class Compress extends Component<Props, State> {
     const [leftImageData, rightImageData] = images.map(i => i.data);
 
     return (
-      <div class={style.compress}>
+      <div class={`${style.compress} ${style[orientation]}`}>
         <Output
           originalImage={source && source.data}
           orientation={orientation}
@@ -409,24 +409,22 @@ export default class Compress extends Component<Props, State> {
           leftImgContain={leftImage.preprocessorState.resize.fitMethod === 'cover'}
           rightImgContain={rightImage.preprocessorState.resize.fitMethod === 'cover'}
         />
-        <div class={`${style.optionPair} ${style[orientation]}`}>
-          {images.map((image, index) => (
-            <Options
-              loading={loading || image.loading}
-              source={source}
-              orientation={orientation}
-              imageIndex={index}
-              imageFile={image.file}
-              downloadUrl={image.downloadUrl}
-              preprocessorState={image.preprocessorState}
-              encoderState={image.encoderState}
-              onEncoderTypeChange={this.onEncoderTypeChange.bind(this, index)}
-              onEncoderOptionsChange={this.onEncoderOptionsChange.bind(this, index)}
-              onPreprocessorOptionsChange={this.onPreprocessorOptionsChange.bind(this, index)}
-              onCopyToOtherClick={this.onCopyToOtherClick.bind(this, index)}
-            />
-          ))}
-        </div>
+        {images.map((image, index) => (
+          <Options
+            loading={loading || image.loading}
+            source={source}
+            orientation={orientation}
+            imageIndex={index}
+            imageFile={image.file}
+            downloadUrl={image.downloadUrl}
+            preprocessorState={image.preprocessorState}
+            encoderState={image.encoderState}
+            onEncoderTypeChange={this.onEncoderTypeChange.bind(this, index)}
+            onEncoderOptionsChange={this.onEncoderOptionsChange.bind(this, index)}
+            onPreprocessorOptionsChange={this.onPreprocessorOptionsChange.bind(this, index)}
+            onCopyToOtherClick={this.onCopyToOtherClick.bind(this, index)}
+          />
+        ))}
       </div>
     );
   }
