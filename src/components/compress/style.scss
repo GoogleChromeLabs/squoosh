@@ -6,7 +6,13 @@
 
   &.horizontal {
     grid-template-columns: 1fr auto;
+    grid-template-rows: calc(100% - 75px);
+
+    @media (min-width: 860px) {
+      grid-template-rows: 100%;
+    }
     align-items: end;
+    align-content: end;
   }
 
   &.vertical {
