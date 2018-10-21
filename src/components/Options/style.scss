@@ -133,7 +133,7 @@ $horizontalPadding: 15px;
   height: var(--size);
   display: grid;
   align-items: center;
-  justify-content: center;
+  justify-items: center;
 }
 
 .download-link {
@@ -163,5 +163,4 @@ $horizontalPadding: 15px;
   --delay: 0;
   --size: 22px;
   grid-area: 1/1;
-  padding: 7px;
 }
