@@ -56,7 +56,7 @@ two-up[legacy-clip-compat] > :not(.two-up-handle) {
   box-shadow: 0 1px 4px rgba(0,0,0,0.1);
   color: var(--thumb-color);
   box-sizing: border-box;
-  padding: 0 48%;
+  padding: 0 calc(var(--thumb-size) * 0.24);
 }
 
 .scrubber svg {
