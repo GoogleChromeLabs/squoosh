@@ -35,8 +35,6 @@ import { cleanMerge, cleanSet } from '../../lib/clean-modify';
 import Processor from '../../codecs/processor';
 import { VectorResizeOptions, BitmapResizeOptions } from '../../codecs/resize/processor-meta';
 
-type Orientation = 'horizontal' | 'vertical';
-
 export interface SourceImage {
   file: File | Fileish;
   data: ImageData;
@@ -69,7 +67,7 @@ interface State {
   loading: boolean;
   loadingCounter: number;
   error?: string;
-  orientation: Orientation;
+  mobileView: boolean;
 }
 
 interface UpdateImageOptions {
@@ -156,7 +154,7 @@ async function processSvg(blob: Blob): Promise<HTMLImageElement> {
 }
 
 export default class Compress extends Component<Props, State> {
-  widthQuery = window.matchMedia('(min-width: 500px)');
+  widthQuery = window.matchMedia('(max-width: 600px)');
 
   state: State = {
     source: undefined,
@@ -178,7 +176,7 @@ export default class Compress extends Component<Props, State> {
         loading: false,
       },
     ],
-    orientation: this.widthQuery.matches ? 'horizontal' : 'vertical',
+    mobileView: this.widthQuery.matches,
   };
 
   private readonly encodeCache = new ResultCache();
@@ -193,7 +191,7 @@ export default class Compress extends Component<Props, State> {
 
   @bind
   private onMobileWidthChange() {
-    this.setState({ orientation: this.widthQuery.matches ? 'horizontal' : 'vertical' });
+    this.setState({ mobileView: this.widthQuery.matches });
   }
 
   private onEncoderTypeChange(index: 0 | 1, newType: EncoderType): void {
@@ -395,15 +393,15 @@ export default class Compress extends Component<Props, State> {
     this.setState({ images });
   }
 
-  render({ }: Props, { loading, images, source, orientation }: State) {
+  render({ }: Props, { loading, images, source, mobileView }: State) {
     const [leftImage, rightImage] = images;
     const [leftImageData, rightImageData] = images.map(i => i.data);
 
     return (
-      <div class={`${style.compress} ${style[orientation]}`}>
+      <div class={style.compress}>
         <Output
           originalImage={source && source.data}
-          orientation={orientation}
+          mobileView={mobileView}
           leftCompressed={leftImageData}
           rightCompressed={rightImageData}
           leftImgContain={leftImage.preprocessorState.resize.fitMethod === 'cover'}
@@ -413,7 +411,7 @@ export default class Compress extends Component<Props, State> {
           <Options
             loading={loading || image.loading}
             source={source}
-            orientation={orientation}
+            mobileView={mobileView}
             imageIndex={index}
             imageFile={image.file}
             downloadUrl={image.downloadUrl}

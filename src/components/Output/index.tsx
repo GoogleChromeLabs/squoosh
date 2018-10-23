@@ -10,7 +10,7 @@ import { twoUpHandle } from './custom-els/TwoUp/styles.css';
 
 interface Props {
   originalImage?: ImageData;
-  orientation: 'horizontal' | 'vertical';
+  mobileView: boolean;
   leftCompressed?: ImageData;
   rightCompressed?: ImageData;
   leftImgContain: boolean;
@@ -180,10 +180,7 @@ export default class Output extends Component<Props, State> {
   }
 
   render(
-    {
-      orientation, leftCompressed, rightCompressed, leftImgContain, rightImgContain,
-      originalImage,
-    }: Props,
+    { mobileView, leftImgContain, rightImgContain, originalImage }: Props,
     { scale, editingScale, altBackground }: State,
   ) {
     const leftDraw = this.leftDrawable();
@@ -194,7 +191,7 @@ export default class Output extends Component<Props, State> {
         <two-up
           legacy-clip-compat
           class={style.twoUp}
-          orientation={orientation}
+          orientation={mobileView ? 'vertical' : 'horizontal'}
           // Event redirecting. See onRetargetableEvent.
           onTouchStartCapture={this.onRetargetableEvent}
           onTouchEndCapture={this.onRetargetableEvent}

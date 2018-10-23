@@ -3,20 +3,16 @@
   height: 100%;
   contain: strict;
   display: grid;
+  align-items: end;
+  align-content: end;
+  grid-template-rows: 1fr auto;
 
-  &.horizontal {
+  @media (min-width: 600px) {
     grid-template-columns: 1fr auto;
     grid-template-rows: calc(100% - 75px);
-
-    @media (min-width: 860px) {
-      grid-template-rows: 100%;
-    }
-    align-items: end;
-    align-content: end;
   }
 
-  &.vertical {
-    // TODO: make the mobile view work
-    background: red;
+  @media (min-width: 860px) {
+    grid-template-rows: 100%;
   }
 }

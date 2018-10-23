@@ -60,7 +60,7 @@ const encoderOptionsComponentMap = {
 };
 
 interface Props {
-  orientation: 'horizontal' | 'vertical';
+  mobileView: boolean;
   loading: boolean;
   source?: SourceImage;
   imageIndex: number;
@@ -155,7 +155,6 @@ export default class Options extends Component<Props, State> {
       imageIndex,
       imageFile,
       downloadUrl,
-      orientation,
       encoderState,
       preprocessorState,
       onEncoderOptionsChange,
