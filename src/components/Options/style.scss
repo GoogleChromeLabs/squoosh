@@ -9,7 +9,7 @@ $horizontalPadding: 15px;
   flex-flow: column;
   max-width: 400px;
   margin: 0 auto;
-  width: 100%;
+  width: calc(100% - 60px);
 
   @media (min-width: 600px) {
     width: 300px;
