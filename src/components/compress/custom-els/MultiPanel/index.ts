@@ -1,5 +1,9 @@
 import * as style from './styles.css';
 
+interface CloseAllOptions {
+  exceptFirst?: boolean;
+}
+
 const openOneOnlyAttr = 'open-one-only';
 
 function getClosestHeading(el: Element) {
@@ -36,7 +40,7 @@ export default class MultiPanel extends HTMLElement {
 
   attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null) {
     if (name === openOneOnlyAttr && newValue === null) {
-      // TODO
+      this._closeAll({ exceptFirst: true });
     }
   }
 
@@ -120,8 +124,13 @@ export default class MultiPanel extends HTMLElement {
     }
   }
 
-  private _closeAll(): void {
-    const els = [...this.children].filter(el => el.matches('[expanded]'));
+  private _closeAll(options: CloseAllOptions = {}): void {
+    const { exceptFirst = false } = options;
+    let els = [...this.children].filter(el => el.matches('[expanded]'));
+
+    if (exceptFirst) {
+      els = els.slice(1);
+    }
 
     for (const el of els) {
       el.removeAttribute('expanded');
@@ -142,27 +151,19 @@ export default class MultiPanel extends HTMLElement {
       // it means it has odd number of elements. log error and set heading to end the loop.
       if (!content) {
         console.error('<multi-panel> requires an even number of element children.');
-        heading = null;
-        continue;
+        break;
       }
 
       // When odd number of elements were inserted in the middle,
       // what was heading before may become content after the insertion.
       // Remove classes and attributes to prepare for this change.
       heading.classList.remove(style.panelContent);
-
-      if (content.classList.contains(style.panelHeading)) {
-        content.classList.remove(style.panelHeading);
-      }
-      if (heading.hasAttribute('expanded') && heading.hasAttribute('aria-expanded')) {
-        heading.removeAttribute('expanded');
-        heading.removeAttribute('aria-expanded');
-      }
+      content.classList.remove(style.panelHeading);
+      heading.removeAttribute('expanded');
+      heading.removeAttribute('aria-expanded');
 
       // If appreciable, remove tabindex from content which used to be header.
-      if (content.hasAttribute('tabindex')) {
-        content.removeAttribute('tabindex');
-      }
+      content.removeAttribute('tabindex');
 
       // Assign heading and content classes
       heading.classList.add(style.panelHeading);
@@ -190,6 +191,9 @@ export default class MultiPanel extends HTMLElement {
     if (!preserveTabIndex && this.firstElementChild) {
       this.firstElementChild.setAttribute('tabindex', '0');
     }
+
+    // In case we're openOneOnly, and an additional open item has been added:
+    if (this.openOneOnly) this._closeAll({ exceptFirst: true });
   }
 
   // returns heading that is before currently selected one.
