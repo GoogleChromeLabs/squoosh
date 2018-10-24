@@ -1,8 +1,10 @@
-import './styles.css';
+import * as style from './styles.css';
+
+const openOneOnlyAttr = 'open-one-only';
 
 function getClosestHeading(el: Element) {
   const closestEl = el.closest('multi-panel > *');
-  if (closestEl && closestEl.classList.contains('panel-heading')) {
+  if (closestEl && closestEl.classList.contains(style.panelHeading)) {
     return closestEl;
   }
   return undefined;
@@ -14,6 +16,7 @@ function getClosestHeading(el: Element) {
  * and odd index element becomes the expandable content.
  */
 export default class MultiPanel extends HTMLElement {
+  static get observedAttributes() { return [openOneOnlyAttr]; }
 
   constructor() {
     super();
@@ -31,12 +34,18 @@ export default class MultiPanel extends HTMLElement {
     this._childrenChange();
   }
 
+  attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null) {
+    if (name === openOneOnlyAttr && newValue === null) {
+      // TODO
+    }
+  }
+
   // Click event handler
   private _onClick(event: MouseEvent) {
     const el = event.target as Element;
     const heading = getClosestHeading(el);
     if (!heading) return;
-    this._expand(heading);
+    this._toggle(heading);
   }
 
   // KeyDown event handler
@@ -77,7 +86,7 @@ export default class MultiPanel extends HTMLElement {
       case 'Enter':
       case ' ':
       case 'Spacebar':
-        this._expand(heading);
+        this._toggle(heading);
         break;
 
       // Any other key press is ignored and passed back to the browser.
@@ -93,7 +102,7 @@ export default class MultiPanel extends HTMLElement {
     }
   }
 
-  private _expand(heading: Element) {
+  private _toggle(heading: Element) {
     if (!heading) return;
     const content = heading.nextElementSibling;
 
@@ -105,8 +114,18 @@ export default class MultiPanel extends HTMLElement {
       content.removeAttribute('expanded');
       content.setAttribute('aria-expanded', 'false');
     } else {
+      if (this.openOneOnly) this._closeAll();
       content.setAttribute('expanded', '');
       content.setAttribute('aria-expanded', 'true');
+    }
+  }
+
+  private _closeAll(): void {
+    const els = [...this.children].filter(el => el.matches('[expanded]'));
+
+    for (const el of els) {
+      el.removeAttribute('expanded');
+      el.setAttribute('aria-expanded', 'false');
     }
   }
 
@@ -130,10 +149,10 @@ export default class MultiPanel extends HTMLElement {
       // When odd number of elements were inserted in the middle,
       // what was heading before may become content after the insertion.
       // Remove classes and attributes to prepare for this change.
-      heading.classList.remove('panel-content');
+      heading.classList.remove(style.panelContent);
 
-      if (content.classList.contains('panel-heading')) {
-        content.classList.remove('panel-heading');
+      if (content.classList.contains(style.panelHeading)) {
+        content.classList.remove(style.panelHeading);
       }
       if (heading.hasAttribute('expanded') && heading.hasAttribute('aria-expanded')) {
         heading.removeAttribute('expanded');
@@ -146,8 +165,8 @@ export default class MultiPanel extends HTMLElement {
       }
 
       // Assign heading and content classes
-      heading.classList.add('panel-heading');
-      content.classList.add('panel-content');
+      heading.classList.add(style.panelHeading);
+      content.classList.add(style.panelContent);
 
       // Assign ids and aria-X for heading/content pair.
       heading.id = `panel-heading-${randomId}`;
@@ -208,13 +227,28 @@ export default class MultiPanel extends HTMLElement {
   private _lastHeading() {
     // if the last element is heading, return last element
     const lastEl = this.lastElementChild as HTMLElement;
-    if (lastEl && lastEl.classList.contains('panel-heading')) {
+    if (lastEl && lastEl.classList.contains(style.panelHeading)) {
       return lastEl;
     }
     // otherwise return 2nd from the last
     const lastContent = this.lastElementChild;
     if (lastContent) {
       return lastContent.previousElementSibling as HTMLElement;
+    }
+  }
+
+  /**
+   * If true, only one panel can be open at once. When one opens, others close.
+   */
+  get openOneOnly() {
+    return this.hasAttribute(openOneOnlyAttr);
+  }
+
+  set openOneOnly(val: boolean) {
+    if (val) {
+      this.setAttribute(openOneOnlyAttr, '');
+    } else {
+      this.removeAttribute(openOneOnlyAttr);
     }
   }
 }

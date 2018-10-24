@@ -24,16 +24,15 @@ import {
     EncoderOptions,
     encoderMap,
 } from '../../codecs/encoders';
-
 import {
   PreprocessorState,
   defaultPreprocessorState,
 } from '../../codecs/preprocessors';
-
 import { decodeImage } from '../../codecs/decoders';
 import { cleanMerge, cleanSet } from '../../lib/clean-modify';
 import Processor from '../../codecs/processor';
 import { VectorResizeOptions, BitmapResizeOptions } from '../../codecs/resize/processor-meta';
+import './custom-els/MultiPanel';
 
 export interface SourceImage {
   file: File | Fileish;
@@ -397,6 +396,23 @@ export default class Compress extends Component<Props, State> {
     const [leftImage, rightImage] = images;
     const [leftImageData, rightImageData] = images.map(i => i.data);
 
+    const options = images.map((image, index) => (
+      <Options
+        loading={loading || image.loading}
+        source={source}
+        mobileView={mobileView}
+        imageIndex={index}
+        imageFile={image.file}
+        downloadUrl={image.downloadUrl}
+        preprocessorState={image.preprocessorState}
+        encoderState={image.encoderState}
+        onEncoderTypeChange={this.onEncoderTypeChange.bind(this, index)}
+        onEncoderOptionsChange={this.onEncoderOptionsChange.bind(this, index)}
+        onPreprocessorOptionsChange={this.onPreprocessorOptionsChange.bind(this, index)}
+        onCopyToOtherClick={this.onCopyToOtherClick.bind(this, index)}
+      />
+    ));
+
     return (
       <div class={style.compress}>
         <Output
@@ -407,22 +423,16 @@ export default class Compress extends Component<Props, State> {
           leftImgContain={leftImage.preprocessorState.resize.fitMethod === 'cover'}
           rightImgContain={rightImage.preprocessorState.resize.fitMethod === 'cover'}
         />
-        {images.map((image, index) => (
-          <Options
-            loading={loading || image.loading}
-            source={source}
-            mobileView={mobileView}
-            imageIndex={index}
-            imageFile={image.file}
-            downloadUrl={image.downloadUrl}
-            preprocessorState={image.preprocessorState}
-            encoderState={image.encoderState}
-            onEncoderTypeChange={this.onEncoderTypeChange.bind(this, index)}
-            onEncoderOptionsChange={this.onEncoderOptionsChange.bind(this, index)}
-            onPreprocessorOptionsChange={this.onPreprocessorOptionsChange.bind(this, index)}
-            onCopyToOtherClick={this.onCopyToOtherClick.bind(this, index)}
-          />
-        ))}
+        {mobileView
+          ? (
+            <multi-panel class={style.multiPanel} open-one-only>
+              <div>Top</div>
+              {options[0]}
+              <div>Bottom</div>
+              {options[1]}
+            </multi-panel>
+          ) : options
+        }
       </div>
     );
   }
