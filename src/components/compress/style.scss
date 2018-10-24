@@ -17,6 +17,23 @@
   }
 }
 
+.options {
+  color: #fff;
+  opacity: 0.9;
+  font-size: 1.2rem;
+  max-height: 100%;
+  display: flex;
+  flex-flow: column;
+  max-width: 400px;
+  margin: 0 auto;
+  width: calc(100% - 60px);
+
+  @media (min-width: 600px) {
+    width: 300px;
+    margin: 0;
+  }
+}
+
 .multi-panel {
   position: relative;
 }

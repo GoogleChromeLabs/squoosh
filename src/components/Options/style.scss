@@ -1,22 +1,5 @@
 $horizontalPadding: 15px;
 
-.options {
-  color: #fff;
-  opacity: 0.9;
-  font-size: 1.2rem;
-  max-height: 100%;
-  display: flex;
-  flex-flow: column;
-  max-width: 400px;
-  margin: 0 auto;
-  width: calc(100% - 60px);
-
-  @media (min-width: 600px) {
-    width: 300px;
-    margin: 0;
-  }
-}
-
 .options-title {
   background: rgba(0, 0, 0, 0.9);
   margin: 0;
@@ -73,35 +56,6 @@ $horizontalPadding: 15px;
   overflow-y: auto;
 }
 
-.results {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  background: rgba(0, 0, 0, 0.9);
-  font-size: 1.4rem;
-}
-
-.result-data {
-  display: flex;
-  align-items: center;
-  padding: 0 $horizontalPadding;
-}
-
-.size-delta {
-  font-size: 1.1rem;
-  font-style: italic;
-  position: relative;
-  top: -1px;
-  margin-left: 0.3em;
-}
-
-.size-increase {
-  color: #e35050;
-}
-
-.size-decrease {
-  color: #50e3c2;
-}
-
 .options-copy {
   display: grid;
   background: rgba(0, 0, 0, 0.9);
@@ -115,59 +69,4 @@ $horizontalPadding: 15px;
   color: #fff;
   text-align: left;
   padding: 5px 10px;
-}
-
-@keyframes action-enter {
-  from {
-    transform: rotate(-90deg);
-    opacity: 0;
-    animation-timing-function: ease-out;
-  }
-}
-
-@keyframes action-leave {
-  from {
-    transform: rotate(0deg);
-    opacity: 1;
-    animation-timing-function: ease-out;
-  }
-}
-
-.download {
-  background: #34B9EB;
-  --size: 38px;
-  width: var(--size);
-  height: var(--size);
-  display: grid;
-  align-items: center;
-  justify-items: center;
-}
-
-.download-link {
-  animation: action-enter 0.2s;
-  grid-area: 1/1;
-}
-
-.download-link-disable {
-  pointer-events: none;
-  opacity: 0;
-  transform: rotate(90deg);
-  animation: action-leave 0.2s;
-}
-
-.download-icon {
-  color: #fff;
-  display: block;
-  --size: 24px;
-  width: var(--size);
-  height: var(--size);
-  padding: 7px;
-  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.7));
-}
-
-.spinner {
-  --color: #fff;
-  --delay: 0;
-  --size: 22px;
-  grid-area: 1/1;
 }

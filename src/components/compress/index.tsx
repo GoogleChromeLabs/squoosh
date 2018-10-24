@@ -33,6 +33,7 @@ import { cleanMerge, cleanSet } from '../../lib/clean-modify';
 import Processor from '../../codecs/processor';
 import { VectorResizeOptions, BitmapResizeOptions } from '../../codecs/resize/processor-meta';
 import './custom-els/MultiPanel';
+import Results from '../results';
 
 export interface SourceImage {
   file: File | Fileish;
@@ -398,18 +399,24 @@ export default class Compress extends Component<Props, State> {
 
     const options = images.map((image, index) => (
       <Options
-        loading={loading || image.loading}
         source={source}
         mobileView={mobileView}
         imageIndex={index}
-        imageFile={image.file}
-        downloadUrl={image.downloadUrl}
         preprocessorState={image.preprocessorState}
         encoderState={image.encoderState}
         onEncoderTypeChange={this.onEncoderTypeChange.bind(this, index)}
         onEncoderOptionsChange={this.onEncoderOptionsChange.bind(this, index)}
         onPreprocessorOptionsChange={this.onPreprocessorOptionsChange.bind(this, index)}
         onCopyToOtherClick={this.onCopyToOtherClick.bind(this, index)}
+      />
+    ));
+
+    const results = images.map(image => (
+      <Results
+        downloadUrl={image.downloadUrl}
+        imageFile={image.file}
+        source={source}
+        loading={loading || image.loading}
       />
     ));
 
@@ -425,13 +432,24 @@ export default class Compress extends Component<Props, State> {
         />
         {mobileView
           ? (
-            <multi-panel class={style.multiPanel} open-one-only>
-              <div>Top</div>
+            <div class={style.options}>
+              <multi-panel class={style.multiPanel} open-one-only>
+                {results[0]}
+                {options[0]}
+                {results[1]}
+                {options[1]}
+              </multi-panel>
+            </div>
+          ) : ([
+            <div class={style.options} key="options0">
               {options[0]}
-              <div>Bottom</div>
+              {results[0]}
+            </div>,
+            <div class={style.options} key="options1">
               {options[1]}
-            </multi-panel>
-          ) : options
+              {results[1]}
+            </div>,
+          ])
         }
       </div>
     );
