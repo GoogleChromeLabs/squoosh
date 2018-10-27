@@ -22,6 +22,9 @@ async function close(content: HTMLElement) {
   content.removeAttribute('expanded');
   content.setAttribute('aria-expanded', 'false');
 
+  // Wait a microtask so other calls to open/close can get the final sizes.
+  await null;
+
   await transitionHeight(content, {
     from,
     to: 0,
@@ -37,8 +40,13 @@ async function open(content: HTMLElement) {
   content.setAttribute('expanded', '');
   content.setAttribute('aria-expanded', 'true');
 
+  const to = content.getBoundingClientRect().height;
+
+  // Wait a microtask so other calls to open/close can get the final sizes.
+  await null;
+
   await transitionHeight(content, {
-    from,
+    from, to,
     duration: 300,
   });
 

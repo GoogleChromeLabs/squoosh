@@ -280,9 +280,9 @@ export async function transitionHeight(el: HTMLElement, opts: TransitionOptions)
   }
 
   el.style.height = from + 'px';
-  el.style.transition = `height ${duration}ms ${easing}`;
   // Force a style calc so the browser picks up the start value.
-  getComputedStyle(el).height;
+  getComputedStyle(el).transform;
+  el.style.transition = `height ${duration}ms ${easing}`;
   el.style.height = to + 'px';
 
   return new Promise<void>((resolve) => {
