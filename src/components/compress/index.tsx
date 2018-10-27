@@ -34,6 +34,7 @@ import Processor from '../../codecs/processor';
 import { VectorResizeOptions, BitmapResizeOptions } from '../../codecs/resize/processor-meta';
 import './custom-els/MultiPanel';
 import Results from '../results';
+import { ExpandIcon } from '../../lib/icons';
 
 export interface SourceImage {
   file: File | Fileish;
@@ -421,7 +422,10 @@ export default class Compress extends Component<Props, State> {
         source={source}
         loading={loading || image.loading}
       >
-        {mobileView ? `${resultTitles[i]} (${encoderMap[image.encoderState.type].label})` : null}
+        {!mobileView ? null : [
+          <ExpandIcon class={style.expandIcon} key="expand-icon"/>,
+          `${resultTitles[i]} (${encoderMap[image.encoderState.type].label})`,
+        ]}
       </Results>
     ));
 

@@ -59,3 +59,16 @@
     order: 3;
   }
 }
+
+.expand-icon {
+  transform: rotate(180deg);
+  margin-left: -12px;
+}
+
+[content-expanded] .expand-icon {
+  transform: none;
+}
+
+:focus .expand-icon {
+  fill: #34B9EB;
+}

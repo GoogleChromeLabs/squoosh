@@ -16,10 +16,15 @@ function getClosestHeading(el: Element): HTMLElement | undefined {
   return undefined;
 }
 
-async function close(content: HTMLElement) {
+async function close(heading: HTMLElement) {
+  const content = heading.nextElementSibling as HTMLElement;
+
+  // if there is no content, nothing to expand
+  if (!content) return;
+
   const from = content.getBoundingClientRect().height;
 
-  content.removeAttribute('expanded');
+  heading.removeAttribute('content-expanded');
   content.setAttribute('aria-expanded', 'false');
 
   // Wait a microtask so other calls to open/close can get the final sizes.
@@ -34,10 +39,15 @@ async function close(content: HTMLElement) {
   content.style.height = '';
 }
 
-async function open(content: HTMLElement) {
+async function open(heading: HTMLElement) {
+  const content = heading.nextElementSibling as HTMLElement;
+
+  // if there is no content, nothing to expand
+  if (!content) return;
+
   const from = content.getBoundingClientRect().height;
 
-  content.setAttribute('expanded', '');
+  heading.setAttribute('content-expanded', '');
   content.setAttribute('aria-expanded', 'true');
 
   const to = content.getBoundingClientRect().height;
@@ -148,23 +158,19 @@ export default class MultiPanel extends HTMLElement {
 
   private _toggle(heading: HTMLElement) {
     if (!heading) return;
-    const content = heading.nextElementSibling as HTMLElement;
-
-    // if there is no content, nothing to expand
-    if (!content) return;
 
     // toggle expanded and aria-expanded attributes
-    if (content.hasAttribute('expanded')) {
-      close(content);
+    if (heading.hasAttribute('content-expanded')) {
+      close(heading);
     } else {
       if (this.openOneOnly) this._closeAll();
-      open(content);
+      open(heading);
     }
   }
 
   private _closeAll(options: CloseAllOptions = {}): void {
     const { exceptFirst = false } = options;
-    let els = [...this.children].filter(el => el.matches('[expanded]')) as HTMLElement[];
+    let els = [...this.children].filter(el => el.matches('[content-expanded]')) as HTMLElement[];
 
     if (exceptFirst) {
       els = els.slice(1);
@@ -194,8 +200,8 @@ export default class MultiPanel extends HTMLElement {
       // Remove classes and attributes to prepare for this change.
       heading.classList.remove(style.panelContent);
       content.classList.remove(style.panelHeading);
-      heading.removeAttribute('expanded');
       heading.removeAttribute('aria-expanded');
+      heading.removeAttribute('content-expanded');
 
       // If appreciable, remove tabindex from content which used to be header.
       content.removeAttribute('tabindex');
@@ -217,6 +223,13 @@ export default class MultiPanel extends HTMLElement {
       } else {
         heading.setAttribute('tabindex', '-1');
       }
+
+      // It's possible that the heading & content expanded attributes are now out of sync. Resync
+      // them using the heading as the source of truth.
+      content.setAttribute(
+        'aria-expanded',
+        heading.hasAttribute('content-expanded') ? 'true' : 'false',
+      );
 
       // next sibling of content = next heading
       heading = content.nextElementSibling;

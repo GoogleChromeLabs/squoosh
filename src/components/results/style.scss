@@ -19,6 +19,10 @@
   grid-template-columns: 1fr auto;
   background: rgba(0, 0, 0, 0.9);
   font-size: 1.4rem;
+
+  &:focus {
+    outline: none;
+  }
 }
 
 .result-data {
@@ -30,6 +34,8 @@
 }
 
 .result-title {
+  display: flex;
+  align-items: center;
   margin-right: 0.4em;
 }
 
