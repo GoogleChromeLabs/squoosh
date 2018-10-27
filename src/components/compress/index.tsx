@@ -153,6 +153,9 @@ async function processSvg(blob: Blob): Promise<HTMLImageElement> {
   return blobToImg(new Blob([newSource], { type: 'image/svg+xml' }));
 }
 
+// These are only used in the mobile view
+const resultTitles = ['Top', 'Bottom'];
+
 export default class Compress extends Component<Props, State> {
   widthQuery = window.matchMedia('(max-width: 599px)');
 
@@ -411,13 +414,15 @@ export default class Compress extends Component<Props, State> {
       />
     ));
 
-    const results = images.map(image => (
+    const results = images.map((image, i) => (
       <Results
         downloadUrl={image.downloadUrl}
         imageFile={image.file}
         source={source}
         loading={loading || image.loading}
-      />
+      >
+        {mobileView ? `${resultTitles[i]} (${encoderMap[image.encoderState.type].label})` : null}
+      </Results>
     ));
 
     return (

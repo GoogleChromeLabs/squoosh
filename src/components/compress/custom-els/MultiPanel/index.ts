@@ -7,7 +7,8 @@ interface CloseAllOptions {
 const openOneOnlyAttr = 'open-one-only';
 
 function getClosestHeading(el: Element) {
-  const closestEl = el.closest('multi-panel > *');
+  // Look for the child of multi-panel, but stop at interactive elements like links & buttons
+  const closestEl = el.closest('multi-panel > *, a, button');
   if (closestEl && closestEl.classList.contains(style.panelHeading)) {
     return closestEl;
   }
@@ -66,7 +67,8 @@ export default class MultiPanel extends HTMLElement {
     // don’t handle modifier shortcuts used by assistive technology.
     if (event.altKey) return;
 
-    let newHeading:HTMLElement | undefined;
+    let newHeading: HTMLElement | undefined;
+
     switch (event.key) {
       case 'ArrowLeft':
       case 'ArrowUp':

@@ -1,4 +1,4 @@
-import { h, Component } from 'preact';
+import { h, Component, ComponentChildren, ComponentChild } from 'preact';
 
 import * as style from './style.scss';
 import FileSize from './FileSize';
@@ -12,6 +12,7 @@ interface Props {
   source?: SourceImage;
   imageFile?: Fileish;
   downloadUrl?: string;
+  children: ComponentChildren;
 }
 
 interface State {
@@ -42,10 +43,14 @@ export default class Results extends Component<Props, State> {
     }
   }
 
-  render({ source, imageFile, downloadUrl }: Props, { showLoadingState }: State) {
+  render({ source, imageFile, downloadUrl, children }: Props, { showLoadingState }: State) {
     return (
       <div class={style.results}>
         <div class={style.resultData}>
+          {(children as ComponentChild[])[0]
+            ? <div class={style.resultTitle}>{children}</div>
+            : null
+          }
           {!imageFile || showLoadingState ? 'Working…' :
             <FileSize
               blob={imageFile}

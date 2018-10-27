@@ -27,8 +27,10 @@
   max-width: 400px;
   margin: 0 auto;
   width: calc(100% - 60px);
+  max-height: calc(100% - 143px);
 
   @media (min-width: 600px) {
+    max-height: none;
     width: 300px;
     margin: 0;
   }
