@@ -36,4 +36,24 @@
 
 .multi-panel {
   position: relative;
+  display: flex;
+  flex-flow: column;
+
+  // Reorder so headings appear after content:
+  & > :nth-child(1) {
+    order: 2;
+    margin-bottom: 10px;
+  }
+
+  & > :nth-child(2) {
+    order: 1;
+  }
+
+  & > :nth-child(3) {
+    order: 4;
+  }
+
+  & > :nth-child(4) {
+    order: 3;
+  }
 }

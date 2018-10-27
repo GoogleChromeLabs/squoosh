@@ -136,7 +136,7 @@ export default class Options extends Component<Props, State> {
     const EncoderOptionComponent = encoderOptionsComponentMap[encoderState.type];
 
     return (
-      <div>
+      <div class={style.optionsScroller}>
         <Expander>
           {encoderState.type === identity.type ? null :
             <div>
@@ -181,32 +181,30 @@ export default class Options extends Component<Props, State> {
 
         <h3 class={style.optionsTitle}>Compress</h3>
 
-        <div class={style.optionsScroller}>
-          <section class={`${style.optionOneCell} ${style.optionsSection}`}>
-            {encoderSupportMap ?
-              <Select value={encoderState.type} onChange={this.onEncoderTypeChange} large>
-                {encoders.filter(encoder => encoderSupportMap[encoder.type]).map(encoder => (
-                  <option value={encoder.type}>{encoder.label}</option>
-                ))}
-              </Select>
-              :
-              <Select large><option>Loading…</option></Select>
-            }
-          </section>
+        <section class={`${style.optionOneCell} ${style.optionsSection}`}>
+          {encoderSupportMap ?
+            <Select value={encoderState.type} onChange={this.onEncoderTypeChange} large>
+              {encoders.filter(encoder => encoderSupportMap[encoder.type]).map(encoder => (
+                <option value={encoder.type}>{encoder.label}</option>
+              ))}
+            </Select>
+            :
+            <Select large><option>Loading…</option></Select>
+          }
+        </section>
 
-          <Expander>
-            {EncoderOptionComponent ?
-              <EncoderOptionComponent
-                options={
-                  // Casting options, as encoderOptionsComponentMap[encodeData.type] ensures
-                  // the correct type, but typescript isn't smart enough.
-                  encoderState.options as any
-                }
-                onChange={onEncoderOptionsChange}
-              />
-            : null}
-          </Expander>
-        </div>
+        <Expander>
+          {EncoderOptionComponent ?
+            <EncoderOptionComponent
+              options={
+                // Casting options, as encoderOptionsComponentMap[encodeData.type] ensures
+                // the correct type, but typescript isn't smart enough.
+                encoderState.options as any
+              }
+              onChange={onEncoderOptionsChange}
+            />
+          : null}
+        </Expander>
 
         <div class={style.optionsCopy}>
           <button onClick={this.onCopyToOtherClick} class={style.copyButton}>

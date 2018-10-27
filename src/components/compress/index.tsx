@@ -154,7 +154,7 @@ async function processSvg(blob: Blob): Promise<HTMLImageElement> {
 }
 
 export default class Compress extends Component<Props, State> {
-  widthQuery = window.matchMedia('(max-width: 600px)');
+  widthQuery = window.matchMedia('(max-width: 599px)');
 
   state: State = {
     source: undefined,
