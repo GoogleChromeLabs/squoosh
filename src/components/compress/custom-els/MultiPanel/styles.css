@@ -1,11 +1,10 @@
 .panel-heading {
-  background:gray;
+  background: gray;
 }
 .panel-content {
-  height:0px;
-  overflow:scroll;
-  transition: height 1s;
+  height: 0px;
+  overflow: auto;
 }
 .panel-content[expanded] {
-  height:auto;
+  height: auto;
 }

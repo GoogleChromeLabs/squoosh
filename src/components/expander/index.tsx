@@ -1,6 +1,6 @@
 import { h, Component, ComponentChild, ComponentChildren } from 'preact';
 import * as style from './style.scss';
-import { linkRef } from '../../lib/initial-util';
+import { transitionHeight } from '../../lib/util';
 
 interface Props {
   children: ComponentChildren;
@@ -13,7 +13,6 @@ export default class Expander extends Component<Props, State> {
   state: State = {
     outgoingChildren: [],
   };
-  private el?: HTMLDivElement;
   private lastElHeight: number = 0;
 
   componentWillReceiveProps(nextProps: Props) {
@@ -32,10 +31,10 @@ export default class Expander extends Component<Props, State> {
 
     // Only interested if going from empty to not-empty, or not-empty to empty.
     if ((children[0] && nextChildren[0]) || (!children[0] && !nextChildren[0])) return;
-    this.lastElHeight = this.el!.getBoundingClientRect().height;
+    this.lastElHeight = this.base!.getBoundingClientRect().height;
   }
 
-  componentDidUpdate(previousProps: Props) {
+  async componentDidUpdate(previousProps: Props) {
     const children = this.props.children as ComponentChild[];
     const previousChildren = previousProps.children as ComponentChild[];
 
@@ -43,37 +42,20 @@ export default class Expander extends Component<Props, State> {
     if ((children[0] && previousChildren[0]) || (!children[0] && !previousChildren[0])) return;
 
     // What height do we need to transition to?
-    this.el!.style.transition = 'none';
-    this.el!.style.height = '';
-    const newHeight = children[0] ? this.el!.getBoundingClientRect().height : 0;
+    this.base!.style.height = '';
+    this.base!.style.overflow = 'hidden';
+    const newHeight = children[0] ? this.base!.getBoundingClientRect().height : 0;
 
-    if (this.lastElHeight === newHeight) {
-      this.el!.style.transition = '';
-      return;
-    }
+    await transitionHeight(this.base!, {
+      duration: 300,
+      from: this.lastElHeight,
+      to: newHeight,
+    });
 
-    // Set the currently rendered height absolutely.
-    this.el!.style.height = this.lastElHeight + 'px';
-    this.el!.style.transition = '';
-    this.el!.style.overflow = 'hidden';
-    // Force a style calc so the browser picks up the start value.
-    getComputedStyle(this.el!).height;
-    // Animate to the new height.
-    this.el!.style.height = newHeight + 'px';
-
-    const listener = () => {
-      // Unset the height & overflow, so element changes do the right thing.
-      this.el!.style.height = '';
-      this.el!.style.overflow = '';
-      this.el!.removeEventListener('transitionend', listener);
-      this.el!.removeEventListener('transitioncancel', listener);
-      if (this.state.outgoingChildren[0]) {
-        this.setState({ outgoingChildren: [] });
-      }
-    };
-
-    this.el!.addEventListener('transitionend', listener);
-    this.el!.addEventListener('transitioncancel', listener);
+    // Unset the height & overflow, so element changes do the right thing.
+    this.base!.style.height = '';
+    this.base!.style.overflow = '';
+    if (this.state.outgoingChildren[0]) this.setState({ outgoingChildren: [] });
   }
 
   render(props: Props, { outgoingChildren }: State) {
@@ -81,10 +63,7 @@ export default class Expander extends Component<Props, State> {
     const childrenExiting = !children[0] && outgoingChildren[0];
 
     return (
-      <div
-        ref={linkRef(this, 'el')}
-        class={`${style.expander} ${childrenExiting ? style.childrenExiting : ''}`}
-      >
+      <div class={childrenExiting ? style.childrenExiting : ''}>
         {children[0] ? children : outgoingChildren}
       </div>
     );

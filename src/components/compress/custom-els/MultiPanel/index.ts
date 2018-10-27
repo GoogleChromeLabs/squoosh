@@ -1,4 +1,5 @@
 import * as style from './styles.css';
+import { transitionHeight } from '../../../../lib/util';
 
 interface CloseAllOptions {
   exceptFirst?: boolean;
@@ -6,13 +7,42 @@ interface CloseAllOptions {
 
 const openOneOnlyAttr = 'open-one-only';
 
-function getClosestHeading(el: Element) {
+function getClosestHeading(el: Element): HTMLElement | undefined {
   // Look for the child of multi-panel, but stop at interactive elements like links & buttons
   const closestEl = el.closest('multi-panel > *, a, button');
   if (closestEl && closestEl.classList.contains(style.panelHeading)) {
-    return closestEl;
+    return closestEl as HTMLElement;
   }
   return undefined;
+}
+
+async function close(content: HTMLElement) {
+  const from = content.getBoundingClientRect().height;
+
+  content.removeAttribute('expanded');
+  content.setAttribute('aria-expanded', 'false');
+
+  await transitionHeight(content, {
+    from,
+    to: 0,
+    duration: 300,
+  });
+
+  content.style.height = '';
+}
+
+async function open(content: HTMLElement) {
+  const from = content.getBoundingClientRect().height;
+
+  content.setAttribute('expanded', '');
+  content.setAttribute('aria-expanded', 'true');
+
+  await transitionHeight(content, {
+    from,
+    duration: 300,
+  });
+
+  content.style.height = '';
 }
 
 /**
@@ -47,7 +77,7 @@ export default class MultiPanel extends HTMLElement {
 
   // Click event handler
   private _onClick(event: MouseEvent) {
-    const el = event.target as Element;
+    const el = event.target as HTMLElement;
     const heading = getClosestHeading(el);
     if (!heading) return;
     this._toggle(heading);
@@ -108,41 +138,36 @@ export default class MultiPanel extends HTMLElement {
     }
   }
 
-  private _toggle(heading: Element) {
+  private _toggle(heading: HTMLElement) {
     if (!heading) return;
-    const content = heading.nextElementSibling;
+    const content = heading.nextElementSibling as HTMLElement;
 
     // if there is no content, nothing to expand
     if (!content) return;
 
     // toggle expanded and aria-expanded attributes
     if (content.hasAttribute('expanded')) {
-      content.removeAttribute('expanded');
-      content.setAttribute('aria-expanded', 'false');
+      close(content);
     } else {
       if (this.openOneOnly) this._closeAll();
-      content.setAttribute('expanded', '');
-      content.setAttribute('aria-expanded', 'true');
+      open(content);
     }
   }
 
   private _closeAll(options: CloseAllOptions = {}): void {
     const { exceptFirst = false } = options;
-    let els = [...this.children].filter(el => el.matches('[expanded]'));
+    let els = [...this.children].filter(el => el.matches('[expanded]')) as HTMLElement[];
 
     if (exceptFirst) {
       els = els.slice(1);
     }
 
-    for (const el of els) {
-      el.removeAttribute('expanded');
-      el.setAttribute('aria-expanded', 'false');
-    }
+    for (const el of els) close(el);
   }
 
   // children of multi-panel should always be even number (heading/content pair)
   private _childrenChange() {
-    let preserveTabIndex : boolean = false;
+    let preserveTabIndex = false;
     let heading = this.firstElementChild;
 
     while (heading) {

@@ -9,10 +9,6 @@
 
   @media (min-width: 600px) {
     grid-template-columns: 1fr auto;
-    grid-template-rows: calc(100% - 75px);
-  }
-
-  @media (min-width: 860px) {
     grid-template-rows: 100%;
   }
 }
@@ -21,18 +17,22 @@
   color: #fff;
   opacity: 0.9;
   font-size: 1.2rem;
-  max-height: 100%;
   display: flex;
   flex-flow: column;
   max-width: 400px;
   margin: 0 auto;
   width: calc(100% - 60px);
   max-height: calc(100% - 143px);
+  overflow: hidden;
 
   @media (min-width: 600px) {
-    max-height: none;
+    max-height: calc(100% - 75px);
     width: 300px;
     margin: 0;
+  }
+
+  @media (min-width: 860px) {
+    max-height: none;
   }
 }
 

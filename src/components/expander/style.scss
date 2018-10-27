@@ -1,7 +1,3 @@
-.expander {
-  transition: height 200ms ease-in-out;
-}
-
 .children-exiting {
   & > * {
     pointer-events: none;
