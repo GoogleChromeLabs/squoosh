@@ -4,7 +4,7 @@ import { shallowEqual } from '../../lib/util';
 import { SourceImage } from '.';
 import { PreprocessorState } from '../../codecs/preprocessors';
 
-import * as identity from '../../codecs/identity/encoder';
+import * as identity from '../../codecs/identity/encoder-meta';
 
 interface CacheResult {
   preprocessed: ImageData;

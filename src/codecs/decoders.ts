@@ -1,47 +1,21 @@
-import * as wasmWebp from './webp/decoder';
-import * as browserWebp from './webp/decoder';
+import { nativeDecode, sniffMimeType, canDecodeImage } from '../lib/util';
+import Processor from './processor';
 
-import { nativeDecode, sniffMimeType } from '../lib/util';
+// tslint:disable-next-line:max-line-length It’s a data URL. Whatcha gonna do?
+const webpFile = 'data:image/webp;base64,UklGRh4AAABXRUJQVlA4TBEAAAAvAAAAAAfQ//73v/+BiOh/AAA=';
+const nativeWebPSupported = canDecodeImage(webpFile);
 
-export interface Decoder {
-  name: string;
-  decode(blob: Blob): Promise<ImageData>;
-  isSupported(): Promise<boolean>;
-  canHandleMimeType(mimeType: string): boolean;
-}
-
-// We load all decoders and filter out the unsupported ones.
-export const decodersPromise: Promise<Decoder[]> = Promise.all(
-  [
-    browserWebp,
-    wasmWebp,
-  ]
-  .map(async (decoder) => {
-    if (await decoder.isSupported()) {
-      return decoder;
-    }
-    return null;
-  }),
-// TypeScript is not smart enough to realized that I’m filtering all the falsy
-// values here.
-).then(list => list.filter(item => !!item)) as any as Promise<Decoder[]>;
-
-async function findDecodersByMimeType(mimeType: string): Promise<Decoder[]> {
-  const decoders = await decodersPromise;
-  return decoders.filter(decoder => decoder.canHandleMimeType(mimeType));
-}
-
-export async function decodeImage(blob: Blob): Promise<ImageData> {
+export async function decodeImage(blob: Blob, processor: Processor): Promise<ImageData> {
   const mimeType = await sniffMimeType(blob);
-  const decoders = await findDecodersByMimeType(mimeType);
-  if (decoders.length <= 0) {
-    // If we can’t find a decoder, hailmary with the browser's decoders
-    return nativeDecode(blob);
+
+  try {
+    if (mimeType === 'image/webp' && !(await nativeWebPSupported)) {
+      return await processor.webpDecode(blob);
+    }
+
+    // Otherwise, just throw it at the browser's decoder.
+    return await nativeDecode(blob);
+  } catch (err) {
+    throw Error("Couldn't decode image");
   }
-  for (const decoder of decoders) {
-    try {
-      return await decoder.decode(blob);
-    } catch { }
-  }
-  throw new Error('No decoder could decode image');
 }

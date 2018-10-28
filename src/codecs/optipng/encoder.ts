@@ -1,23 +1,18 @@
-import { canvasEncode, blobToArrayBuffer } from '../../lib/util';
-import EncodeWorker from './Encoder.worker';
+import optipng, { OptiPngModule } from '../../../codecs/optipng/optipng';
+import wasmUrl from '../../../codecs/optipng/optipng.wasm';
+import { EncodeOptions } from './encoder-meta';
+import { initWasmModule } from '../util';
 
-export interface EncodeOptions {
-  level: number;
-}
-export interface EncoderState { type: typeof type; options: EncodeOptions; }
+let emscriptenModule: Promise<OptiPngModule>;
 
-export const type = 'png';
-export const label = 'OptiPNG';
-export const mimeType = 'image/png';
-export const extension = 'png';
+export async function compress(data: BufferSource, options: EncodeOptions): Promise<ArrayBuffer> {
+  if (!emscriptenModule) emscriptenModule = initWasmModule(optipng, wasmUrl);
 
-export const defaultOptions: EncodeOptions = {
-  level: 2,
-};
+  const module = await emscriptenModule;
+  const resultView = module.compress(data, options);
+  const result = new Uint8Array(resultView);
+  module.free_result();
 
-export async function encode(data: ImageData, opts: EncodeOptions): Promise<ArrayBuffer> {
-  const pngBlob = await canvasEncode(data, mimeType);
-  const pngBuffer = await blobToArrayBuffer(pngBlob);
-  const encodeWorker = await new EncodeWorker();
-  return encodeWorker.compress(pngBuffer, opts);
+  // wasm can’t run on SharedArrayBuffers, so we hard-cast to ArrayBuffer.
+  return result.buffer as ArrayBuffer;
 }

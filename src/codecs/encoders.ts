@@ -1,15 +1,15 @@
-import * as identity from './identity/encoder';
-import * as optiPNG from './optipng/encoder';
-import * as mozJPEG from './mozjpeg/encoder';
-import * as webP from './webp/encoder';
-import * as browserPNG from './browser-png/encoder';
-import * as browserJPEG from './browser-jpeg/encoder';
-import * as browserWebP from './browser-webp/encoder';
-import * as browserGIF from './browser-gif/encoder';
-import * as browserTIFF from './browser-tiff/encoder';
-import * as browserJP2 from './browser-jp2/encoder';
-import * as browserBMP from './browser-bmp/encoder';
-import * as browserPDF from './browser-pdf/encoder';
+import * as identity from './identity/encoder-meta';
+import * as optiPNG from './optipng/encoder-meta';
+import * as mozJPEG from './mozjpeg/encoder-meta';
+import * as webP from './webp/encoder-meta';
+import * as browserPNG from './browser-png/encoder-meta';
+import * as browserJPEG from './browser-jpeg/encoder-meta';
+import * as browserWebP from './browser-webp/encoder-meta';
+import * as browserGIF from './browser-gif/encoder-meta';
+import * as browserTIFF from './browser-tiff/encoder-meta';
+import * as browserJP2 from './browser-jp2/encoder-meta';
+import * as browserBMP from './browser-bmp/encoder-meta';
+import * as browserPDF from './browser-pdf/encoder-meta';
 
 export interface EncoderSupportMap {
   [key: string]: boolean;

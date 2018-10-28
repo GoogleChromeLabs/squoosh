@@ -1,17 +1,20 @@
-import { blobToArrayBuffer } from '../../lib/util';
-import DecoderWorker  from './Decoder.worker';
+import webp_dec, { WebPModule } from '../../../codecs/webp_dec/webp_dec';
+import wasmUrl from '../../../codecs/webp_dec/webp_dec.wasm';
+import { initWasmModule } from '../util';
 
-export const name = 'WASM WebP Decoder';
-export async function decode(blob: Blob): Promise<ImageData> {
-  const decoder = await new DecoderWorker();
-  return decoder.decode(await blobToArrayBuffer(blob));
-}
+let emscriptenModule: Promise<WebPModule>;
 
-export async function isSupported(): Promise<boolean> {
-  return true;
-}
+export async function decode(data: ArrayBuffer): Promise<ImageData> {
+  if (!emscriptenModule) emscriptenModule = initWasmModule(webp_dec, wasmUrl);
 
-const supportedMimeTypes = ['image/webp'];
-export function canHandleMimeType(mimeType: string): boolean {
-  return supportedMimeTypes.includes(mimeType);
+  const module = await emscriptenModule;
+  const rawImage = module.decode(data);
+  const result = new ImageData(
+    new Uint8ClampedArray(rawImage.buffer),
+    rawImage.width,
+    rawImage.height,
+  );
+
+  module.free_result();
+  return result;
 }
