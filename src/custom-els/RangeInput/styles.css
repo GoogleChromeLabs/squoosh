@@ -84,11 +84,11 @@ range-input::before {
   overflow: hidden;
 }
 
-.input:active + .thumb-wrapper .value-display {
+.touch-active + .thumb-wrapper .value-display {
   opacity: 1;
   transform: scale(1);
 }
 
-.input:active + .thumb-wrapper .thumb {
+.touch-active + .thumb-wrapper .thumb {
   box-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
