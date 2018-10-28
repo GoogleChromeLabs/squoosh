@@ -2,10 +2,10 @@ import { h, Component, ComponentChildren, ComponentChild } from 'preact';
 
 import * as style from './style.scss';
 import FileSize from './FileSize';
-import { DownloadIcon } from '../../lib/icons';
+import { DownloadIcon, CopyAcrossIcon, CopyAcrossIconProps } from '../../lib/icons';
 import '../custom-els/LoadingSpinner';
 import { SourceImage } from '../compress';
-import { Fileish } from '../../lib/initial-util';
+import { Fileish, bind } from '../../lib/initial-util';
 
 interface Props {
   loading: boolean;
@@ -13,6 +13,8 @@ interface Props {
   imageFile?: Fileish;
   downloadUrl?: string;
   children: ComponentChildren;
+  copyDirection: CopyAcrossIconProps['copyDirection'];
+  onCopyToOtherClick(): void;
 }
 
 interface State {
@@ -43,7 +45,16 @@ export default class Results extends Component<Props, State> {
     }
   }
 
-  render({ source, imageFile, downloadUrl, children }: Props, { showLoadingState }: State) {
+  @bind
+  private onCopyToOtherClick(event: Event) {
+    event.preventDefault();
+    this.props.onCopyToOtherClick();
+  }
+
+  render(
+    { source, imageFile, downloadUrl, children, copyDirection }: Props,
+    { showLoadingState }: State,
+  ) {
     return (
       <div class={style.results}>
         <div class={style.resultData}>
@@ -58,6 +69,14 @@ export default class Results extends Component<Props, State> {
             />
           }
         </div>
+
+        <button
+          class={style.copyToOther}
+          title="Copy settings to other side"
+          onClick={this.onCopyToOtherClick}
+        >
+          <CopyAcrossIcon class={style.copyIcon} copyDirection={copyDirection} />
+        </button>
 
         <div class={style.download}>
           {(downloadUrl && imageFile) && (

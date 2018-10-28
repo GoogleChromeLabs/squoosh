@@ -59,13 +59,11 @@ const encoderOptionsComponentMap = {
 interface Props {
   mobileView: boolean;
   source?: SourceImage;
-  imageIndex: number;
   encoderState: EncoderState;
   preprocessorState: PreprocessorState;
   onEncoderTypeChange(newType: EncoderType): void;
   onEncoderOptionsChange(newOptions: EncoderOptions): void;
   onPreprocessorOptionsChange(newOptions: PreprocessorState): void;
-  onCopyToOtherClick(): void;
 }
 
 interface State {
@@ -116,16 +114,9 @@ export default class Options extends Component<Props, State> {
     );
   }
 
-  @bind
-  onCopyToOtherClick(event: Event) {
-    event.preventDefault();
-    this.props.onCopyToOtherClick();
-  }
-
   render(
     {
       source,
-      imageIndex,
       encoderState,
       preprocessorState,
       onEncoderOptionsChange,
@@ -205,14 +196,6 @@ export default class Options extends Component<Props, State> {
             />
           : null}
         </Expander>
-
-        <div class={style.optionsCopy}>
-          <button onClick={this.onCopyToOtherClick} class={style.copyButton}>
-            {imageIndex === 1 && '← '}
-            Copy settings across
-            {imageIndex === 0 && ' →'}
-          </button>
-        </div>
       </div>
     );
   }
