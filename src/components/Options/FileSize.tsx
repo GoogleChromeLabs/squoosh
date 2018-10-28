@@ -7,32 +7,10 @@ interface Props {
   compareTo?: Blob;
 }
 
-interface State {
-  sizeFormatted?: string;
-}
+interface State {}
 
 export default class FileSize extends Component<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    if (props.blob) {
-      this.setState({
-        sizeFormatted: prettyBytes(props.blob.size),
-      });
-    }
-  }
-
-  componentWillReceiveProps({ blob }: Props) {
-    if (blob) {
-      this.setState({
-        sizeFormatted: prettyBytes(blob.size),
-      });
-    }
-  }
-
-  render(
-    { blob, compareTo }: Props,
-    { sizeFormatted }: State,
-  ) {
+  render({ blob, compareTo }: Props) {
     let comparison: JSX.Element | undefined;
 
     if (compareTo) {
@@ -58,6 +36,6 @@ export default class FileSize extends Component<Props, State> {
       }
     }
 
-    return <span>{sizeFormatted} {comparison}</span>;
+    return <span>{prettyBytes(blob.size)} {comparison}</span>;
   }
 }
