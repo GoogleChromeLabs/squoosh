@@ -43,6 +43,12 @@
   flex-wrap: wrap;
   contain: content;
 
+  // Allow clicks to fall through to the pinch zoom area
+  pointer-events: none;
+  & > * {
+    pointer-events: auto;
+  }
+
   @media (min-width: 860px) {
     top: auto;
     left: 320px;
