@@ -6,7 +6,6 @@ import { DownloadIcon, CopyAcrossIcon, CopyAcrossIconProps } from '../../lib/ico
 import '../custom-els/LoadingSpinner';
 import { SourceImage } from '../compress';
 import { Fileish, bind } from '../../lib/initial-util';
-import { button } from '../output/style.scss.d';
 
 interface Props {
   loading: boolean;
