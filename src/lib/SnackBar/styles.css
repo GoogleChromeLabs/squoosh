@@ -53,13 +53,13 @@ snack-bar {
   }
 }
 
-.snackbar--text {
+.text {
   flex: 1 1 auto;
   padding: 16px;
   font-size: 100%;
 }
 
-.snackbar--button {
+.button {
   position: relative;
   flex: 0 1 auto;
   padding: 8px;
@@ -81,10 +81,10 @@ snack-bar {
   transition: background-color 200ms ease;
   outline: none;
 }
-.snackbar--button:hover {
+.button:hover {
   background-color: rgba(0,0,0,0.15);
 }
-.snackbar--button:focus:before {
+.button:focus:before {
   content: '';
   position: absolute;
   left: 50%;

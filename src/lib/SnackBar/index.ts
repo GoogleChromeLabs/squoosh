@@ -1,114 +1,96 @@
-import './styles.css';
-
-const DEFAULT_TIMEOUT = 2750;
+import * as style from './styles.css';
 
 export interface SnackOptions {
-  message: string;
   timeout?: number;
-  actionText?: string;
-  actionHandler?: () => boolean | null;
+  actions?: string[];
 }
 
-export interface SnackShowResult {
-  action: boolean;
-}
+function createSnack(message: string, options: SnackOptions): [Element, Promise<string>] {
+  const {
+    timeout = 0,
+    actions = [],
+  } = options;
 
-class Snack {
-  private _onremove: ((result: SnackShowResult) => void)[] = [];
-  private _options: SnackOptions;
-  private _element: Element = document.createElement('div');
-  private _text: Element = document.createElement('div');
-  private _button: Element = document.createElement('button');
-  private _showing = false;
-  private _closeTimer?: number;
-  private _result: SnackShowResult = {
-    action: false,
-  };
+  // Provide a default 'dismiss' action
+  if (!timeout && actions.length === 0) actions.push('dismiss');
 
-  constructor (options: SnackOptions, callback?: (result: SnackShowResult) => void) {
-    this._options = options;
+  const el = document.createElement('div');
+  el.className = style.snackbar;
+  el.setAttribute('aria-live', 'assertive');
+  el.setAttribute('aria-atomic', 'true');
+  el.setAttribute('aria-hidden', 'false');
 
-    this._element.className = 'snackbar';
-    this._element.setAttribute('aria-live', 'assertive');
-    this._element.setAttribute('aria-atomic', 'true');
-    this._element.setAttribute('aria-hidden', 'true');
+  const text = document.createElement('div');
+  text.className = style.text;
+  text.textContent = message;
+  el.appendChild(text);
 
-    this._text.className = 'snackbar--text';
-    this._text.textContent = options.message;
-    this._element.appendChild(this._text);
+  const result = new Promise<string>((resolve) => {
+    let timeoutId: number;
 
-    if (options.actionText) {
-      this._button.className = 'snackbar--button';
-      this._button.textContent = options.actionText;
-      this._button.addEventListener('click', () => {
-        if (this._showing) {
-          if (options.actionHandler && options.actionHandler() === false) return;
-          this._result.action = true;
-        }
-        this.hide();
+    // Add action buttons
+    for (const action of actions) {
+      const button = document.createElement('button');
+      button.className = style.button;
+      button.textContent = action;
+      button.addEventListener('click', () => {
+        clearTimeout(timeoutId);
+        resolve(action);
       });
-      this._element.appendChild(this._button);
+      el.appendChild(button);
     }
 
-    if (callback) {
-      this._onremove.push(callback);
+    // Add timeout
+    if (timeout) {
+      timeoutId = self.setTimeout(
+        () => resolve(''),
+        timeout,
+      );
     }
-  }
+  });
 
-  cancelTimer () {
-    if (this._closeTimer != null) clearTimeout(this._closeTimer);
-  }
-
-  show (parent: Element): Promise<SnackShowResult> {
-    if (this._showing) return Promise.resolve(this._result);
-    this._showing = true;
-    this.cancelTimer();
-    if (parent !== this._element.parentNode) {
-      parent.appendChild(this._element);
-    }
-    this._element.removeAttribute('aria-hidden');
-    this._closeTimer = setTimeout(this.hide.bind(this), this._options.timeout || DEFAULT_TIMEOUT);
-    return new Promise((resolve) => {
-      this._onremove.push(resolve);
-    });
-  }
-
-  hide () {
-    if (!this._showing) return;
-    this._showing = false;
-    this.cancelTimer();
-    this._element.addEventListener('animationend', this.remove.bind(this));
-    this._element.setAttribute('aria-hidden', 'true');
-  }
-
-  remove () {
-    this.cancelTimer();
-    const parent = this._element.parentNode;
-    if (parent) parent.removeChild(this._element);
-    this._onremove.forEach(f => f(this._result));
-    this._onremove = [];
-  }
+  return [el, result];
 }
 
 export default class SnackBarElement extends HTMLElement {
-  private _snackbars: Snack[] = [];
-  private _processingStack = false;
+  private _snackbars: [string, SnackOptions, (action: Promise<string>) => void][] = [];
+  private _processingQueue = false;
 
-  showSnackbar (options: SnackOptions): Promise<SnackShowResult> {
-    return new Promise((resolve) => {
-      const snack = new Snack(options, resolve);
-      this._snackbars.push(snack);
-      this._processStack();
+  /**
+   * Show a snackbar. Returns a promise for the name of the action clicked, or an empty string if no
+   * action is clicked.
+   */
+  showSnackbar(message: string, options: SnackOptions = {}): Promise<string> {
+    return new Promise<string>((resolve) => {
+      this._snackbars.push([message, options, resolve]);
+      if (!this._processingQueue) this._processQueue();
     });
   }
 
-  private async _processStack () {
-    if (this._processingStack === true || this._snackbars.length === 0) return;
-    this._processingStack = true;
-    await this._snackbars[0].show(this);
-    this._snackbars.shift();
-    this._processingStack = false;
-    this._processStack();
+  private async _processQueue() {
+    this._processingQueue = true;
+
+    while (this._snackbars[0]) {
+      const [message, options, resolver] = this._snackbars[0];
+      const [el, result] = createSnack(message, options);
+      // Pass the result back to the original showSnackbar call.
+      resolver(result);
+      this.appendChild(el);
+
+      // Wait for the user to click an action, or for the snack to timeout.
+      await result;
+
+      // Transition the snack away.
+      el.setAttribute('aria-hidden', 'true');
+      await new Promise((resolve) => {
+        el.addEventListener('animationend', () => resolve());
+      });
+      el.remove();
+
+      this._snackbars.shift();
+    }
+
+    this._processingQueue = false;
   }
 }
 
