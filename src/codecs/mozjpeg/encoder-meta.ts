@@ -17,6 +17,7 @@ export interface EncodeOptions {
   trellis_opt_zero: boolean;
   trellis_opt_table: boolean;
   trellis_loops: number;
+  chroma_subsample: number;
 }
 
 export interface EncoderState { type: typeof type; options: EncodeOptions; }
@@ -38,4 +39,5 @@ export const defaultOptions: EncodeOptions = {
   trellis_opt_zero: false,
   trellis_opt_table: false,
   trellis_loops: 1,
+  chroma_subsample: 0,
 };

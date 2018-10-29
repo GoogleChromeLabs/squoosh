@@ -45,6 +45,10 @@ export default class MozJPEGEncoderOptions extends Component<Props, State> {
       color_space: inputFieldValueAsNumber(form.color_space, options.color_space),
       quant_table: inputFieldValueAsNumber(form.quant_table, options.quant_table),
       trellis_loops: inputFieldValueAsNumber(form.trellis_loops, options.trellis_loops),
+      // Other:
+      chroma_subsample: (!form.auto_chroma_subsample) ? options.chroma_subsample :
+        form.auto_chroma_subsample.checked ? 0 :
+        inputFieldValueAsNumber(form.chroma_subsample, 2),
     };
     this.props.onChange(newOptions);
   }
@@ -131,6 +135,35 @@ export default class MozJPEGEncoderOptions extends Component<Props, State> {
                   <option value={MozJpegColorSpace.YCbCr}>YCbCr</option>
                 </Select>
               </label>
+              <Expander>
+                {options.color_space === MozJpegColorSpace.YCbCr ?
+                  <label class={style.optionInputFirst}>
+                    <Checkbox
+                      name="auto_chroma_subsample"
+                      checked={options.chroma_subsample === 0}
+                      onChange={this.onChange}
+                    />
+                    Auto subsample chroma
+                  </label>
+                  : null
+                }
+              </Expander>
+              <Expander>
+                {options.chroma_subsample !== 0 ?
+                  <div class={style.optionOneCell}>
+                    <Range
+                      name="chroma_subsample"
+                      min="1"
+                      max="4"
+                      value={options.chroma_subsample}
+                      onInput={this.onChange}
+                    >
+                      Subsample chroma by:
+                    </Range>
+                  </div>
+                  : null
+                }
+              </Expander>
               <label class={style.optionTextFirst}>
                 Quantization:
                 <Select

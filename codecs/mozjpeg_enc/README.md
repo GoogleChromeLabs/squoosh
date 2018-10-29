@@ -39,5 +39,6 @@ struct MozJpegOptions {
   bool trellis_opt_zero;
   bool trellis_opt_table;
   int trellis_loops;
+  int chroma_subsample;
 };
 ```

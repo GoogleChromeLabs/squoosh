@@ -29,6 +29,7 @@ struct MozJpegOptions {
   bool trellis_opt_zero;
   bool trellis_opt_table;
   int trellis_loops;
+  int chroma_subsample;
 };
 
 int version() {
@@ -119,9 +120,6 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
    */
   jpeg_set_defaults(&cinfo);
 
-  /* Now you can set any non-default parameters you wish to.
-   * Here we just illustrate the use of quality (quantization table) scaling:
-   */
   jpeg_set_colorspace(&cinfo, (J_COLOR_SPACE) opts.color_space);
 
   if (opts.quant_table != -1) {
@@ -146,6 +144,11 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
   char const *pqual = quality_str.c_str();
 
   set_quality_ratings(&cinfo, (char*) pqual, opts.baseline);
+
+  if (opts.chroma_subsample && opts.color_space == JCS_YCbCr) {
+    cinfo.comp_info[0].h_samp_factor = opts.chroma_subsample;
+    cinfo.comp_info[0].v_samp_factor = opts.chroma_subsample;
+  }
 
   if (!opts.baseline && opts.progressive) {
     jpeg_simple_progression(&cinfo);
@@ -209,6 +212,7 @@ EMSCRIPTEN_BINDINGS(my_module) {
     .field("trellis_opt_zero", &MozJpegOptions::trellis_opt_zero)
     .field("trellis_opt_table", &MozJpegOptions::trellis_opt_table)
     .field("trellis_loops", &MozJpegOptions::trellis_loops)
+    .field("chroma_subsample", &MozJpegOptions::chroma_subsample)
     ;
 
   function("version", &version);
