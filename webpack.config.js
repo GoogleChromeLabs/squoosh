@@ -200,9 +200,11 @@ module.exports = function (_, env) {
 
       new OptimizeCssAssetsPlugin({
         cssProcessorOptions: {
-          zindex: false,
-          discardComments: { removeAll: true }
+          postcssReduceIdents: {
             counterStyle: false,
+            gridTemplate: false,
+            keyframes: false
+          }
         }
       }),
 
