@@ -251,11 +251,23 @@ export default class Compress extends Component<Props, State> {
     }
   }
 
-  private onCopyToOtherClick(index: 0 | 1) {
+  private async onCopyToOtherClick(index: 0 | 1) {
     const otherIndex = (index + 1) % 2;
+    const oldSettings = this.state.images[otherIndex];
 
     this.setState({
       images: cleanSet(this.state.images, otherIndex, this.state.images[index]),
+    });
+
+    const result = await this.props.showSnack('Settings copied across', {
+      timeout: 5000,
+      actions: ['undo', 'dismiss'],
+    });
+
+    if (result !== 'undo') return;
+
+    this.setState({
+      images: cleanSet(this.state.images, otherIndex, oldSettings),
     });
   }
 
