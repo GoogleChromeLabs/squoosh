@@ -108,7 +108,7 @@ module.exports = function (_, env) {
               loader: 'typings-for-css-modules-loader',
               options: {
                 modules: true,
-                localIdentName: '[local]__[hash:base64:5]',
+                localIdentName: isProd ? '[hash:base64:5]' : '[local]__[hash:base64:5]',
                 namedExport: true,
                 camelCase: true,
                 importLoaders: 1,
@@ -202,6 +202,7 @@ module.exports = function (_, env) {
         cssProcessorOptions: {
           zindex: false,
           discardComments: { removeAll: true }
+            counterStyle: false,
         }
       }),
 

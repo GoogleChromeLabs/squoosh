@@ -22,7 +22,6 @@ snack-bar {
   transform-origin: center;
   color: #eee;
   z-index: 100;
-  pointer-events: none;
   cursor: default;
   will-change: transform;
   animation: snackbar-show 300ms ease forwards 1;
@@ -75,7 +74,6 @@ snack-bar {
   font-size: 100%;
   text-transform: uppercase;
   text-align: center;
-  pointer-events: all;
   cursor: pointer;
   overflow: hidden;
   transition: background-color 200ms ease;
