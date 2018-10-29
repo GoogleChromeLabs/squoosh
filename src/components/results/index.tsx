@@ -6,6 +6,7 @@ import { DownloadIcon, CopyAcrossIcon, CopyAcrossIconProps } from '../../lib/ico
 import '../custom-els/LoadingSpinner';
 import { SourceImage } from '../compress';
 import { Fileish, bind } from '../../lib/initial-util';
+import { button } from '../output/style.scss.d';
 
 interface Props {
   loading: boolean;
@@ -14,12 +15,19 @@ interface Props {
   downloadUrl?: string;
   children: ComponentChildren;
   copyDirection: CopyAcrossIconProps['copyDirection'];
+  buttonPosition: keyof typeof buttonPositionClass;
   onCopyToOtherClick(): void;
 }
 
 interface State {
   showLoadingState: boolean;
 }
+
+const buttonPositionClass = {
+  'stack-right': style.stackRight,
+  'download-right': style.downloadRight,
+  'download-left': style.downloadLeft,
+};
 
 const loadingReactionDelay = 500;
 
@@ -52,11 +60,12 @@ export default class Results extends Component<Props, State> {
   }
 
   render(
-    { source, imageFile, downloadUrl, children, copyDirection }: Props,
+    { source, imageFile, downloadUrl, children, copyDirection, buttonPosition }: Props,
     { showLoadingState }: State,
   ) {
+
     return (
-      <div class={style.results}>
+      <div class={`${style.results} ${buttonPositionClass[buttonPosition]}`}>
         <div class={style.resultData}>
           {(children as ComponentChild[])[0]
             ? <div class={style.resultTitle}>{children}</div>

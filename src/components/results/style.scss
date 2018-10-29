@@ -16,7 +16,7 @@
 
 .results {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: [text] 1fr [copy-button] auto [download-button] auto;
   background: rgba(0, 0, 0, 0.9);
   font-size: 1rem;
 
@@ -34,11 +34,27 @@
 }
 
 .result-data {
+  grid-row: 1;
+  grid-column: text;
   display: flex;
   align-items: center;
-  padding: 0 15px;
+  padding: 0 10px;
   white-space: nowrap;
   overflow: hidden;
+}
+
+.download-right {
+  grid-template-columns: [copy-button] auto [text] 1fr [download-button] auto;
+}
+
+.download-left {
+  grid-template-columns: [download-button] auto [text] 1fr [copy-button] auto;
+}
+
+.stack-right {
+  & .result-data {
+    padding: 0 15px;
+  }
 }
 
 .result-title {
@@ -64,6 +80,8 @@
 }
 
 .download {
+  grid-row: 1;
+  grid-column: download-button;
   background: #34B9EB;
   --size: 38px;
   width: var(--size);
@@ -104,6 +122,8 @@
 }
 
 .copy-to-other {
+  grid-row: 1;
+  grid-column: copy-button;
   composes: unbutton from '../../lib/util.scss';
   composes: download;
 

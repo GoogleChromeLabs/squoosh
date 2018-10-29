@@ -156,6 +156,9 @@ async function processSvg(blob: Blob): Promise<HTMLImageElement> {
 
 // These are only used in the mobile view
 const resultTitles = ['Top', 'Bottom'];
+// These are only used in the desktop view
+const buttonPositions =
+  ['download-left', 'download-right'] as ('download-left' | 'download-right')[];
 
 export default class Compress extends Component<Props, State> {
   widthQuery = window.matchMedia('(max-width: 599px)');
@@ -424,6 +427,7 @@ export default class Compress extends Component<Props, State> {
         loading={loading || image.loading}
         copyDirection={copyDirections[index]}
         onCopyToOtherClick={this.onCopyToOtherClick.bind(this, index)}
+        buttonPosition={mobileView ? 'stack-right' : buttonPositions[index]}
       >
         {!mobileView ? null : [
           <ExpandIcon class={style.expandIcon} key="expand-icon"/>,
