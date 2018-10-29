@@ -25,6 +25,7 @@ module.exports = function (_, env) {
     path.join(__dirname, 'src/components'),
     path.join(__dirname, 'src/codecs'),
     path.join(__dirname, 'src/custom-els'),
+    path.join(__dirname, 'src/lib'),
   ];
 
   return {
