@@ -29,6 +29,7 @@ struct MozJpegOptions {
   bool trellis_opt_zero;
   bool trellis_opt_table;
   int trellis_loops;
+  bool auto_subsample;
   int chroma_subsample;
   bool separate_chroma_quality;
   int chroma_quality;
@@ -152,7 +153,7 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
 
   set_quality_ratings(&cinfo, (char*) pqual, opts.baseline);
 
-  if (opts.chroma_subsample && opts.color_space == JCS_YCbCr) {
+  if (!opts.auto_subsample && opts.color_space == JCS_YCbCr) {
     cinfo.comp_info[0].h_samp_factor = opts.chroma_subsample;
     cinfo.comp_info[0].v_samp_factor = opts.chroma_subsample;
   }
@@ -220,6 +221,7 @@ EMSCRIPTEN_BINDINGS(my_module) {
     .field("trellis_opt_table", &MozJpegOptions::trellis_opt_table)
     .field("trellis_loops", &MozJpegOptions::trellis_loops)
     .field("chroma_subsample", &MozJpegOptions::chroma_subsample)
+    .field("auto_subsample", &MozJpegOptions::auto_subsample)
     .field("separate_chroma_quality", &MozJpegOptions::separate_chroma_quality)
     .field("chroma_quality", &MozJpegOptions::chroma_quality)
     ;

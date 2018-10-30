@@ -39,19 +39,17 @@ export default class MozJPEGEncoderOptions extends Component<Props, State> {
       trellis_multipass: inputFieldChecked(form.trellis_multipass, options.trellis_multipass),
       trellis_opt_zero: inputFieldChecked(form.trellis_opt_zero, options.trellis_opt_zero),
       trellis_opt_table: inputFieldChecked(form.trellis_opt_table, options.trellis_opt_table),
+      auto_subsample: inputFieldChecked(form.auto_subsample, options.auto_subsample),
       separate_chroma_quality:
         inputFieldChecked(form.separate_chroma_quality, options.separate_chroma_quality),
       // .value
       quality: inputFieldValueAsNumber(form.quality, options.quality),
       chroma_quality: inputFieldValueAsNumber(form.chroma_quality, options.chroma_quality),
+      chroma_subsample: inputFieldValueAsNumber(form.chroma_subsample, options.chroma_subsample),
       smoothing: inputFieldValueAsNumber(form.smoothing, options.smoothing),
       color_space: inputFieldValueAsNumber(form.color_space, options.color_space),
       quant_table: inputFieldValueAsNumber(form.quant_table, options.quant_table),
       trellis_loops: inputFieldValueAsNumber(form.trellis_loops, options.trellis_loops),
-      // Other:
-      chroma_subsample: (!form.auto_chroma_subsample) ? options.chroma_subsample :
-        form.auto_chroma_subsample.checked ? 0 :
-        inputFieldValueAsNumber(form.chroma_subsample, 2),
     };
     this.props.onChange(newOptions);
   }
@@ -99,14 +97,14 @@ export default class MozJPEGEncoderOptions extends Component<Props, State> {
                   <div>
                     <label class={style.optionInputFirst}>
                       <Checkbox
-                        name="auto_chroma_subsample"
-                        checked={options.chroma_subsample === 0}
+                        name="auto_subsample"
+                        checked={options.auto_subsample}
                         onChange={this.onChange}
                       />
                       Auto subsample chroma
                     </label>
                     <Expander>
-                      {options.chroma_subsample !== 0 ?
+                      {options.auto_subsample ? null :
                         <div class={style.optionOneCell}>
                           <Range
                             name="chroma_subsample"
@@ -118,7 +116,6 @@ export default class MozJPEGEncoderOptions extends Component<Props, State> {
                             Subsample chroma by:
                           </Range>
                         </div>
-                        : null
                       }
                     </Expander>
                     <label class={style.optionInputFirst}>
