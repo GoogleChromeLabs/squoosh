@@ -57,6 +57,7 @@ class RangeInputElement extends HTMLElement {
 
     this.insertBefore(this._input, this.firstChild);
     this._valueDisplay = this.querySelector('.' + style.valueDisplay) as HTMLDivElement;
+    this._update();
   }
 
   get labelPrecision(): string {
