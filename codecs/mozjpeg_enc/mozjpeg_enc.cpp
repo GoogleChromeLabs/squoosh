@@ -143,6 +143,8 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
   jpeg_c_set_bool_param(&cinfo, JBOOLEAN_TRELLIS_Q_OPT, opts.trellis_opt_table);
   jpeg_c_set_int_param(&cinfo, JINT_TRELLIS_NUM_LOOPS, opts.trellis_loops);
 
+  // A little hacky to build a string for this, but it means we can use set_quality_ratings which
+  // does some useful heuristic stuff.
   std::string quality_str = std::to_string(opts.quality);
 
   if (opts.separate_chroma_quality && opts.color_space == JCS_YCbCr) {

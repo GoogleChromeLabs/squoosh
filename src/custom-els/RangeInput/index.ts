@@ -57,6 +57,7 @@ class RangeInputElement extends HTMLElement {
 
     this.insertBefore(this._input, this.firstChild);
     this._valueDisplay = this.querySelector('.' + style.valueDisplay) as HTMLDivElement;
+    // Set inline styles (this is useful when used with frameworks which might clear inline styles)
     this._update();
   }
 
