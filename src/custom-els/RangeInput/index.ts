@@ -1,6 +1,6 @@
+import PointerTracker from 'pointer-tracker';
 import { bind } from '../../lib/initial-util';
 import * as style from './styles.css';
-import { PointerTracker } from '../../lib/PointerTracker';
 
 const RETARGETED_EVENTS = ['focus', 'blur'];
 const UPDATE_EVENTS = ['input', 'change'];
