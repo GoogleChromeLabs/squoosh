@@ -13,6 +13,7 @@ const CopyPlugin = require('copy-webpack-plugin');
 const WatchTimestampsPlugin = require('./config/watch-timestamps-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const WorkerPlugin = require('worker-plugin');
+const AutoSWPlugin = require('./config/auto-sw-plugin');
 
 function readJson (filename) {
   return JSON.parse(fs.readFileSync(filename));
@@ -183,6 +184,8 @@ module.exports = function (_, env) {
       }),
 
       new WorkerPlugin(),
+
+      new AutoSWPlugin(),
 
       // Automatically split code into async chunks.
       // See: https://medium.com/webpack/webpack-4-code-splitting-chunk-graph-and-the-splitchunks-optimization-be739a861366

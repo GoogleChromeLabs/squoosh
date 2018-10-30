@@ -47,6 +47,7 @@
     "node-sass": "^4.9.4",
     "optimize-css-assets-webpack-plugin": "^4.0.3",
     "pointer-tracker": "^2.0.3",
+    "minimatch": "^3.0.4",
     "preact": "^8.3.1",
     "pretty-bytes": "^5.1.0",
     "progress-bar-webpack-plugin": "^1.11.0",

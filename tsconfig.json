@@ -3,6 +3,11 @@
   "compilerOptions": {
     "strict": true,
     "target": "es2017",
+    "lib": [
+      "webworker",
+      "dom",
+      "esnext"
+    ],
     "module": "esnext",
     "moduleResolution": "node",
     "experimentalDecorators": true,
