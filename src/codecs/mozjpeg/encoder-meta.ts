@@ -18,6 +18,8 @@ export interface EncodeOptions {
   trellis_opt_table: boolean;
   trellis_loops: number;
   chroma_subsample: number;
+  separate_chroma_quality: boolean;
+  chroma_quality: number;
 }
 
 export interface EncoderState { type: typeof type; options: EncodeOptions; }
@@ -40,4 +42,6 @@ export const defaultOptions: EncodeOptions = {
   trellis_opt_table: false,
   trellis_loops: 1,
   chroma_subsample: 0,
+  separate_chroma_quality: false,
+  chroma_quality: 75,
 };
