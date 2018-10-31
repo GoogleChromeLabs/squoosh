@@ -1,8 +1,7 @@
-/// <reference no-default-lib="true"/>
-/// <reference lib="esnext" />
-/// <reference lib="WebWorker" />
 declare var self: ServiceWorkerGlobalScope;
 declare var BUILD_ASSETS: string[];
+// This seems to be required to put TypeScript into module mode *shrugs*
+export type dummy = '';
 
 console.log('hello from sw', BUILD_ASSETS);
 
@@ -22,5 +21,3 @@ self.addEventListener('fetch', (event) => {
     return cachedResponse || fetch(request);
   }());
 });
-
-export default null;
