@@ -1,25 +1,26 @@
+/// <reference no-default-lib="true"/>
+/// <reference lib="esnext" />
+/// <reference lib="WebWorker" />
+declare var self: ServiceWorkerGlobalScope;
 declare var BUILD_ASSETS: string[];
 
 console.log('hello from sw', BUILD_ASSETS);
 
-addEventListener('install', (e: any) => {
-  e.waitUntil(
-    caches.open('v1')
-      .then(cache => cache.addAll(BUILD_ASSETS))
-      .then((self as any).skipWaiting()),
-  );
+self.addEventListener('install', (event) => {
+  self.skipWaiting();
+
+  event.waitUntil(async function () {
+    const cache = await caches.open('v1');
+    await cache.addAll(BUILD_ASSETS);
+  }());
 });
 
-addEventListener('activate', () => {
-  (self as any as ServiceWorkerGlobalScope).clients.claim();
+self.addEventListener('fetch', (event) => {
+  const request = event.request;
+  event.respondWith(async function () {
+    const cachedResponse = await caches.match(request);
+    return cachedResponse || fetch(request);
+  }());
 });
 
-addEventListener('fetch', (e: Event) => {
-  const request = (e as FetchEvent).request;
-  (e as FetchEvent).respondWith(
-    caches.match(request).then(res => res || fetch(request).then(res =>
-      caches.open('v1')
-        .then(cache => (cache.put(request, res.clone()), res.clone())),
-    )),
-  );
-});
+export default null;
