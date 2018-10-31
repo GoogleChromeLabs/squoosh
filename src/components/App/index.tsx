@@ -36,7 +36,10 @@ export default class App extends Component<Props, State> {
   constructor() {
     super();
 
-    import('../compress').then((module) => {
+    import(
+      /* webpackChunkName: "main-app" */
+      '../compress',
+    ).then((module) => {
       this.setState({ Compress: module.default });
     }).catch(() => {
       this.showSnack('Failed to load app');
