@@ -193,8 +193,6 @@ module.exports = function (_, env) {
 
       new WorkerPlugin(),
 
-      new AutoSWPlugin(),
-
       // Automatically split code into async chunks.
       // See: https://medium.com/webpack/webpack-4-code-splitting-chunk-graph-and-the-splitchunks-optimization-be739a861366
       isProd && new webpack.optimize.SplitChunksPlugin({}),
@@ -243,6 +241,8 @@ module.exports = function (_, env) {
         inject: true,
         compile: true
       }),
+
+      new AutoSWPlugin({}),
 
       new ScriptExtHtmlPlugin({
         defaultAttribute: 'async'
