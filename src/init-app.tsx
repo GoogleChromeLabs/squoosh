@@ -10,9 +10,7 @@ let root = document.querySelector('#app') || undefined;
 root = render(<App />, document.body, root);
 
 // In production, install a Service Worker
-if (process.env.NODE_ENV === 'production') {
-  navigator.serviceWorker.register('./sw');
-} else {
+if (process.env.NODE_ENV !== 'production') {
   // Enable support for React DevTools and some helpful console warnings:
   require('preact/debug');
 
