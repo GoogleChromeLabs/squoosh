@@ -127,7 +127,7 @@ module.exports = class AutoSWPlugin {
     await (util.promisify(childCompiler.runAsChild.bind(childCompiler)))();
 
     const original = childCompilation.assets[workerOptions.filename].source();
-    const source = `var BUILD_ASSETS=${JSON.stringify(assetMapping)}\n${original}`;
+    const source = `var BUILD_ASSETS=${JSON.stringify(assetMapping)};\n${original}`;
     childCompilation.assets[workerOptions.filename] = {
       source: () => source,
       size: () => Buffer.byteLength(source, 'utf8')
