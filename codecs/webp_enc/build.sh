@@ -14,8 +14,13 @@ echo "============================================="
   emcc \
     ${OPTIMIZE} \
     --bind \
+    -D WEBP_USE_THREAD \
     -s ALLOW_MEMORY_GROWTH=1 \
-    -s MODULARIZE=1 \
+    -s USE_PTHREADS=1 \
+    -s ASSERTIONS=1 \
+    -s PTHREAD_POOL_SIZE=2 \
+    -s TOTAL_MEMORY=268435456 \
+    -s WASM_MEM_MAX=268435456 \
     -s 'EXPORT_NAME="webp_enc"' \
     --std=c++11 \
     -I node_modules/libwebp \

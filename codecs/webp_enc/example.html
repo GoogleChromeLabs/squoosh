@@ -1,7 +1,7 @@
 <!doctype html>
 <script src='webp_enc.js'></script>
 <script>
-  const module = webp_enc();
+  // const Module = webp_enc();
 
   async function loadImage(src) {
     // Load image
@@ -17,10 +17,11 @@
     return ctx.getImageData(0, 0, img.width, img.height);
   }
 
-  module.onRuntimeInitialized = async _ => {
-    console.log('Version:', module.version().toString(16));
+  Module.onRuntimeInitialized = async _ => {
+    console.log('Version:', Module.version().toString(16));
     const image = await loadImage('../example.png');
-    const result = module.encode(image.data, image.width, image.height, {
+    let start = performance.now();
+    const result = Module.encode(image.data, image.width, image.height, {
       quality: 75,
       target_size: 0,
       target_PSNR: 0,
@@ -43,16 +44,18 @@
       exact: 0,
       image_hint: 0,
       emulate_jpeg_size: 0,
-      thread_level: 0,
+      thread_level: 1,
       low_memory: 0,
       near_lossless: 100,
       use_delta_palette: 0,
       use_sharp_yuv: 0,
     });
+    let stop = performance.now();
     console.log('size', result.length);
-    const blob = new Blob([result], {type: 'image/webp'});
+    console.log('time', stop - start);
+    const blob = new Blob([new Uint8Array(result)], {type: 'image/webp'});
 
-    module.free_result();
+    Module.free_result();
 
     const blobURL = URL.createObjectURL(blob);
     const img = document.createElement('img');
