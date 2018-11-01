@@ -1,9 +1,8 @@
 import { nativeDecode, sniffMimeType, canDecodeImage } from '../lib/util';
 import Processor from './processor';
+import webpDataUrl from 'url-loader!./tiny.webp';
 
-// tslint:disable-next-line:max-line-length It’s a data URL. Whatcha gonna do?
-const webpFile = 'data:image/webp;base64,UklGRh4AAABXRUJQVlA4TBEAAAAvAAAAAAfQ//73v/+BiOh/AAA=';
-const nativeWebPSupported = canDecodeImage(webpFile);
+const nativeWebPSupported = canDecodeImage(webpDataUrl);
 
 export async function decodeImage(blob: Blob, processor: Processor): Promise<ImageData> {
   const mimeType = await sniffMimeType(blob);

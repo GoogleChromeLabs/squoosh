@@ -4,13 +4,13 @@ import { bind, linkRef, Fileish } from '../../lib/initial-util';
 import '../custom-els/LoadingSpinner';
 
 import logo from './imgs/logo.svg';
-import largePhoto from './imgs/demos/large-photo.jpg';
-import artwork from './imgs/demos/artwork.jpg';
-import deviceScreen from './imgs/demos/device-screen.png';
-import largePhotoIcon from './imgs/demos/large-photo-icon.jpg';
-import artworkIcon from './imgs/demos/artwork-icon.jpg';
-import deviceScreenIcon from './imgs/demos/device-screen-icon.jpg';
-import logoIcon from './imgs/demos/logo-icon.png';
+import largePhoto from './imgs/demos/demo-large-photo.jpg';
+import artwork from './imgs/demos/demo-artwork.jpg';
+import deviceScreen from './imgs/demos/demo-device-screen.png';
+import largePhotoIcon from './imgs/demos/icon-demo-large-photo.jpg';
+import artworkIcon from './imgs/demos/icon-demo-artwork.jpg';
+import deviceScreenIcon from './imgs/demos/icon-demo-device-screen.jpg';
+import logoIcon from './imgs/demos/icon-demo-logo.png';
 import * as style from './style.scss';
 import SnackBarElement from '../../lib/SnackBar';
 

@@ -8,7 +8,7 @@ async function mozjpegEncode(
   data: ImageData, options: MozJPEGEncoderOptions,
 ): Promise<ArrayBuffer> {
   const { encode } = await import(
-    /* webpackChunkName: "mozjpeg-enc-worker" */
+    /* webpackChunkName: "process-mozjpeg-enc" */
     './mozjpeg/encoder',
   );
   return encode(data, options);
@@ -16,7 +16,7 @@ async function mozjpegEncode(
 
 async function quantize(data: ImageData, opts: QuantizeOptions): Promise<ImageData> {
   const { process } = await import(
-    /* webpackChunkName: "imagequant-worker" */
+    /* webpackChunkName: "process-imagequant" */
     './imagequant/processor',
   );
   return process(data, opts);
@@ -26,7 +26,7 @@ async function optiPngEncode(
   data: BufferSource, options: OptiPNGEncoderOptions,
 ): Promise<ArrayBuffer> {
   const { compress } = await import(
-    /* webpackChunkName: "optipng-worker" */
+    /* webpackChunkName: "process-optipng" */
     './optipng/encoder',
   );
   return compress(data, options);
@@ -36,7 +36,7 @@ async function webpEncode(
   data: ImageData, options: WebPEncoderOptions,
 ): Promise<ArrayBuffer> {
   const { encode } = await import(
-    /* webpackChunkName: "webp-enc-worker" */
+    /* webpackChunkName: "process-webp-enc" */
     './webp/encoder',
   );
   return encode(data, options);
@@ -44,7 +44,7 @@ async function webpEncode(
 
 async function webpDecode(data: ArrayBuffer): Promise<ImageData> {
   const { decode } = await import(
-    /* webpackChunkName: "webp-dec-worker" */
+    /* webpackChunkName: "process-webp-dec" */
     './webp/decoder',
   );
   return decode(data);

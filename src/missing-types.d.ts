@@ -27,3 +27,8 @@ declare module '*.wasm' {
   const content: string;
   export default content;
 }
+
+declare module 'url-loader!*' {
+  const value: string;
+  export default value;
+}
