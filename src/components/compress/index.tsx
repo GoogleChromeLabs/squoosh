@@ -1,4 +1,5 @@
 import { h, Component } from 'preact';
+import { get, set } from 'idb-keyval';
 
 import { bind, Fileish } from '../../lib/initial-util';
 import { blobToImg, drawableToImageData, blobToText } from '../../lib/util';
@@ -155,6 +156,12 @@ async function processSvg(blob: Blob): Promise<HTMLImageElement> {
   return blobToImg(new Blob([newSource], { type: 'image/svg+xml' }));
 }
 
+async function getOldestServiceWorker() {
+  const reg = await navigator.serviceWorker.getRegistration();
+  if (!reg) return null;
+  return reg.active || reg.waiting || reg.installing;
+}
+
 // These are only used in the mobile view
 const resultTitles = ['Top', 'Bottom'];
 // These are only used in the desktop view
@@ -196,7 +203,15 @@ export default class Compress extends Component<Props, State> {
     this.widthQuery.addListener(this.onMobileWidthChange);
     this.updateFile(props.file);
 
-    navigator.serviceWorker.register('../../sw');
+    // If this is the first time the user has interacted with the app, tell the service worker to
+    // cache all the codecs.
+    get<boolean | undefined>('user-interacted').then(async (userInteracted: boolean) => {
+      if (userInteracted) return;
+      set('user-interacted', true);
+      const serviceWorker = await getOldestServiceWorker();
+      if (!serviceWorker) return; // Service worker not installing yet.
+      serviceWorker.postMessage('cache-all');
+    });
   }
 
   @bind

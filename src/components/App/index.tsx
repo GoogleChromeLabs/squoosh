@@ -45,6 +45,8 @@ export default class App extends Component<Props, State> {
       this.showSnack('Failed to load app');
     });
 
+    navigator.serviceWorker.register('../../sw');
+
     // In development, persist application state across hot reloads:
     if (process.env.NODE_ENV === 'development') {
       this.setState(window.STATE);

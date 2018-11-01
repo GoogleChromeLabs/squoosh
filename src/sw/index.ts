@@ -1,5 +1,7 @@
-import { cacheOrNetworkAndCache, cleanupCache, cacheOrNetwork } from './strategies';
-import webpDataUrl from 'url-loader!../codecs/tiny.webp';
+import {
+  cacheOrNetworkAndCache, cleanupCache, cacheOrNetwork, cacheBasics, cacheAdditionalProcessors,
+} from './util';
+import { get } from 'idb-keyval';
 
 // Give TypeScript the correct global.
 declare var self: ServiceWorkerGlobalScope;
@@ -13,45 +15,15 @@ const expectedCaches = [versionedCache, dynamicCache];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(async function () {
-    let toCache = ['/', '/assets/favicon.ico'];
+    const promises = [];
+    promises.push(cacheBasics(versionedCache, BUILD_ASSETS));
 
-    const prefixesToCache = [
-      // First interaction JS & CSS:
-      'first-interaction.',
-      // Main app JS & CSS:
-      'main-app.',
-      // Little icons for the demo images on the homescreen:
-      'icon-demo-',
-      // Site logo:
-      'logo.',
-      // Worker which handles image processing:
-      'processor-worker.',
-      // processor-worker imports:
-      'process-',
-    ];
-
-    const prefixMatches = BUILD_ASSETS.filter(
-      asset => prefixesToCache.some(prefix => asset.startsWith(prefix)),
-    );
-
-    const wasm = BUILD_ASSETS.filter(asset => asset.endsWith('.wasm'));
-
-    toCache.push(...prefixMatches, ...wasm);
-
-    const supportsWebP = await (async () => {
-      if (!self.createImageBitmap) return false;
-      const response = await fetch(webpDataUrl);
-      const blob = await response.blob();
-      return createImageBitmap(blob).then(() => true, () => false);
-    })();
-
-    // No point caching the WebP decoder if it's supported natively:
-    if (supportsWebP) {
-      toCache = toCache.filter(asset => !/webp[\-_]dec/.test(asset));
+    // If the user has already interacted with the app, update the codecs too.
+    if (await get('user-interacted')) {
+      promises.push(cacheAdditionalProcessors(versionedCache, BUILD_ASSETS));
     }
 
-    const cache = await caches.open(versionedCache);
-    await cache.addAll(toCache);
+    await Promise.all(promises);
   }());
 });
 
@@ -82,4 +54,10 @@ self.addEventListener('fetch', (event) => {
   }
 
   cacheOrNetwork(event);
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data === 'cache-all') {
+    event.waitUntil(cacheAdditionalProcessors(versionedCache, BUILD_ASSETS));
+  }
 });

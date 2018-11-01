@@ -40,6 +40,7 @@
     "file-loader": "^1.1.11",
     "html-webpack-plugin": "^3.2.0",
     "husky": "^1.1.2",
+    "idb-keyval": "^3.1.0",
     "if-env": "^1.0.4",
     "linkstate": "^1.1.1",
     "loader-utils": "^1.1.0",
