@@ -14,6 +14,7 @@ const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPl
 const WorkerPlugin = require('worker-plugin');
 const AutoSWPlugin = require('./config/auto-sw-plugin');
 const CrittersPlugin = require('critters-webpack-plugin');
+const AssetTemplatePlugin = require('./config/asset-template-plugin');
 
 function readJson (filename) {
   return JSON.parse(fs.readFileSync(filename));
@@ -238,8 +239,16 @@ module.exports = function (_, env) {
         compile: true
       }),
 
-      new AutoSWPlugin({
-        version: VERSION
+      isProd && new AutoSWPlugin({ version: VERSION }),
+
+      isProd && new AssetTemplatePlugin({
+        template: path.join(__dirname, '_headers.ejs'),
+        filename: '_headers',
+      }),
+
+      isProd && new AssetTemplatePlugin({
+        template: path.join(__dirname, '_redirects.ejs'),
+        filename: '_redirects',
       }),
 
       new ScriptExtHtmlPlugin({

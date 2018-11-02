@@ -1,0 +1,30 @@
+/
+  Cache-Control: nocache
+
+/serviceworker.js
+  Cache-Control: nocache
+
+/assets/*
+  Cache-Control: must-revalidate, max-age=3600
+
+/*.chunk.*
+  Cache-Control: max-age=31536000
+/*.worker.*
+  Cache-Control: max-age=31536000
+/main.*.js
+  Cache-Control: max-age=31536000
+/main.*.css
+  Cache-Control: max-age=31536000
+/*.wasm
+  Cache-Control: max-age=31536000
+/:a.jpg
+  Cache-Control: max-age=31536000
+/:a.png
+  Cache-Control: max-age=31536000
+/:a.svg
+  Cache-Control: max-age=31536000
+
+# List of build assets at time of generation:
+<%_ for (let file of files) { _%>
+#  <%= file %>
+<%_ } _%>
