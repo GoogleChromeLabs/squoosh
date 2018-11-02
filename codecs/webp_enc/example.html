@@ -19,7 +19,7 @@
 
   Module.onRuntimeInitialized = async _ => {
     console.log('Version:', Module.version().toString(16));
-    const image = await loadImage('../example.png');
+    const image = await loadImage('../really_big.jpg');
     let start = performance.now();
     const result = Module.encode(image.data, image.width, image.height, {
       quality: 75,
