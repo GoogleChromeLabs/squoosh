@@ -7,6 +7,25 @@ const ParserHelpers = require('webpack/lib/ParserHelpers');
 const NAME = 'auto-sw-plugin';
 const JS_TYPES = ['auto', 'esm', 'dynamic'];
 
+/**
+ * Automatically finds and bundles Service Workers by looking for navigator.serviceWorker.register(..).
+ * An Array of webpack assets is injected into the Service Worker bundle as a `BUILD_ASSETS` global.
+ * Hidden and `.map` files are excluded by default, and this can be customized using the include & exclude options.
+ * @example
+ *  // webpack config
+ *  plugins: [
+ *    new AutoSWPlugin({
+ *      exclude: [
+ *        '**\/.*',     // don't expose hidden files (default)
+ *        '**\/*.map',  // don't precache sourcemaps (default)
+ *        'index.html'  // don't cache the page itself
+ *      ]
+ *    })
+ *  ]
+ * @param {Object} [options={}]
+ * @param {string[]} [options.exclude]  Minimatch pattern(s) of which assets to omit from BUILD_ASSETS.
+ * @param {string[]} [options.include]  Minimatch pattern(s) of assets to allow in BUILD_ASSETS.
+ */
 module.exports = class AutoSWPlugin {
   constructor(options) {
     this.options = Object.assign({
@@ -46,7 +65,6 @@ module.exports = class AutoSWPlugin {
               context
             });
 
-            // const req = `require(${JSON.stringify(LOADER + '!' + dep.string)})`;
             const id = `__webpack__serviceworker__${++counter}`;
             ParserHelpers.toConstantDependency(parser, id)(expr.arguments[0]);
             return ParserHelpers.addParsedVariableToModule(parser, id, '__webpack_public_path__ + ' + JSON.stringify(outputFilename));
