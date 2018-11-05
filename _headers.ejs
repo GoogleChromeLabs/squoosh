@@ -1,12 +1,14 @@
 /
-  Cache-Control: nocache
+  Cache-Control: no-cache
 
 /serviceworker.js
-  Cache-Control: nocache
+  Cache-Control: no-cache
 
+# URLs in /assets do not include a hash and are mutable
 /assets/*
   Cache-Control: must-revalidate, max-age=3600
 
+# hashed webpack assets
 /*.chunk.*
   Cache-Control: max-age=31536000
 /*.worker.*
@@ -17,14 +19,9 @@
   Cache-Control: max-age=31536000
 /*.wasm
   Cache-Control: max-age=31536000
-/:a.jpg
+/:file.jpg
   Cache-Control: max-age=31536000
-/:a.png
+/:file.png
   Cache-Control: max-age=31536000
-/:a.svg
+/:file.svg
   Cache-Control: max-age=31536000
-
-# List of build assets at time of generation:
-<%_ for (let file of files) { _%>
-#  <%= file %>
-<%_ } _%>
