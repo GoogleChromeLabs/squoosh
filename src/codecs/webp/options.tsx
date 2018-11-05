@@ -27,7 +27,9 @@ const losslessPresets:[number, number][] = [
 const losslessPresetDefault = 6;
 
 function determineLosslessQuality(quality: number, method: number): number {
-  const index = losslessPresets.findIndex(item => item[0] === method && item[1] === quality);
+  const index = losslessPresets.findIndex(
+    ([presetMethod, presetQuality]) => presetMethod === method && presetQuality === quality,
+  );
   if (index !== -1) return index;
   // Quality doesn't match one of the presets.
   // This can happen when toggling 'lossless'.
