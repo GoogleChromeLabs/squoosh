@@ -26,8 +26,10 @@ const losslessPresets:[number, number][] = [
 ];
 const losslessPresetDefault = 6;
 
-function determineLosslessQuality(quality: number): number {
-  const index = losslessPresets.findIndex(item => item[1] === quality);
+function determineLosslessQuality(quality: number, method: number): number {
+  const index = losslessPresets.findIndex(
+    ([presetMethod, presetQuality]) => presetMethod === method && presetQuality === quality,
+  );
   if (index !== -1) return index;
   // Quality doesn't match one of the presets.
   // This can happen when toggling 'lossless'.
@@ -45,7 +47,7 @@ export default class WebPEncoderOptions extends Component<Props, State> {
     const lossless = inputFieldCheckedAsNumber(form.lossless);
     const { options } = this.props;
     const losslessPresetValue = inputFieldValueAsNumber(
-      form.lossless_preset, determineLosslessQuality(options.quality),
+      form.lossless_preset, determineLosslessQuality(options.quality, options.method),
     );
 
     const newOptions: EncodeOptions = {
@@ -97,7 +99,7 @@ export default class WebPEncoderOptions extends Component<Props, State> {
             name="lossless_preset"
             min="0"
             max="9"
-            value={determineLosslessQuality(options.quality)}
+            value={determineLosslessQuality(options.quality, options.method)}
             onInput={this.onChange}
           >
             Effort:
