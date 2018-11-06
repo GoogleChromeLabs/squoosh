@@ -74,7 +74,7 @@ export default class App extends Component<Props, State> {
   render({}: Props, { file, Compress }: State) {
     return (
       <div id="app" class={style.app}>
-        <file-drop accept="image/*" onfiledrop={this.onFileDrop}>
+        <file-drop accept="image/*" onfiledrop={this.onFileDrop} class={style.drop}>
           {(!file)
             ? <Intro onFile={this.onIntroPickFile} onError={this.showError} />
             : (Compress)

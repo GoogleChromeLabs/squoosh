@@ -113,14 +113,19 @@ export default class Output extends Component<Props, State> {
   }
 
   @bind
-  private editScale() {
+  private onScaleValueFocus() {
     this.setState({ editingScale: true }, () => {
-      if (this.scaleInput) this.scaleInput.focus();
+      if (this.scaleInput) {
+        // Firefox unfocuses the input straight away unless I force a style calculation here. I have
+        // no idea why, but it's late and I'm quite tired.
+        getComputedStyle(this.scaleInput).transform;
+        this.scaleInput.focus();
+      }
     });
   }
 
   @bind
-  private cancelEditScale() {
+  private onScaleInputBlur() {
     this.setState({ editingScale: false });
   }
 
@@ -188,6 +193,7 @@ export default class Output extends Component<Props, State> {
       <div class={`${style.output} ${altBackground ? style.altBackground : ''}`}>
         <two-up
           legacy-clip-compat
+          class={style.twoUp}
           orientation={orientation}
           // Event redirecting. See onRetargetableEvent.
           onTouchStartCapture={this.onRetargetableEvent}
@@ -198,6 +204,7 @@ export default class Output extends Component<Props, State> {
           onWheelCapture={this.onRetargetableEvent}
         >
           <pinch-zoom
+            class={style.pinchZoom}
             onChange={this.onPinchZoomLeftChange}
             ref={linkRef(this, 'pinchZoomLeft')}
           >
@@ -213,7 +220,7 @@ export default class Output extends Component<Props, State> {
               }}
             />
           </pinch-zoom>
-          <pinch-zoom ref={linkRef(this, 'pinchZoomRight')}>
+          <pinch-zoom class={style.pinchZoom} ref={linkRef(this, 'pinchZoomRight')}>
             <canvas
               class={style.outputCanvas}
               ref={linkRef(this, 'canvasRight')}
@@ -229,7 +236,7 @@ export default class Output extends Component<Props, State> {
         </two-up>
 
         <div class={style.controls}>
-          <div class={style.group}>
+          <div class={style.zoomControls}>
             <button class={style.button} onClick={this.zoomOut}>
               <RemoveIcon />
             </button>
@@ -243,11 +250,11 @@ export default class Output extends Component<Props, State> {
                 class={style.zoom}
                 value={Math.round(scale * 100)}
                 onInput={this.onScaleInputChanged}
-                onBlur={this.cancelEditScale}
+                onBlur={this.onScaleInputBlur}
               />
             ) : (
-              <span class={style.zoom} tabIndex={0} onFocus={this.editScale}>
-                <strong>{Math.round(scale * 100)}</strong>
+              <span class={style.zoom} tabIndex={0} onFocus={this.onScaleValueFocus}>
+                <span class={style.zoomValue}>{Math.round(scale * 100)}</span>
                 %
               </span>
             )}

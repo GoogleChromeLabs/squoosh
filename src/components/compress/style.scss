@@ -4,7 +4,6 @@
 
 .option-pair {
   display: flex;
-  justify-content: flex-end;
   width: 100%;
   height: 100%;
 
@@ -15,5 +14,6 @@
 
   &.vertical {
     flex-direction: column;
+    justify-content: flex-end;
   }
 }

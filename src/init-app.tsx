@@ -16,6 +16,7 @@ if (process.env.NODE_ENV === 'development') {
 
   // When an update to any module is received, re-import the app and trigger a full re-render:
   module.hot.accept('./components/App', () => {
+    // The linter doesn't like the capital A in App. It is wrong.
     // tslint:disable-next-line variable-name
     import('./components/App').then(({ default: App }) => {
       root = render(<App />, document.body, root);

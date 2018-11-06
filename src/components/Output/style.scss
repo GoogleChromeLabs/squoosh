@@ -2,139 +2,127 @@
 Note: These styles are temporary. They will be replaced before going live.
 */
 
-%fill {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  contain: strict;
-}
-
 .output {
-  @extend %fill;
+  composes: abs-fill from '../../lib/util.scss';
 
-  &:before {
+  &::before {
     content: '';
-    @extend %fill;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background: #000;
     opacity: 0;
     transition: opacity 500ms ease;
   }
-  &.altBackground:before {
-    opacity: .6;
-  }
 
-  > two-up {
-    @extend %fill;
-    --accent-color: var(--button-fg);
-
-    > pinch-zoom {
-      @extend %fill;
-      outline: none;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
+  &.alt-background::before {
+    opacity: 0.6;
   }
+}
+
+.two-up {
+  composes: abs-fill from '../../lib/util.scss';
+  --accent-color: var(--button-fg);
+}
+
+.pinch-zoom {
+  composes: abs-fill from '../../lib/util.scss';
+  outline: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .controls {
   position: absolute;
   display: flex;
   justify-content: center;
-  left: 220px;
-  right: 220px;
-  bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
   padding: 9px;
   overflow: hidden;
   flex-wrap: wrap;
   contain: content;
 
-  @media (max-width: 680px) {
-    top: 0;
-    bottom: auto;
-    left: 0;
-    right: 0;
+  @media (min-width: 680px) {
+    top: auto;
+    left: 220px;
+    right: 220px;
+    bottom: 0;
   }
+}
 
-  > * {
-    z-index: 2;
-  }
+.zoom-controls {
+  display: flex;
 
-  .group {
-    display: flex;
-  }
-
-  .button,
-  .zoom {
-    display: flex;
-    align-items: center;
-    flex: 0;
-    box-sizing: border-box;
-    height: 48px;
-    padding: 0 16px;
-    margin: 4px;
-    background-color: #fff;
-    border: 1px solid rgba(0,0,0,0.2);
-    border-radius: 5px;
-    line-height: 1;
-    font-size: 110%;
-    white-space: nowrap;
-
-    &:focus {
-      box-shadow: 0 0 0 2px var(--button-fg);
-      outline: none;
-      z-index: 1;
-    }
-  }
-
-  .button {
-    text-transform: uppercase;
-    color: var(--button-fg);
-    cursor: pointer;
-    text-indent: 6px;
-  }
-
-  .button:hover {
-    background-color: #eee;
-  }
-
-  .zoom {
-    flex: 0 0 6em;
-    color: #625E80;
-    font: inherit;
-    cursor: text;
-    width: 6em;
-    text-align: center;
-    justify-content: center;
-
-    &:focus {
-      box-shadow: inset 0 1px 4px rgba(0,0,0,0.2), 0 0 0 2px var(--button-fg);
-    }
-
-    strong {
-      position: relative;
-      top: 1px;
-      margin: 0 3px 0 0;
-      color: #888;
-      font-weight: normal;
-      border-bottom: 1px dashed #999;
-    }
-  }
-
-  .group > :not(:first-child) {
+  & :not(:first-child) {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
     margin-left: 0;
   }
-  .group > :not(:last-child) {
+  & :not(:last-child) {
     margin-right: 0;
     border-right-width: 0;
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
   }
+}
+
+.button,
+.zoom {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: 48px;
+  padding: 0 16px;
+  margin: 4px;
+  background-color: #fff;
+  border: 1px solid rgba(0,0,0,0.2);
+  border-radius: 5px;
+  line-height: 1;
+  white-space: nowrap;
+
+  &:focus {
+    box-shadow: 0 0 0 2px var(--button-fg);
+    outline: none;
+    z-index: 1;
+  }
+}
+
+.button {
+  text-transform: uppercase;
+  color: var(--button-fg);
+  cursor: pointer;
+  text-indent: 6px;
+  font-size: 110%;
+
+  &:hover {
+    background-color: #eee;
+  }
+}
+
+.zoom {
+  color: #625E80;
+  cursor: text;
+  width: 6em;
+  font: inherit;
+  text-align: center;
+  justify-content: center;
+
+  &:focus {
+    box-shadow: inset 0 1px 4px rgba(0,0,0,0.2), 0 0 0 2px var(--button-fg);
+  }
+}
+
+.zoom-value {
+  position: relative;
+  top: 1px;
+  margin: 0 3px 0 0;
+  color: #888;
+  border-bottom: 1px dashed #999;
 }
 
 .output-canvas {

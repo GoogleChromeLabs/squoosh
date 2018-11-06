@@ -68,12 +68,14 @@ export default class TwoUp extends HTMLElement {
   }
 
   connectedCallback() {
-    this._handle.innerHTML = `<div class="${styles.scrubber}">${
-      '<svg viewBox="0 0 20 10" fill="currentColor"><path d="M8 0v10L0 5zM12 0v10l8-5z"/></svg>'
-    }</div>`;
-
     this._childrenChange();
+
     if (!this._everConnected) {
+      this._handle.innerHTML = `<div class="${styles.scrubber}">${
+        `<svg viewBox="0 0 27 20" fill="currentColor">${
+          '<path d="M17 19.2l9.5-9.6L16.9 0zM9.6 0L0 9.6l9.6 9.6z"/>'
+        }</svg>`
+      }</div>`;
       this._resetPosition();
       this._everConnected = true;
     }

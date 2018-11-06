@@ -12,14 +12,14 @@ Note: These styles are temporary. They will be replaced before going live.
   contain: strict;
 }
 
-:global {
-  file-drop {
-    overflow: hidden;
-    touch-action: none;
-    height:100%;
-    width:100%;
+.drop {
+  overflow: hidden;
+  touch-action: none;
+  height: 100%;
+  width: 100%;
 
-    &:after {
+  &:global {
+    &::after {
       content: '';
       position: absolute;
       display: block;
@@ -28,28 +28,20 @@ Note: These styles are temporary. They will be replaced before going live.
       right: 10px;
       bottom: 10px;
       border: 2px dashed #fff;
+      background-color:rgba(88, 116, 88, 0.2);
+      border-color: rgba(65, 129, 65, 0.5);
       border-radius: 10px;
       opacity: 0;
       transform: scale(0.95);
-      transition: opacity 300ms ease, transform 300ms cubic-bezier(.6,2,.6,1), background-color 300ms step-end, border-color 300ms step-end;
+      transition: all 200ms ease-in;
+      transition-property: transform, opacity;
       pointer-events: none;
     }
 
-    &.drop-valid:after,
-    &.drop-invalid:after {
+    &.drop-valid::after {
       opacity: 1;
       transform: scale(1);
-      transition: opacity 300ms ease, transform 300ms cubic-bezier(.6,2,.6,1);
-    }
-
-    &.drop-valid:after {
-      background-color:rgba(88, 116, 88, 0.2);
-      border-color: rgba(65, 129, 65, 0.5);
-    }
-
-    &.drop-invalid:after {
-      background-color:rgba(119, 85, 85, 0.2);
-      border-color:rgba(129, 63, 63, 0.5);
+      transition-timing-function: ease-out;
     }
   }
 }

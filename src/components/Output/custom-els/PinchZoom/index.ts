@@ -145,7 +145,7 @@ export default class PinchZoom extends HTMLElement {
     const relativeToEl = (relativeTo === 'content' ? this._positioningEl : this);
 
     // No content element? Fall back to just setting scale
-    if (!relativeToEl) {
+    if (!relativeToEl || !this._positioningEl) {
       this.setTransform({ scale, allowChangeEvent });
       return;
     }
@@ -157,6 +157,10 @@ export default class PinchZoom extends HTMLElement {
     if (relativeTo === 'content') {
       originX += this.x;
       originY += this.y;
+    } else {
+      const currentRect = this._positioningEl.getBoundingClientRect();
+      originX -= currentRect.left;
+      originY -= currentRect.top;
     }
 
     this._applyChange({
