@@ -29,6 +29,10 @@ struct MozJpegOptions {
   bool trellis_opt_zero;
   bool trellis_opt_table;
   int trellis_loops;
+  bool auto_subsample;
+  int chroma_subsample;
+  bool separate_chroma_quality;
+  int chroma_quality;
 };
 
 int version() {
@@ -119,9 +123,6 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
    */
   jpeg_set_defaults(&cinfo);
 
-  /* Now you can set any non-default parameters you wish to.
-   * Here we just illustrate the use of quality (quantization table) scaling:
-   */
   jpeg_set_colorspace(&cinfo, (J_COLOR_SPACE) opts.color_space);
 
   if (opts.quant_table != -1) {
@@ -142,10 +143,22 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
   jpeg_c_set_bool_param(&cinfo, JBOOLEAN_TRELLIS_Q_OPT, opts.trellis_opt_table);
   jpeg_c_set_int_param(&cinfo, JINT_TRELLIS_NUM_LOOPS, opts.trellis_loops);
 
+  // A little hacky to build a string for this, but it means we can use set_quality_ratings which
+  // does some useful heuristic stuff.
   std::string quality_str = std::to_string(opts.quality);
+
+  if (opts.separate_chroma_quality && opts.color_space == JCS_YCbCr) {
+    quality_str += "," + std::to_string(opts.chroma_quality);
+  }
+
   char const *pqual = quality_str.c_str();
 
   set_quality_ratings(&cinfo, (char*) pqual, opts.baseline);
+
+  if (!opts.auto_subsample && opts.color_space == JCS_YCbCr) {
+    cinfo.comp_info[0].h_samp_factor = opts.chroma_subsample;
+    cinfo.comp_info[0].v_samp_factor = opts.chroma_subsample;
+  }
 
   if (!opts.baseline && opts.progressive) {
     jpeg_simple_progression(&cinfo);
@@ -209,6 +222,10 @@ EMSCRIPTEN_BINDINGS(my_module) {
     .field("trellis_opt_zero", &MozJpegOptions::trellis_opt_zero)
     .field("trellis_opt_table", &MozJpegOptions::trellis_opt_table)
     .field("trellis_loops", &MozJpegOptions::trellis_loops)
+    .field("chroma_subsample", &MozJpegOptions::chroma_subsample)
+    .field("auto_subsample", &MozJpegOptions::auto_subsample)
+    .field("separate_chroma_quality", &MozJpegOptions::separate_chroma_quality)
+    .field("chroma_quality", &MozJpegOptions::chroma_quality)
     ;
 
   function("version", &version);
