@@ -1,5 +1,5 @@
+import PointerTracker, { Pointer } from 'pointer-tracker';
 import * as styles from './styles.css';
-import { PointerTracker, Pointer } from '../../../../lib/PointerTracker';
 
 const legacyClipCompatAttr = 'legacy-clip-compat';
 const orientationAttr = 'orientation';

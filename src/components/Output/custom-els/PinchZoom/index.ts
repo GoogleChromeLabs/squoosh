@@ -1,5 +1,5 @@
+import PointerTracker, { Pointer } from 'pointer-tracker';
 import './styles.css';
-import { PointerTracker, Pointer } from '../../../../lib/PointerTracker';
 
 interface Point {
   clientX: number;
