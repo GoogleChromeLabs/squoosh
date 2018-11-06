@@ -54,4 +54,5 @@ $horizontalPadding: 15px;
 .options-scroller {
   overflow-x: hidden;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }

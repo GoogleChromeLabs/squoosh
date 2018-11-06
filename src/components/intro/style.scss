@@ -19,7 +19,6 @@
 }
 
 .intro {
-  composes: abs-fill from '../../lib/util.scss';
   display: grid;
   grid-template-rows: 1fr min-content;
   align-items: center;
@@ -29,6 +28,9 @@
   -webkit-overflow-scrolling: touch;
   overflow: auto;
   padding: 20px 0 0;
+  height: 100%;
+  box-sizing: border-box;
+  overscroll-behavior: contain;
 }
 
 .logo-container {
