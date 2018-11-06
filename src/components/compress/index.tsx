@@ -34,7 +34,7 @@ import Processor from '../../codecs/processor';
 import { VectorResizeOptions, BitmapResizeOptions } from '../../codecs/resize/processor-meta';
 import './custom-els/MultiPanel';
 import Results from '../results';
-import { ExpandIcon } from '../../lib/icons';
+import { ExpandIcon, CopyAcrossIconProps } from '../../lib/icons';
 
 export interface SourceImage {
   file: File | Fileish;
@@ -136,7 +136,7 @@ async function processSvg(blob: Blob): Promise<HTMLImageElement> {
   const parser = new DOMParser();
   const text = await blobToText(blob);
   const document = parser.parseFromString(text, 'image/svg+xml');
-  const svg = document.documentElement;
+  const svg = document.documentElement!;
 
   if (svg.hasAttribute('width') && svg.hasAttribute('height')) {
     return blobToImg(blob);
@@ -156,6 +156,9 @@ async function processSvg(blob: Blob): Promise<HTMLImageElement> {
 
 // These are only used in the mobile view
 const resultTitles = ['Top', 'Bottom'];
+// These are only used in the desktop view
+const buttonPositions =
+  ['download-left', 'download-right'] as ('download-left' | 'download-right')[];
 
 export default class Compress extends Component<Props, State> {
   widthQuery = window.matchMedia('(max-width: 599px)');
@@ -405,26 +408,30 @@ export default class Compress extends Component<Props, State> {
       <Options
         source={source}
         mobileView={mobileView}
-        imageIndex={index}
         preprocessorState={image.preprocessorState}
         encoderState={image.encoderState}
         onEncoderTypeChange={this.onEncoderTypeChange.bind(this, index)}
         onEncoderOptionsChange={this.onEncoderOptionsChange.bind(this, index)}
         onPreprocessorOptionsChange={this.onPreprocessorOptionsChange.bind(this, index)}
-        onCopyToOtherClick={this.onCopyToOtherClick.bind(this, index)}
       />
     ));
 
-    const results = images.map((image, i) => (
+    const copyDirections =
+      (mobileView ? ['down', 'up'] : ['right', 'left']) as CopyAcrossIconProps['copyDirection'][];
+
+    const results = images.map((image, index) => (
       <Results
         downloadUrl={image.downloadUrl}
         imageFile={image.file}
         source={source}
         loading={loading || image.loading}
+        copyDirection={copyDirections[index]}
+        onCopyToOtherClick={this.onCopyToOtherClick.bind(this, index)}
+        buttonPosition={mobileView ? 'stack-right' : buttonPositions[index]}
       >
         {!mobileView ? null : [
           <ExpandIcon class={style.expandIcon} key="expand-icon"/>,
-          `${resultTitles[i]} (${encoderMap[image.encoderState.type].label})`,
+          `${resultTitles[index]} (${encoderMap[image.encoderState.type].label})`,
         ]}
       </Results>
     ));
