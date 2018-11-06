@@ -58,6 +58,16 @@ export default class Results extends Component<Props, State> {
     this.props.onCopyToOtherClick();
   }
 
+  @bind
+  onDownload() {
+    ga('send', 'event', 'compression', 'download', {
+      // GA can’t do floats. So we round to ints.
+      metric1: Math.floor(this.props.source!.file.size),
+      metric2: Math.floor(this.props.imageFile!.size),
+      metric3: Math.floor(this.props.imageFile!.size / this.props.source!.file.size * 1000),
+    });
+  }
+
   render(
     { source, imageFile, downloadUrl, children, copyDirection, buttonPosition }: Props,
     { showLoadingState }: State,
@@ -93,6 +103,7 @@ export default class Results extends Component<Props, State> {
               href={downloadUrl}
               download={imageFile.name}
               title="Download"
+              onClick={this.onDownload}
             >
               <DownloadIcon class={style.downloadIcon} />
             </a>
