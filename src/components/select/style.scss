@@ -1,0 +1,33 @@
+.select {
+  position: relative;
+}
+
+.native-select {
+  background: #2f2f2f;
+  border-radius: 4px;
+  font: inherit;
+  padding: 4px 25px 4px 10px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  border: none;
+  color: #fff;
+  width: 100%;
+}
+
+.arrow {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  fill: #fff;
+  width: 10px;
+}
+
+.large {
+  padding: 10px 35px 10px 10px;
+  background: #151515;
+
+  & .arrow {
+    right: 13px;
+  }
+}

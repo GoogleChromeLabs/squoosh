@@ -23,7 +23,8 @@ module.exports = function (_, env) {
   const nodeModules = path.join(__dirname, 'node_modules');
   const componentStyleDirs = [
     path.join(__dirname, 'src/components'),
-    path.join(__dirname, 'src/codecs')
+    path.join(__dirname, 'src/codecs'),
+    path.join(__dirname, 'src/custom-els'),
   ];
 
   return {

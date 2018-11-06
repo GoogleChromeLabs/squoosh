@@ -203,23 +203,38 @@ export function nativeResize(
 
 /**
  * @param field An HTMLInputElement, but the casting is done here to tidy up onChange.
+ * @param defaultVal Value to return if 'field' doesn't exist.
  */
-export function inputFieldValueAsNumber(field: any): number {
-  return Number((field as HTMLInputElement).value);
+export function inputFieldValueAsNumber(field: any, defaultVal: number = 0): number {
+  if (!field) return defaultVal;
+  return Number(inputFieldValue(field));
 }
 
 /**
  * @param field An HTMLInputElement, but the casting is done here to tidy up onChange.
+ * @param defaultVal Value to return if 'field' doesn't exist.
  */
-export function inputFieldCheckedAsNumber(field: any): number {
+export function inputFieldCheckedAsNumber(field: any, defaultVal: number = 0): number {
+  if (!field) return defaultVal;
   return Number(inputFieldChecked(field));
 }
 
 /**
  * @param field An HTMLInputElement, but the casting is done here to tidy up onChange.
+ * @param defaultVal Value to return if 'field' doesn't exist.
  */
-export function inputFieldChecked(field: any): boolean {
+export function inputFieldChecked(field: any, defaultVal: boolean = false): boolean {
+  if (!field) return defaultVal;
   return (field as HTMLInputElement).checked;
+}
+
+/**
+ * @param field An HTMLInputElement, but the casting is done here to tidy up onChange.
+ * @param defaultVal Value to return if 'field' doesn't exist.
+ */
+export function inputFieldValue(field: any, defaultVal: string = ''): string {
+  if (!field) return defaultVal;
+  return (field as HTMLInputElement).value;
 }
 
 /**

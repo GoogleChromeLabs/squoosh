@@ -1,19 +1,22 @@
 .compress {
-  height: 100%;
-}
-
-.option-pair {
-  display: flex;
   width: 100%;
   height: 100%;
+  contain: strict;
+  display: grid;
 
   &.horizontal {
-    justify-content: space-between;
-    align-items: flex-end;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: calc(100% - 75px);
+
+    @media (min-width: 860px) {
+      grid-template-rows: 100%;
+    }
+    align-items: end;
+    align-content: end;
   }
 
   &.vertical {
-    flex-direction: column;
-    justify-content: flex-end;
+    // TODO: make the mobile view work
+    background: red;
   }
 }

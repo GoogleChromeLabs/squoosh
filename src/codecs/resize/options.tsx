@@ -1,8 +1,12 @@
 import { h, Component } from 'preact';
 import linkState from 'linkstate';
-import { bind } from '../../lib/initial-util';
-import { inputFieldValueAsNumber } from '../../lib/util';
+import { bind, linkRef } from '../../lib/initial-util';
+import { inputFieldValueAsNumber, inputFieldValue } from '../../lib/util';
 import { ResizeOptions } from './processor-meta';
+import * as style from '../../components/Options/style.scss';
+import Checkbox from '../../components/checkbox';
+import Expander from '../../components/expander';
+import Select from '../../components/select';
 
 interface Props {
   isVector: Boolean;
@@ -22,23 +26,26 @@ export default class ResizerOptions extends Component<Props, State> {
 
   form?: HTMLFormElement;
 
-  reportOptions() {
-    const width = this.form!.width as HTMLInputElement;
-    const height = this.form!.height as HTMLInputElement;
+  private reportOptions() {
+    const form = this.form!;
+    const width = form.width as HTMLInputElement;
+    const height = form.height as HTMLInputElement;
+    const { options } = this.props;
 
     if (!width.checkValidity() || !height.checkValidity()) return;
 
-    const options: ResizeOptions = {
+    const newOptions: ResizeOptions = {
       width: inputFieldValueAsNumber(width),
       height: inputFieldValueAsNumber(height),
-      method: this.form!.resizeMethod.value,
-      fitMethod: this.form!.fitMethod.value,
+      method: form.resizeMethod.value,
+      // Casting, as the formfield only returns the correct values.
+      fitMethod: inputFieldValue(form.fitMethod, options.fitMethod) as ResizeOptions['fitMethod'],
     };
-    this.props.onChange(options);
+    this.props.onChange(newOptions);
   }
 
   @bind
-  onChange(event: Event) {
+  private onChange() {
     this.reportOptions();
   }
 
@@ -50,27 +57,31 @@ export default class ResizerOptions extends Component<Props, State> {
   }
 
   @bind
-  onWidthInput(event: Event) {
-    if (!this.state.maintainAspect) return;
+  private onWidthInput() {
+    if (this.state.maintainAspect) {
+      const width = inputFieldValueAsNumber(this.form!.width);
+      this.form!.height.value = Math.round(width / this.props.aspect);
+    }
 
-    const width = inputFieldValueAsNumber(this.form!.width);
-    this.form!.height.value = Math.round(width / this.props.aspect);
+    this.reportOptions();
   }
 
   @bind
-  onHeightInput(event: Event) {
-    if (!this.state.maintainAspect) return;
+  private onHeightInput() {
+    if (this.state.maintainAspect) {
+      const height = inputFieldValueAsNumber(this.form!.height);
+      this.form!.width.value = Math.round(height * this.props.aspect);
+    }
 
-    const height = inputFieldValueAsNumber(this.form!.height);
-    this.form!.width.value = Math.round(height * this.props.aspect);
+    this.reportOptions();
   }
 
-  render({ options, aspect, isVector }: Props, { maintainAspect }: State) {
+  render({ options, isVector }: Props, { maintainAspect }: State) {
     return (
-      <form ref={el => this.form = el}>
-        <label>
+      <form ref={linkRef(this, 'form')} class={style.optionsSection}>
+        <label class={style.optionTextFirst}>
           Method:
-          <select
+          <Select
             name="resizeMethod"
             value={options.method}
             onChange={this.onChange}
@@ -80,51 +91,55 @@ export default class ResizerOptions extends Component<Props, State> {
             <option value="browser-low">Browser low quality</option>
             <option value="browser-medium">Browser medium quality</option>
             <option value="browser-high">Browser high quality</option>
-          </select>
+          </Select>
         </label>
-        <label>
+        <label class={style.optionTextFirst}>
           Width:
           <input
             required
+            class={style.textField}
             name="width"
             type="number"
             min="1"
             value={'' + options.width}
-            onChange={this.onChange}
             onInput={this.onWidthInput}
           />
         </label>
-        <label>
+        <label class={style.optionTextFirst}>
           Height:
           <input
             required
+            class={style.textField}
             name="height"
             type="number"
             min="1"
             value={'' + options.height}
-            onChange={this.onChange}
+            onInput={this.onHeightInput}
           />
         </label>
-        <label>
-          <input
+        <label class={style.optionInputFirst}>
+          <Checkbox
             name="maintainAspect"
-            type="checkbox"
             checked={maintainAspect}
             onChange={linkState(this, 'maintainAspect')}
           />
           Maintain aspect ratio
         </label>
-        <label style={{ display: maintainAspect ? 'none' : '' }}>
-          Fit method:
-          <select
-            name="fitMethod"
-            value={options.fitMethod}
-            onChange={this.onChange}
-          >
-            <option value="stretch">Stretch</option>
-            <option value="cover">Cover</option>
-          </select>
-        </label>
+        <Expander>
+          {maintainAspect ? null :
+            <label class={style.optionTextFirst}>
+              Fit method:
+              <Select
+                name="fitMethod"
+                value={options.fitMethod}
+                onChange={this.onChange}
+              >
+                <option value="stretch">Stretch</option>
+                <option value="cover">Cover</option>
+              </Select>
+            </label>
+          }
+        </Expander>
       </form>
     );
   }

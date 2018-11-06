@@ -2,6 +2,8 @@ import { h, Component } from 'preact';
 import { bind } from '../../lib/initial-util';
 import { inputFieldValueAsNumber } from '../../lib/util';
 import { EncodeOptions } from './encoder-meta';
+import Range from '../../components/range';
+import * as style from '../../components/Options/style.scss';
 
 type Props = {
   options: EncodeOptions;
@@ -21,19 +23,19 @@ export default class OptiPNGEncoderOptions extends Component<Props, {}> {
 
   render({ options }: Props) {
     return (
-      <form>
-        <label>
-          Effort:
-          <input
+      <form class={style.optionsSection}>
+        <div class={style.optionOneCell}>
+          <Range
             name="level"
-            type="range"
             min="0"
             max="7"
             step="1"
-            value={'' + options.level}
-            onChange={this.onChange}
-          />
-        </label>
+            value={options.level}
+            onInput={this.onChange}
+          >
+            Effort:
+          </Range>
+        </div>
       </form>
     );
   }

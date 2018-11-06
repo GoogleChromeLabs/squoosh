@@ -31,14 +31,17 @@ import {
   encoders,
   encodersSupported,
   EncoderSupportMap,
-  encoderMap,
 } from '../../codecs/encoders';
 import { QuantizeOptions } from '../../codecs/imagequant/processor-meta';
 import { ResizeOptions } from '../../codecs/resize/processor-meta';
 import { PreprocessorState } from '../../codecs/preprocessors';
-import FileSize from '../FileSize';
+import FileSize from './FileSize';
 import { DownloadIcon } from '../../lib/icons';
 import { SourceImage } from '../App';
+import Checkbox from '../checkbox';
+import Expander from '../expander';
+import Select from '../select';
+import '../custom-els/LoadingSpinner';
 
 const encoderOptionsComponentMap = {
   [identity.type]: undefined,
@@ -56,13 +59,9 @@ const encoderOptionsComponentMap = {
   [browserPDF.type]: undefined,
 };
 
-const titles = {
-  horizontal: ['Left Image', 'Right Image'],
-  vertical: ['Top Image', 'Bottom Image'],
-};
-
 interface Props {
   orientation: 'horizontal' | 'vertical';
+  loading: boolean;
   source?: SourceImage;
   imageIndex: number;
   imageFile?: Fileish;
@@ -77,14 +76,37 @@ interface Props {
 
 interface State {
   encoderSupportMap?: EncoderSupportMap;
+  showLoadingState: boolean;
 }
 
+const loadingReactionDelay = 500;
+
 export default class Options extends Component<Props, State> {
-  typeSelect?: HTMLSelectElement;
+  state: State = {
+    encoderSupportMap: undefined,
+    showLoadingState: false,
+  };
+
+  /** The timeout ID between entering the loading state, and changing UI */
+  private loadingTimeoutId: number = 0;
 
   constructor() {
     super();
     encodersSupported.then(encoderSupportMap => this.setState({ encoderSupportMap }));
+  }
+
+  componentDidUpdate(prevProps: Props, prevState: State) {
+    if (prevProps.loading && !this.props.loading) {
+      // Just stopped loading
+      clearTimeout(this.loadingTimeoutId);
+      this.setState({ showLoadingState: false });
+    } else if (!prevProps.loading && this.props.loading) {
+      // Just started loading
+      this.loadingTimeoutId = self.setTimeout(
+        () => this.setState({ showLoadingState: true }),
+        loadingReactionDelay,
+      );
+    }
   }
 
   @bind
@@ -138,105 +160,118 @@ export default class Options extends Component<Props, State> {
       preprocessorState,
       onEncoderOptionsChange,
     }: Props,
-    { encoderSupportMap }: State,
+    { encoderSupportMap, showLoadingState }: State,
   ) {
     // tslint:disable variable-name
     const EncoderOptionComponent = encoderOptionsComponentMap[encoderState.type];
 
     return (
-      <div class={`${style.options} ${style[orientation]}`}>
-        <h2 class={style.title}>
-          {titles[orientation][imageIndex]}
-          {', '}
-          {encoderMap[encoderState.type].label}
-        </h2>
-
-        <div class={style.content}>
-          <section class={style.picker}>
-            {encoderSupportMap ?
-              <select value={encoderState.type} onChange={this.onEncoderTypeChange}>
-                {encoders.filter(encoder => encoderSupportMap[encoder.type]).map(encoder => (
-                  <option value={encoder.type}>{encoder.label}</option>
-                ))}
-              </select>
-              :
-              <select><option>Loading…</option></select>
-            }
-          </section>
-
-          {encoderState.type !== 'identity' && (
-            <div key="preprocessors" class={style.preprocessors}>
-              <label class={style.toggle}>
-                <input
+      <div class={style.options}>
+        <Expander>
+          {encoderState.type === identity.type ? null :
+            <div>
+              <h3 class={style.optionsTitle}>Edit</h3>
+              <label class={style.sectionEnabler}>
+                <Checkbox
                   name="resize.enable"
-                  type="checkbox"
                   checked={!!preprocessorState.resize.enabled}
                   onChange={this.onPreprocessorEnabledChange}
                 />
                 Resize
               </label>
-              {preprocessorState.resize.enabled &&
-                <ResizeOptionsComponent
-                  isVector={Boolean(source && source.vectorImage)}
-                  aspect={source ? (source.data.width / source.data.height) : 1}
-                  options={preprocessorState.resize}
-                  onChange={this.onResizeOptionsChange}
-                />
-              }
-              <label class={style.toggle}>
-                <input
+              <Expander>
+                {preprocessorState.resize.enabled ?
+                  <ResizeOptionsComponent
+                    isVector={Boolean(source && source.vectorImage)}
+                    aspect={source ? (source.data.width / source.data.height) : 1}
+                    options={preprocessorState.resize}
+                    onChange={this.onResizeOptionsChange}
+                  />
+                : null}
+              </Expander>
+              <label class={style.sectionEnabler}>
+                <Checkbox
                   name="quantizer.enable"
-                  type="checkbox"
                   checked={!!preprocessorState.quantizer.enabled}
                   onChange={this.onPreprocessorEnabledChange}
                 />
-                Quantize
+                Reduce palette
               </label>
-              {preprocessorState.quantizer.enabled &&
-                <QuantizerOptionsComponent
-                  options={preprocessorState.quantizer}
-                  onChange={this.onQuantizerOptionsChange}
-                />
-              }
+              <Expander>
+                {preprocessorState.quantizer.enabled ?
+                  <QuantizerOptionsComponent
+                    options={preprocessorState.quantizer}
+                    onChange={this.onQuantizerOptionsChange}
+                  />
+                : null}
+              </Expander>
             </div>
-          )}
-
-          {EncoderOptionComponent &&
-            <EncoderOptionComponent
-              options={
-                // Casting options, as encoderOptionsComponentMap[encodeData.type] ensures
-                // the correct type, but typescript isn't smart enough.
-                encoderState.options as any
-              }
-              onChange={onEncoderOptionsChange}
-            />
           }
+        </Expander>
+
+        <h3 class={style.optionsTitle}>Compress</h3>
+
+        <div class={style.optionsScroller}>
+          <section class={`${style.optionOneCell} ${style.optionsSection}`}>
+            {encoderSupportMap ?
+              <Select value={encoderState.type} onChange={this.onEncoderTypeChange} large>
+                {encoders.filter(encoder => encoderSupportMap[encoder.type]).map(encoder => (
+                  <option value={encoder.type}>{encoder.label}</option>
+                ))}
+              </Select>
+              :
+              <Select large><option>Loading…</option></Select>
+            }
+          </section>
+
+          <Expander>
+            {EncoderOptionComponent ?
+              <EncoderOptionComponent
+                options={
+                  // Casting options, as encoderOptionsComponentMap[encodeData.type] ensures
+                  // the correct type, but typescript isn't smart enough.
+                  encoderState.options as any
+                }
+                onChange={onEncoderOptionsChange}
+              />
+            : null}
+          </Expander>
         </div>
 
-        <div class={style.row}>
-          <button onClick={this.onCopyToOtherClick}>Copy settings to other side</button>
+        <div class={style.optionsCopy}>
+          <button onClick={this.onCopyToOtherClick} class={style.copyButton}>
+            {imageIndex === 1 && '← '}
+            Copy settings across
+            {imageIndex === 0 && ' →'}
+          </button>
         </div>
 
-        <div class={style.sizeDetails}>
-          <FileSize
-            class={style.size}
-            increaseClass={style.increase}
-            decreaseClass={style.decrease}
-            file={imageFile}
-            compareTo={(source && imageFile !== source.file) ? source.file : undefined}
-          />
+        <div class={style.results}>
+          <div class={style.resultData}>
+            {!imageFile || showLoadingState ? 'Working…' :
+              <FileSize
+                blob={imageFile}
+                compareTo={(source && imageFile !== source.file) ? source.file : undefined}
+              />
+            }
+          </div>
 
-          {(downloadUrl && imageFile) && (
-            <a
-              class={style.download}
-              href={downloadUrl}
-              download={imageFile.name}
-              title="Download"
-            >
-              <DownloadIcon />
-            </a>
-          )}
+          <div class={style.download}>
+            {(downloadUrl && imageFile) && (
+              <a
+                class={`${style.downloadLink} ${showLoadingState ? style.downloadLinkDisable : ''}`}
+                href={downloadUrl}
+                download={imageFile.name}
+                title="Download"
+              >
+                <DownloadIcon class={style.downloadIcon} />
+              </a>
+            )}
+            {showLoadingState && <loading-spinner class={style.spinner} />}
+          </div>
+
         </div>
+
       </div>
     );
   }

@@ -1,6 +1,7 @@
 import { h, Component } from 'preact';
 import { bind } from '../../lib/initial-util';
-import '../../custom-els/RangeInput';
+import * as style from '../../components/Options/style.scss';
+import Range from '../../components/range';
 
 interface EncodeOptions {
   quality: number;
@@ -33,18 +34,19 @@ export default function qualityOption(opts: QualityOptionArg = {}) {
 
     render({ options }: Props) {
       return (
-        <div>
-          <label>
-            Quality:
-            <range-input
+        <div class={style.optionsSection}>
+          <div class={style.optionOneCell}>
+            <Range
               name="quality"
               min={min}
               max={max}
               step={step || 'any'}
-              value={'' + options.quality}
-              onChange={this.onChange}
-            />
-          </label>
+              value={options.quality}
+              onInput={this.onChange}
+            >
+              Quality:
+            </Range>
+          </div>
         </div>
       );
     }

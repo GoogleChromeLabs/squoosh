@@ -2,6 +2,10 @@ import { h, Component } from 'preact';
 import { bind } from '../../lib/initial-util';
 import { inputFieldValueAsNumber, konami } from '../../lib/util';
 import { QuantizeOptions } from './processor-meta';
+import * as style from '../../components/Options/style.scss';
+import Expander from '../../components/expander';
+import Select from '../../components/select';
+import Range from '../../components/range';
 
 const konamiPromise = konami();
 
@@ -26,50 +30,61 @@ export default class QuantizerOptions extends Component<Props, State> {
   @bind
   onChange(event: Event) {
     const form = (event.currentTarget as HTMLInputElement).closest('form') as HTMLFormElement;
+    const { options } = this.props;
 
-    const options: QuantizeOptions = {
-      zx: inputFieldValueAsNumber(form.zx),
-      maxNumColors: inputFieldValueAsNumber(form.maxNumColors),
+    const newOptions: QuantizeOptions = {
+      zx: inputFieldValueAsNumber(form.zx, options.zx),
+      maxNumColors: inputFieldValueAsNumber(form.maxNumColors, options.maxNumColors),
       dither: inputFieldValueAsNumber(form.dither),
     };
-    this.props.onChange(options);
+    this.props.onChange(newOptions);
   }
 
   render({ options }: Props, { extendedSettings }: State) {
     return (
-      <form>
-        <label style={{ display: extendedSettings ? '' : 'none' }}>
-          Type:
-          <select
-            name="zx"
-            value={'' + options.zx}
-            onChange={this.onChange}
-          >
-            <option value="0">Standard</option>
-            <option value="1">ZX</option>
-          </select>
-        </label>
-        <label style={{ display: options.zx ? 'none' : '' }}>
-          Palette Colors:
-          <range-input
-            name="maxNumColors"
-            min="2"
-            max="256"
-            value={'' + options.maxNumColors}
-            onChange={this.onChange}
-          />
-        </label>
-        <label>
-          Dithering:
-          <range-input
+      <form class={style.optionsSection}>
+        <Expander>
+          {extendedSettings ?
+            <label class={style.optionTextFirst}>
+              Type:
+              <Select
+                name="zx"
+                value={'' + options.zx}
+                onChange={this.onChange}
+              >
+                <option value="0">Standard</option>
+                <option value="1">ZX</option>
+              </Select>
+            </label>
+          : null}
+        </Expander>
+        <Expander>
+          {options.zx ? null :
+            <div class={style.optionOneCell}>
+              <Range
+                name="maxNumColors"
+                min="2"
+                max="256"
+                value={options.maxNumColors}
+                onInput={this.onChange}
+              >
+                Colors:
+              </Range>
+            </div>
+          }
+        </Expander>
+        <div class={style.optionOneCell}>
+          <Range
             name="dither"
             min="0"
             max="1"
             step="0.01"
-            value={'' + options.dither}
-            onChange={this.onChange}
-          />
-        </label>
+            value={options.dither}
+            onInput={this.onChange}
+          >
+            Dithering:
+          </Range>
+        </div>
       </form>
     );
   }

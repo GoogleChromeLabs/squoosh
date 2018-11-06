@@ -52,7 +52,7 @@ two-up[legacy-clip-compat] > :not(.two-up-handle) {
   height: calc(var(--thumb-size) * 0.9);
   background: var(--thumb-background);
   border: 1px solid rgba(0,0,0,0.2);
-  border-radius: calc(var(--thumb-size) * 0.08);
+  border-radius: var(--thumb-size);
   box-shadow: 0 1px 4px rgba(0,0,0,0.1);
   color: var(--thumb-color);
   box-sizing: border-box;

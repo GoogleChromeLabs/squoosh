@@ -47,10 +47,10 @@ Note: These styles are temporary. They will be replaced before going live.
   flex-wrap: wrap;
   contain: content;
 
-  @media (min-width: 680px) {
+  @media (min-width: 860px) {
     top: auto;
-    left: 220px;
-    right: 220px;
+    left: 320px;
+    right: 320px;
     bottom: 0;
   }
 }
