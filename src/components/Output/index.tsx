@@ -177,6 +177,17 @@ export default class Output extends Component<Props, State> {
     const clonedEvent = new (event.constructor as typeof Event)(event.type, event);
     this.retargetedEvents.add(clonedEvent);
     this.pinchZoomLeft.dispatchEvent(clonedEvent);
+
+    // Unfocus any active element on touchend. This fixes an issue on (at least) Android Chrome,
+    // where the software keyboard is hidden, but the input remains focused, then after interaction
+    // with this element the keyboard reappears for NO GOOD REASON. Thanks Android.
+    if (
+      event.type === 'touchend' &&
+      document.activeElement &&
+      document.activeElement instanceof HTMLElement
+    ) {
+      document.activeElement.blur();
+    }
   }
 
   render(
