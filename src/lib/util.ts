@@ -57,16 +57,32 @@ export async function canvasEncode(data: ImageData, type: string, quality?: numb
   return blob;
 }
 
+async function decodeImage(url: string): Promise<HTMLImageElement> {
+  const img = new Image();
+  img.decoding = 'async';
+  img.src = url;
+  const loaded = new Promise((resolve, reject) => {
+    img.onload = () => resolve();
+    img.onerror = () => reject(Error('Image loading error'));
+  });
+
+  if (img.decode) {
+    // Nice off-thread way supported in Safari/Chrome.
+    // Safari throws on decode if the source is SVG.
+    // https://bugs.webkit.org/show_bug.cgi?id=188347
+    await img.decode().catch(() => null);
+  }
+
+  // Always await loaded, as we may have bailed due to the Safari bug above.
+  await loaded;
+  return img;
+}
+
 /**
  * Attempts to load the given URL as an image.
  */
-export function canDecodeImage(data: string): Promise<boolean> {
-  return new Promise((resolve) => {
-    const img = document.createElement('img');
-    img.src = data;
-    img.onload = _ => resolve(true);
-    img.onerror = _ => resolve(false);
-  });
+export function canDecodeImage(url: string): Promise<boolean> {
+  return decodeImage(url).then(() => true, () => false);
 }
 
 export function blobToArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
@@ -108,24 +124,7 @@ export async function blobToImg(blob: Blob): Promise<HTMLImageElement> {
   const url = URL.createObjectURL(blob);
 
   try {
-    const img = new Image();
-    img.decoding = 'async';
-    img.src = url;
-    const loaded = new Promise((resolve, reject) => {
-      img.onload = () => resolve();
-      img.onerror = () => reject(Error('Image loading error'));
-    });
-
-    if (img.decode) {
-      // Nice off-thread way supported in Safari/Chrome.
-      // Safari throws on decode if the source is SVG.
-      // https://bugs.webkit.org/show_bug.cgi?id=188347
-      await img.decode().catch(() => null);
-    }
-
-    // Always await loaded, as we may have bailed due to the Safari bug above.
-    await loaded;
-    return img;
+    return await decodeImage(url);
   } finally {
     URL.revokeObjectURL(url);
   }
