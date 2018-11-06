@@ -3,20 +3,72 @@
   height: 100%;
   contain: strict;
   display: grid;
+  align-items: end;
+  align-content: end;
+  grid-template-rows: 1fr auto;
 
-  &.horizontal {
+  @media (min-width: 600px) {
     grid-template-columns: 1fr auto;
-    grid-template-rows: calc(100% - 75px);
+    grid-template-rows: 100%;
+  }
+}
 
-    @media (min-width: 860px) {
-      grid-template-rows: 100%;
-    }
-    align-items: end;
-    align-content: end;
+.options {
+  color: #fff;
+  opacity: 0.9;
+  font-size: 1.2rem;
+  display: flex;
+  flex-flow: column;
+  max-width: 400px;
+  margin: 0 auto;
+  width: calc(100% - 60px);
+  max-height: calc(100% - 143px);
+  overflow: hidden;
+
+  @media (min-width: 600px) {
+    max-height: calc(100% - 75px);
+    width: 300px;
+    margin: 0;
   }
 
-  &.vertical {
-    // TODO: make the mobile view work
-    background: red;
+  @media (min-width: 860px) {
+    max-height: 100%;
   }
+}
+
+.multi-panel {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+
+  // Reorder so headings appear after content:
+  & > :nth-child(1) {
+    order: 2;
+    margin-bottom: 10px;
+  }
+
+  & > :nth-child(2) {
+    order: 1;
+  }
+
+  & > :nth-child(3) {
+    order: 4;
+  }
+
+  & > :nth-child(4) {
+    order: 3;
+  }
+}
+
+.expand-icon {
+  transform: rotate(180deg);
+  margin-left: -12px;
+}
+
+[content-expanded] .expand-icon {
+  transform: none;
+}
+
+:focus .expand-icon {
+  fill: #34B9EB;
 }

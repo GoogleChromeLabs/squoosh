@@ -24,18 +24,17 @@ import {
     EncoderOptions,
     encoderMap,
 } from '../../codecs/encoders';
-
 import {
   PreprocessorState,
   defaultPreprocessorState,
 } from '../../codecs/preprocessors';
-
 import { decodeImage } from '../../codecs/decoders';
 import { cleanMerge, cleanSet } from '../../lib/clean-modify';
 import Processor from '../../codecs/processor';
 import { VectorResizeOptions, BitmapResizeOptions } from '../../codecs/resize/processor-meta';
-
-type Orientation = 'horizontal' | 'vertical';
+import './custom-els/MultiPanel';
+import Results from '../results';
+import { ExpandIcon } from '../../lib/icons';
 
 export interface SourceImage {
   file: File | Fileish;
@@ -69,7 +68,7 @@ interface State {
   loading: boolean;
   loadingCounter: number;
   error?: string;
-  orientation: Orientation;
+  mobileView: boolean;
 }
 
 interface UpdateImageOptions {
@@ -155,8 +154,11 @@ async function processSvg(blob: Blob): Promise<HTMLImageElement> {
   return blobToImg(new Blob([newSource], { type: 'image/svg+xml' }));
 }
 
+// These are only used in the mobile view
+const resultTitles = ['Top', 'Bottom'];
+
 export default class Compress extends Component<Props, State> {
-  widthQuery = window.matchMedia('(min-width: 500px)');
+  widthQuery = window.matchMedia('(max-width: 599px)');
 
   state: State = {
     source: undefined,
@@ -178,7 +180,7 @@ export default class Compress extends Component<Props, State> {
         loading: false,
       },
     ],
-    orientation: this.widthQuery.matches ? 'horizontal' : 'vertical',
+    mobileView: this.widthQuery.matches,
   };
 
   private readonly encodeCache = new ResultCache();
@@ -193,7 +195,7 @@ export default class Compress extends Component<Props, State> {
 
   @bind
   private onMobileWidthChange() {
-    this.setState({ orientation: this.widthQuery.matches ? 'horizontal' : 'vertical' });
+    this.setState({ mobileView: this.widthQuery.matches });
   }
 
   private onEncoderTypeChange(index: 0 | 1, newType: EncoderType): void {
@@ -395,36 +397,69 @@ export default class Compress extends Component<Props, State> {
     this.setState({ images });
   }
 
-  render({ }: Props, { loading, images, source, orientation }: State) {
+  render({ }: Props, { loading, images, source, mobileView }: State) {
     const [leftImage, rightImage] = images;
     const [leftImageData, rightImageData] = images.map(i => i.data);
 
+    const options = images.map((image, index) => (
+      <Options
+        source={source}
+        mobileView={mobileView}
+        imageIndex={index}
+        preprocessorState={image.preprocessorState}
+        encoderState={image.encoderState}
+        onEncoderTypeChange={this.onEncoderTypeChange.bind(this, index)}
+        onEncoderOptionsChange={this.onEncoderOptionsChange.bind(this, index)}
+        onPreprocessorOptionsChange={this.onPreprocessorOptionsChange.bind(this, index)}
+        onCopyToOtherClick={this.onCopyToOtherClick.bind(this, index)}
+      />
+    ));
+
+    const results = images.map((image, i) => (
+      <Results
+        downloadUrl={image.downloadUrl}
+        imageFile={image.file}
+        source={source}
+        loading={loading || image.loading}
+      >
+        {!mobileView ? null : [
+          <ExpandIcon class={style.expandIcon} key="expand-icon"/>,
+          `${resultTitles[i]} (${encoderMap[image.encoderState.type].label})`,
+        ]}
+      </Results>
+    ));
+
     return (
-      <div class={`${style.compress} ${style[orientation]}`}>
+      <div class={style.compress}>
         <Output
           originalImage={source && source.data}
-          orientation={orientation}
+          mobileView={mobileView}
           leftCompressed={leftImageData}
           rightCompressed={rightImageData}
           leftImgContain={leftImage.preprocessorState.resize.fitMethod === 'cover'}
           rightImgContain={rightImage.preprocessorState.resize.fitMethod === 'cover'}
         />
-        {images.map((image, index) => (
-          <Options
-            loading={loading || image.loading}
-            source={source}
-            orientation={orientation}
-            imageIndex={index}
-            imageFile={image.file}
-            downloadUrl={image.downloadUrl}
-            preprocessorState={image.preprocessorState}
-            encoderState={image.encoderState}
-            onEncoderTypeChange={this.onEncoderTypeChange.bind(this, index)}
-            onEncoderOptionsChange={this.onEncoderOptionsChange.bind(this, index)}
-            onPreprocessorOptionsChange={this.onPreprocessorOptionsChange.bind(this, index)}
-            onCopyToOtherClick={this.onCopyToOtherClick.bind(this, index)}
-          />
-        ))}
+        {mobileView
+          ? (
+            <div class={style.options}>
+              <multi-panel class={style.multiPanel} open-one-only>
+                {results[0]}
+                {options[0]}
+                {results[1]}
+                {options[1]}
+              </multi-panel>
+            </div>
+          ) : ([
+            <div class={style.options} key="options0">
+              {options[0]}
+              {results[0]}
+            </div>,
+            <div class={style.options} key="options1">
+              {options[1]}
+              {results[1]}
+            </div>,
+          ])
+        }
       </div>
     );
   }

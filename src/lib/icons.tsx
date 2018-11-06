@@ -41,3 +41,9 @@ export const CheckedIcon = (props: JSX.HTMLAttributes) => (
     <path d="M21.3 0H2.7A2.7 2.7 0 0 0 0 2.7v18.6A2.7 2.7 0 0 0 2.7 24h18.6a2.7 2.7 0 0 0 2.7-2.7V2.7A2.7 2.7 0 0 0 21.3 0zm-12 18.7L2.7 12l1.8-1.9L9.3 15 19.5 4.8l1.8 1.9z"/>
   </Icon>
 );
+
+export const ExpandIcon = (props: JSX.HTMLAttributes) => (
+  <Icon {...props}>
+    <path d="M16.6 8.6L12 13.2 7.4 8.6 6 10l6 6 6-6z"/>
+  </Icon>
+);

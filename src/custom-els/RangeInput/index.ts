@@ -1,5 +1,6 @@
 import { bind } from '../../lib/initial-util';
 import * as style from './styles.css';
+import { PointerTracker } from '../../lib/PointerTracker';
 
 const RETARGETED_EVENTS = ['focus', 'blur'];
 const UPDATE_EVENTS = ['input', 'change'];
@@ -25,6 +26,17 @@ class RangeInputElement extends HTMLElement {
     this._input = document.createElement('input');
     this._input.type = 'range';
     this._input.className = style.input;
+
+    const tracker = new PointerTracker(this._input, {
+      start: (): boolean => {
+        if (tracker.currentPointers.length !== 0) return false;
+        this._input.classList.add(style.touchActive);
+        return true;
+      },
+      end: () => {
+        this._input.classList.remove(style.touchActive);
+      },
+    });
 
     for (const event of RETARGETED_EVENTS) {
       this._input.addEventListener(event, this._retargetEvent, true);

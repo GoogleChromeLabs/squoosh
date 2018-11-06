@@ -1,7 +1,7 @@
 import { h, Component } from 'preact';
 
 import * as style from './style.scss';
-import { bind, Fileish } from '../../lib/initial-util';
+import { bind } from '../../lib/initial-util';
 import { cleanSet, cleanMerge } from '../../lib/clean-modify';
 import OptiPNGEncoderOptions from '../../codecs/optipng/options';
 import MozJpegEncoderOptions from '../../codecs/mozjpeg/options';
@@ -35,13 +35,10 @@ import {
 import { QuantizeOptions } from '../../codecs/imagequant/processor-meta';
 import { ResizeOptions } from '../../codecs/resize/processor-meta';
 import { PreprocessorState } from '../../codecs/preprocessors';
-import FileSize from './FileSize';
-import { DownloadIcon } from '../../lib/icons';
 import { SourceImage } from '../App';
 import Checkbox from '../checkbox';
 import Expander from '../expander';
 import Select from '../select';
-import '../custom-els/LoadingSpinner';
 
 const encoderOptionsComponentMap = {
   [identity.type]: undefined,
@@ -60,12 +57,9 @@ const encoderOptionsComponentMap = {
 };
 
 interface Props {
-  orientation: 'horizontal' | 'vertical';
-  loading: boolean;
+  mobileView: boolean;
   source?: SourceImage;
   imageIndex: number;
-  imageFile?: Fileish;
-  downloadUrl?: string;
   encoderState: EncoderState;
   preprocessorState: PreprocessorState;
   onEncoderTypeChange(newType: EncoderType): void;
@@ -76,37 +70,16 @@ interface Props {
 
 interface State {
   encoderSupportMap?: EncoderSupportMap;
-  showLoadingState: boolean;
 }
-
-const loadingReactionDelay = 500;
 
 export default class Options extends Component<Props, State> {
   state: State = {
     encoderSupportMap: undefined,
-    showLoadingState: false,
   };
-
-  /** The timeout ID between entering the loading state, and changing UI */
-  private loadingTimeoutId: number = 0;
 
   constructor() {
     super();
     encodersSupported.then(encoderSupportMap => this.setState({ encoderSupportMap }));
-  }
-
-  componentDidUpdate(prevProps: Props, prevState: State) {
-    if (prevProps.loading && !this.props.loading) {
-      // Just stopped loading
-      clearTimeout(this.loadingTimeoutId);
-      this.setState({ showLoadingState: false });
-    } else if (!prevProps.loading && this.props.loading) {
-      // Just started loading
-      this.loadingTimeoutId = self.setTimeout(
-        () => this.setState({ showLoadingState: true }),
-        loadingReactionDelay,
-      );
-    }
   }
 
   @bind
@@ -153,20 +126,17 @@ export default class Options extends Component<Props, State> {
     {
       source,
       imageIndex,
-      imageFile,
-      downloadUrl,
-      orientation,
       encoderState,
       preprocessorState,
       onEncoderOptionsChange,
     }: Props,
-    { encoderSupportMap, showLoadingState }: State,
+    { encoderSupportMap }: State,
   ) {
     // tslint:disable variable-name
     const EncoderOptionComponent = encoderOptionsComponentMap[encoderState.type];
 
     return (
-      <div class={style.options}>
+      <div class={style.optionsScroller}>
         <Expander>
           {encoderState.type === identity.type ? null :
             <div>
@@ -211,32 +181,30 @@ export default class Options extends Component<Props, State> {
 
         <h3 class={style.optionsTitle}>Compress</h3>
 
-        <div class={style.optionsScroller}>
-          <section class={`${style.optionOneCell} ${style.optionsSection}`}>
-            {encoderSupportMap ?
-              <Select value={encoderState.type} onChange={this.onEncoderTypeChange} large>
-                {encoders.filter(encoder => encoderSupportMap[encoder.type]).map(encoder => (
-                  <option value={encoder.type}>{encoder.label}</option>
-                ))}
-              </Select>
-              :
-              <Select large><option>Loading…</option></Select>
-            }
-          </section>
+        <section class={`${style.optionOneCell} ${style.optionsSection}`}>
+          {encoderSupportMap ?
+            <Select value={encoderState.type} onChange={this.onEncoderTypeChange} large>
+              {encoders.filter(encoder => encoderSupportMap[encoder.type]).map(encoder => (
+                <option value={encoder.type}>{encoder.label}</option>
+              ))}
+            </Select>
+            :
+            <Select large><option>Loading…</option></Select>
+          }
+        </section>
 
-          <Expander>
-            {EncoderOptionComponent ?
-              <EncoderOptionComponent
-                options={
-                  // Casting options, as encoderOptionsComponentMap[encodeData.type] ensures
-                  // the correct type, but typescript isn't smart enough.
-                  encoderState.options as any
-                }
-                onChange={onEncoderOptionsChange}
-              />
-            : null}
-          </Expander>
-        </div>
+        <Expander>
+          {EncoderOptionComponent ?
+            <EncoderOptionComponent
+              options={
+                // Casting options, as encoderOptionsComponentMap[encodeData.type] ensures
+                // the correct type, but typescript isn't smart enough.
+                encoderState.options as any
+              }
+              onChange={onEncoderOptionsChange}
+            />
+          : null}
+        </Expander>
 
         <div class={style.optionsCopy}>
           <button onClick={this.onCopyToOtherClick} class={style.copyButton}>
@@ -245,33 +213,6 @@ export default class Options extends Component<Props, State> {
             {imageIndex === 0 && ' →'}
           </button>
         </div>
-
-        <div class={style.results}>
-          <div class={style.resultData}>
-            {!imageFile || showLoadingState ? 'Working…' :
-              <FileSize
-                blob={imageFile}
-                compareTo={(source && imageFile !== source.file) ? source.file : undefined}
-              />
-            }
-          </div>
-
-          <div class={style.download}>
-            {(downloadUrl && imageFile) && (
-              <a
-                class={`${style.downloadLink} ${showLoadingState ? style.downloadLinkDisable : ''}`}
-                href={downloadUrl}
-                download={imageFile.name}
-                title="Download"
-              >
-                <DownloadIcon class={style.downloadIcon} />
-              </a>
-            )}
-            {showLoadingState && <loading-spinner class={style.spinner} />}
-          </div>
-
-        </div>
-
       </div>
     );
   }
