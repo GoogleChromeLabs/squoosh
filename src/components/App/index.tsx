@@ -4,7 +4,7 @@ import { bind, linkRef, Fileish } from '../../lib/initial-util';
 import * as style from './style.scss';
 import { FileDropEvent } from './custom-els/FileDrop';
 import './custom-els/FileDrop';
-import SnackBarElement from '../../lib/SnackBar';
+import SnackBarElement, { SnackOptions } from '../../lib/SnackBar';
 import '../../lib/SnackBar';
 import Intro from '../intro';
 import '../custom-els/LoadingSpinner';
@@ -39,7 +39,7 @@ export default class App extends Component<Props, State> {
     import('../compress').then((module) => {
       this.setState({ Compress: module.default });
     }).catch(() => {
-      this.showError('Failed to load app');
+      this.showSnack('Failed to load app');
     });
 
     // In development, persist application state across hot reloads:
@@ -66,9 +66,9 @@ export default class App extends Component<Props, State> {
   }
 
   @bind
-  private showError(error: string) {
+  private showSnack(message: string, options: SnackOptions = {}): Promise<string> {
     if (!this.snackbar) throw Error('Snackbar missing');
-    this.snackbar.showSnackbar({ message: error });
+    return this.snackbar.showSnackbar(message, options);
   }
 
   render({}: Props, { file, Compress }: State) {
@@ -76,9 +76,9 @@ export default class App extends Component<Props, State> {
       <div id="app" class={style.app}>
         <file-drop accept="image/*" onfiledrop={this.onFileDrop} class={style.drop}>
           {(!file)
-            ? <Intro onFile={this.onIntroPickFile} onError={this.showError} />
+            ? <Intro onFile={this.onIntroPickFile} showSnack={this.showSnack} />
             : (Compress)
-              ? <Compress file={file} onError={this.showError} />
+              ? <Compress file={file} showSnack={this.showSnack} />
               : <loading-spinner class={style.appLoader}/>
           }
           <snack-bar ref={linkRef(this, 'snackbar')} />

@@ -35,6 +35,7 @@ import { VectorResizeOptions, BitmapResizeOptions } from '../../codecs/resize/pr
 import './custom-els/MultiPanel';
 import Results from '../results';
 import { ExpandIcon, CopyAcrossIconProps } from '../../lib/icons';
+import SnackBarElement from 'src/lib/SnackBar';
 
 export interface SourceImage {
   file: File | Fileish;
@@ -58,7 +59,7 @@ interface EncodedImage {
 
 interface Props {
   file: File | Fileish;
-  onError: (msg: string) => void;
+  showSnack: SnackBarElement['showSnackbar'];
 }
 
 interface State {
@@ -250,11 +251,23 @@ export default class Compress extends Component<Props, State> {
     }
   }
 
-  private onCopyToOtherClick(index: 0 | 1) {
+  private async onCopyToOtherClick(index: 0 | 1) {
     const otherIndex = (index + 1) % 2;
+    const oldSettings = this.state.images[otherIndex];
 
     this.setState({
       images: cleanSet(this.state.images, otherIndex, this.state.images[index]),
+    });
+
+    const result = await this.props.showSnack('Settings copied across', {
+      timeout: 5000,
+      actions: ['undo', 'dismiss'],
+    });
+
+    if (result !== 'undo') return;
+
+    this.setState({
+      images: cleanSet(this.state.images, otherIndex, oldSettings),
     });
   }
 
@@ -318,7 +331,7 @@ export default class Compress extends Component<Props, State> {
       console.error(err);
       // Another file has been opened before this one processed.
       if (this.state.loadingCounter !== loadingCounter) return;
-      this.props.onError('Invalid image');
+      this.props.showSnack('Invalid image');
       this.setState({ loading: false });
     }
   }
@@ -377,7 +390,7 @@ export default class Compress extends Component<Props, State> {
         }
       } catch (err) {
         if (err.name === 'AbortError') return;
-        this.props.onError(`Processing error (type=${image.encoderState.type}): ${err}`);
+        this.props.showSnack(`Processing error (type=${image.encoderState.type}): ${err}`);
         throw err;
       }
     }

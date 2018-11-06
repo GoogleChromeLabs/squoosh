@@ -12,6 +12,7 @@ import artworkIcon from './imgs/demos/artwork-icon.jpg';
 import deviceScreenIcon from './imgs/demos/device-screen-icon.jpg';
 import logoIcon from './imgs/demos/logo-icon.png';
 import * as style from './style.scss';
+import SnackBarElement from '../../lib/SnackBar';
 
 const demos = [
   {
@@ -42,7 +43,7 @@ const demos = [
 
 interface Props {
   onFile: (file: File | Fileish) => void;
-  onError: (error: string) => void;
+  showSnack: SnackBarElement['showSnackbar'];
 }
 interface State {
   fetchingDemoIndex?: number;
@@ -79,7 +80,7 @@ export default class Intro extends Component<Props, State> {
       this.props.onFile(file);
     } catch (err) {
       this.setState({ fetchingDemoIndex: undefined });
-      this.props.onError("Couldn't fetch demo image");
+      this.props.showSnack("Couldn't fetch demo image");
     }
   }
 

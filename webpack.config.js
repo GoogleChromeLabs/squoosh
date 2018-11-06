@@ -25,6 +25,7 @@ module.exports = function (_, env) {
     path.join(__dirname, 'src/components'),
     path.join(__dirname, 'src/codecs'),
     path.join(__dirname, 'src/custom-els'),
+    path.join(__dirname, 'src/lib'),
   ];
 
   return {
@@ -107,7 +108,7 @@ module.exports = function (_, env) {
               loader: 'typings-for-css-modules-loader',
               options: {
                 modules: true,
-                localIdentName: '[local]__[hash:base64:5]',
+                localIdentName: isProd ? '[hash:base64:5]' : '[local]__[hash:base64:5]',
                 namedExport: true,
                 camelCase: true,
                 importLoaders: 1,
@@ -199,8 +200,11 @@ module.exports = function (_, env) {
 
       new OptimizeCssAssetsPlugin({
         cssProcessorOptions: {
-          zindex: false,
-          discardComments: { removeAll: true }
+          postcssReduceIdents: {
+            counterStyle: false,
+            gridTemplate: false,
+            keyframes: false
+          }
         }
       }),
 

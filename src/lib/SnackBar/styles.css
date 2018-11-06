@@ -22,7 +22,6 @@ snack-bar {
   transform-origin: center;
   color: #eee;
   z-index: 100;
-  pointer-events: none;
   cursor: default;
   will-change: transform;
   animation: snackbar-show 300ms ease forwards 1;
@@ -53,13 +52,13 @@ snack-bar {
   }
 }
 
-.snackbar--text {
+.text {
   flex: 1 1 auto;
   padding: 16px;
   font-size: 100%;
 }
 
-.snackbar--button {
+.button {
   position: relative;
   flex: 0 1 auto;
   padding: 8px;
@@ -75,16 +74,15 @@ snack-bar {
   font-size: 100%;
   text-transform: uppercase;
   text-align: center;
-  pointer-events: all;
   cursor: pointer;
   overflow: hidden;
   transition: background-color 200ms ease;
   outline: none;
 }
-.snackbar--button:hover {
+.button:hover {
   background-color: rgba(0,0,0,0.15);
 }
-.snackbar--button:focus:before {
+.button:focus:before {
   content: '';
   position: absolute;
   left: 50%;
