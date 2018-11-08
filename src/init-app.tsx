@@ -9,8 +9,7 @@ let root = document.querySelector('#app') || undefined;
 // "attach" the client-side rendering to it, updating the DOM in-place instead of replacing:
 root = render(<App />, document.body, root);
 
-// In production, this entire condition is removed.
-if (process.env.NODE_ENV === 'development') {
+if (process.env.NODE_ENV !== 'production') {
   // Enable support for React DevTools and some helpful console warnings:
   require('preact/debug');
 

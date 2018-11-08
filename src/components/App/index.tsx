@@ -36,11 +36,16 @@ export default class App extends Component<Props, State> {
   constructor() {
     super();
 
-    import('../compress').then((module) => {
+    import(
+      /* webpackChunkName: "main-app" */
+      '../compress',
+    ).then((module) => {
       this.setState({ Compress: module.default });
     }).catch(() => {
       this.showSnack('Failed to load app');
     });
+
+    navigator.serviceWorker.register('../../sw');
 
     // In development, persist application state across hot reloads:
     if (process.env.NODE_ENV === 'development') {

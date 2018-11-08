@@ -13,6 +13,7 @@ const CopyPlugin = require('copy-webpack-plugin');
 const WatchTimestampsPlugin = require('./config/watch-timestamps-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const WorkerPlugin = require('worker-plugin');
+const AutoSWPlugin = require('./config/auto-sw-plugin');
 
 function readJson (filename) {
   return JSON.parse(fs.readFileSync(filename));
@@ -30,12 +31,14 @@ module.exports = function (_, env) {
 
   return {
     mode: isProd ? 'production' : 'development',
-    entry: './src/index',
+    entry: {
+      'first-interaction': './src/index'
+    },
     devtool: isProd ? 'source-map' : 'inline-source-map',
     stats: 'minimal',
     output: {
       filename: isProd ? '[name].[chunkhash:5].js' : '[name].js',
-      chunkFilename: '[name].chunk.[chunkhash:5].js',
+      chunkFilename: '[name].[chunkhash:5].js',
       path: path.join(__dirname, 'build'),
       publicPath: '/',
       globalObject: 'self'
@@ -154,11 +157,17 @@ module.exports = function (_, env) {
           // This is needed to make webpack NOT process wasm files.
           // See https://github.com/webpack/webpack/issues/6725
           type: 'javascript/auto',
-          loader: 'file-loader'
+          loader: 'file-loader',
+          options: {
+            name: '[name].[hash:5].[ext]',
+          },
         },
         {
           test: /\.(png|svg|jpg|gif)$/,
-          loader: 'file-loader'
+          loader: 'file-loader',
+          options: {
+            name: '[name].[hash:5].[ext]',
+          },
         }
       ]
     },
@@ -195,7 +204,7 @@ module.exports = function (_, env) {
       // See also: https://twitter.com/wsokra/status/970253245733113856
       isProd && new MiniCssExtractPlugin({
         filename: '[name].[contenthash:5].css',
-        chunkFilename: '[name].chunk.[contenthash:5].css'
+        chunkFilename: '[name].[contenthash:5].css'
       }),
 
       new OptimizeCssAssetsPlugin({
@@ -232,6 +241,8 @@ module.exports = function (_, env) {
         inject: true,
         compile: true
       }),
+
+      new AutoSWPlugin({}),
 
       new ScriptExtHtmlPlugin({
         defaultAttribute: 'async'
