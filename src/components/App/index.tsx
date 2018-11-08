@@ -12,6 +12,15 @@ import '../custom-els/LoadingSpinner';
 // This is imported for TypeScript only. It isn't used.
 import Compress from '../compress';
 
+const compressPromise = import(
+  /* webpackChunkName: "main-app" */
+  '../compress',
+);
+const offlinerPromise = import(
+  /* webpackChunkName: "offliner" */
+  '../../lib/offliner',
+);
+
 export interface SourceImage {
   file: File | Fileish;
   data: ImageData;
@@ -36,16 +45,15 @@ export default class App extends Component<Props, State> {
   constructor() {
     super();
 
-    import(
-      /* webpackChunkName: "main-app" */
-      '../compress',
-    ).then((module) => {
+    compressPromise.then((module) => {
       this.setState({ Compress: module.default });
     }).catch(() => {
       this.showSnack('Failed to load app');
     });
 
-    navigator.serviceWorker.register('../../sw');
+    offlinerPromise.then(({ offliner }) => {
+      offliner(this.showSnack);
+    });
 
     // In development, persist application state across hot reloads:
     if (process.env.NODE_ENV === 'development') {

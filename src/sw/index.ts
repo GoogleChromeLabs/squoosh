@@ -28,6 +28,8 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
+  self.clients.claim();
+
   event.waitUntil(async function () {
     // Remove old caches.
     const promises = (await caches.keys()).map((cacheName) => {
@@ -57,7 +59,12 @@ self.addEventListener('fetch', (event) => {
 });
 
 self.addEventListener('message', (event) => {
-  if (event.data === 'cache-all') {
-    event.waitUntil(cacheAdditionalProcessors(versionedCache, BUILD_ASSETS));
+  switch (event.data) {
+    case 'cache-all':
+      event.waitUntil(cacheAdditionalProcessors(versionedCache, BUILD_ASSETS));
+      break;
+    case 'skip-waiting':
+      self.skipWaiting();
+      break;
   }
 });
