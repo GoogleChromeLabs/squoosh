@@ -242,7 +242,7 @@ export default class PinchZoom extends HTMLElement {
   /**
    * Update transform values without checking bounds. This is only called in setTransform.
    */
-  _updateTransform(scale: number, x: number, y: number, allowChangeEvent: boolean) {
+  private _updateTransform(scale: number, x: number, y: number, allowChangeEvent: boolean) {
     // Avoid scaling to zero
     if (scale < MIN_SCALE) return;
 
