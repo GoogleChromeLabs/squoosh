@@ -239,14 +239,14 @@ module.exports = function (_, env) {
           removeComments: true
         },
         manifest: readJson('./src/manifest.json'),
-        inject: 'head',
+        inject: 'body',
         compile: true
       }),
 
       new AutoSWPlugin({}),
 
       new ScriptExtHtmlPlugin({
-        defaultAttribute: 'defer'
+        inline: ['first'],
       }),
 
       // Inline constants during build, so they can be folded by UglifyJS.
