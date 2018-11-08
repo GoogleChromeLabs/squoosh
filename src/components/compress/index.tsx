@@ -205,13 +205,14 @@ export default class Compress extends Component<Props, State> {
 
     // If this is the first time the user has interacted with the app, tell the service worker to
     // cache all the codecs.
-    get<boolean | undefined>('user-interacted').then(async (userInteracted: boolean) => {
-      if (userInteracted) return;
-      set('user-interacted', true);
-      const serviceWorker = await getOldestServiceWorker();
-      if (!serviceWorker) return; // Service worker not installing yet.
-      serviceWorker.postMessage('cache-all');
-    });
+    get<boolean | undefined>('user-interacted')
+      .then(async (userInteracted: boolean | undefined) => {
+        if (userInteracted) return;
+        set('user-interacted', true);
+        const serviceWorker = await getOldestServiceWorker();
+        if (!serviceWorker) return; // Service worker not installing yet.
+        serviceWorker.postMessage('cache-all');
+      });
   }
 
   @bind
