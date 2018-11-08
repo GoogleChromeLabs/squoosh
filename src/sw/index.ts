@@ -8,8 +8,7 @@ declare var self: ServiceWorkerGlobalScope;
 // This is populated by webpack.
 declare var BUILD_ASSETS: string[];
 
-const version = '1.0.0';
-const versionedCache = 'static-' + version;
+const versionedCache = 'static-' + VERSION;
 const dynamicCache = 'dynamic';
 const expectedCaches = [versionedCache, dynamicCache];
 
