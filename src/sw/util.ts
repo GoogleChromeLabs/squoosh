@@ -46,6 +46,12 @@ export function cleanupCache(event: FetchEvent, cacheName: string, keepAssets: s
   }());
 }
 
+function getAssetsWithPrefix(assets: string[], prefixes: string[]) {
+  return assets.filter(
+    asset => prefixes.some(prefix => asset.startsWith(prefix)),
+  );
+}
+
 export async function cacheBasics(cacheName: string, buildAssets: string[]) {
   const toCache = ['/', '/assets/favicon.ico'];
 
@@ -60,9 +66,7 @@ export async function cacheBasics(cacheName: string, buildAssets: string[]) {
     'logo.',
   ];
 
-  const prefixMatches = buildAssets.filter(
-    asset => prefixesToCache.some(prefix => asset.startsWith(prefix)),
-  );
+  const prefixMatches = getAssetsWithPrefix(buildAssets, prefixesToCache);
 
   toCache.push(...prefixMatches);
 
@@ -80,10 +84,7 @@ export async function cacheAdditionalProcessors(cacheName: string, buildAssets: 
     'process-',
   ];
 
-  const prefixMatches = buildAssets.filter(
-    asset => prefixesToCache.some(prefix => asset.startsWith(prefix)),
-  );
-
+  const prefixMatches = getAssetsWithPrefix(buildAssets, prefixesToCache);
   const wasm = buildAssets.filter(asset => asset.endsWith('.wasm'));
 
   toCache.push(...prefixMatches, ...wasm);

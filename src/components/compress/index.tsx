@@ -156,7 +156,7 @@ async function processSvg(blob: Blob): Promise<HTMLImageElement> {
   return blobToImg(new Blob([newSource], { type: 'image/svg+xml' }));
 }
 
-async function getOldestServiceWorker() {
+async function getMostActiveServiceWorker() {
   const reg = await navigator.serviceWorker.getRegistration();
   if (!reg) return null;
   return reg.active || reg.waiting || reg.installing;
@@ -209,7 +209,7 @@ export default class Compress extends Component<Props, State> {
       .then(async (userInteracted: boolean | undefined) => {
         if (userInteracted) return;
         set('user-interacted', true);
-        const serviceWorker = await getOldestServiceWorker();
+        const serviceWorker = await getMostActiveServiceWorker();
         if (!serviceWorker) return; // Service worker not installing yet.
         serviceWorker.postMessage('cache-all');
       });
