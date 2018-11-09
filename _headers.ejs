@@ -9,19 +9,6 @@
   Cache-Control: must-revalidate, max-age=3600
 
 # hashed webpack assets
-/*.chunk.*
-  Cache-Control: max-age=31536000
-/*.worker.*
-  Cache-Control: max-age=31536000
-/main.*.js
-  Cache-Control: max-age=31536000
-/main.*.css
-  Cache-Control: max-age=31536000
-/*.wasm
-  Cache-Control: max-age=31536000
-/:file.jpg
-  Cache-Control: max-age=31536000
-/:file.png
-  Cache-Control: max-age=31536000
-/:file.svg
+# Assuming name.hash.extension
+/*.*.*
   Cache-Control: max-age=31536000
