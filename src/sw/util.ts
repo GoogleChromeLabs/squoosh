@@ -56,8 +56,6 @@ export async function cacheBasics(cacheName: string, buildAssets: string[]) {
   const toCache = ['/', '/assets/favicon.ico'];
 
   const prefixesToCache = [
-    // First interaction JS & CSS:
-    'first-interaction.',
     // Main app JS & CSS:
     'main-app.',
     // Service worker handler:
