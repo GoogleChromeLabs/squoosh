@@ -239,7 +239,7 @@ module.exports = function (_, env) {
         compile: true
       }),
 
-      isProd && new AutoSWPlugin({ version: VERSION }),
+      new AutoSWPlugin({ version: VERSION }),
 
       isProd && new AssetTemplatePlugin({
         template: path.join(__dirname, '_headers.ejs'),
