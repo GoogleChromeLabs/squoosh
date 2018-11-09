@@ -9,6 +9,9 @@
 /serviceworker.js
   Cache-Control: no-cache
 
+/manifest.json
+  Cache-Control: must-revalidate, max-age=3600
+
 # URLs in /assets do not include a hash and are mutable.
 # But it isn't a big deal if the user gets an old version.
 /assets/*
