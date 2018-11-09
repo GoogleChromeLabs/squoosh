@@ -19,7 +19,7 @@ function readJson (filename) {
   return JSON.parse(fs.readFileSync(filename));
 }
 
-const VERSION = Object.keys(readJson('./src/changelog.json'))[0];
+const VERSION = readJson('./package.json').version;
 
 module.exports = function (_, env) {
   const isProd = env.mode === 'production';
