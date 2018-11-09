@@ -4,10 +4,11 @@ import './style';
 import App from './components/App';
 
 // Find the outermost Element in our server-rendered HTML structure.
-let root = document.querySelector('#app') || undefined;
+let root = document.getElementById('app_root') as Element;
 
 // "attach" the client-side rendering to it, updating the DOM in-place instead of replacing:
 root = render(<App />, document.body, root);
+root.setAttribute('id', 'app_root');
 
 if (process.env.NODE_ENV !== 'production') {
   // Enable support for React DevTools and some helpful console warnings:

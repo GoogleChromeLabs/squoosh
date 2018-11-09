@@ -14,6 +14,7 @@ const WatchTimestampsPlugin = require('./config/watch-timestamps-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const WorkerPlugin = require('worker-plugin');
 const AutoSWPlugin = require('./config/auto-sw-plugin');
+const CrittersPlugin = require('critters-webpack-plugin');
 
 function readJson (filename) {
   return JSON.parse(fs.readFileSync(filename));
@@ -229,7 +230,7 @@ module.exports = function (_, env) {
       // For now we're not doing SSR.
       new HtmlPlugin({
         filename: path.join(__dirname, 'build/index.html'),
-        template: 'src/index.html',
+        template: '!!prerender-loader?string!src/index.html',
         minify: isProd && {
           collapseWhitespace: true,
           removeScriptTypeAttributes: true,
@@ -238,14 +239,14 @@ module.exports = function (_, env) {
           removeComments: true
         },
         manifest: readJson('./src/manifest.json'),
-        inject: true,
+        inject: 'body',
         compile: true
       }),
 
       new AutoSWPlugin({}),
 
       new ScriptExtHtmlPlugin({
-        defaultAttribute: 'async'
+        inline: ['first']
       }),
 
       // Inline constants during build, so they can be folded by UglifyJS.
@@ -277,6 +278,22 @@ module.exports = function (_, env) {
         analyzerMode: 'static',
         defaultSizes: 'gzip',
         openAnalyzer: false
+      }),
+
+      // Inline Critical CSS (for the intro screen, essentially)
+      isProd && new CrittersPlugin({
+        // use <link rel="stylesheet" media="not x" onload="this.media='all'"> hack to load async css:
+        preload: 'media',
+        // inline all styles from any stylesheet below this size:
+        inlineThreshold: 2000,
+        // don't bother lazy-loading non-critical stylesheets below this size, just inline the non-critical styles too:
+        minimumExternalSize: 4000,
+        // don't emit <noscript> external stylesheet links since the app fundamentally requires JS anyway:
+        noscriptFallback: false,
+        // inline the tiny data URL fonts we have for the intro screen:
+        inlineFonts: true,
+        // (and don't lazy load them):
+        preloadFonts: false
       })
     ].filter(Boolean), // Filter out any falsey plugin array entries.
 
