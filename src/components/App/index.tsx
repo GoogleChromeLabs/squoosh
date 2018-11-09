@@ -76,6 +76,11 @@ export default class App extends Component<Props, State> {
     return this.snackbar.showSnackbar(message, options);
   }
 
+  @bind
+  private onBack() {
+    this.setState({ file: undefined });
+  }
+
   render({}: Props, { file, Compress }: State) {
     return (
       <div id="app" class={style.app}>
@@ -83,7 +88,7 @@ export default class App extends Component<Props, State> {
           {(!file)
             ? <Intro onFile={this.onIntroPickFile} showSnack={this.showSnack} />
             : (Compress)
-              ? <Compress file={file} showSnack={this.showSnack} />
+              ? <Compress file={file} showSnack={this.showSnack} onBack={this.onBack} />
               : <loading-spinner class={style.appLoader}/>
           }
           <snack-bar ref={linkRef(this, 'snackbar')} />

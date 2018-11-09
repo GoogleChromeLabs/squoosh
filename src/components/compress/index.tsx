@@ -61,6 +61,7 @@ interface EncodedImage {
 interface Props {
   file: File | Fileish;
   showSnack: SnackBarElement['showSnackbar'];
+  onBack: () => void;
 }
 
 interface State {
@@ -431,7 +432,7 @@ export default class Compress extends Component<Props, State> {
     this.setState({ images });
   }
 
-  render({ }: Props, { loading, images, source, mobileView }: State) {
+  render({ onBack }: Props, { loading, images, source, mobileView }: State) {
     const [leftImage, rightImage] = images;
     const [leftImageData, rightImageData] = images.map(i => i.data);
 
@@ -476,6 +477,7 @@ export default class Compress extends Component<Props, State> {
           rightCompressed={rightImageData}
           leftImgContain={leftImage.preprocessorState.resize.fitMethod === 'cover'}
           rightImgContain={rightImage.preprocessorState.resize.fitMethod === 'cover'}
+          onBack={onBack}
         />
         {mobileView
           ? (

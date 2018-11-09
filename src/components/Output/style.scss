@@ -38,7 +38,7 @@
   top: 0;
   left: 0;
   right: 0;
-  padding: 9px;
+  padding: 9px 84px;
   overflow: hidden;
   flex-wrap: wrap;
   contain: content;
@@ -50,6 +50,7 @@
   }
 
   @media (min-width: 860px) {
+    padding: 9px;
     top: auto;
     left: 320px;
     right: 320px;
@@ -78,14 +79,19 @@
   display: flex;
   align-items: center;
   box-sizing: border-box;
-  height: 48px;
-  padding: 0 16px;
   margin: 4px;
   background-color: #fff;
   border: 1px solid rgba(0,0,0,0.2);
   border-radius: 5px;
   line-height: 1;
   white-space: nowrap;
+  height: 36px;
+  padding: 0 8px;
+
+  @media (min-width: 600px) {
+    height: 48px;
+    padding: 0 16px;
+  }
 
   &:focus {
     box-shadow: 0 0 0 2px var(--button-fg);
@@ -133,4 +139,11 @@
   // We should try to remove this once the issue is fixed.
   // https://bugs.chromium.org/p/chromium/issues/detail?id=870222#c10
   will-change: auto;
+}
+
+.back {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 9px;
 }

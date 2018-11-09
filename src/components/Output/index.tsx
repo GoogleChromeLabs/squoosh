@@ -5,7 +5,7 @@ import './custom-els/TwoUp';
 import * as style from './style.scss';
 import { bind, linkRef } from '../../lib/initial-util';
 import { shallowEqual, drawDataToCanvas } from '../../lib/util';
-import { ToggleIcon, AddIcon, RemoveIcon } from '../../lib/icons';
+import { ToggleIcon, AddIcon, RemoveIcon, BackIcon } from '../../lib/icons';
 import { twoUpHandle } from './custom-els/TwoUp/styles.css';
 
 interface Props {
@@ -15,6 +15,7 @@ interface Props {
   rightCompressed?: ImageData;
   leftImgContain: boolean;
   rightImgContain: boolean;
+  onBack: () => void;
 }
 
 interface State {
@@ -191,7 +192,7 @@ export default class Output extends Component<Props, State> {
   }
 
   render(
-    { mobileView, leftImgContain, rightImgContain, originalImage }: Props,
+    { mobileView, leftImgContain, rightImgContain, originalImage, onBack }: Props,
     { scale, editingScale, altBackground }: State,
   ) {
     const leftDraw = this.leftDrawable();
@@ -242,6 +243,12 @@ export default class Output extends Component<Props, State> {
             />
           </pinch-zoom>
         </two-up>
+
+        <div class={style.back}>
+          <button class={style.button} onClick={onBack}>
+            <BackIcon />
+          </button>
+        </div>
 
         <div class={style.controls}>
           <div class={style.zoomControls}>
