@@ -8,11 +8,8 @@ export interface SnackOptions {
 function createSnack(message: string, options: SnackOptions): [Element, Promise<string>] {
   const {
     timeout = 0,
-    actions = [],
+    actions = ['dismiss'],
   } = options;
-
-  // Provide a default 'dismiss' action
-  if (!timeout && actions.length === 0) actions.push('dismiss');
 
   const el = document.createElement('div');
   el.className = style.snackbar;

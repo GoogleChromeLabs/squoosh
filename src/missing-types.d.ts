@@ -32,3 +32,5 @@ declare module 'url-loader!*' {
   const value: string;
   export default value;
 }
+
+declare var VERSION: string;

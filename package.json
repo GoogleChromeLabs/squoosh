@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "squoosh",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "license": "apache-2.0",
   "scripts": {
     "start": "webpack serve --host 0.0.0.0 --hot",
@@ -71,7 +71,6 @@
     "webpack-bundle-analyzer": "^2.13.1",
     "webpack-cli": "^2.1.5",
     "webpack-dev-server": "^3.1.5",
-    "webpack-plugin-replace": "^1.1.1",
     "worker-plugin": "^1.1.1"
   }
 }

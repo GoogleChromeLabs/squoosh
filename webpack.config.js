@@ -8,7 +8,6 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const HtmlPlugin = require('html-webpack-plugin');
 const ScriptExtHtmlPlugin = require('script-ext-html-webpack-plugin');
-const ReplacePlugin = require('webpack-plugin-replace');
 const CopyPlugin = require('copy-webpack-plugin');
 const WatchTimestampsPlugin = require('./config/watch-timestamps-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
@@ -19,6 +18,8 @@ const CrittersPlugin = require('critters-webpack-plugin');
 function readJson (filename) {
   return JSON.parse(fs.readFileSync(filename));
 }
+
+const VERSION = readJson('./package.json').version;
 
 module.exports = function (_, env) {
   const isProd = env.mode === 'production';
@@ -143,12 +144,6 @@ module.exports = function (_, env) {
           loader: 'ts-loader'
         },
         {
-          test: /\.jsx?$/,
-          loader: 'babel-loader',
-          // Don't respect any Babel RC files found on the filesystem:
-          options: Object.assign(readJson('.babelrc'), { babelrc: false })
-        },
-        {
           // All the codec files define a global with the same name as their file name. `exports-loader` attaches those to `module.exports`.
           test: /\/codecs\/.*\.js$/,
           loader: 'exports-loader'
@@ -243,7 +238,9 @@ module.exports = function (_, env) {
         compile: true
       }),
 
-      new AutoSWPlugin({}),
+      new AutoSWPlugin({
+        version: VERSION
+      }),
 
       new ScriptExtHtmlPlugin({
         inline: ['first']
@@ -251,20 +248,10 @@ module.exports = function (_, env) {
 
       // Inline constants during build, so they can be folded by UglifyJS.
       new webpack.DefinePlugin({
+        VERSION: JSON.stringify(VERSION),
         // We set node.process=false later in this config.
         // Here we make sure if (process && process.foo) still works:
         process: '{}'
-      }),
-
-      // Babel embeds helpful error messages into transpiled classes that we don't need in production.
-      // Here we replace the constructor and message with a static throw, leaving the message to be DCE'd.
-      // This is useful since it shows the message in SourceMapped code when debugging.
-      isProd && new ReplacePlugin({
-        include: /babel-helper$/,
-        patterns: [{
-          regex: /throw\s+(?:new\s+)?((?:Type|Reference)?Error)\s*\(/g,
-          value: (s, type) => `throw 'babel error'; (`
-        }]
       }),
 
       // Copying files via Webpack allows them to be served dynamically by `webpack serve`

@@ -60,6 +60,8 @@ export async function cacheBasics(cacheName: string, buildAssets: string[]) {
     'first-interaction.',
     // Main app JS & CSS:
     'main-app.',
+    // Service worker handler:
+    'offliner.',
     // Little icons for the demo images on the homescreen:
     'icon-demo-',
     // Site logo:
