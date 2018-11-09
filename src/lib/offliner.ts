@@ -42,6 +42,8 @@ async function updateReady(reg: ServiceWorkerRegistration): Promise<void> {
 
 /** Set up the service worker and monitor changes */
 export async function offliner(showSnack: SnackBarElement['showSnackbar']) {
+  if (PRERENDER) return;
+
   if (process.env.NODE_ENV === 'production') {
     navigator.serviceWorker.register('../sw');
   }
