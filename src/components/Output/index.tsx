@@ -1,6 +1,6 @@
 import { h, Component } from 'preact';
-import PinchZoom, { ScaleToOpts } from './custom-els/PinchZoom';
-import './custom-els/PinchZoom';
+import PinchZoom, { ScaleToOpts } from 'pinch-zoom-element/lib';
+import 'pinch-zoom-element/lib';
 import './custom-els/TwoUp';
 import * as style from './style.scss';
 import { bind, linkRef } from '../../lib/initial-util';
