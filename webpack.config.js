@@ -141,7 +141,6 @@ module.exports = function (_, env) {
         },
         {
           test: /\.tsx?$/,
-          exclude: nodeModules,
           loader: 'ts-loader'
         },
         {
