@@ -141,7 +141,8 @@ module.exports = function (_, env) {
         },
         {
           test: /\.tsx?$/,
-          loader: 'ts-loader'
+          loader: 'ts-loader',
+          options: { allowTsInNodeModules: true }
         },
         {
           // All the codec files define a global with the same name as their file name. `exports-loader` attaches those to `module.exports`.
