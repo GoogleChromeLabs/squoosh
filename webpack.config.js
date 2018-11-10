@@ -273,7 +273,8 @@ module.exports = function (_, env) {
 
       // Inline Critical CSS (for the intro screen, essentially)
       isProd && new CrittersPlugin({
-        preload: 'swap',
+        // use <link rel="stylesheet" media="not x" onload="this.media='all'"> hack to load async css:
+        preload: 'media',
         // inline all styles from any stylesheet below this size:
         inlineThreshold: 2000,
         // don't bother lazy-loading non-critical stylesheets below this size, just inline the non-critical styles too:
