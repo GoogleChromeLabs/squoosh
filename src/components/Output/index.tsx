@@ -48,6 +48,15 @@ export default class Output extends Component<Props, State> {
     const leftDraw = this.leftDrawable();
     const rightDraw = this.rightDrawable();
 
+    // Reset the pinch zoom, which may have an position set from the previous view, after pressing
+    // the back button.
+    this.pinchZoomLeft!.setTransform({
+      allowChangeEvent: true,
+      x: 0,
+      y: 0,
+      scale: 1,
+    });
+
     if (this.canvasLeft && leftDraw) {
       drawDataToCanvas(this.canvasLeft, leftDraw);
     }
