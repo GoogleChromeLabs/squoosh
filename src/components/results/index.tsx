@@ -60,11 +60,16 @@ export default class Results extends Component<Props, State> {
 
   @bind
   onDownload() {
+    // GA can’t do floats. So we round to ints. We're deliberately rounding to nearest kilobyte to
+    // avoid cases where exact image sizes leak something interesting about the user.
+    const before = Math.round(this.props.source!.file.size / 1024);
+    const after = Math.round(this.props.imageFile!.size / 1024);
+    const change = Math.round(after / before * 1000);
+
     ga('send', 'event', 'compression', 'download', {
-      // GA can’t do floats. So we round to ints.
-      metric1: Math.floor(this.props.source!.file.size),
-      metric2: Math.floor(this.props.imageFile!.size),
-      metric3: Math.floor(this.props.imageFile!.size / this.props.source!.file.size * 1000),
+      metric1: before,
+      metric2: after,
+      metric3: change,
     });
   }
 

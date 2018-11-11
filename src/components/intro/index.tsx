@@ -129,6 +129,11 @@ export default class Intro extends Component<Props, State> {
         <ul class={style.relatedLinks}>
           <li><a href="https://github.com/GoogleChromeLabs/squoosh/">View the code</a></li>
           <li><a href="https://github.com/GoogleChromeLabs/squoosh/issues">Report a bug</a></li>
+          <li>
+            <a href="https://github.com/GoogleChromeLabs/squoosh/blob/master/README.md#privacy">
+              Privacy
+            </a>
+          </li>
         </ul>
       </div>
     );
