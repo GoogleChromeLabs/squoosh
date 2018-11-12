@@ -5,13 +5,13 @@ by various image compressors.
 
 # Privacy
 
-Google analytics is used to record the following:
+Google Analytics is used to record the following:
 
-* [Basic visit data](https://support.google.com/analytics/answer/6004245?hl=en&ref_topic=2919631).
+* [Basic visit data](https://support.google.com/analytics/answer/6004245?ref_topic=2919631).
 * Before and after image size once an image is downloaded. These values are rounded to the nearest
   kilobyte.
 
-Impage compression is handled locally, no additional data is sent to the server.
+Image compression is handled locally; no additional data is sent to the server.
 
 # Building locally
 
