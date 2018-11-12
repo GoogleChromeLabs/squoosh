@@ -1,6 +1,6 @@
-# Squoosh!
+# [Squoosh]!
 
-Squoosh is an image compression web app that allows you to dive into the advanced options provided
+[Squoosh] is an image compression web app that allows you to dive into the advanced options provided
 by various image compressors.
 
 # Privacy
@@ -30,3 +30,5 @@ You can run the development server with:
 ```sh
 npm start
 ```
+
+[Squoosh]: https://squoosh.app
