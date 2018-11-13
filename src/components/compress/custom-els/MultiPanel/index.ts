@@ -104,6 +104,7 @@ export default class MultiPanel extends HTMLElement {
   // KeyDown event handler
   private _onKeyDown(event: KeyboardEvent) {
     const selectedEl = document.activeElement;
+    /// @ts-ignore
     const heading = getClosestHeading(selectedEl);
 
     // if keydown event is not on heading element, ignore
@@ -253,6 +254,7 @@ export default class MultiPanel extends HTMLElement {
     }
     // previous Element of active Element is previous Content,
     // previous Element of previous Content  is previousHeading
+    /// @ts-ignore
     const previousContent = document.activeElement.previousElementSibling;
     if (previousContent) {
       return previousContent.previousElementSibling as HTMLElement;
@@ -263,6 +265,7 @@ export default class MultiPanel extends HTMLElement {
   private _nextHeading() {
     // activeElement would be the currently selected heading
     // 2 elemements after that would be the next heading.
+    /// @ts-ignore
     const nextContent = document.activeElement.nextElementSibling;
     if (nextContent) {
       return nextContent.nextElementSibling as HTMLElement;
