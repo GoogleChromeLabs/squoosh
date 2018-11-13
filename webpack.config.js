@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const webpack = require('webpack');
 const CleanPlugin = require('clean-webpack-plugin');
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 const ProgressBarPlugin = require('progress-bar-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
@@ -290,12 +290,10 @@ module.exports = function (_, env) {
 
     optimization: {
       minimizer: [
-        new UglifyJsPlugin({
+        new TerserPlugin({
           sourceMap: isProd,
-          extractComments: {
-            file: 'build/licenses.txt'
-          },
-          uglifyOptions: {
+          extractComments: 'build/licenses.txt',
+          terserOptions: {
             compress: {
               inline: 1
             },
