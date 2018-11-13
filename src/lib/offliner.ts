@@ -63,6 +63,10 @@ export async function offliner(showSnack: SnackBarElement['showSnackbar']) {
     location.reload();
   });
 
+  // If we don't have a controller, we don't need to check for updates – we've just loaded from the
+  // network.
+  if (!hasController) return;
+
   const reg = await navigator.serviceWorker.getRegistration();
   // Service worker not registered yet.
   if (!reg) return;
