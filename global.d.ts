@@ -6,7 +6,8 @@ declare interface NodeModule {
 }
 
 declare interface Window {
-  STATE: any
+  STATE: any;
+  ga: any;
 }
 
 declare namespace JSX {
