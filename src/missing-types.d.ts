@@ -39,7 +39,3 @@ declare var ga: {
   (...args: any[]): void;
   q: any[];
 };
-
-interface Window {
-  ga: typeof ga;
-}
