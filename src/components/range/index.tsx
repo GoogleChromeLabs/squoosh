@@ -13,6 +13,8 @@ export default class Range extends Component<Props, State> {
   @bind
   private onTextInput(event: Event) {
     const input = event.target as HTMLInputElement;
+    const value = input.value.trim();
+    if (!value) return;
     this.rangeWc!.value = input.value;
     const { onInput } = this.props;
     if (onInput) onInput(event);
