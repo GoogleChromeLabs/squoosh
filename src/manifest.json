@@ -3,7 +3,7 @@
   "short_name": "Squoosh",
   "start_url": "/",
   "display": "standalone",
-  "orientation": "portrait",
+  "orientation": "any",
   "background_color": "#fff",
   "theme_color": "#f78f21",
   "icons": [
