@@ -90,7 +90,7 @@ export default class Intro extends Component<Props, State> {
         <div>
           <div class={style.logoSizer}>
             <div class={style.logoContainer}>
-              <img src={logo} class={style.logo} alt="Squoosh" decoding="async" />
+              <img src={logo} class={style.logo} alt="Squoosh" decoding="async" draggable="false" />
             </div>
           </div>
           <p class={style.openImageGuide}>
