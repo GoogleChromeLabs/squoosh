@@ -48,6 +48,7 @@
 
 .logo {
   composes: abs-fill from '../../lib/util.scss';
+  pointer-events: none;
 }
 
 .open-image-guide {
@@ -144,6 +145,7 @@
 
 .demo-icon {
   composes: abs-fill from '../../lib/util.scss';
+  pointer-events: none;
 }
 
 .demo-description {
