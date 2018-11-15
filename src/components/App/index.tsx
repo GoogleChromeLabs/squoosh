@@ -8,6 +8,7 @@ import SnackBarElement, { SnackOptions } from '../../lib/SnackBar';
 import '../../lib/SnackBar';
 import Intro from '../intro';
 import '../custom-els/LoadingSpinner';
+import history from '../../lib/history';
 
 // This is imported for TypeScript only. It isn't used.
 import Compress from '../compress';
@@ -33,6 +34,9 @@ interface State {
   file?: File | Fileish;
   Compress?: typeof Compress;
 }
+
+const ROUTE_INDEX = '/';
+const ROUTE_EDITOR = '/editor';
 
 export default class App extends Component<Props, State> {
   state: State = {
@@ -64,16 +68,32 @@ export default class App extends Component<Props, State> {
     }
   }
 
+  componentDidMount() {
+    history.on('popstate', this.onBack);
+
+    if (!this.state.file && history.pathname !== ROUTE_INDEX) {
+      history.replace(ROUTE_INDEX);
+    }
+  }
+
+  componentWillUnmount() {
+    history.off('popstate', this.onBack);
+  }
+
+  private onFileSelected() {
+    history.push(ROUTE_EDITOR);
+  }
+
   @bind
   private onFileDrop(event: FileDropEvent) {
     const { file } = event;
     if (!file) return;
-    this.setState({ file });
+    this.setState({ file }, this.onFileSelected);
   }
 
   @bind
   private onIntroPickFile(file: File | Fileish) {
-    this.setState({ file });
+    this.setState({ file }, this.onFileSelected);
   }
 
   @bind
@@ -85,6 +105,7 @@ export default class App extends Component<Props, State> {
   @bind
   private onBack() {
     this.setState({ file: undefined });
+    history.replace(ROUTE_INDEX);
   }
 
   render({}: Props, { file, Compress }: State) {
