@@ -32,3 +32,48 @@ npm start
 ```
 
 [Squoosh]: https://squoosh.app
+
+
+
+
+
+*------------------------------Español------------------------------*
+
+
+
+
+
+# [Squoosh]!
+
+[Squoosh] es una aplicación web de compresión de imágenes que te permite sumergirte en las opciones avanzadas proporcionadas
+Por varios compresores de imagen.
+
+# Privacidad
+
+Google Analytics se utiliza para grabar lo siguiente:
+
+* [Datos de visita básicos] (https://support.google.com/analytics/answer/6004245?ref_topic=2919631).
+* Antes y después del tamaño de la imagen una vez que se descarga una imagen. Estos valores se redondean al más cercano.
+kilobyte.
+
+La compresión de imágenes se maneja localmente; No se envían datos adicionales al servidor.
+
+# Construyendo localmente
+
+Clona el repositorio, y
+
+```
+npm instalar
+npm ejecutar construir
+```
+
+Obtendrá un error en la primera compilación debido a [un error estúpido que no hemos solucionado
+todavía] (https://github.com/GoogleChromeLabs/squoosh/issues/251).
+
+Puede ejecutar el servidor de desarrollo con:
+
+```
+npm start
+```
+
+[Squoosh]: https://squoosh.app
