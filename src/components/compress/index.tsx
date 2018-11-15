@@ -83,6 +83,9 @@ async function preprocessImage(
   processor: Processor,
 ): Promise<ImageData> {
   let result = source.data;
+  if (preprocessData.rotateFlip.enabled) {
+    result = await processor.rotateFlip(result, preprocessData.rotateFlip);
+  }
   if (preprocessData.resize.enabled) {
     if (preprocessData.resize.method === 'vector' && source.vectorImage) {
       result = processor.vectorResize(
@@ -474,6 +477,8 @@ export default class Compress extends Component<Props, State> {
           rightCompressed={rightImageData}
           leftImgContain={leftImage.preprocessorState.resize.fitMethod === 'cover'}
           rightImgContain={rightImage.preprocessorState.resize.fitMethod === 'cover'}
+          leftFlipDimensions={leftImage.preprocessorState.rotateFlip.rotate % 180 !== 0}
+          rightFlipDimensions={rightImage.preprocessorState.rotateFlip.rotate % 180 !== 0}
           onBack={onBack}
         />
         {mobileView

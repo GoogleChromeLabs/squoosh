@@ -2,6 +2,9 @@ import {
   QuantizeOptions, defaultOptions as quantizerDefaultOptions,
 } from './imagequant/processor-meta';
 import { ResizeOptions, defaultOptions as resizeDefaultOptions } from './resize/processor-meta';
+import {
+  RotateFlipOptions, defaultOptions as rotateFlipDefaultOptions,
+} from './rotate-flip/processor-meta';
 
 interface Enableable {
   enabled: boolean;
@@ -9,6 +12,7 @@ interface Enableable {
 export interface PreprocessorState {
   quantizer: Enableable & QuantizeOptions;
   resize: Enableable & ResizeOptions;
+  rotateFlip: Enableable & RotateFlipOptions;
 }
 
 export const defaultPreprocessorState: PreprocessorState = {
@@ -19,5 +23,9 @@ export const defaultPreprocessorState: PreprocessorState = {
   resize: {
     enabled: false,
     ...resizeDefaultOptions,
+  },
+  rotateFlip: {
+    enabled: false,
+    ...rotateFlipDefaultOptions,
   },
 };

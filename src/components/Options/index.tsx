@@ -11,6 +11,7 @@ import BrowserWebPEncoderOptions from '../../codecs/browser-webp/options';
 
 import QuantizerOptionsComponent from '../../codecs/imagequant/options';
 import ResizeOptionsComponent from '../../codecs/resize/options';
+import RotateFlipOptionsComponent from '../../codecs/rotate-flip/options';
 
 import * as identity from '../../codecs/identity/encoder-meta';
 import * as optiPNG from '../../codecs/optipng/encoder-meta';
@@ -34,6 +35,7 @@ import {
 } from '../../codecs/encoders';
 import { QuantizeOptions } from '../../codecs/imagequant/processor-meta';
 import { ResizeOptions } from '../../codecs/resize/processor-meta';
+import { RotateFlipOptions } from 'src/codecs/rotate-flip/processor-meta';
 import { PreprocessorState } from '../../codecs/preprocessors';
 import { SourceImage } from '../App';
 import Checkbox from '../checkbox';
@@ -114,6 +116,13 @@ export default class Options extends Component<Props, State> {
     );
   }
 
+  @bind
+  onRotateFlipOptionsChange(opts: RotateFlipOptions) {
+    this.props.onPreprocessorOptionsChange(
+      cleanMerge(this.props.preprocessorState, 'rotateFlip', opts),
+    );
+  }
+
   render(
     {
       source,
@@ -132,6 +141,22 @@ export default class Options extends Component<Props, State> {
           {encoderState.type === identity.type ? null :
             <div>
               <h3 class={style.optionsTitle}>Edit</h3>
+              <label class={style.sectionEnabler}>
+                <Checkbox
+                  name="rotateFlip.enable"
+                  checked={!!preprocessorState.rotateFlip.enabled}
+                  onChange={this.onPreprocessorEnabledChange}
+                />
+                Rotate/flip
+              </label>
+              <Expander>
+                {preprocessorState.rotateFlip.enabled ?
+                  <RotateFlipOptionsComponent
+                    options={preprocessorState.rotateFlip}
+                    onChange={this.onRotateFlipOptionsChange}
+                  />
+                : null}
+              </Expander>
               <label class={style.sectionEnabler}>
                 <Checkbox
                   name="resize.enable"

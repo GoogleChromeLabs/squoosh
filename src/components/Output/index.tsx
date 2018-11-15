@@ -15,6 +15,8 @@ interface Props {
   rightCompressed?: ImageData;
   leftImgContain: boolean;
   rightImgContain: boolean;
+  leftFlipDimensions: boolean;
+  rightFlipDimensions: boolean;
   onBack: () => void;
 }
 
@@ -201,7 +203,10 @@ export default class Output extends Component<Props, State> {
   }
 
   render(
-    { mobileView, leftImgContain, rightImgContain, originalImage, onBack }: Props,
+    {
+      mobileView, leftImgContain, rightImgContain, leftFlipDimensions, rightFlipDimensions,
+      originalImage, onBack,
+    }: Props,
     { scale, editingScale, altBackground }: State,
   ) {
     const leftDraw = this.leftDrawable();
@@ -226,30 +231,38 @@ export default class Output extends Component<Props, State> {
             onChange={this.onPinchZoomLeftChange}
             ref={linkRef(this, 'pinchZoomLeft')}
           >
-            <canvas
-              class={style.outputCanvas}
-              ref={linkRef(this, 'canvasLeft')}
-              width={leftDraw && leftDraw.width}
-              height={leftDraw && leftDraw.height}
-              style={{
-                width: originalImage && originalImage.width,
-                height: originalImage && originalImage.height,
-                objectFit: leftImgContain ? 'contain' : '',
-              }}
-            />
+            <div class={style.pinchTarget}>
+              <canvas
+                class={style.outputCanvas}
+                ref={linkRef(this, 'canvasLeft')}
+                width={leftDraw && leftDraw.width}
+                height={leftDraw && leftDraw.height}
+                style={{
+                  width: originalImage &&
+                    (leftFlipDimensions ? originalImage.height : originalImage.width),
+                  height: originalImage &&
+                    (leftFlipDimensions ? originalImage.width : originalImage.height),
+                  objectFit: leftImgContain ? 'contain' : '',
+                }}
+              />
+            </div>
           </pinch-zoom>
           <pinch-zoom class={style.pinchZoom} ref={linkRef(this, 'pinchZoomRight')}>
-            <canvas
-              class={style.outputCanvas}
-              ref={linkRef(this, 'canvasRight')}
-              width={rightDraw && rightDraw.width}
-              height={rightDraw && rightDraw.height}
-              style={{
-                width: originalImage && originalImage.width,
-                height: originalImage && originalImage.height,
-                objectFit: rightImgContain ? 'contain' : '',
-              }}
-            />
+            <div class={style.pinchTarget}>
+              <canvas
+                class={style.outputCanvas}
+                ref={linkRef(this, 'canvasRight')}
+                width={rightDraw && rightDraw.width}
+                height={rightDraw && rightDraw.height}
+                style={{
+                  width: originalImage &&
+                    (rightFlipDimensions ? originalImage.height : originalImage.width),
+                  height: originalImage &&
+                    (rightFlipDimensions ? originalImage.width : originalImage.height),
+                  objectFit: rightImgContain ? 'contain' : '',
+                }}
+              />
+            </div>
           </pinch-zoom>
         </two-up>
 

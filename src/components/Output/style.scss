@@ -26,9 +26,22 @@
 .pinch-zoom {
   composes: abs-fill from '../../lib/util.scss';
   outline: none;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+}
+
+.pinch-target {
+  composes: abs-fill from '../../lib/util.scss';
+  contain: layout;
+}
+
+.output-canvas {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  // This fixes a severe painting bug in Chrome.
+  // We should try to remove this once the issue is fixed.
+  // https://bugs.chromium.org/p/chromium/issues/detail?id=870222#c10
+  will-change: auto;
 }
 
 .controls {
@@ -131,14 +144,6 @@
   margin: 0 3px 0 0;
   color: #888;
   border-bottom: 1px dashed #999;
-}
-
-.output-canvas {
-  flex-shrink: 0;
-  // This fixes a severe painting bug in Chrome.
-  // We should try to remove this once the issue is fixed.
-  // https://bugs.chromium.org/p/chromium/issues/detail?id=870222#c10
-  will-change: auto;
 }
 
 .back {
