@@ -36,6 +36,10 @@ import './custom-els/MultiPanel';
 import Results from '../results';
 import { ExpandIcon, CopyAcrossIconProps } from '../../lib/icons';
 import SnackBarElement from 'src/lib/SnackBar';
+import history from '../../lib/history';
+
+const ROUTE_INDEX = '/';
+const ROUTE_EDITOR = '/editor';
 
 export interface SourceImage {
   file: File | Fileish;
@@ -230,6 +234,16 @@ export default class Compress extends Component<Props, State> {
     if (nextProps.file !== this.props.file) {
       this.updateFile(nextProps.file);
     }
+  }
+
+  componentDidMount() {
+    history.push(ROUTE_EDITOR);
+    history.on('popstate', this.props.onBack);
+  }
+
+  componentWillUnmount() {
+    history.replace(ROUTE_INDEX);
+    history.off('popstate', this.props.onBack);
   }
 
   componentDidUpdate(prevProps: Props, prevState: State): void {
