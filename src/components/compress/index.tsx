@@ -238,12 +238,12 @@ export default class Compress extends Component<Props, State> {
 
   componentDidMount() {
     history.push(ROUTE_EDITOR);
-    history.on('popstate', this.props.onBack);
+    history.addPopStateListener(this.props.onBack);
   }
 
   componentWillUnmount() {
     history.replace(ROUTE_INDEX);
-    history.off('popstate', this.props.onBack);
+    history.removePopStateListener(this.props.onBack);
   }
 
   componentDidUpdate(prevProps: Props, prevState: State): void {
