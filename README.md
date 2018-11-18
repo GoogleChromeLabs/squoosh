@@ -22,7 +22,7 @@ npm install
 npm run build
 ```
 
-You'll get an error on first build because of [a unexpected bug we haven't fixed
+You'll get an error on first build because of [an unexpected bug we haven't fixed
 yet](https://github.com/GoogleChromeLabs/squoosh/issues/251).
 
 You can run the development server with:
