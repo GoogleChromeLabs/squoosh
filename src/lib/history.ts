@@ -8,7 +8,5 @@ export default {
   push(path: string) {
     window.history.pushState(null, '', path);
   },
-  replace(path: string) {
-    window.history.replaceState(null, '', path);
-  },
+  back: window.history.back.bind(window.history),
 };

@@ -38,7 +38,6 @@ import { ExpandIcon, CopyAcrossIconProps } from '../../lib/icons';
 import SnackBarElement from 'src/lib/SnackBar';
 import history from '../../lib/history';
 
-const ROUTE_INDEX = '/';
 const ROUTE_EDITOR = '/editor';
 
 export interface SourceImage {
@@ -242,8 +241,13 @@ export default class Compress extends Component<Props, State> {
   }
 
   componentWillUnmount() {
-    history.replace(ROUTE_INDEX);
     history.removePopStateListener(this.props.onBack);
+  }
+
+  @bind
+  private onBack() {
+    history.back();
+    this.props.onBack();
   }
 
   componentDidUpdate(prevProps: Props, prevState: State): void {
@@ -430,7 +434,7 @@ export default class Compress extends Component<Props, State> {
     this.setState({ images });
   }
 
-  render({ onBack }: Props, { loading, images, source, mobileView }: State) {
+  render({}: Props, { loading, images, source, mobileView }: State) {
     const [leftImage, rightImage] = images;
     const [leftImageData, rightImageData] = images.map(i => i.data);
 
@@ -475,7 +479,7 @@ export default class Compress extends Component<Props, State> {
           rightCompressed={rightImageData}
           leftImgContain={leftImage.preprocessorState.resize.fitMethod === 'cover'}
           rightImgContain={rightImage.preprocessorState.resize.fitMethod === 'cover'}
-          onBack={onBack}
+          onBack={this.onBack}
         />
         {mobileView
           ? (
