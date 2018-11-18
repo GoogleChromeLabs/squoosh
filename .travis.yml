@@ -3,6 +3,5 @@ node_js:
 - node
 - 10
 - 8
-- 6
 cache: npm
 script: npm run build || npm run build # scss ts definitions need to be generated before an actual build
