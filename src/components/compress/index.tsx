@@ -43,13 +43,18 @@ export interface SourceImage {
   vectorImage?: HTMLImageElement;
 }
 
-interface EncodedImage {
+interface SideSettings {
+  preprocessorState: PreprocessorState;
+  encoderState: EncoderState;
+}
+
+interface Side {
   preprocessed?: ImageData;
   file?: Fileish;
   downloadUrl?: string;
   data?: ImageData;
-  preprocessorState: PreprocessorState;
-  encoderState: EncoderState;
+  latestSettings: SideSettings;
+  encodedSettings?: SideSettings;
   loading: boolean;
   /** Counter of the latest bmp currently encoding */
   loadingCounter: number;
@@ -65,7 +70,7 @@ interface Props {
 
 interface State {
   source?: SourceImage;
-  images: [EncodedImage, EncodedImage];
+  sides: [Side, Side];
   /** Source image load */
   loading: boolean;
   loadingCounter: number;
@@ -174,17 +179,21 @@ export default class Compress extends Component<Props, State> {
     source: undefined,
     loading: false,
     loadingCounter: 0,
-    images: [
+    sides: [
       {
-        preprocessorState: defaultPreprocessorState,
-        encoderState: { type: identity.type, options: identity.defaultOptions },
+        latestSettings: {
+          preprocessorState: defaultPreprocessorState,
+          encoderState: { type: identity.type, options: identity.defaultOptions },
+        },
         loadingCounter: 0,
         loadedCounter: 0,
         loading: false,
       },
       {
-        preprocessorState: defaultPreprocessorState,
-        encoderState: { type: mozJPEG.type, options: mozJPEG.defaultOptions },
+        latestSettings: {
+          preprocessorState: defaultPreprocessorState,
+          encoderState: { type: mozJPEG.type, options: mozJPEG.defaultOptions },
+        },
         loadingCounter: 0,
         loadedCounter: 0,
         loading: false,
@@ -212,7 +221,7 @@ export default class Compress extends Component<Props, State> {
 
   private onEncoderTypeChange(index: 0 | 1, newType: EncoderType): void {
     this.setState({
-      images: cleanSet(this.state.images, `${index}.encoderState`, {
+      sides: cleanSet(this.state.sides, `${index}.latestSettings.encoderState`, {
         type: newType,
         options: encoderMap[newType].defaultOptions,
       }),
@@ -221,13 +230,13 @@ export default class Compress extends Component<Props, State> {
 
   private onPreprocessorOptionsChange(index: 0 | 1, options: PreprocessorState): void {
     this.setState({
-      images: cleanSet(this.state.images, `${index}.preprocessorState`, options),
+      sides: cleanSet(this.state.sides, `${index}.latestSettings.preprocessorState`, options),
     });
   }
 
   private onEncoderOptionsChange(index: 0 | 1, options: EncoderOptions): void {
     this.setState({
-      images: cleanSet(this.state.images, `${index}.encoderState.options`, options),
+      sides: cleanSet(this.state.sides, `${index}.latestSettings.encoderState.options`, options),
     });
   }
 
@@ -248,18 +257,18 @@ export default class Compress extends Component<Props, State> {
   }
 
   componentDidUpdate(prevProps: Props, prevState: State): void {
-    const { source, images } = this.state;
+    const { source, sides } = this.state;
 
-    for (const [i, image] of images.entries()) {
-      const prevImage = prevState.images[i];
+    for (const [i, side] of sides.entries()) {
+      const prevSettings = prevState.sides[i].latestSettings;
       const sourceChanged = source !== prevState.source;
-      const encoderChanged = image.encoderState !== prevImage.encoderState;
-      const preprocessorChanged = image.preprocessorState !== prevImage.preprocessorState;
+      const encoderChanged = side.latestSettings.encoderState !== prevSettings.encoderState;
+      const preprocessorChanged =
+        side.latestSettings.preprocessorState !== prevSettings.preprocessorState;
 
       // The image only needs updated if the encoder/preprocessor settings have changed, or the
       // source has changed.
       if (sourceChanged || encoderChanged || preprocessorChanged) {
-        if (prevImage.downloadUrl) URL.revokeObjectURL(prevImage.downloadUrl);
         this.updateImage(i, {
           skipPreprocessing: !sourceChanged && !preprocessorChanged,
         }).catch((err) => {
@@ -271,10 +280,10 @@ export default class Compress extends Component<Props, State> {
 
   private async onCopyToOtherClick(index: 0 | 1) {
     const otherIndex = (index + 1) % 2;
-    const oldSettings = this.state.images[otherIndex];
+    const oldSettings = this.state.sides[otherIndex];
 
     this.setState({
-      images: cleanSet(this.state.images, otherIndex, this.state.images[index]),
+      sides: cleanSet(this.state.sides, otherIndex, this.state.sides[index]),
     });
 
     const result = await this.props.showSnack('Settings copied across', {
@@ -285,7 +294,7 @@ export default class Compress extends Component<Props, State> {
     if (result !== 'undo') return;
 
     this.setState({
-      images: cleanSet(this.state.images, otherIndex, oldSettings),
+      sides: cleanSet(this.state.sides, otherIndex, oldSettings),
     });
   }
 
@@ -325,18 +334,19 @@ export default class Compress extends Component<Props, State> {
 
       for (const i of [0, 1]) {
         // Ditch previous encodings
-        const downloadUrl = this.state.images[i].downloadUrl;
+        const downloadUrl = this.state.sides[i].downloadUrl;
         if (downloadUrl) URL.revokeObjectURL(downloadUrl!);
 
-        newState = cleanMerge(newState, `images.${i}`, {
+        newState = cleanMerge(newState, `sides.${i}`, {
           preprocessed: undefined,
           file: undefined,
           downloadUrl: undefined,
           data: undefined,
+          encodedSettings: undefined,
         });
 
         // Default resize values come from the image:
-        newState = cleanMerge(newState, `images.${i}.preprocessorState.resize`, {
+        newState = cleanMerge(newState, `sides.${i}.latestSettings.preprocessorState.resize`, {
           width: data.width,
           height: data.height,
           method: vectorImage ? 'vector' : 'browser-high',
@@ -361,21 +371,24 @@ export default class Compress extends Component<Props, State> {
     if (!source) return;
 
     // Each time we trigger an async encode, the counter changes.
-    const loadingCounter = this.state.images[index].loadingCounter + 1;
+    const loadingCounter = this.state.sides[index].loadingCounter + 1;
 
-    let images = cleanMerge(this.state.images, index, {
+    let sides = cleanMerge(this.state.sides, index, {
       loadingCounter,
       loading: true,
     });
 
-    this.setState({ images });
+    this.setState({ sides });
 
-    const image = images[index];
+    const side = sides[index];
+    const settings = side.latestSettings;
 
     let file: File | Fileish | undefined;
     let preprocessed: ImageData | undefined;
     let data: ImageData | undefined;
-    const cacheResult = this.encodeCache.match(source, image.preprocessorState, image.encoderState);
+    const cacheResult = this.encodeCache.match(
+      source, settings.preprocessorState, settings.encoderState,
+    );
     const processor = (index === 0) ? this.leftProcessor : this.rightProcessor;
 
     // Abort anything the processor is currently doing.
@@ -388,14 +401,16 @@ export default class Compress extends Component<Props, State> {
     } else {
       try {
         // Special case for identity
-        if (image.encoderState.type === identity.type) {
+        if (settings.encoderState.type === identity.type) {
           ({ file, data } = source);
         } else {
-          preprocessed = (skipPreprocessing && image.preprocessed)
-            ? image.preprocessed
-            : await preprocessImage(source, image.preprocessorState, processor);
+          preprocessed = (skipPreprocessing && side.preprocessed)
+            ? side.preprocessed
+            : await preprocessImage(source, settings.preprocessorState, processor);
 
-          file = await compressImage(preprocessed, image.encoderState, source.file.name, processor);
+          file = await compressImage(
+            preprocessed, settings.encoderState, source.file.name, processor,
+          );
           data = await decodeImage(file, processor);
 
           this.encodeCache.add({
@@ -403,45 +418,48 @@ export default class Compress extends Component<Props, State> {
             data,
             preprocessed,
             file,
-            encoderState: image.encoderState,
-            preprocessorState: image.preprocessorState,
+            encoderState: settings.encoderState,
+            preprocessorState: settings.preprocessorState,
           });
         }
       } catch (err) {
         if (err.name === 'AbortError') return;
-        this.props.showSnack(`Processing error (type=${image.encoderState.type}): ${err}`);
+        this.props.showSnack(`Processing error (type=${settings.encoderState.type}): ${err}`);
         throw err;
       }
     }
 
-    const latestImage = this.state.images[index];
+    const latestData = this.state.sides[index];
     // If a later encode has landed before this one, return.
-    if (loadingCounter < latestImage.loadedCounter) {
+    if (loadingCounter < latestData.loadedCounter) {
       return;
     }
 
-    images = cleanMerge(this.state.images, index, {
+    if (latestData.downloadUrl) URL.revokeObjectURL(latestData.downloadUrl);
+
+    sides = cleanMerge(this.state.sides, index, {
       file,
       data,
       preprocessed,
       downloadUrl: URL.createObjectURL(file),
-      loading: images[index].loadingCounter !== loadingCounter,
+      loading: sides[index].loadingCounter !== loadingCounter,
       loadedCounter: loadingCounter,
+      encodedSettings: settings,
     });
 
-    this.setState({ images });
+    this.setState({ sides });
   }
 
-  render({ onBack }: Props, { loading, images, source, mobileView }: State) {
-    const [leftImage, rightImage] = images;
-    const [leftImageData, rightImageData] = images.map(i => i.data);
+  render({ onBack }: Props, { loading, sides, source, mobileView }: State) {
+    const [leftSide, rightSide] = sides;
+    const [leftImageData, rightImageData] = sides.map(i => i.data);
 
-    const options = images.map((image, index) => (
+    const options = sides.map((side, index) => (
       <Options
         source={source}
         mobileView={mobileView}
-        preprocessorState={image.preprocessorState}
-        encoderState={image.encoderState}
+        preprocessorState={side.latestSettings.preprocessorState}
+        encoderState={side.latestSettings.encoderState}
         onEncoderTypeChange={this.onEncoderTypeChange.bind(this, index)}
         onEncoderOptionsChange={this.onEncoderOptionsChange.bind(this, index)}
         onPreprocessorOptionsChange={this.onPreprocessorOptionsChange.bind(this, index)}
@@ -451,22 +469,35 @@ export default class Compress extends Component<Props, State> {
     const copyDirections =
       (mobileView ? ['down', 'up'] : ['right', 'left']) as CopyAcrossIconProps['copyDirection'][];
 
-    const results = images.map((image, index) => (
+    const results = sides.map((side, index) => (
       <Results
-        downloadUrl={image.downloadUrl}
-        imageFile={image.file}
+        downloadUrl={side.downloadUrl}
+        imageFile={side.file}
         source={source}
-        loading={loading || image.loading}
+        loading={loading || side.loading}
         copyDirection={copyDirections[index]}
         onCopyToOtherClick={this.onCopyToOtherClick.bind(this, index)}
         buttonPosition={mobileView ? 'stack-right' : buttonPositions[index]}
       >
         {!mobileView ? null : [
           <ExpandIcon class={style.expandIcon} key="expand-icon"/>,
-          `${resultTitles[index]} (${encoderMap[image.encoderState.type].label})`,
+          `${resultTitles[index]} (${encoderMap[side.latestSettings.encoderState.type].label})`,
         ]}
       </Results>
     ));
+
+    // For rendering, we ideally want the settings that were used to create the data, not the latest
+    // settings.
+    const leftDisplaySettings = leftSide.encodedSettings || leftSide.latestSettings;
+    const rightDisplaySettings = rightSide.encodedSettings || rightSide.latestSettings;
+    const leftImgContain = leftDisplaySettings.preprocessorState.resize.enabled &&
+      leftDisplaySettings.preprocessorState.resize.fitMethod === 'contain';
+    const rightImgContain = rightDisplaySettings.preprocessorState.resize.enabled &&
+      rightDisplaySettings.preprocessorState.resize.fitMethod === 'contain';
+    const leftFlipDimensions = leftDisplaySettings.preprocessorState.rotateFlip.enabled &&
+      leftDisplaySettings.preprocessorState.rotateFlip.rotate % 180 !== 0;
+    const rightFlipDimensions = rightDisplaySettings.preprocessorState.rotateFlip.enabled &&
+      rightDisplaySettings.preprocessorState.rotateFlip.rotate % 180 !== 0;
 
     return (
       <div class={style.compress}>
@@ -475,10 +506,10 @@ export default class Compress extends Component<Props, State> {
           mobileView={mobileView}
           leftCompressed={leftImageData}
           rightCompressed={rightImageData}
-          leftImgContain={leftImage.preprocessorState.resize.fitMethod === 'cover'}
-          rightImgContain={rightImage.preprocessorState.resize.fitMethod === 'cover'}
-          leftFlipDimensions={leftImage.preprocessorState.rotateFlip.rotate % 180 !== 0}
-          rightFlipDimensions={rightImage.preprocessorState.rotateFlip.rotate % 180 !== 0}
+          leftImgContain={leftImgContain}
+          rightImgContain={rightImgContain}
+          leftFlipDimensions={leftFlipDimensions}
+          rightFlipDimensions={rightFlipDimensions}
           onBack={onBack}
         />
         {mobileView

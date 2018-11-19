@@ -83,7 +83,7 @@ export default class Options extends Component<Props, State> {
   }
 
   @bind
-  onEncoderTypeChange(event: Event) {
+  private onEncoderTypeChange(event: Event) {
     const el = event.currentTarget as HTMLSelectElement;
 
     // The select element only has values matching encoder types,
@@ -93,34 +93,54 @@ export default class Options extends Component<Props, State> {
   }
 
   @bind
-  onPreprocessorEnabledChange(event: Event) {
+  private onPreprocessorEnabledChange(event: Event) {
     const el = event.currentTarget as HTMLInputElement;
     const preprocessor = el.name.split('.')[0] as keyof PreprocessorState;
 
-    this.props.onPreprocessorOptionsChange(
-      cleanSet(this.props.preprocessorState, `${preprocessor}.enabled`, el.checked),
-    );
+    let newState = this.props.preprocessorState;
+
+    // If orientation has changed, we should flip the resize values.
+    if (preprocessor === 'rotateFlip' && this.props.preprocessorState.rotateFlip.rotate % 180) {
+      newState = cleanMerge(newState, 'resize', {
+        width: this.props.preprocessorState.resize.height,
+        height: this.props.preprocessorState.resize.width,
+      });
+    }
+
+    newState = cleanSet(newState, `${preprocessor}.enabled`, el.checked);
+    this.props.onPreprocessorOptionsChange(newState);
   }
 
   @bind
-  onQuantizerOptionsChange(opts: QuantizeOptions) {
+  private onQuantizerOptionsChange(opts: QuantizeOptions) {
     this.props.onPreprocessorOptionsChange(
       cleanMerge(this.props.preprocessorState, 'quantizer', opts),
     );
   }
 
   @bind
-  onResizeOptionsChange(opts: ResizeOptions) {
+  private onResizeOptionsChange(opts: ResizeOptions) {
     this.props.onPreprocessorOptionsChange(
       cleanMerge(this.props.preprocessorState, 'resize', opts),
     );
   }
 
   @bind
-  onRotateFlipOptionsChange(opts: RotateFlipOptions) {
-    this.props.onPreprocessorOptionsChange(
-      cleanMerge(this.props.preprocessorState, 'rotateFlip', opts),
-    );
+  private onRotateFlipOptionsChange(opts: RotateFlipOptions) {
+    // If orientation has changed, we should flip the resize values.
+    const oldRotate = this.props.preprocessorState.rotateFlip.rotate;
+    const newRotate = opts.rotate;
+    let newState = cleanMerge(this.props.preprocessorState, 'rotateFlip', opts);
+    const orientationChanged = oldRotate % 180 !== newRotate % 180;
+
+    if (orientationChanged) {
+      newState = cleanMerge(newState, 'resize', {
+        width: this.props.preprocessorState.resize.height,
+        height: this.props.preprocessorState.resize.width,
+      });
+    }
+
+    this.props.onPreprocessorOptionsChange(newState);
   }
 
   render(
@@ -134,6 +154,8 @@ export default class Options extends Component<Props, State> {
   ) {
     // tslint:disable variable-name
     const EncoderOptionComponent = encoderOptionsComponentMap[encoderState.type];
+    const flipDimensions =
+      preprocessorState.rotateFlip.enabled && preprocessorState.rotateFlip.rotate % 180;
 
     return (
       <div class={style.optionsScroller}>
@@ -169,7 +191,11 @@ export default class Options extends Component<Props, State> {
                 {preprocessorState.resize.enabled ?
                   <ResizeOptionsComponent
                     isVector={Boolean(source && source.vectorImage)}
-                    aspect={source ? (source.data.width / source.data.height) : 1}
+                    aspect={source
+                      ? flipDimensions
+                        ? (source.data.height / source.data.width)
+                        : (source.data.width / source.data.height)
+                      : 1}
                     options={preprocessorState.resize}
                     onChange={this.onResizeOptionsChange}
                   />
