@@ -30,7 +30,9 @@
 
 .pinch-target {
   composes: abs-fill from '../../lib/util.scss';
-  contain: layout;
+  // This is a hack to work around https://github.com/GoogleChromeLabs/critters/issues/17.
+  // DO NOT LET THIS MERGE. I'm just putting it here so the UI can be reviewed in the PR.
+  contain: layout !important;
 }
 
 .output-canvas {
