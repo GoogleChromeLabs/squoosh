@@ -137,7 +137,7 @@
   flex-shrink: 0;
   // This fixes a severe painting bug in Chrome.
   // We should try to remove this once the issue is fixed.
-  // https://bugs.chromium.org/p/chromium/issues/detail?id=870222#c10
+  // https://bugs.chromium.org/p/chromium/issues/detail?id=870222#c10;
   will-change: auto;
 }
 

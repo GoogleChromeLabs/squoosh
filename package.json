@@ -5,7 +5,8 @@
   "license": "apache-2.0",
   "scripts": {
     "start": "webpack-dev-server --host 0.0.0.0 --hot",
-    "build": "webpack -p",
+    "typecss": "find src -name '*css' -exec tcm -c -p {} \\;",
+    "build": "npm run typecss; webpack -p",
     "lint": "tslint -c tslint.json  -p tsconfig.json -t verbose 'src/**/*.{ts,tsx,js,jsx}'",
     "lintfix": "tslint -c tslint.json -p tsconfig.json -t verbose --fix 'src/**/*.{ts,tsx,js,jsx}'"
   },
@@ -57,6 +58,7 @@
     "tslint-config-airbnb": "^5.11.0",
     "tslint-config-semistandard": "^7.0.0",
     "tslint-react": "^3.6.0",
+    "typed-css-modules-loader": "0.0.17",
     "typescript": "^3.1.6",
     "typings-for-css-modules-loader": "^1.7.0",
     "url-loader": "^1.1.2",
