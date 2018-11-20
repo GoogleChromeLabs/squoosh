@@ -1,5 +1,7 @@
 # [Squoosh]!
 
+[![Build Status](https://travis-ci.org/GoogleChromeLabs/squoosh.svg?branch=master)](https://travis-ci.org/GoogleChromeLabs/squoosh)
+
 [Squoosh] is an image compression web app that allows you to dive into the advanced options provided
 by various image compressors.
 
