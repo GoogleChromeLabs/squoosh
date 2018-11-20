@@ -1,6 +1,6 @@
 import { h, Component } from 'preact';
 import { bind } from '../../lib/initial-util';
-import { inputFieldChecked, inputFieldValueAsNumber } from '../../lib/util';
+import { inputFieldChecked, inputFieldValueAsNumber, preventDefault } from '../../lib/util';
 import { EncodeOptions, MozJpegColorSpace } from './encoder-meta';
 import * as style from '../../components/Options/style.scss';
 import Checkbox from '../../components/checkbox';
@@ -58,7 +58,7 @@ export default class MozJPEGEncoderOptions extends Component<Props, State> {
     // I'm rendering both lossy and lossless forms, as it becomes much easier when
     // gathering the data.
     return (
-      <form class={style.optionsSection}>
+      <form class={style.optionsSection} onSubmit={preventDefault}>
         <div class={style.optionOneCell}>
           <Range
             name="quality"
