@@ -9,4 +9,7 @@ export default {
     window.history.pushState(null, '', path);
   },
   back: window.history.back.bind(window.history),
+  get pathname() {
+    return window.location.pathname;
+  },
 };

@@ -8,6 +8,9 @@ import SnackBarElement, { SnackOptions } from '../../lib/SnackBar';
 import '../../lib/SnackBar';
 import Intro from '../intro';
 import '../custom-els/LoadingSpinner';
+import history from '../../lib/history';
+
+const ROUTE_EDITOR = '/editor';
 
 // This is imported for TypeScript only. It isn't used.
 import Compress from '../compress';
@@ -31,11 +34,13 @@ interface Props {}
 
 interface State {
   file?: File | Fileish;
+  isEditorOpen: Boolean;
   Compress?: typeof Compress;
 }
 
 export default class App extends Component<Props, State> {
   state: State = {
+    isEditorOpen: false,
     file: undefined,
     Compress: undefined,
   };
@@ -65,15 +70,14 @@ export default class App extends Component<Props, State> {
   }
 
   @bind
-  private onFileDrop(event: FileDropEvent) {
-    const { file } = event;
+  private onFileDrop({ file }: FileDropEvent) {
     if (!file) return;
-    this.setState({ file });
+    this.setState({ file }, this.openEditor);
   }
 
   @bind
   private onIntroPickFile(file: File | Fileish) {
-    this.setState({ file });
+    this.setState({ file }, this.openEditor);
   }
 
   @bind
@@ -83,18 +87,34 @@ export default class App extends Component<Props, State> {
   }
 
   @bind
-  private onBack() {
-    this.setState({ file: undefined });
+  private onPopState() {
+    history.pathname === ROUTE_EDITOR ?
+      this.setState({ isEditorOpen: true }) :
+      this.setState({ isEditorOpen: false });
   }
 
-  render({}: Props, { file, Compress }: State) {
+  @bind
+  private openEditor() {
+    history.push(ROUTE_EDITOR);
+    this.setState({ isEditorOpen: true });
+  }
+
+  componentDidMount() {
+    history.addPopStateListener(this.onPopState);
+  }
+
+  componentWillUnmount() {
+    history.removePopStateListener(this.onPopState);
+  }
+
+  render({}: Props, { file, isEditorOpen, Compress }: State) {
     return (
       <div id="app" class={style.app}>
         <file-drop accept="image/*" onfiledrop={this.onFileDrop} class={style.drop}>
-          {(!file)
+          {(!file || !isEditorOpen)
             ? <Intro onFile={this.onIntroPickFile} showSnack={this.showSnack} />
             : (Compress)
-              ? <Compress file={file} showSnack={this.showSnack} onBack={this.onBack} />
+              ? <Compress file={file} showSnack={this.showSnack} onBack={history.back} />
               : <loading-spinner class={style.appLoader}/>
           }
           <snack-bar ref={linkRef(this, 'snackbar')} />

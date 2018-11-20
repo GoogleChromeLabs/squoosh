@@ -36,9 +36,6 @@ import './custom-els/MultiPanel';
 import Results from '../results';
 import { ExpandIcon, CopyAcrossIconProps } from '../../lib/icons';
 import SnackBarElement from 'src/lib/SnackBar';
-import history from '../../lib/history';
-
-const ROUTE_EDITOR = '/editor';
 
 export interface SourceImage {
   file: File | Fileish;
@@ -233,21 +230,6 @@ export default class Compress extends Component<Props, State> {
     if (nextProps.file !== this.props.file) {
       this.updateFile(nextProps.file);
     }
-  }
-
-  componentDidMount() {
-    history.push(ROUTE_EDITOR);
-    history.addPopStateListener(this.props.onBack);
-  }
-
-  componentWillUnmount() {
-    history.removePopStateListener(this.props.onBack);
-  }
-
-  @bind
-  private onBack() {
-    history.back();
-    this.props.onBack();
   }
 
   componentDidUpdate(prevProps: Props, prevState: State): void {
@@ -479,7 +461,7 @@ export default class Compress extends Component<Props, State> {
           rightCompressed={rightImageData}
           leftImgContain={leftImage.preprocessorState.resize.fitMethod === 'cover'}
           rightImgContain={rightImage.preprocessorState.resize.fitMethod === 'cover'}
-          onBack={this.onBack}
+          onBack={this.props.onBack}
         />
         {mobileView
           ? (
