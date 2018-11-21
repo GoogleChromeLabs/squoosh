@@ -1,6 +1,6 @@
 import { h, Component } from 'preact';
 import { bind } from '../../lib/initial-util';
-import { inputFieldValueAsNumber } from '../../lib/util';
+import { inputFieldValueAsNumber, preventDefault } from '../../lib/util';
 import { EncodeOptions } from './encoder-meta';
 import Range from '../../components/range';
 import * as style from '../../components/Options/style.scss';
@@ -23,7 +23,7 @@ export default class OptiPNGEncoderOptions extends Component<Props, {}> {
 
   render({ options }: Props) {
     return (
-      <form class={style.optionsSection}>
+      <form class={style.optionsSection} onSubmit={preventDefault}>
         <div class={style.optionOneCell}>
           <Range
             name="level"
