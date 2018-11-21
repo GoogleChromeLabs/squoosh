@@ -1,7 +1,7 @@
 import { h, Component } from 'preact';
 import linkState from 'linkstate';
 import { bind, linkRef } from '../../lib/initial-util';
-import { inputFieldValueAsNumber, inputFieldValue } from '../../lib/util';
+import { inputFieldValueAsNumber, inputFieldValue, preventDefault } from '../../lib/util';
 import { ResizeOptions } from './processor-meta';
 import * as style from '../../components/Options/style.scss';
 import Checkbox from '../../components/checkbox';
@@ -78,7 +78,7 @@ export default class ResizerOptions extends Component<Props, State> {
 
   render({ options, isVector }: Props, { maintainAspect }: State) {
     return (
-      <form ref={linkRef(this, 'form')} class={style.optionsSection}>
+      <form ref={linkRef(this, 'form')} class={style.optionsSection} onSubmit={preventDefault}>
         <label class={style.optionTextFirst}>
           Method:
           <Select
