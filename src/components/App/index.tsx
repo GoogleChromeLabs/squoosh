@@ -88,9 +88,7 @@ export default class App extends Component<Props, State> {
 
   @bind
   private onPopState() {
-    history.pathname === ROUTE_EDITOR ?
-      this.setState({ isEditorOpen: true }) :
-      this.setState({ isEditorOpen: false });
+    this.setState({ isEditorOpen: history.pathname === ROUTE_EDITOR });
   }
 
   @bind
