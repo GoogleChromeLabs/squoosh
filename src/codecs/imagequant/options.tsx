@@ -1,6 +1,6 @@
 import { h, Component } from 'preact';
 import { bind } from '../../lib/initial-util';
-import { inputFieldValueAsNumber, konami } from '../../lib/util';
+import { inputFieldValueAsNumber, konami, preventDefault } from '../../lib/util';
 import { QuantizeOptions } from './processor-meta';
 import * as style from '../../components/Options/style.scss';
 import Expander from '../../components/expander';
@@ -42,7 +42,7 @@ export default class QuantizerOptions extends Component<Props, State> {
 
   render({ options }: Props, { extendedSettings }: State) {
     return (
-      <form class={style.optionsSection}>
+      <form class={style.optionsSection} onSubmit={preventDefault}>
         <Expander>
           {extendedSettings ?
             <label class={style.optionTextFirst}>
