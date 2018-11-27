@@ -26,20 +26,19 @@
 .pinch-zoom {
   composes: abs-fill from '../../lib/util.scss';
   outline: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .pinch-target {
-  composes: abs-fill from '../../lib/util.scss';
+  display: flex;
+  flex-shrink: 0;
+  justify-content: center;
+  align-items: center;
   // This is a hack to work around https://github.com/GoogleChromeLabs/critters/issues/17.
   // DO NOT LET THIS MERGE. I'm just putting it here so the UI can be reviewed in the PR.
   contain: layout !important;
-}
-
-.output-canvas {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
   // This fixes a severe painting bug in Chrome.
   // We should try to remove this once the issue is fixed.
   // https://bugs.chromium.org/p/chromium/issues/detail?id=870222#c10

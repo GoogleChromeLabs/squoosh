@@ -211,6 +211,12 @@ export default class Output extends Component<Props, State> {
   ) {
     const leftDraw = this.leftDrawable();
     const rightDraw = this.rightDrawable();
+    // To keep position stable, the output is put in a square using the longest dimension.
+    const maxDimension = originalImage && Math.max(originalImage.width, originalImage.height);
+    const pinchTargetStyle = {
+      width: maxDimension,
+      height: maxDimension,
+    };
 
     return (
       <div class={`${style.output} ${altBackground ? style.altBackground : ''}`}>
@@ -231,9 +237,8 @@ export default class Output extends Component<Props, State> {
             onChange={this.onPinchZoomLeftChange}
             ref={linkRef(this, 'pinchZoomLeft')}
           >
-            <div class={style.pinchTarget}>
+            <div class={style.pinchTarget} style={pinchTargetStyle}>
               <canvas
-                class={style.outputCanvas}
                 ref={linkRef(this, 'canvasLeft')}
                 width={leftDraw && leftDraw.width}
                 height={leftDraw && leftDraw.height}
@@ -248,9 +253,8 @@ export default class Output extends Component<Props, State> {
             </div>
           </pinch-zoom>
           <pinch-zoom class={style.pinchZoom} ref={linkRef(this, 'pinchZoomRight')}>
-            <div class={style.pinchTarget}>
+            <div class={style.pinchTarget} style={pinchTargetStyle}>
               <canvas
-                class={style.outputCanvas}
                 ref={linkRef(this, 'canvasRight')}
                 width={rightDraw && rightDraw.width}
                 height={rightDraw && rightDraw.height}
