@@ -39,6 +39,7 @@ function addCssTypes(rootPaths, opts = {}) {
     const watcher = chokidar.watch(paths, {
       // Avoid processing already-processed files.
       ignored: '*.d.*',
+      persistent: watch,
     });
 
     function change(path) {
