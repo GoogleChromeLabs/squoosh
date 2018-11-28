@@ -15,6 +15,7 @@ const WorkerPlugin = require('worker-plugin');
 const AutoSWPlugin = require('./config/auto-sw-plugin');
 const CrittersPlugin = require('critters-webpack-plugin');
 const AssetTemplatePlugin = require('./config/asset-template-plugin');
+const addCssTypes = require('./config/add-css-types');
 
 function readJson (filename) {
   return JSON.parse(fs.readFileSync(filename));
@@ -22,7 +23,7 @@ function readJson (filename) {
 
 const VERSION = readJson('./package.json').version;
 
-module.exports = function (_, env) {
+module.exports = async function (_, env) {
   const isProd = env.mode === 'production';
   const nodeModules = path.join(__dirname, 'node_modules');
   const componentStyleDirs = [
@@ -31,6 +32,8 @@ module.exports = function (_, env) {
     path.join(__dirname, 'src/custom-els'),
     path.join(__dirname, 'src/lib'),
   ];
+
+  await addCssTypes(componentStyleDirs, { watch: !isProd });
 
   return {
     mode: isProd ? 'production' : 'development',
@@ -109,9 +112,7 @@ module.exports = function (_, env) {
             // In production, CSS is extracted to files on disk. In development, it's inlined into JS:
             isProd ? MiniCssExtractPlugin.loader : 'style-loader',
             {
-              // This is a fork of css-loader that auto-generates .d.ts files for CSS module imports.
-              // The result is a definition file with the exported String classname mappings.
-              loader: 'typings-for-css-modules-loader',
+              loader: 'css-loader',
               options: {
                 modules: true,
                 localIdentName: isProd ? '[hash:base64:5]' : '[local]__[hash:base64:5]',
