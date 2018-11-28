@@ -110,12 +110,16 @@ export default class App extends Component<Props, State> {
   private exposeAPI() {
     const api = {
       setFile: (blob: Blob, name: string) => {
-        this.setState({ file: new File([blob], name) });
+        return new Promise((resolve) => {
+          this.setState({ file: new File([blob], name) });
+          document.addEventListener('squooshingdone', () => resolve(), { once: true });
+        });
       },
       getBlob: async (side: 0 | 1) => {
         if (!this.state.file || !this.compressInstance) {
           throw new Error('No file has been loaded');
         }
+        await this.compressInstance.compressionJobs[side];
         return this.compressInstance.state.images[side].file;
       },
     };
