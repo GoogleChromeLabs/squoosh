@@ -38,6 +38,7 @@ export default class App extends Component<Props, State> {
     file: undefined,
     Compress: undefined,
   };
+  private compressInstance?: import('../compress').default;
 
   snackbar?: SnackBarElement;
 
@@ -71,6 +72,7 @@ export default class App extends Component<Props, State> {
     });
 
     window.addEventListener('popstate', this.onPopState);
+    this.exposeAPI();
   }
 
   @bind
@@ -105,6 +107,21 @@ export default class App extends Component<Props, State> {
     this.setState({ isEditorOpen: true });
   }
 
+  private exposeAPI() {
+    const api = {
+      setFile: (blob: Blob, name: string) => {
+        this.setState({ file: new File([blob], name) });
+      },
+      getBlob: async (side: 0 | 1) => {
+        if (!this.state.file || !this.compressInstance) {
+          throw new Error('No file has been loaded');
+        }
+        return this.compressInstance.state.images[side].file;
+      },
+    };
+    expose(api, self.parent);
+  }
+
   render({}: Props, { file, isEditorOpen, Compress }: State) {
     return (
       <div id="app" class={style.app}>
@@ -112,7 +129,12 @@ export default class App extends Component<Props, State> {
           {!isEditorOpen
             ? <Intro onFile={this.onIntroPickFile} showSnack={this.showSnack} />
             : (Compress)
-              ? <Compress file={file!} showSnack={this.showSnack} onBack={back} />
+              ? <Compress
+                  ref={i => this.compressInstance = i}
+                  file={file!}
+                  showSnack={this.showSnack}
+                  onBack={this.onBack}
+              />
               : <loading-spinner class={style.appLoader}/>
           }
           <snack-bar ref={linkRef(this, 'snackbar')} />

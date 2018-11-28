@@ -1,0 +1,28 @@
+<!doctype html>
+
+<iframe src="http://localhost:8080" width=800 height=800 id="ifr"></iframe>
+<button id="load">Load an image</button>
+<button id="extract">extract</button>
+
+<script src="https://cdn.jsdelivr.net/npm/comlinkjs@3.0.2/umd/comlink.js"></script>
+<script>
+const ifr = document.all.ifr;
+const squoosh = Comlink.proxy(ifr.contentWindow);
+
+async function load() {
+  const blob = await fetch("/profile.jpg").then(resp => resp.blob());
+  await squoosh.setFile(blob);
+  console.log('done')
+}
+document.all.load.onclick = load;
+
+async function extract() {
+  const file = await squoosh.getBlob(1);
+  console.log('asdf', file)
+  const url = URL.createObjectURL(file);
+  const img = document.createElement('img');
+  img.src = url;
+  document.body.append(img);
+}
+document.all.extract.onclick = extract;
+</script>
