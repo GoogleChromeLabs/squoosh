@@ -1,27 +1,67 @@
 <!doctype html>
-
-<iframe src="http://localhost:8080" width=800 height=800 id="ifr"></iframe>
-<button id="load">Load an image</button>
-<button id="extract">extract</button>
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+header {
+  flex: 0 0;
+  padding: 20px;
+  background-color: #333;
+}
+header img {
+  height: 100px;
+  margin: 20px;
+}
+iframe {
+  flex: 1 1;
+  border: 0;
+}
+</style>
+<header id="header">
+  <img src="ewag.jpg">
+  <img src="jakearchibald.jpg">
+  <img src="jasonjmiller.jpg">
+  <img src="kosamari.jpg">
+  <img src="surma.jpg">
+  <button id="apply">Apply right side to all</button>
+</header>
+<iframe id="ifr" src="http://localhost:8080"></iframe>
 
 <script src="https://cdn.jsdelivr.net/npm/comlinkjs@3.0.2/umd/comlink.js"></script>
 <script>
 const ifr = document.all.ifr;
 const squoosh = Comlink.proxy(ifr.contentWindow);
 
-async function load() {
-  const blob = await fetch("/profile.jpg").then(resp => resp.blob());
+async function load(url) {
+  const blob = await fetch(url).then(resp => resp.blob());
   await squoosh.setFile(blob);
-  extract();
 }
-document.all.load.onclick = load;
+document.all.header.onclick = ev => load(ev.target.src);
 
-async function extract() {
-  const file = await squoosh.getBlob(1);
-  const url = URL.createObjectURL(file);
-  const img = document.createElement('img');
-  img.src = url;
-  document.body.append(img);
+document.all.apply.onclick = async ev => {
+  ev.stopPropagation();
+  for(const img of document.querySelectorAll("header img")) {
+    await load(img.src);
+    const file = await squoosh.getBlob(1);
+    const url = URL.createObjectURL(file);
+    downloadFile(url);
+  }
 }
-document.all.extract.onclick = extract;
+
+function downloadFile(url) {
+  const a = document.createElement('a')
+  a.href = url;
+  a.download = true;
+  a.hidden = true;
+  document.body.append(a);
+  a.click();
+}
 </script>
