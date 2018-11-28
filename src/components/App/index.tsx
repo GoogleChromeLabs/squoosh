@@ -9,9 +9,6 @@ import '../../lib/SnackBar';
 import Intro from '../intro';
 import '../custom-els/LoadingSpinner';
 
-// This is imported for TypeScript only. It isn't used.
-import Compress from '../compress';
-
 const compressPromise = import(
   /* webpackChunkName: "main-app" */
   '../compress',
@@ -31,7 +28,7 @@ interface Props {}
 
 interface State {
   file?: File | Fileish;
-  Compress?: typeof Compress;
+  Compress?: typeof import('../compress').default;
 }
 
 export default class App extends Component<Props, State> {
