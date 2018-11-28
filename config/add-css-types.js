@@ -39,6 +39,8 @@ function addCssTypes(rootPaths, opts = {}) {
     const watcher = chokidar.watch(paths, {
       // Avoid processing already-processed files.
       ignored: '*.d.*',
+      // Without this, travis and netlify builds never complete. I'm not sure why, but it might be
+      // related to https://github.com/paulmillr/chokidar/pull/758
       persistent: watch,
     });
 
