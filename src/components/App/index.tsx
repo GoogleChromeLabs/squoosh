@@ -101,10 +101,6 @@ export default class App extends Component<Props, State> {
     history.addPopStateListener(this.onPopState);
   }
 
-  componentWillUnmount() {
-    history.removePopStateListener(this.onPopState);
-  }
-
   render({}: Props, { file, isEditorOpen, Compress }: State) {
     return (
       <div id="app" class={style.app}>
