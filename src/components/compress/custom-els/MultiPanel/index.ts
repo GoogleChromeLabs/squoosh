@@ -170,7 +170,7 @@ export default class MultiPanel extends HTMLElement {
 
   private _closeAll(options: CloseAllOptions = {}): void {
     const { exceptFirst = false } = options;
-    let els = [...this.children].filter(el => el.matches('[content-expanded]')) as HTMLElement[];
+    let els = [...Array.from(this.children)].filter(el => el.matches('[content-expanded]')) as HTMLElement[];
 
     if (exceptFirst) {
       els = els.slice(1);

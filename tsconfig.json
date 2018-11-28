@@ -11,7 +11,8 @@
     "jsx": "react",
     "jsxFactory": "h",
     "allowJs": false,
-    "baseUrl": "."
+    "baseUrl": ".",
+    "lib": ["dom", "webworker", "esnext"],
   },
   "exclude": ["src/sw/**/*"]
 }
