@@ -162,7 +162,7 @@ const resultTitles = ['Top', 'Bottom'];
 const buttonPositions =
   ['download-left', 'download-right'] as ('download-left' | 'download-right')[];
 
-const originDocumentTitle = document.title;
+const originalDocumentTitle = document.title;
 
 export default class Compress extends Component<Props, State> {
   widthQuery = window.matchMedia('(max-width: 599px)');
@@ -228,9 +228,8 @@ export default class Compress extends Component<Props, State> {
     });
   }
 
-  private updateDocumentTitle(filename : string = '') {
-    const titleWithFilename = `${filename} - ${originDocumentTitle}`;
-    const newTitle : string = filename ? titleWithFilename : originDocumentTitle;
+  private updateDocumentTitle(filename: string = '') {
+    const newTitle : string = filename ? `${filename} - ${originalDocumentTitle}` : originalDocumentTitle;
 
     document.title = newTitle;
   }
@@ -341,9 +340,8 @@ export default class Compress extends Component<Props, State> {
         });
       }
 
-      this.setState(newState, () => {
-        this.updateDocumentTitle(file.name);
-      });
+      this.updateDocumentTitle(file.name);
+      this.setState(newState);
     } catch (err) {
       if (err.name === 'AbortError') return;
       console.error(err);
