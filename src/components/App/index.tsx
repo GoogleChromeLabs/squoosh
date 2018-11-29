@@ -18,12 +18,6 @@ const offlinerPromise = import(
   '../../lib/offliner',
 );
 
-export interface SourceImage {
-  file: File | Fileish;
-  data: ImageData;
-  vectorImage?: HTMLImageElement;
-}
-
 interface Props {}
 
 interface State {

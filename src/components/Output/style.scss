@@ -101,6 +101,7 @@
   white-space: nowrap;
   height: 36px;
   padding: 0 8px;
+  cursor: pointer;
 
   @media (min-width: 600px) {
     height: 48px;
@@ -115,14 +116,19 @@
 }
 
 .button {
-  text-transform: uppercase;
   color: var(--button-fg);
-  cursor: pointer;
-  text-indent: 6px;
-  font-size: 110%;
 
   &:hover {
     background-color: #eee;
+  }
+
+  &.active {
+    background: #34B9EB;
+    color: #fff;
+
+    &:hover {
+      background: #32a3ce;
+    }
   }
 }
 

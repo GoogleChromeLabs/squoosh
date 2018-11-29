@@ -3,6 +3,9 @@ import { RotateFlipOptions } from './processor-meta';
 const bpp = 4;
 
 export function rotateFlip(data: ImageData, opts: RotateFlipOptions): ImageData {
+  // Early exit if there's no transform.
+  if (!opts.flipHorizontal && !opts.flipVertical && opts.rotate === 0) return data;
+
   const flipDimensions = opts.rotate % 180 !== 0;
   const width = flipDimensions ? data.height : data.width;
   const height = flipDimensions ? data.width : data.height;

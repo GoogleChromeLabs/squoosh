@@ -35,12 +35,15 @@ import { VectorResizeOptions, BitmapResizeOptions } from '../../codecs/resize/pr
 import './custom-els/MultiPanel';
 import Results from '../results';
 import { ExpandIcon, CopyAcrossIconProps } from '../../lib/icons';
-import SnackBarElement from 'src/lib/SnackBar';
+import SnackBarElement from '../../lib/SnackBar';
+import { InputProcessorState, defaultInputProcessorState } from '../../codecs/input-processors';
 
 export interface SourceImage {
   file: File | Fileish;
-  data: ImageData;
+  decoded: ImageData;
+  processed: ImageData;
   vectorImage?: HTMLImageElement;
+  inputProcessorState: InputProcessorState;
 }
 
 interface SideSettings {
@@ -82,15 +85,21 @@ interface UpdateImageOptions {
   skipPreprocessing?: boolean;
 }
 
+function processInput(
+  data: ImageData,
+  inputProcessData: InputProcessorState,
+  processor: Processor,
+) {
+  return processor.rotateFlip(data, inputProcessData.rotateFlip);
+}
+
 async function preprocessImage(
   source: SourceImage,
   preprocessData: PreprocessorState,
   processor: Processor,
 ): Promise<ImageData> {
-  let result = source.data;
-  if (preprocessData.rotateFlip.enabled) {
-    result = await processor.rotateFlip(result, preprocessData.rotateFlip);
-  }
+  let result = source.processed;
+
   if (preprocessData.resize.enabled) {
     if (preprocessData.resize.method === 'vector' && source.vectorImage) {
       result = processor.vectorResize(
@@ -241,9 +250,7 @@ export default class Compress extends Component<Props, State> {
   }
 
   private updateDocumentTitle(filename: string = '') {
-    const newTitle: string = filename ? `${filename} - ${originalDocumentTitle}` : originalDocumentTitle;
-
-    document.title = newTitle;
+    document.title = filename ? `${filename} - ${originalDocumentTitle}` : originalDocumentTitle;
   }
 
   componentWillReceiveProps(nextProps: Props): void {
@@ -301,6 +308,8 @@ export default class Compress extends Component<Props, State> {
   @bind
   private async updateFile(file: File | Fileish) {
     const loadingCounter = this.state.loadingCounter + 1;
+    // Either processor is good enough here.
+    const processor = this.leftProcessor;
 
     this.setState({ loadingCounter, loading: true });
 
@@ -309,7 +318,7 @@ export default class Compress extends Component<Props, State> {
     this.rightProcessor.abortCurrent();
 
     try {
-      let data: ImageData;
+      let decoded: ImageData;
       let vectorImage: HTMLImageElement | undefined;
 
       // Special-case SVG. We need to avoid createImageBitmap because of
@@ -317,18 +326,23 @@ export default class Compress extends Component<Props, State> {
       // Also, we cache the HTMLImageElement so we can perform vector resizing later.
       if (file.type.startsWith('image/svg+xml')) {
         vectorImage = await processSvg(file);
-        data = drawableToImageData(vectorImage);
+        decoded = drawableToImageData(vectorImage);
       } else {
         // Either processor is good enough here.
-        data = await decodeImage(file, this.leftProcessor);
+        decoded = await decodeImage(file, processor);
       }
+
+      const processed = await processInput(decoded, defaultInputProcessorState, processor);
 
       // Another file has been opened before this one processed.
       if (this.state.loadingCounter !== loadingCounter) return;
 
       let newState: State = {
         ...this.state,
-        source: { data, file, vectorImage },
+        source: {
+          decoded, file, vectorImage, processed,
+          inputProcessorState: defaultInputProcessorState,
+        },
         loading: false,
       };
 
@@ -347,8 +361,8 @@ export default class Compress extends Component<Props, State> {
 
         // Default resize values come from the image:
         newState = cleanMerge(newState, `sides.${i}.latestSettings.preprocessorState.resize`, {
-          width: data.width,
-          height: data.height,
+          width: processed.width,
+          height: processed.height,
           method: vectorImage ? 'vector' : 'browser-high',
         });
       }
@@ -366,7 +380,9 @@ export default class Compress extends Component<Props, State> {
   }
 
   private async updateImage(index: number, options: UpdateImageOptions = {}): Promise<void> {
-    const { skipPreprocessing = false } = options;
+    const {
+      skipPreprocessing = false,
+    } = options;
     const { source } = this.state;
     if (!source) return;
 
@@ -402,7 +418,8 @@ export default class Compress extends Component<Props, State> {
       try {
         // Special case for identity
         if (settings.encoderState.type === identity.type) {
-          ({ file, data } = source);
+          file = source.file;
+          data = await source.processed;
         } else {
           preprocessed = (skipPreprocessing && side.preprocessed)
             ? side.preprocessed
@@ -494,22 +511,16 @@ export default class Compress extends Component<Props, State> {
       leftDisplaySettings.preprocessorState.resize.fitMethod === 'contain';
     const rightImgContain = rightDisplaySettings.preprocessorState.resize.enabled &&
       rightDisplaySettings.preprocessorState.resize.fitMethod === 'contain';
-    const leftFlipDimensions = leftDisplaySettings.preprocessorState.rotateFlip.enabled &&
-      leftDisplaySettings.preprocessorState.rotateFlip.rotate % 180 !== 0;
-    const rightFlipDimensions = rightDisplaySettings.preprocessorState.rotateFlip.enabled &&
-      rightDisplaySettings.preprocessorState.rotateFlip.rotate % 180 !== 0;
 
     return (
       <div class={style.compress}>
         <Output
-          originalImage={source && source.data}
+          originalImage={source && source.processed}
           mobileView={mobileView}
           leftCompressed={leftImageData}
           rightCompressed={rightImageData}
           leftImgContain={leftImgContain}
           rightImgContain={rightImgContain}
-          leftFlipDimensions={leftFlipDimensions}
-          rightFlipDimensions={rightFlipDimensions}
           onBack={onBack}
         />
         {mobileView

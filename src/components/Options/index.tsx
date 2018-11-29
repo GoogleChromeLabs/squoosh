@@ -11,7 +11,6 @@ import BrowserWebPEncoderOptions from '../../codecs/browser-webp/options';
 
 import QuantizerOptionsComponent from '../../codecs/imagequant/options';
 import ResizeOptionsComponent from '../../codecs/resize/options';
-import RotateFlipOptionsComponent from '../../codecs/rotate-flip/options';
 
 import * as identity from '../../codecs/identity/encoder-meta';
 import * as optiPNG from '../../codecs/optipng/encoder-meta';
@@ -35,9 +34,8 @@ import {
 } from '../../codecs/encoders';
 import { QuantizeOptions } from '../../codecs/imagequant/processor-meta';
 import { ResizeOptions } from '../../codecs/resize/processor-meta';
-import { RotateFlipOptions } from 'src/codecs/rotate-flip/processor-meta';
 import { PreprocessorState } from '../../codecs/preprocessors';
-import { SourceImage } from '../App';
+import { SourceImage } from '../compress';
 import Checkbox from '../checkbox';
 import Expander from '../expander';
 import Select from '../select';
@@ -99,14 +97,6 @@ export default class Options extends Component<Props, State> {
 
     let newState = this.props.preprocessorState;
 
-    // If orientation has changed, we should flip the resize values.
-    if (preprocessor === 'rotateFlip' && this.props.preprocessorState.rotateFlip.rotate % 180) {
-      newState = cleanMerge(newState, 'resize', {
-        width: this.props.preprocessorState.resize.height,
-        height: this.props.preprocessorState.resize.width,
-      });
-    }
-
     newState = cleanSet(newState, `${preprocessor}.enabled`, el.checked);
     this.props.onPreprocessorOptionsChange(newState);
   }
@@ -125,24 +115,6 @@ export default class Options extends Component<Props, State> {
     );
   }
 
-  @bind
-  private onRotateFlipOptionsChange(opts: RotateFlipOptions) {
-    // If orientation has changed, we should flip the resize values.
-    const oldRotate = this.props.preprocessorState.rotateFlip.rotate;
-    const newRotate = opts.rotate;
-    let newState = cleanMerge(this.props.preprocessorState, 'rotateFlip', opts);
-    const orientationChanged = oldRotate % 180 !== newRotate % 180;
-
-    if (orientationChanged) {
-      newState = cleanMerge(newState, 'resize', {
-        width: this.props.preprocessorState.resize.height,
-        height: this.props.preprocessorState.resize.width,
-      });
-    }
-
-    this.props.onPreprocessorOptionsChange(newState);
-  }
-
   render(
     {
       source,
@@ -154,8 +126,6 @@ export default class Options extends Component<Props, State> {
   ) {
     // tslint:disable variable-name
     const EncoderOptionComponent = encoderOptionsComponentMap[encoderState.type];
-    const flipDimensions =
-      preprocessorState.rotateFlip.enabled && preprocessorState.rotateFlip.rotate % 180;
 
     return (
       <div class={style.optionsScroller}>
@@ -163,22 +133,6 @@ export default class Options extends Component<Props, State> {
           {encoderState.type === identity.type ? null :
             <div>
               <h3 class={style.optionsTitle}>Edit</h3>
-              <label class={style.sectionEnabler}>
-                <Checkbox
-                  name="rotateFlip.enable"
-                  checked={!!preprocessorState.rotateFlip.enabled}
-                  onChange={this.onPreprocessorEnabledChange}
-                />
-                Rotate/flip
-              </label>
-              <Expander>
-                {preprocessorState.rotateFlip.enabled ?
-                  <RotateFlipOptionsComponent
-                    options={preprocessorState.rotateFlip}
-                    onChange={this.onRotateFlipOptionsChange}
-                  />
-                : null}
-              </Expander>
               <label class={style.sectionEnabler}>
                 <Checkbox
                   name="resize.enable"
@@ -191,11 +145,7 @@ export default class Options extends Component<Props, State> {
                 {preprocessorState.resize.enabled ?
                   <ResizeOptionsComponent
                     isVector={Boolean(source && source.vectorImage)}
-                    aspect={source
-                      ? flipDimensions
-                        ? (source.data.height / source.data.width)
-                        : (source.data.width / source.data.height)
-                      : 1}
+                    aspect={source ? source.processed.width / source.processed.height : 1}
                     options={preprocessorState.resize}
                     onChange={this.onResizeOptionsChange}
                   />

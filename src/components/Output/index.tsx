@@ -5,7 +5,14 @@ import './custom-els/TwoUp';
 import * as style from './style.scss';
 import { bind, linkRef } from '../../lib/initial-util';
 import { shallowEqual, drawDataToCanvas } from '../../lib/util';
-import { ToggleIcon, AddIcon, RemoveIcon, BackIcon } from '../../lib/icons';
+import {
+    ToggleBackgroundIcon,
+    AddIcon,
+    RemoveIcon,
+    BackIcon,
+    ToggleBackgroundActiveIcon,
+    RotateIcon,
+} from '../../lib/icons';
 import { twoUpHandle } from './custom-els/TwoUp/styles.css';
 
 interface Props {
@@ -15,8 +22,6 @@ interface Props {
   rightCompressed?: ImageData;
   leftImgContain: boolean;
   rightImgContain: boolean;
-  leftFlipDimensions: boolean;
-  rightFlipDimensions: boolean;
   onBack: () => void;
 }
 
@@ -203,10 +208,7 @@ export default class Output extends Component<Props, State> {
   }
 
   render(
-    {
-      mobileView, leftImgContain, rightImgContain, leftFlipDimensions, rightFlipDimensions,
-      originalImage, onBack,
-    }: Props,
+    { mobileView, leftImgContain, rightImgContain, originalImage, onBack }: Props,
     { scale, editingScale, altBackground }: State,
   ) {
     const leftDraw = this.leftDrawable();
@@ -243,10 +245,8 @@ export default class Output extends Component<Props, State> {
                 width={leftDraw && leftDraw.width}
                 height={leftDraw && leftDraw.height}
                 style={{
-                  width: originalImage &&
-                    (leftFlipDimensions ? originalImage.height : originalImage.width),
-                  height: originalImage &&
-                    (leftFlipDimensions ? originalImage.width : originalImage.height),
+                  width: originalImage && originalImage.width,
+                  height: originalImage && originalImage.height,
                   objectFit: leftImgContain ? 'contain' : '',
                 }}
               />
@@ -259,10 +259,8 @@ export default class Output extends Component<Props, State> {
                 width={rightDraw && rightDraw.width}
                 height={rightDraw && rightDraw.height}
                 style={{
-                  width: originalImage &&
-                    (rightFlipDimensions ? originalImage.height : originalImage.width),
-                  height: originalImage &&
-                    (rightFlipDimensions ? originalImage.width : originalImage.height),
+                  width: originalImage && originalImage.width,
+                  height: originalImage && originalImage.height,
                   objectFit: rightImgContain ? 'contain' : '',
                 }}
               />
@@ -304,8 +302,16 @@ export default class Output extends Component<Props, State> {
             </button>
           </div>
           <button class={style.button} onClick={this.toggleBackground}>
-            <ToggleIcon />
-            Toggle Background
+            <RotateIcon />
+          </button>
+          <button
+            class={`${style.button} ${altBackground ? style.active : ''}`}
+            onClick={this.toggleBackground}
+          >
+            {altBackground
+              ? <ToggleBackgroundActiveIcon />
+              : <ToggleBackgroundIcon />
+            }
           </button>
         </div>
       </div>
