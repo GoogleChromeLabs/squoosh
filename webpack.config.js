@@ -15,6 +15,7 @@ const WorkerPlugin = require('worker-plugin');
 const AutoSWPlugin = require('./config/auto-sw-plugin');
 const CrittersPlugin = require('critters-webpack-plugin');
 const AssetTemplatePlugin = require('./config/asset-template-plugin');
+const addCssTypes = require('./config/add-css-types');
 
 function readJson (filename) {
   return JSON.parse(fs.readFileSync(filename));
@@ -22,7 +23,7 @@ function readJson (filename) {
 
 const VERSION = readJson('./package.json').version;
 
-module.exports = function (_, env) {
+module.exports = async function (_, env) {
   const isProd = env.mode === 'production';
   const nodeModules = path.join(__dirname, 'node_modules');
   const componentStyleDirs = [
@@ -31,6 +32,8 @@ module.exports = function (_, env) {
     path.join(__dirname, 'src/custom-els'),
     path.join(__dirname, 'src/lib'),
   ];
+
+  await addCssTypes(componentStyleDirs, { watch: !isProd });
 
   return {
     mode: isProd ? 'production' : 'development',
@@ -109,9 +112,7 @@ module.exports = function (_, env) {
             // In production, CSS is extracted to files on disk. In development, it's inlined into JS:
             isProd ? MiniCssExtractPlugin.loader : 'style-loader',
             {
-              // This is a fork of css-loader that auto-generates .d.ts files for CSS module imports.
-              // The result is a definition file with the exported String classname mappings.
-              loader: 'typings-for-css-modules-loader',
+              loader: 'css-loader',
               options: {
                 modules: true,
                 localIdentName: isProd ? '[hash:base64:5]' : '[local]__[hash:base64:5]',
@@ -169,7 +170,11 @@ module.exports = function (_, env) {
       ]
     },
     plugins: [
-      new webpack.IgnorePlugin(/(fs|crypto|path)/, /\/codecs\//),
+      new webpack.IgnorePlugin(
+        /(fs|crypto|path)/,
+        new RegExp(`${path.sep}codecs${path.sep}`)
+      ),
+
       // Pretty progressbar showing build progress:
       new ProgressBarPlugin({
         format: '\u001b[90m\u001b[44mBuild\u001b[49m\u001b[39m [:bar] \u001b[32m\u001b[1m:percent\u001b[22m\u001b[39m (:elapseds) \u001b[2m:msg\u001b[22m\r',
