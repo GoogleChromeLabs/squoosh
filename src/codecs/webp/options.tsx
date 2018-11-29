@@ -1,6 +1,6 @@
 import { h, Component } from 'preact';
 import { bind } from '../../lib/initial-util';
-import { inputFieldCheckedAsNumber, inputFieldValueAsNumber } from '../../lib/util';
+import { inputFieldCheckedAsNumber, inputFieldValueAsNumber, preventDefault } from '../../lib/util';
 import { EncodeOptions, WebPImageHint } from './encoder-meta';
 import * as style from '../../components/Options/style.scss';
 import Checkbox from '../../components/checkbox';
@@ -319,7 +319,7 @@ export default class WebPEncoderOptions extends Component<Props, State> {
     // I'm rendering both lossy and lossless forms, as it becomes much easier when
     // gathering the data.
     return (
-      <form class={style.optionsSection}>
+      <form class={style.optionsSection} onSubmit={preventDefault}>
         <label class={style.optionInputFirst}>
           <Checkbox
             name="lossless"
