@@ -101,6 +101,9 @@ export default class Output extends Component<Props, State> {
         scale: 1,
       });
     } else if (oldSourceData && newSourceData && oldSourceData !== newSourceData) {
+      // Since the pinch zoom transform origin is the top-left of the content, we need to flip
+      // things around a bit when the content size changes, so the new content appears as if it were
+      // central to the previous content.
       const scaleChange = 1 - pinchZoom.scale;
       const oldXScaleOffset = oldSourceData.width / 2 * scaleChange;
       const oldYScaleOffset = oldSourceData.height / 2 * scaleChange;
