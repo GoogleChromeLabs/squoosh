@@ -14,15 +14,20 @@ import {
     RotateIcon,
 } from '../../lib/icons';
 import { twoUpHandle } from './custom-els/TwoUp/styles.css';
+import { InputProcessorState } from '../../codecs/input-processors';
+import { cleanSet } from '../../lib/clean-modify';
+import { SourceImage } from '../compress';
 
 interface Props {
-  originalImage?: ImageData;
+  source?: SourceImage;
+  inputProcessorState?: InputProcessorState;
   mobileView: boolean;
   leftCompressed?: ImageData;
   rightCompressed?: ImageData;
   leftImgContain: boolean;
   rightImgContain: boolean;
   onBack: () => void;
+  onInputProcessorChange: (newState: InputProcessorState) => void;
 }
 
 interface State {
@@ -77,6 +82,11 @@ export default class Output extends Component<Props, State> {
     const prevRightDraw = this.rightDrawable(prevProps);
     const leftDraw = this.leftDrawable();
     const rightDraw = this.rightDrawable();
+    const sourceFileChanged =
+      // Has the value become (un)defined?
+      (!!this.props.source !== !!prevProps.source) ||
+      // Or has the file changed?
+      (this.props.source && prevProps.source && this.props.source.file !== prevProps.source.file);
 
     if (leftDraw && leftDraw !== prevLeftDraw && this.canvasLeft) {
       drawDataToCanvas(this.canvasLeft, leftDraw);
@@ -85,7 +95,7 @@ export default class Output extends Component<Props, State> {
       drawDataToCanvas(this.canvasRight, rightDraw);
     }
 
-    if (this.props.originalImage !== prevProps.originalImage && this.pinchZoomLeft) {
+    if (sourceFileChanged && this.pinchZoomLeft) {
       // New image? Reset the pinch-zoom.
       this.pinchZoomLeft.setTransform({
         allowChangeEvent: true,
@@ -101,11 +111,11 @@ export default class Output extends Component<Props, State> {
   }
 
   private leftDrawable(props: Props = this.props): ImageData | undefined {
-    return props.leftCompressed || props.originalImage;
+    return props.leftCompressed || (props.source && props.source.processed);
   }
 
   private rightDrawable(props: Props = this.props): ImageData | undefined {
-    return props.rightCompressed || props.originalImage;
+    return props.rightCompressed || (props.source && props.source.processed);
   }
 
   @bind
@@ -127,6 +137,20 @@ export default class Output extends Component<Props, State> {
     if (!this.pinchZoomLeft) throw Error('Missing pinch-zoom element');
 
     this.pinchZoomLeft.scaleTo(this.state.scale / 1.25, scaleToOpts);
+  }
+
+  @bind
+  private onRotateClick() {
+    const { inputProcessorState } = this.props;
+    if (!inputProcessorState) return;
+
+    const newState = cleanSet(
+      inputProcessorState,
+      'rotateFlip.rotate',
+      (inputProcessorState.rotateFlip.rotate + 90) % 360,
+    );
+
+    this.props.onInputProcessorChange(newState);
   }
 
   @bind
@@ -208,12 +232,13 @@ export default class Output extends Component<Props, State> {
   }
 
   render(
-    { mobileView, leftImgContain, rightImgContain, originalImage, onBack }: Props,
+    { mobileView, leftImgContain, rightImgContain, source, onBack }: Props,
     { scale, editingScale, altBackground }: State,
   ) {
     const leftDraw = this.leftDrawable();
     const rightDraw = this.rightDrawable();
     // To keep position stable, the output is put in a square using the longest dimension.
+    const originalImage = source && source.processed;
     const maxDimension = originalImage && Math.max(originalImage.width, originalImage.height);
     const pinchTargetStyle = {
       width: maxDimension,
@@ -301,7 +326,7 @@ export default class Output extends Component<Props, State> {
               <AddIcon />
             </button>
           </div>
-          <button class={style.button} onClick={this.toggleBackground}>
+          <button class={style.button} onClick={this.onRotateClick}>
             <RotateIcon />
           </button>
           <button
