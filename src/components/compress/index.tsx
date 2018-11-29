@@ -229,7 +229,7 @@ export default class Compress extends Component<Props, State> {
   }
 
   private updateDocumentTitle(filename: string = '') {
-    const newTitle : string = filename ? `${filename} - ${originalDocumentTitle}` : originalDocumentTitle;
+    const newTitle: string = filename ? `${filename} - ${originalDocumentTitle}` : originalDocumentTitle;
 
     document.title = newTitle;
   }
