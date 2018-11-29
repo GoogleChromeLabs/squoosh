@@ -16,7 +16,6 @@ import * as browserGIF from './browser-gif/encoder';
 import * as browserTIFF from './browser-tiff/encoder';
 import * as browserJP2 from './browser-jp2/encoder';
 import * as browserPDF from './browser-pdf/encoder';
-import { RotateFlipOptions } from './rotate-flip/processor-meta';
 
 type ProcessorWorkerApi = import('./processor-worker').ProcessorWorkerApi;
 
@@ -125,8 +124,10 @@ export default class Processor {
   }
 
   @Processor._processingJob({ needsWorker: true })
-  rotateFlip(data: ImageData, opts: RotateFlipOptions): Promise<ImageData> {
-    return this._workerApi!.rotateFlip(data, opts);
+  rotateFlip(
+    data: ImageData, rotate: import('./rotate/processor-meta').OptionType,
+  ): Promise<ImageData> {
+    return this._workerApi!.rotateFlip(data, rotate);
   }
 
   @Processor._processingJob({ needsWorker: true })

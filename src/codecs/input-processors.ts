@@ -1,12 +1,9 @@
-import {
-  RotateFlipOptions,
-  defaultOptions as rotateFlipDefaultOptions,
-} from './rotate-flip/processor-meta';
+import { defaultOption } from './rotate/processor-meta';
 
 export interface InputProcessorState {
-  rotateFlip: RotateFlipOptions;
+  rotate: import('./rotate/processor-meta').OptionType;
 }
 
 export const defaultInputProcessorState: InputProcessorState = {
-  rotateFlip: { ...rotateFlipDefaultOptions },
+  rotate: defaultOption,
 };

@@ -21,14 +21,14 @@ async function quantize(
 }
 
 async function rotateFlip(
-  data: ImageData, options: import('../rotate-flip/processor-meta').RotateFlipOptions,
+  data: ImageData, rotateBy: import('../rotate/processor-meta').OptionType,
 ): Promise<ImageData> {
-  const { rotateFlip } = await import(
-    /* webpackChunkName: "process-rotate-flip" */
-    '../rotate-flip/processor',
+  const { rotate } = await import(
+    /* webpackChunkName: "process-rotate" */
+    '../rotate/processor',
   );
 
-  return rotateFlip(data, options);
+  return rotate(data, rotateBy);
 }
 
 async function optiPngEncode(

@@ -90,7 +90,7 @@ function processInput(
   inputProcessData: InputProcessorState,
   processor: Processor,
 ) {
-  return processor.rotateFlip(data, inputProcessData.rotateFlip);
+  return processor.rotateFlip(data, inputProcessData.rotate);
 }
 
 async function preprocessImage(
@@ -335,8 +335,8 @@ export default class Compress extends Component<Props, State> {
     const source = this.state.source;
     if (!source) return;
 
-    const oldRotate = source.inputProcessorState.rotateFlip.rotate;
-    const newRotate = options.rotateFlip.rotate;
+    const oldRotate = source.inputProcessorState.rotate;
+    const newRotate = options.rotate;
     const orientationChanged = oldRotate % 180 !== newRotate % 180;
     const loadingCounter = this.state.loadingCounter + 1;
     // Either processor is good enough here.

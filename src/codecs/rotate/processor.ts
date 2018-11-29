@@ -1,12 +1,10 @@
-import { RotateFlipOptions } from './processor-meta';
-
 const bpp = 4;
 
-export function rotateFlip(data: ImageData, opts: RotateFlipOptions): ImageData {
+export function rotate(data: ImageData, rotate: 0 | 90 | 180 | 270): ImageData {
   // Early exit if there's no transform.
-  if (!opts.flipHorizontal && !opts.flipVertical && opts.rotate === 0) return data;
+  if (rotate === 0) return data;
 
-  const flipDimensions = opts.rotate % 180 !== 0;
+  const flipDimensions = rotate % 180 !== 0;
   const width = flipDimensions ? data.height : data.width;
   const height = flipDimensions ? data.width : data.height;
   const out = new ImageData(width, height);
@@ -25,7 +23,7 @@ export function rotateFlip(data: ImageData, opts: RotateFlipOptions): ImageData 
   let d2Advance = 1;
   let d2Multiplier = inputWidth;
 
-  if (opts.rotate === 90) {
+  if (rotate === 90) {
     // d1 is y, d2 is x.
     // y starts at its max value and decreases.
     // x starts at 0 and increases.
@@ -37,7 +35,7 @@ export function rotateFlip(data: ImageData, opts: RotateFlipOptions): ImageData 
     d2Limit = inputWidth;
     d2Advance = 1;
     d2Multiplier = 1;
-  } else if (opts.rotate === 180) {
+  } else if (rotate === 180) {
     // d1 is x, d2 is y.
     // x starts at its max and decreases.
     // y starts at its max and decreases.
@@ -49,7 +47,7 @@ export function rotateFlip(data: ImageData, opts: RotateFlipOptions): ImageData 
     d2Limit = inputHeight;
     d2Advance = -1;
     d2Multiplier = inputWidth;
-  } else if (opts.rotate === 270) {
+  } else if (rotate === 270) {
     // d1 is y, d2 is x.
     // y starts at 0 and increases.
     // x starts at its max and decreases.
@@ -61,26 +59,6 @@ export function rotateFlip(data: ImageData, opts: RotateFlipOptions): ImageData 
     d2Limit = inputWidth;
     d2Advance = -1;
     d2Multiplier = 1;
-  }
-
-  if (opts.flipHorizontal) {
-    d1Advance *= -1;
-
-    if (d1Start === 0) {
-      d1Start = d1Limit - 1;
-    } else {
-      d1Start = 0;
-    }
-  }
-
-  if (opts.flipVertical) {
-    d2Advance *= -1;
-
-    if (d2Start === 0) {
-      d2Start = d2Limit - 1;
-    } else {
-      d2Start = 0;
-    }
   }
 
   for (let d2 = d2Start; d2 >= 0 && d2 < d2Limit; d2 += d2Advance) {
