@@ -88,21 +88,35 @@ export default class Output extends Component<Props, State> {
       // Or has the file changed?
       (this.props.source && prevProps.source && this.props.source.file !== prevProps.source.file);
 
-    if (leftDraw && leftDraw !== prevLeftDraw && this.canvasLeft) {
-      drawDataToCanvas(this.canvasLeft, leftDraw);
-    }
-    if (rightDraw && rightDraw !== prevRightDraw && this.canvasRight) {
-      drawDataToCanvas(this.canvasRight, rightDraw);
-    }
+    const oldSourceData = prevProps.source && prevProps.source.processed;
+    const newSourceData = this.props.source && this.props.source.processed;
+    const pinchZoom = this.pinchZoomLeft!;
 
-    if (sourceFileChanged && this.pinchZoomLeft) {
+    if (sourceFileChanged) {
       // New image? Reset the pinch-zoom.
-      this.pinchZoomLeft.setTransform({
+      pinchZoom.setTransform({
         allowChangeEvent: true,
         x: 0,
         y: 0,
         scale: 1,
       });
+    } else if (oldSourceData && newSourceData && oldSourceData !== newSourceData) {
+      const scaleChange = 1 - pinchZoom.scale;
+      const oldXScaleOffset = oldSourceData.width / 2 * scaleChange;
+      const oldYScaleOffset = oldSourceData.height / 2 * scaleChange;
+
+      pinchZoom.setTransform({
+        allowChangeEvent: true,
+        x: pinchZoom.x - oldXScaleOffset + oldYScaleOffset,
+        y: pinchZoom.y - oldYScaleOffset + oldXScaleOffset,
+      });
+    }
+
+    if (leftDraw && leftDraw !== prevLeftDraw && this.canvasLeft) {
+      drawDataToCanvas(this.canvasLeft, leftDraw);
+    }
+    if (rightDraw && rightDraw !== prevRightDraw && this.canvasRight) {
+      drawDataToCanvas(this.canvasRight, rightDraw);
     }
   }
 
@@ -239,11 +253,6 @@ export default class Output extends Component<Props, State> {
     const rightDraw = this.rightDrawable();
     // To keep position stable, the output is put in a square using the longest dimension.
     const originalImage = source && source.processed;
-    const maxDimension = originalImage && Math.max(originalImage.width, originalImage.height);
-    const pinchTargetStyle = {
-      width: maxDimension,
-      height: maxDimension,
-    };
 
     return (
       <div class={`${style.output} ${altBackground ? style.altBackground : ''}`}>
@@ -264,32 +273,30 @@ export default class Output extends Component<Props, State> {
             onChange={this.onPinchZoomLeftChange}
             ref={linkRef(this, 'pinchZoomLeft')}
           >
-            <div class={style.pinchTarget} style={pinchTargetStyle}>
-              <canvas
-                ref={linkRef(this, 'canvasLeft')}
-                width={leftDraw && leftDraw.width}
-                height={leftDraw && leftDraw.height}
-                style={{
-                  width: originalImage && originalImage.width,
-                  height: originalImage && originalImage.height,
-                  objectFit: leftImgContain ? 'contain' : '',
-                }}
-              />
-            </div>
+            <canvas
+              class={style.pinchTarget}
+              ref={linkRef(this, 'canvasLeft')}
+              width={leftDraw && leftDraw.width}
+              height={leftDraw && leftDraw.height}
+              style={{
+                width: originalImage && originalImage.width,
+                height: originalImage && originalImage.height,
+                objectFit: leftImgContain ? 'contain' : '',
+              }}
+            />
           </pinch-zoom>
           <pinch-zoom class={style.pinchZoom} ref={linkRef(this, 'pinchZoomRight')}>
-            <div class={style.pinchTarget} style={pinchTargetStyle}>
-              <canvas
-                ref={linkRef(this, 'canvasRight')}
-                width={rightDraw && rightDraw.width}
-                height={rightDraw && rightDraw.height}
-                style={{
-                  width: originalImage && originalImage.width,
-                  height: originalImage && originalImage.height,
-                  objectFit: rightImgContain ? 'contain' : '',
-                }}
-              />
-            </div>
+            <canvas
+              class={style.pinchTarget}
+              ref={linkRef(this, 'canvasRight')}
+              width={rightDraw && rightDraw.width}
+              height={rightDraw && rightDraw.height}
+              style={{
+                width: originalImage && originalImage.width,
+                height: originalImage && originalImage.height,
+                objectFit: rightImgContain ? 'contain' : '',
+              }}
+            />
           </pinch-zoom>
         </two-up>
 
