@@ -297,3 +297,10 @@ export async function transitionHeight(el: HTMLElement, opts: TransitionOptions)
     el.addEventListener('transitioncancel', listener);
   });
 }
+
+/**
+ * Simple event listener that prevents the default.
+ */
+export function preventDefault(event: Event) {
+  event.preventDefault();
+}

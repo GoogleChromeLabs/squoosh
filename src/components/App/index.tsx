@@ -12,9 +12,6 @@ import history from '../../lib/history';
 
 const ROUTE_EDITOR = '/editor';
 
-// This is imported for TypeScript only. It isn't used.
-import Compress from '../compress';
-
 const compressPromise = import(
   /* webpackChunkName: "main-app" */
   '../compress',
@@ -24,18 +21,12 @@ const offlinerPromise = import(
   '../../lib/offliner',
 );
 
-export interface SourceImage {
-  file: File | Fileish;
-  data: ImageData;
-  vectorImage?: HTMLImageElement;
-}
-
 interface Props {}
 
 interface State {
   file?: File | Fileish;
   isEditorOpen: Boolean;
-  Compress?: typeof Compress;
+  Compress?: typeof import('../compress').default;
 }
 
 export default class App extends Component<Props, State> {

@@ -31,6 +31,13 @@
   align-items: center;
 }
 
+.pinch-target {
+  // This fixes a severe painting bug in Chrome.
+  // We should try to remove this once the issue is fixed.
+  // https://bugs.chromium.org/p/chromium/issues/detail?id=870222#c10
+  will-change: auto;
+}
+
 .controls {
   position: absolute;
   display: flex;
@@ -55,6 +62,7 @@
     left: 320px;
     right: 320px;
     bottom: 0;
+    flex-wrap: wrap-reverse;
   }
 }
 
@@ -87,6 +95,7 @@
   white-space: nowrap;
   height: 36px;
   padding: 0 8px;
+  cursor: pointer;
 
   @media (min-width: 600px) {
     height: 48px;
@@ -101,14 +110,19 @@
 }
 
 .button {
-  text-transform: uppercase;
   color: var(--button-fg);
-  cursor: pointer;
-  text-indent: 6px;
-  font-size: 110%;
 
   &:hover {
     background-color: #eee;
+  }
+
+  &.active {
+    background: #34B9EB;
+    color: #fff;
+
+    &:hover {
+      background: #32a3ce;
+    }
   }
 }
 
@@ -133,17 +147,18 @@
   border-bottom: 1px dashed #999;
 }
 
-.output-canvas {
-  flex-shrink: 0;
-  // This fixes a severe painting bug in Chrome.
-  // We should try to remove this once the issue is fixed.
-  // https://bugs.chromium.org/p/chromium/issues/detail?id=870222#c10
-  will-change: auto;
-}
-
 .back {
   position: absolute;
   top: 0;
   left: 0;
   padding: 9px;
+}
+
+.buttons-no-wrap {
+  display: flex;
+  pointer-events: none;
+
+  & > * {
+    pointer-events: auto;
+  }
 }

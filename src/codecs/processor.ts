@@ -1,6 +1,5 @@
 import { proxy } from 'comlink';
 import { QuantizeOptions } from './imagequant/processor-meta';
-import { ProcessorWorkerApi } from './processor-worker';
 import { canvasEncode, blobToArrayBuffer } from '../lib/util';
 import { EncodeOptions as MozJPEGEncoderOptions } from './mozjpeg/encoder-meta';
 import { EncodeOptions as OptiPNGEncoderOptions } from './optipng/encoder-meta';
@@ -17,6 +16,8 @@ import * as browserGIF from './browser-gif/encoder';
 import * as browserTIFF from './browser-tiff/encoder';
 import * as browserJP2 from './browser-jp2/encoder';
 import * as browserPDF from './browser-pdf/encoder';
+
+type ProcessorWorkerApi = import('./processor-worker').ProcessorWorkerApi;
 
 /** How long the worker should be idle before terminating. */
 const workerTimeout = 1000;
@@ -62,7 +63,7 @@ export default class Processor {
           // @ts-ignore - Typescript doesn't know about the 2nd param to new Worker, and the
           // definition can't be overwritten.
           this._worker = new Worker(
-            './processor-worker.ts',
+            './processor-worker',
             { name: 'processor-worker', type: 'module' },
           ) as Worker;
           // Need to do some TypeScript trickery to make the type match.
@@ -117,10 +118,16 @@ export default class Processor {
   }
 
   // Off main thread jobs:
-
   @Processor._processingJob({ needsWorker: true })
   imageQuant(data: ImageData, opts: QuantizeOptions): Promise<ImageData> {
     return this._workerApi!.quantize(data, opts);
+  }
+
+  @Processor._processingJob({ needsWorker: true })
+  rotate(
+    data: ImageData, opts: import('./rotate/processor-meta').RotateOptions,
+  ): Promise<ImageData> {
+    return this._workerApi!.rotate(data, opts);
   }
 
   @Processor._processingJob({ needsWorker: true })

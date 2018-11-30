@@ -2,19 +2,17 @@
   "compileOnSave": false,
   "compilerOptions": {
     "strict": true,
-    "target": "es2017",
+    "target": "esnext",
     "module": "esnext",
+    "lib": [
+      "webworker",
+      "esnext"
+    ],
     "moduleResolution": "node",
     "experimentalDecorators": true,
     "noUnusedLocals": true,
     "sourceMap": true,
-    "jsx": "react",
-    "jsxFactory": "h",
     "allowJs": false,
     "baseUrl": "."
-  },
-  "exclude": [
-    "src/sw/**/*",
-    "src/codecs/processor-worker/**/*"
-  ]
+  }
 }

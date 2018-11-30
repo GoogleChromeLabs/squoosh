@@ -5,17 +5,29 @@ import './custom-els/TwoUp';
 import * as style from './style.scss';
 import { bind, linkRef } from '../../lib/initial-util';
 import { shallowEqual, drawDataToCanvas } from '../../lib/util';
-import { ToggleIcon, AddIcon, RemoveIcon, BackIcon } from '../../lib/icons';
+import {
+    ToggleBackgroundIcon,
+    AddIcon,
+    RemoveIcon,
+    BackIcon,
+    ToggleBackgroundActiveIcon,
+    RotateIcon,
+} from '../../lib/icons';
 import { twoUpHandle } from './custom-els/TwoUp/styles.css';
+import { InputProcessorState } from '../../codecs/input-processors';
+import { cleanSet } from '../../lib/clean-modify';
+import { SourceImage } from '../compress';
 
 interface Props {
-  originalImage?: ImageData;
+  source?: SourceImage;
+  inputProcessorState?: InputProcessorState;
   mobileView: boolean;
   leftCompressed?: ImageData;
   rightCompressed?: ImageData;
   leftImgContain: boolean;
   rightImgContain: boolean;
   onBack: () => void;
+  onInputProcessorChange: (newState: InputProcessorState) => void;
 }
 
 interface State {
@@ -70,22 +82,44 @@ export default class Output extends Component<Props, State> {
     const prevRightDraw = this.rightDrawable(prevProps);
     const leftDraw = this.leftDrawable();
     const rightDraw = this.rightDrawable();
+    const sourceFileChanged =
+      // Has the value become (un)defined?
+      (!!this.props.source !== !!prevProps.source) ||
+      // Or has the file changed?
+      (this.props.source && prevProps.source && this.props.source.file !== prevProps.source.file);
+
+    const oldSourceData = prevProps.source && prevProps.source.processed;
+    const newSourceData = this.props.source && this.props.source.processed;
+    const pinchZoom = this.pinchZoomLeft!;
+
+    if (sourceFileChanged) {
+      // New image? Reset the pinch-zoom.
+      pinchZoom.setTransform({
+        allowChangeEvent: true,
+        x: 0,
+        y: 0,
+        scale: 1,
+      });
+    } else if (oldSourceData && newSourceData && oldSourceData !== newSourceData) {
+      // Since the pinch zoom transform origin is the top-left of the content, we need to flip
+      // things around a bit when the content size changes, so the new content appears as if it were
+      // central to the previous content.
+      const scaleChange = 1 - pinchZoom.scale;
+      const oldXScaleOffset = oldSourceData.width / 2 * scaleChange;
+      const oldYScaleOffset = oldSourceData.height / 2 * scaleChange;
+
+      pinchZoom.setTransform({
+        allowChangeEvent: true,
+        x: pinchZoom.x - oldXScaleOffset + oldYScaleOffset,
+        y: pinchZoom.y - oldYScaleOffset + oldXScaleOffset,
+      });
+    }
 
     if (leftDraw && leftDraw !== prevLeftDraw && this.canvasLeft) {
       drawDataToCanvas(this.canvasLeft, leftDraw);
     }
     if (rightDraw && rightDraw !== prevRightDraw && this.canvasRight) {
       drawDataToCanvas(this.canvasRight, rightDraw);
-    }
-
-    if (this.props.originalImage !== prevProps.originalImage && this.pinchZoomLeft) {
-      // New image? Reset the pinch-zoom.
-      this.pinchZoomLeft.setTransform({
-        allowChangeEvent: true,
-        x: 0,
-        y: 0,
-        scale: 1,
-      });
     }
   }
 
@@ -94,11 +128,11 @@ export default class Output extends Component<Props, State> {
   }
 
   private leftDrawable(props: Props = this.props): ImageData | undefined {
-    return props.leftCompressed || props.originalImage;
+    return props.leftCompressed || (props.source && props.source.processed);
   }
 
   private rightDrawable(props: Props = this.props): ImageData | undefined {
-    return props.rightCompressed || props.originalImage;
+    return props.rightCompressed || (props.source && props.source.processed);
   }
 
   @bind
@@ -120,6 +154,20 @@ export default class Output extends Component<Props, State> {
     if (!this.pinchZoomLeft) throw Error('Missing pinch-zoom element');
 
     this.pinchZoomLeft.scaleTo(this.state.scale / 1.25, scaleToOpts);
+  }
+
+  @bind
+  private onRotateClick() {
+    const { inputProcessorState } = this.props;
+    if (!inputProcessorState) return;
+
+    const newState = cleanSet(
+      inputProcessorState,
+      'rotate.rotate',
+      (inputProcessorState.rotate.rotate + 90) % 360,
+    );
+
+    this.props.onInputProcessorChange(newState);
   }
 
   @bind
@@ -201,11 +249,13 @@ export default class Output extends Component<Props, State> {
   }
 
   render(
-    { mobileView, leftImgContain, rightImgContain, originalImage, onBack }: Props,
+    { mobileView, leftImgContain, rightImgContain, source, onBack }: Props,
     { scale, editingScale, altBackground }: State,
   ) {
     const leftDraw = this.leftDrawable();
     const rightDraw = this.rightDrawable();
+    // To keep position stable, the output is put in a square using the longest dimension.
+    const originalImage = source && source.processed;
 
     return (
       <div class={`${style.output} ${altBackground ? style.altBackground : ''}`}>
@@ -227,7 +277,7 @@ export default class Output extends Component<Props, State> {
             ref={linkRef(this, 'pinchZoomLeft')}
           >
             <canvas
-              class={style.outputCanvas}
+              class={style.pinchTarget}
               ref={linkRef(this, 'canvasLeft')}
               width={leftDraw && leftDraw.width}
               height={leftDraw && leftDraw.height}
@@ -240,7 +290,7 @@ export default class Output extends Component<Props, State> {
           </pinch-zoom>
           <pinch-zoom class={style.pinchZoom} ref={linkRef(this, 'pinchZoomRight')}>
             <canvas
-              class={style.outputCanvas}
+              class={style.pinchTarget}
               ref={linkRef(this, 'canvasRight')}
               width={rightDraw && rightDraw.width}
               height={rightDraw && rightDraw.height}
@@ -286,10 +336,21 @@ export default class Output extends Component<Props, State> {
               <AddIcon />
             </button>
           </div>
-          <button class={style.button} onClick={this.toggleBackground}>
-            <ToggleIcon />
-            Toggle Background
-          </button>
+          <div class={style.buttonsNoWrap}>
+            <button class={style.button} onClick={this.onRotateClick} title="Rotate image">
+              <RotateIcon />
+            </button>
+            <button
+              class={`${style.button} ${altBackground ? style.active : ''}`}
+              onClick={this.toggleBackground}
+              title="Change canvas color"
+            >
+              {altBackground
+                ? <ToggleBackgroundActiveIcon />
+                : <ToggleBackgroundIcon />
+              }
+            </button>
+          </div>
         </div>
       </div>
     );
