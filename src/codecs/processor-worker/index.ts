@@ -20,15 +20,15 @@ async function quantize(
   return process(data, opts);
 }
 
-async function rotateFlip(
-  data: ImageData, rotateBy: import('../rotate/processor-meta').OptionType,
+async function rotate(
+  data: ImageData, opts: import('../rotate/processor-meta').RotateFlipOptions,
 ): Promise<ImageData> {
   const { rotate } = await import(
     /* webpackChunkName: "process-rotate" */
     '../rotate/processor',
   );
 
-  return rotate(data, rotateBy);
+  return rotate(data, opts);
 }
 
 async function optiPngEncode(
@@ -59,7 +59,7 @@ async function webpDecode(data: ArrayBuffer): Promise<ImageData> {
   return decode(data);
 }
 
-const exports = { mozjpegEncode, quantize, rotateFlip, optiPngEncode, webpEncode, webpDecode };
+const exports = { mozjpegEncode, quantize, rotate, optiPngEncode, webpEncode, webpDecode };
 export type ProcessorWorkerApi = typeof exports;
 
 expose(exports, self);

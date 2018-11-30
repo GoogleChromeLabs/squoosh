@@ -124,10 +124,10 @@ export default class Processor {
   }
 
   @Processor._processingJob({ needsWorker: true })
-  rotateFlip(
-    data: ImageData, rotate: import('./rotate/processor-meta').OptionType,
+  rotate(
+    data: ImageData, opts: import('./rotate/processor-meta').RotateFlipOptions,
   ): Promise<ImageData> {
-    return this._workerApi!.rotateFlip(data, rotate);
+    return this._workerApi!.rotate(data, opts);
   }
 
   @Processor._processingJob({ needsWorker: true })

@@ -1,3 +1,5 @@
-export type OptionType = 0 | 90 | 180 | 270;
+export interface RotateFlipOptions {
+  rotate: 0 | 90 | 180 | 270;
+}
 
-export const defaultOption: OptionType = 0;
+export const defaultOptions: RotateFlipOptions = { rotate: 0 };

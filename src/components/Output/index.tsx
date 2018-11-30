@@ -163,8 +163,8 @@ export default class Output extends Component<Props, State> {
 
     const newState = cleanSet(
       inputProcessorState,
-      'rotate',
-      (inputProcessorState.rotate + 90) % 360,
+      'rotate.rotate',
+      (inputProcessorState.rotate.rotate + 90) % 360,
     );
 
     this.props.onInputProcessorChange(newState);

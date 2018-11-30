@@ -1,14 +1,18 @@
+import { RotateFlipOptions } from './processor-meta';
+
 const bpp = 4;
 
-export function rotate(data: ImageData, rotate: 0 | 90 | 180 | 270): ImageData {
+export function rotate(data: ImageData, opts: RotateFlipOptions): ImageData {
+  const { rotate } = opts;
+
   // Early exit if there's no transform.
   if (rotate === 0) return data;
 
   const flipDimensions = rotate % 180 !== 0;
-  const width = flipDimensions ? data.height : data.width;
-  const height = flipDimensions ? data.width : data.height;
-  const out = new ImageData(width, height);
   const { width: inputWidth, height: inputHeight } = data;
+  const outputWidth = flipDimensions ? inputHeight : inputWidth;
+  const outputHeight = flipDimensions ? inputWidth : inputHeight;
+  const out = new ImageData(outputWidth, outputHeight);
   let i = 0;
 
   // In the straight-copy case, d1 is x, d2 is y.
@@ -63,8 +67,9 @@ export function rotate(data: ImageData, rotate: 0 | 90 | 180 | 270): ImageData {
 
   for (let d2 = d2Start; d2 >= 0 && d2 < d2Limit; d2 += d2Advance) {
     for (let d1 = d1Start; d1 >= 0 && d1 < d1Limit; d1 += d1Advance) {
+      // Iterate over channels:
       const start = ((d1 * d1Multiplier) + (d2 * d2Multiplier)) * bpp;
-      for (let j = 0; j < 4; j += 1) {
+      for (let j = 0; j < bpp; j += 1) {
         out.data[i] = data.data[start + j];
         i += 1;
       }
