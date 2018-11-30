@@ -62,6 +62,7 @@
     left: 320px;
     right: 320px;
     bottom: 0;
+    flex-wrap: wrap-reverse;
   }
 }
 
@@ -151,4 +152,13 @@
   top: 0;
   left: 0;
   padding: 9px;
+}
+
+.buttons-no-wrap {
+  display: flex;
+  pointer-events: none;
+
+  & > * {
+    pointer-events: auto;
+  }
 }

@@ -336,19 +336,21 @@ export default class Output extends Component<Props, State> {
               <AddIcon />
             </button>
           </div>
-          <button class={style.button} onClick={this.onRotateClick} title="Rotate image">
-            <RotateIcon />
-          </button>
-          <button
-            class={`${style.button} ${altBackground ? style.active : ''}`}
-            onClick={this.toggleBackground}
-            title="Change canvas color"
-          >
-            {altBackground
-              ? <ToggleBackgroundActiveIcon />
-              : <ToggleBackgroundIcon />
-            }
-          </button>
+          <div class={style.buttonsNoWrap}>
+            <button class={style.button} onClick={this.onRotateClick} title="Rotate image">
+              <RotateIcon />
+            </button>
+            <button
+              class={`${style.button} ${altBackground ? style.active : ''}`}
+              onClick={this.toggleBackground}
+              title="Change canvas color"
+            >
+              {altBackground
+                ? <ToggleBackgroundActiveIcon />
+                : <ToggleBackgroundIcon />
+              }
+            </button>
+          </div>
         </div>
       </div>
     );
