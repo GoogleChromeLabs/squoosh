@@ -1,8 +1,8 @@
-import { RotateFlipOptions } from './processor-meta';
+import { RotateOptions } from './processor-meta';
 
 const bpp = 4;
 
-export function rotate(data: ImageData, opts: RotateFlipOptions): ImageData {
+export function rotate(data: ImageData, opts: RotateOptions): ImageData {
   const { rotate } = opts;
 
   // Early exit if there's no transform.

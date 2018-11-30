@@ -21,7 +21,7 @@ async function quantize(
 }
 
 async function rotate(
-  data: ImageData, opts: import('../rotate/processor-meta').RotateFlipOptions,
+  data: ImageData, opts: import('../rotate/processor-meta').RotateOptions,
 ): Promise<ImageData> {
   const { rotate } = await import(
     /* webpackChunkName: "process-rotate" */
