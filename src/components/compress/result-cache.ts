@@ -1,7 +1,6 @@
 import { EncoderState } from '../../codecs/encoders';
 import { Fileish } from '../../lib/initial-util';
 import { shallowEqual } from '../../lib/util';
-import { SourceImage } from '.';
 import { PreprocessorState } from '../../codecs/preprocessors';
 
 import * as identity from '../../codecs/identity/encoder-meta';
@@ -15,7 +14,7 @@ interface CacheResult {
 interface CacheEntry extends CacheResult {
   preprocessorState: PreprocessorState;
   encoderState: EncoderState;
-  source: SourceImage;
+  sourceData: ImageData;
 }
 
 const SIZE = 5;
@@ -32,13 +31,13 @@ export default class ResultCache {
   }
 
   match(
-    source: SourceImage,
+    sourceData: ImageData,
     preprocessorState: PreprocessorState,
     encoderState: EncoderState,
   ): CacheResult | undefined {
     const matchingIndex = this._entries.findIndex((entry) => {
       // Check for quick exits:
-      if (entry.source !== source) return false;
+      if (entry.sourceData !== sourceData) return false;
       if (entry.encoderState.type !== encoderState.type) return false;
 
       // Check that each set of options in the preprocessor are the same

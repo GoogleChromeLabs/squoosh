@@ -1,7 +1,7 @@
 import { nativeResize, NativeResizeMethod, drawableToImageData } from '../../lib/util';
 import { BitmapResizeOptions, VectorResizeOptions } from './processor-meta';
 
-function getCoverOffsets(sw: number, sh: number, dw: number, dh: number) {
+function getContainOffsets(sw: number, sh: number, dw: number, dh: number) {
   const currentAspect = sw / sh;
   const endAspect = dw / dh;
 
@@ -22,8 +22,8 @@ export function resize(data: ImageData, opts: BitmapResizeOptions): ImageData {
   let sw = data.width;
   let sh = data.height;
 
-  if (opts.fitMethod === 'cover') {
-    ({ sx, sy, sw, sh } = getCoverOffsets(sw, sh, opts.width, opts.height));
+  if (opts.fitMethod === 'contain') {
+    ({ sx, sy, sw, sh } = getContainOffsets(sw, sh, opts.width, opts.height));
   }
 
   return nativeResize(
@@ -38,8 +38,8 @@ export function vectorResize(data: HTMLImageElement, opts: VectorResizeOptions):
   let sw = data.width;
   let sh = data.height;
 
-  if (opts.fitMethod === 'cover') {
-    ({ sx, sy, sw, sh } = getCoverOffsets(sw, sh, opts.width, opts.height));
+  if (opts.fitMethod === 'contain') {
+    ({ sx, sy, sw, sh } = getContainOffsets(sw, sh, opts.width, opts.height));
   }
 
   return drawableToImageData(data, {

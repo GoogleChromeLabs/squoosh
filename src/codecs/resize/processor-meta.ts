@@ -4,7 +4,7 @@ export interface ResizeOptions {
   width: number;
   height: number;
   method: 'vector' | BitmapResizeMethods;
-  fitMethod: 'stretch' | 'cover';
+  fitMethod: 'stretch' | 'contain';
 }
 
 export interface BitmapResizeOptions extends ResizeOptions {

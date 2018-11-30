@@ -118,10 +118,16 @@ export default class Processor {
   }
 
   // Off main thread jobs:
-
   @Processor._processingJob({ needsWorker: true })
   imageQuant(data: ImageData, opts: QuantizeOptions): Promise<ImageData> {
     return this._workerApi!.quantize(data, opts);
+  }
+
+  @Processor._processingJob({ needsWorker: true })
+  rotate(
+    data: ImageData, opts: import('./rotate/processor-meta').RotateOptions,
+  ): Promise<ImageData> {
+    return this._workerApi!.rotate(data, opts);
   }
 
   @Processor._processingJob({ needsWorker: true })

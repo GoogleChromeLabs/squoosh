@@ -135,7 +135,7 @@ export default class ResizerOptions extends Component<Props, State> {
                 onChange={this.onChange}
               >
                 <option value="stretch">Stretch</option>
-                <option value="cover">Cover</option>
+                <option value="contain">Contain</option>
               </Select>
             </label>
           }
