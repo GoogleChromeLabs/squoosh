@@ -72,12 +72,14 @@ export default class App extends Component<Props, State> {
   @bind
   private onFileDrop({ file }: FileDropEvent) {
     if (!file) return;
-    this.setState({ file }, this.openEditor);
+    this.setState({ file });
+    this.openEditor();
   }
 
   @bind
   private onIntroPickFile(file: File | Fileish) {
-    this.setState({ file }, this.openEditor);
+    this.setState({ file });
+    this.openEditor();
   }
 
   @bind
@@ -105,10 +107,10 @@ export default class App extends Component<Props, State> {
     return (
       <div id="app" class={style.app}>
         <file-drop accept="image/*" onfiledrop={this.onFileDrop} class={style.drop}>
-          {(!file || !isEditorOpen)
+          {!isEditorOpen
             ? <Intro onFile={this.onIntroPickFile} showSnack={this.showSnack} />
             : (Compress)
-              ? <Compress file={file} showSnack={this.showSnack} onBack={history.back} />
+              ? <Compress file={file!} showSnack={this.showSnack} onBack={history.back} />
               : <loading-spinner class={style.appLoader}/>
           }
           <snack-bar ref={linkRef(this, 'snackbar')} />
