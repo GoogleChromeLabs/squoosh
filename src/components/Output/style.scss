@@ -152,3 +152,12 @@
   left: 0;
   padding: 9px;
 }
+
+.buttons-no-wrap {
+  display: flex;
+  pointer-events: none;
+
+  & > * {
+    pointer-events: auto;
+  }
+}
