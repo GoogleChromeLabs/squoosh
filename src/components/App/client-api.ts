@@ -32,6 +32,6 @@ class API {
     }
 
     await this.app.compressInstance.compressionJobs[side];
-    return this.app.compressInstance.state.images[side].file;
+    return this.app.compressInstance.state.sides[side].file;
   }
 }
