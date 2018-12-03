@@ -36,7 +36,7 @@ export default class App extends Component<Props, State> {
     file: undefined,
     Compress: undefined,
   };
-  private compressInstance?: import('../compress').default;
+  compressInstance?: import('../compress').default;
 
   snackbar?: SnackBarElement;
 
@@ -70,7 +70,7 @@ export default class App extends Component<Props, State> {
     });
 
     window.addEventListener('popstate', this.onPopState);
-    this.exposeAPI();
+    import('./client-api').then(m => m.exposeAPI(this));
   }
 
   @bind
@@ -103,39 +103,6 @@ export default class App extends Component<Props, State> {
     if (this.state.isEditorOpen) return;
     history.pushState(null, '', ROUTE_EDITOR);
     this.setState({ isEditorOpen: true });
-  }
-
-  private exposeAPI() {
-    const api = {
-      setFile: async (blob: Blob, name: string) => {
-        let oldCompressorState = this.compressInstance && this.compressInstance.state;
-        await new Promise((resolve) => {
-          this.setState({ file: new File([blob], name) }, resolve);
-        });
-        await new Promise((resolve) => {
-          document.addEventListener('squooshingdone', resolve, { once: true });
-        });
-        if (oldCompressorState) {
-          let newState = this.compressInstance!.state;
-          [0, 1].forEach((index) => {
-            oldCompressorState = cleanMerge(oldCompressorState!, `images.${index}`, {
-              loading: false,
-              data: undefined,
-            });
-            newState = cleanSet(newState, `images.${index}`, oldCompressorState.images[index]);
-          });
-          this.compressInstance!.setState(newState);
-        }
-      },
-      getBlob: async (side: 0 | 1) => {
-        if (!this.state.file || !this.compressInstance) {
-          throw new Error('No file has been loaded');
-        }
-        await this.compressInstance.compressionJobs[side];
-        return this.compressInstance.state.images[side].file;
-      },
-    };
-    expose(api, self.parent);
   }
 
   render({}: Props, { file, isEditorOpen, Compress }: State) {
