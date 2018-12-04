@@ -36,6 +36,8 @@
   // We should try to remove this once the issue is fixed.
   // https://bugs.chromium.org/p/chromium/issues/detail?id=870222#c10
   will-change: auto;
+  // Prevent the image becoming misshapen due to default flexbox layout.
+  flex-shrink: 0;
 }
 
 .controls {
