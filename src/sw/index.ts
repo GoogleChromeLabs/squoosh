@@ -40,6 +40,11 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  if (event.request.method === 'POST') {
+    // @ts-ignore - The type of respondWith is INCORRECT
+    event.respondWith(new Response('Got a post request'));
+    return;
+  }
   // We only care about GET.
   if (event.request.method !== 'GET') return;
 
