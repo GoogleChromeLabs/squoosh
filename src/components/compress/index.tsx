@@ -85,12 +85,18 @@ interface UpdateImageOptions {
   skipPreprocessing?: boolean;
 }
 
-function processInput(
+async function processInput(
   data: ImageData,
   inputProcessData: InputProcessorState,
   processor: Processor,
 ) {
-  return processor.rotate(data, inputProcessData.rotate);
+  let processedData = data;
+
+  if (inputProcessData.rotate.rotate !== 0) {
+    processedData = await processor.rotate(processedData, inputProcessData.rotate);
+  }
+
+  return processedData;
 }
 
 async function preprocessImage(
