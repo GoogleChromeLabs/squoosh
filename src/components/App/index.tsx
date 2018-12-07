@@ -88,7 +88,8 @@ export default class App extends Component<Props, State> {
 
   @bind
   private openEditor() {
-    !this.state.isEditorOpen && history.push(ROUTE_EDITOR);
+    if (!this.state.isEditorOpen) return;
+    history.push(ROUTE_EDITOR);
     this.setState({ isEditorOpen: true });
   }
 
