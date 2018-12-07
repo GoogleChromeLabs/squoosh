@@ -58,19 +58,21 @@ export default class App extends Component<Props, State> {
         window.STATE = this.state;
       };
     }
+
+    history.addPopStateListener(this.onPopState);
   }
 
   @bind
   private onFileDrop({ file }: FileDropEvent) {
     if (!file) return;
-    this.setState({ file });
     this.openEditor();
+    this.setState({ file });
   }
 
   @bind
   private onIntroPickFile(file: File | Fileish) {
-    this.setState({ file });
     this.openEditor();
+    this.setState({ file });
   }
 
   @bind
@@ -86,12 +88,8 @@ export default class App extends Component<Props, State> {
 
   @bind
   private openEditor() {
-    history.push(ROUTE_EDITOR);
+    !this.state.isEditorOpen && history.push(ROUTE_EDITOR);
     this.setState({ isEditorOpen: true });
-  }
-
-  componentDidMount() {
-    history.addPopStateListener(this.onPopState);
   }
 
   render({}: Props, { file, isEditorOpen, Compress }: State) {
