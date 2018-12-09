@@ -20,7 +20,7 @@ import * as browserPDF from './browser-pdf/encoder';
 type ProcessorWorkerApi = import('./processor-worker').ProcessorWorkerApi;
 
 /** How long the worker should be idle before terminating. */
-const workerTimeout = 1000;
+const workerTimeout = 10000;
 
 interface ProcessingJobOptions {
   needsWorker?: boolean;
