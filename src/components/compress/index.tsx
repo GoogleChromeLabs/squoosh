@@ -321,7 +321,10 @@ export default class Compress extends Component<Props, State> {
     const oldSettings = this.state.sides[otherIndex];
 
     this.setState({
-      sides: cleanSet(this.state.sides, otherIndex, this.state.sides[index]),
+      sides: cleanSet(this.state.sides, otherIndex, {
+        ...this.state.sides[index],
+        downloadUrl: oldSettings.downloadUrl,
+      }),
     });
 
     const result = await this.props.showSnack('Settings copied across', {
