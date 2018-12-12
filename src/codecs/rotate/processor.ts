@@ -4,10 +4,6 @@ const bpp = 4;
 
 export function rotate(data: ImageData, opts: RotateOptions): ImageData {
   const { rotate } = opts;
-
-  // Early exit if there's no transform.
-  if (rotate === 0) return data;
-
   const flipDimensions = rotate % 180 !== 0;
   const { width: inputWidth, height: inputHeight } = data;
   const outputWidth = flipDimensions ? inputHeight : inputWidth;
