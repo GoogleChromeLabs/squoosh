@@ -160,7 +160,7 @@ function stateForNewSourceData(state: State, newSource: SourceImage): State {
   for (const i of [0, 1]) {
     // Ditch previous encodings
     const downloadUrl = state.sides[i].downloadUrl;
-    if (downloadUrl) URL.revokeObjectURL(downloadUrl!);
+    if (downloadUrl) URL.revokeObjectURL(downloadUrl);
 
     newState = cleanMerge(state, `sides.${i}`, {
       preprocessed: undefined,
@@ -319,9 +319,14 @@ export default class Compress extends Component<Props, State> {
   private async onCopyToOtherClick(index: 0 | 1) {
     const otherIndex = (index + 1) % 2;
     const oldSettings = this.state.sides[otherIndex];
+    const newSettings = { ...this.state.sides[index] };
+
+    // Create a new object URL for the new settings. This avoids both sides sharing a URL, which
+    // means it can be safely revoked without impacting the other side.
+    if (newSettings.file) newSettings.downloadUrl = URL.createObjectURL(newSettings.file);
 
     this.setState({
-      sides: cleanSet(this.state.sides, otherIndex, this.state.sides[index]),
+      sides: cleanSet(this.state.sides, otherIndex, newSettings),
     });
 
     const result = await this.props.showSnack('Settings copied across', {
