@@ -8,7 +8,6 @@ import SnackBarElement, { SnackOptions } from '../../lib/SnackBar';
 import '../../lib/SnackBar';
 import Intro from '../intro';
 import '../custom-els/LoadingSpinner';
-import history from '../../lib/history';
 
 const ROUTE_EDITOR = '/editor';
 
@@ -20,6 +19,10 @@ const offlinerPromise = import(
   /* webpackChunkName: "offliner" */
   '../../lib/offliner',
 );
+
+function back() {
+  window.history.back();
+}
 
 interface Props {}
 
@@ -59,7 +62,7 @@ export default class App extends Component<Props, State> {
       };
     }
 
-    history.addPopStateListener(this.onPopState);
+    window.addEventListener('popstate', this.onPopState);
   }
 
   @bind
@@ -83,13 +86,13 @@ export default class App extends Component<Props, State> {
 
   @bind
   private onPopState() {
-    this.setState({ isEditorOpen: history.pathname === ROUTE_EDITOR });
+    this.setState({ isEditorOpen: location.pathname === ROUTE_EDITOR });
   }
 
   @bind
   private openEditor() {
     if (this.state.isEditorOpen) return;
-    history.push(ROUTE_EDITOR);
+    history.pushState(null, '', ROUTE_EDITOR);
     this.setState({ isEditorOpen: true });
   }
 
@@ -100,7 +103,7 @@ export default class App extends Component<Props, State> {
           {!isEditorOpen
             ? <Intro onFile={this.onIntroPickFile} showSnack={this.showSnack} />
             : (Compress)
-              ? <Compress file={file!} showSnack={this.showSnack} onBack={history.back} />
+              ? <Compress file={file!} showSnack={this.showSnack} onBack={back} />
               : <loading-spinner class={style.appLoader}/>
           }
           <snack-bar ref={linkRef(this, 'snackbar')} />
