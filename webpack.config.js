@@ -251,6 +251,11 @@ module.exports = async function (_, env) {
         filename: '_headers',
       }),
 
+      isProd && new AssetTemplatePlugin({
+        template: path.join(__dirname, '_redirects.ejs'),
+        filename: '_redirects',
+      }),
+
       new ScriptExtHtmlPlugin({
         inline: ['first']
       }),
