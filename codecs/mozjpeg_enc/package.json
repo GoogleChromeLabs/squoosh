@@ -8,6 +8,6 @@
     "mozjpeg": "mozilla/mozjpeg#v3.3.1"
   },
   "devDependencies": {
-    "napa": "^3.0.0"
+    "napa": "3.0.0"
   }
 }

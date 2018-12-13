@@ -16,7 +16,7 @@
     "zlib": "emscripten-ports/zlib"
   },
   "dependencies": {
-    "napa": "^3.0.0",
+    "napa": "3.0.0",
     "tar-dependency": "0.0.3"
   }
 }
