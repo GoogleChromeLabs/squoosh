@@ -8,6 +8,6 @@
     "libimagequant": "ImageOptim/libimagequant#2.12.1"
   },
   "devDependencies": {
-    "napa": "^3.0.0"
+    "napa": "3.0.0"
   }
 }

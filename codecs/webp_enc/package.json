@@ -8,6 +8,6 @@
     "libwebp": "webmproject/libwebp#v1.0.0"
   },
   "devDependencies": {
-    "napa": "^3.0.0"
+    "napa": "3.0.0"
   }
 }
