@@ -17,7 +17,7 @@
   "devDependencies": {
     "@types/node": "10.12.15",
     "@types/pretty-bytes": "5.1.0",
-    "@types/webassembly-js-api": "0.0.1",
+    "@types/webassembly-js-api": "0.0.2",
     "@webcomponents/custom-elements": "1.2.1",
     "@webpack-cli/serve": "0.1.2",
     "assets-webpack-plugin": "3.9.7",
