@@ -54,7 +54,7 @@
     "terser-webpack-plugin": "1.1.0",
     "ts-loader": "5.3.1",
     "tslint": "5.11.0",
-    "tslint-config-airbnb": "5.11.0",
+    "tslint-config-airbnb": "5.11.1",
     "tslint-config-semistandard": "7.0.0",
     "tslint-react": "3.6.0",
     "typed-css-modules": "0.3.7",
