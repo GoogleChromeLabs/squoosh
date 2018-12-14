@@ -42,7 +42,7 @@
     "node-sass": "4.11.0",
     "optimize-css-assets-webpack-plugin": "5.0.1",
     "pointer-tracker": "2.0.3",
-    "preact": "8.3.1",
+    "preact": "8.4.2",
     "prerender-loader": "1.2.0",
     "pretty-bytes": "5.1.0",
     "progress-bar-webpack-plugin": "1.11.0",
