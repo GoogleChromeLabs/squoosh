@@ -26,7 +26,7 @@ val encode(std::string img, int width, int height, WebPConfig config) {
     throw std::runtime_error("Unexpected error");
   }
 
-  pic.use_argb = !!config.lossless;
+  pic.use_argb = 1;
   pic.width = width;
   pic.height = height;
   pic.writer = WebPMemoryWrite;
