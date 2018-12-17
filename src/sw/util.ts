@@ -48,7 +48,7 @@ export function serveShareTarget(event: FetchEvent): void {
     const client = await self.clients.get(event.resultingClientId);
     const data = await dataPromise;
     const file = data.get('file');
-    client.postMessage({ file, action: 'load-image' }, [file]);
+    client.postMessage({ file, action: 'load-image' });
   }());
 }
 
