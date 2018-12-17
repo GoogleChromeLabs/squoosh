@@ -40,7 +40,9 @@ import Checkbox from '../checkbox';
 import Expander from '../expander';
 import Select from '../select';
 
-const encoderOptionsComponentMap = {
+const encoderOptionsComponentMap: {
+  [x: string]: (new (...args: any[]) => Component<any, any>) | undefined;
+} = {
   [identity.type]: undefined,
   [optiPNG.type]: OptiPNGEncoderOptions,
   [mozJPEG.type]: MozJpegEncoderOptions,
