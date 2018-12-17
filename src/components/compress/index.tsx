@@ -240,6 +240,7 @@ export default class Compress extends Component<Props, State> {
   private readonly encodeCache = new ResultCache();
   private readonly leftProcessor = new Processor();
   private readonly rightProcessor = new Processor();
+  private readonly updateImageTimeoutIds: [number, number] = [0, 0];
 
   constructor(props: Props) {
     super(props);
@@ -307,10 +308,8 @@ export default class Compress extends Component<Props, State> {
       // The image only needs updated if the encoder/preprocessor settings have changed, or the
       // source has changed.
       if (sourceDataChanged || encoderChanged || preprocessorChanged) {
-        this.updateImage(i, {
+        this.queueUpdateImage(i, {
           skipPreprocessing: !sourceDataChanged && !preprocessorChanged,
-        }).catch((err) => {
-          console.error(err);
         });
       }
     }
@@ -455,6 +454,21 @@ export default class Compress extends Component<Props, State> {
       this.props.showSnack('Invalid image');
       this.setState({ loading: false });
     }
+  }
+
+  private queueUpdateImage(index: number, options: UpdateImageOptions = {}): void {
+    // Debounce the heavy lifting of updateImage.
+    // Otherwise, the thrashing causes jank, and sometimes crashes iOS Safari.
+    clearTimeout(this.updateImageTimeoutIds[index]);
+
+    this.updateImageTimeoutIds[index] = self.setTimeout(
+      () => {
+        this.updateImage(index, options).catch((err) => {
+          console.error(err);
+        });
+      },
+      100,
+    );
   }
 
   private async updateImage(index: number, options: UpdateImageOptions = {}): Promise<void> {
