@@ -1,5 +1,6 @@
 import {
   cacheOrNetworkAndCache, cleanupCache, cacheOrNetwork, cacheBasics, cacheAdditionalProcessors,
+  serveShareTarget,
 } from './util';
 import { get } from 'idb-keyval';
 
@@ -40,18 +41,18 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  if (event.request.method === 'POST') {
-    // @ts-ignore - The type of respondWith is INCORRECT
-    event.respondWith(new Response('Got a post request'));
-    return;
-  }
-  // We only care about GET.
-  if (event.request.method !== 'GET') return;
-
   const url = new URL(event.request.url);
 
   // Don't care about other-origin URLs
   if (url.origin !== location.origin) return;
+
+  if (url.pathname === '/' && url.searchParams.has('share-target')) {
+    serveShareTarget(event);
+    return;
+  }
+
+  // We only care about GET from here on in.
+  if (event.request.method !== 'GET') return;
 
   if (url.pathname.startsWith('/demo-') || url.pathname.startsWith('/wc-polyfill')) {
     cacheOrNetworkAndCache(event, dynamicCache);

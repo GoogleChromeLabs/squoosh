@@ -40,6 +40,12 @@ async function updateReady(reg: ServiceWorkerRegistration): Promise<void> {
   });
 }
 
+let sharedImageResolver: (value?: File | PromiseLike<File> | undefined) => void;
+
+export const sharedImage: Promise<File> = new Promise((resolve) => {
+  sharedImageResolver = resolve;
+});
+
 /** Set up the service worker and monitor changes */
 export async function offliner(showSnack: SnackBarElement['showSnackbar']) {
   // This needs to be a typeof because Webpack.
@@ -50,6 +56,16 @@ export async function offliner(showSnack: SnackBarElement['showSnackbar']) {
   }
 
   const hasController = !!navigator.serviceWorker.controller;
+  const pageUrl = new URL(location.href);
+
+  if (pageUrl.searchParams.has('share-target')) {
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      if (event.data.action !== 'load-image') return;
+      sharedImageResolver(event.data.file);
+    });
+
+    new BroadcastChannel('share-ready').postMessage('share-ready');
+  }
 
   // Look for changes in the controller
   navigator.serviceWorker.addEventListener('controllerchange', async () => {

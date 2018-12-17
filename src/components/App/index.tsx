@@ -50,7 +50,13 @@ export default class App extends Component<Props, State> {
       this.showSnack('Failed to load app');
     });
 
-    offlinerPromise.then(({ offliner }) => offliner(this.showSnack));
+    offlinerPromise.then(async ({ offliner, sharedImage }) => {
+      offliner(this.showSnack);
+      const file = await sharedImage;
+      history.replaceState('', '', '/');
+      this.openEditor();
+      this.setState({ file });
+    });
 
     // In development, persist application state across hot reloads:
     if (process.env.NODE_ENV === 'development') {

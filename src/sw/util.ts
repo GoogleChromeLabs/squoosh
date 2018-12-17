@@ -1,8 +1,11 @@
 import webpDataUrl from 'url-loader!../codecs/tiny.webp';
 
+// Give TypeScript the correct global.
+declare var self: ServiceWorkerGlobalScope;
+
 export function cacheOrNetwork(event: FetchEvent): void {
   event.respondWith(async function () {
-    const cachedResponse = await caches.match(event.request);
+    const cachedResponse = await caches.match(event.request, { ignoreSearch: true });
     return cachedResponse || fetch(event.request);
   }());
 }
@@ -26,6 +29,24 @@ export function cacheOrNetworkAndCache(event: FetchEvent, cacheName: string): vo
 
     // Return the network response.
     return response;
+  }());
+}
+
+export function serveShareTarget(event: FetchEvent): void {
+  // Serve the page from the cache:
+  event.respondWith(async function () {
+    const rootPage = await caches.match('/');
+    if (rootPage) return rootPage;
+    // This shouldn't happen, but I've seen Safari lose items from the cache, so just in case:
+    return fetch('/');
+  }());
+
+  event.waitUntil(async function () {
+    await new Promise(r => new BroadcastChannel('share-ready').onmessage = r);
+    const client = await self.clients.get(event.resultingClientId);
+    const data = await event.request.formData();
+    const file = data.get('file');
+    client.postMessage({ file, action: 'load-image' }, [file]);
   }());
 }
 
