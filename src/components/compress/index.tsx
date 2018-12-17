@@ -457,9 +457,15 @@ export default class Compress extends Component<Props, State> {
     }
   }
 
+  /**
+   * Debounce the heavy lifting of updateImage.
+   * Otherwise, the thrashing causes jank, and sometimes crashes iOS Safari.
+   */
   private queueUpdateImage(index: number, options: UpdateImageOptions = {}): void {
-    // Debounce the heavy lifting of updateImage.
-    // Otherwise, the thrashing causes jank, and sometimes crashes iOS Safari.
+    // Call updateImage after this delay, unless queueUpdateImage is called again, in which case the
+    // timeout is reset.
+    const delay = 100;
+
     clearTimeout(this.updateImageTimeoutIds[index]);
 
     this.updateImageTimeoutIds[index] = self.setTimeout(
@@ -468,7 +474,7 @@ export default class Compress extends Component<Props, State> {
           console.error(err);
         });
       },
-      100,
+      delay,
     );
   }
 
