@@ -62,6 +62,14 @@ export default class App extends Component<Props, State> {
       };
     }
 
+    // Since iOS 10, Apple tries to prevent disabling pinch-zoom. This is great in theory, but
+    // really breaks things on Squoosh, as you can easily end up zooming the UI when you mean to
+    // zoom the image. Once you've done this, it's really difficult to undo. Anyway, this seems to
+    // prevent it.
+    document.body.addEventListener('gesturestart', (event) => {
+      event.preventDefault();
+    });
+
     window.addEventListener('popstate', this.onPopState);
   }
 
