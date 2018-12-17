@@ -75,6 +75,11 @@ export default class App extends Component<Props, State> {
     import('./client-api').then(m => m.exposeAPI(this));
   }
 
+  @bind openFile(file: File | Fileish) {
+    this.openEditor();
+    this.setState({ file });
+  }
+
   @bind
   private onFileDrop({ files }: FileDropEvent) {
     if (!files || files.length === 0) return;
@@ -85,8 +90,7 @@ export default class App extends Component<Props, State> {
 
   @bind
   private onIntroPickFile(file: File | Fileish) {
-    this.openEditor();
-    this.setState({ file });
+    return this.openFile(file);
   }
 
   @bind
