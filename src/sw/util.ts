@@ -33,7 +33,9 @@ export function cacheOrNetworkAndCache(event: FetchEvent, cacheName: string): vo
 }
 
 export function serveShareTarget(event: FetchEvent): void {
+  const dataPromise = event.request.formData();
   // Serve the page from the cache:
+
   event.respondWith(async function () {
     const rootPage = await caches.match('/');
     if (rootPage) return rootPage;
@@ -44,7 +46,7 @@ export function serveShareTarget(event: FetchEvent): void {
   event.waitUntil(async function () {
     await new Promise(r => new BroadcastChannel('share-ready').onmessage = r);
     const client = await self.clients.get(event.resultingClientId);
-    const data = await event.request.formData();
+    const data = await dataPromise;
     const file = data.get('file');
     client.postMessage({ file, action: 'load-image' }, [file]);
   }());
