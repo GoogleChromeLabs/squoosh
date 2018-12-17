@@ -205,7 +205,6 @@ const originalDocumentTitle = document.title;
 
 export default class Compress extends Component<Props, State> {
   widthQuery = window.matchMedia('(max-width: 599px)');
-  compressionJobs: [Promise<void>, Promise<void>] = [Promise.resolve(), Promise.resolve()];
 
   state: State = {
     source: undefined,
@@ -306,7 +305,7 @@ export default class Compress extends Component<Props, State> {
       // The image only needs updated if the encoder/preprocessor settings have changed, or the
       // source has changed.
       if (sourceDataChanged || encoderChanged || preprocessorChanged) {
-        this.compressionJobs[i] = this.updateImage(i, {
+        this.queueUpdateImage(i, {
           skipPreprocessing: !sourceDataChanged && !preprocessorChanged,
         });
       }
@@ -396,8 +395,8 @@ export default class Compress extends Component<Props, State> {
     // Either processor is good enough here.
     const processor = this.leftProcessor;
 
-    this.setState({ loadingCounter, loading: true });
-
+    this.setState({ loadingCounter, loading: true }, this.signalProcessingStart);
+    // this.signalProcessingStart();
     // Abort any current encode jobs, as they're redundant now.
     this.leftProcessor.abortCurrent();
     this.rightProcessor.abortCurrent();
@@ -445,7 +444,9 @@ export default class Compress extends Component<Props, State> {
       this.updateDocumentTitle(file.name);
       this.setState(newState);
     } catch (err) {
-      if (err.name === 'AbortError') return;
+      if (err.name === 'AbortError') {
+        return;
+      }
       console.error(err);
       // Another file has been opened/processed before this one processed.
       if (this.state.loadingCounter !== loadingCounter) return;
@@ -467,12 +468,38 @@ export default class Compress extends Component<Props, State> {
 
     this.updateImageTimeoutIds[index] = self.setTimeout(
       () => {
-        this.updateImage(index, options).catch((err) => {
+        this.updateImage(index, options)
+        .catch((err) => {
           console.error(err);
         });
       },
       delay,
     );
+  }
+
+  @bind
+  private dispatchCustomEvent(name: string, detail?: {}) {
+    (this.base || document).dispatchEvent(new CustomEvent(name, { detail, bubbles: true }));
+  }
+
+  @bind
+  private signalProcessingStart() {
+    this.dispatchCustomEvent('squoosh:processingstart');
+  }
+
+  @bind
+  private signalProcessingDone(side: 0|1) {
+    this.dispatchCustomEvent('squoosh:processingdone', { side });
+  }
+
+  @bind
+  private signalProcessingAbort(side: 0|1) {
+    this.dispatchCustomEvent('squoosh:processingabort', { side });
+  }
+
+  @bind
+  private signalProcessingError(side: 0|1, msg: string) {
+    this.dispatchCustomEvent('squoosh:processingerror', { side, msg });
   }
 
   private async updateImage(index: number, options: UpdateImageOptions = {}): Promise<void> {
@@ -490,9 +517,7 @@ export default class Compress extends Component<Props, State> {
       loading: true,
     });
 
-    this.setState({ sides }, () => this.base!.dispatchEvent(
-      new CustomEvent('squooshingdone', { bubbles: true }),
-    ));
+    this.setState({ sides });
 
     const side = sides[index];
     const settings = side.latestSettings;
@@ -538,8 +563,13 @@ export default class Compress extends Component<Props, State> {
           });
         }
       } catch (err) {
-        if (err.name === 'AbortError') return;
-        this.props.showSnack(`Processing error (type=${settings.encoderState.type}): ${err}`);
+        if (err.name === 'AbortError') {
+          this.signalProcessingAbort(index as 0 | 1);
+          return;
+        }
+        const errorMsg = `Processing error (type=${settings.encoderState.type}): ${err}`;
+        this.signalProcessingError(index as 0|1, errorMsg);
+        this.props.showSnack(errorMsg);
         throw err;
       }
     }
@@ -562,7 +592,7 @@ export default class Compress extends Component<Props, State> {
       encodedSettings: settings,
     });
 
-    this.setState({ sides });
+    this.setState({ sides }, () => this.signalProcessingDone(index as 0|1));
   }
 
   render({ onBack }: Props, { loading, sides, source, mobileView }: State) {
