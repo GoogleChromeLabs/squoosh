@@ -1,6 +1,6 @@
 # OptiPNG
 
-- Source: <https://sourceforge.net/project/optipng>
+- Source: <http://optipng.sourceforge.net/>
 - Version: v0.7.7
 
 ## Dependencies
