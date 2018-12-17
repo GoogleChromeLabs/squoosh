@@ -240,7 +240,8 @@ export default class Compress extends Component<Props, State> {
   private readonly encodeCache = new ResultCache();
   private readonly leftProcessor = new Processor();
   private readonly rightProcessor = new Processor();
-  private readonly updateImageTimeoutIds: [number, number] = [0, 0];
+  // For debouncing calls to updateImage for each side.
+  private readonly updateImageTimeoutIds: [number?, number?] = [undefined, undefined];
 
   constructor(props: Props) {
     super(props);
