@@ -56,8 +56,8 @@ export default class App extends Component<Props, State> {
     if (process.env.NODE_ENV === 'development') {
       this.setState(window.STATE);
       const oldCDU = this.componentDidUpdate;
-      this.componentDidUpdate = (props, state) => {
-        if (oldCDU) oldCDU.call(this, props, state);
+      this.componentDidUpdate = (props, state, prev) => {
+        if (oldCDU) oldCDU.call(this, props, state, prev);
         window.STATE = this.state;
       };
     }
