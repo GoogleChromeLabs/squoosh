@@ -576,9 +576,9 @@ export default class Compress extends Component<Props, State> {
         mobileView={mobileView}
         preprocessorState={side.latestSettings.preprocessorState}
         encoderState={side.latestSettings.encoderState}
-        onEncoderTypeChange={this.onEncoderTypeChange.bind(this, index)}
-        onEncoderOptionsChange={this.onEncoderOptionsChange.bind(this, index)}
-        onPreprocessorOptionsChange={this.onPreprocessorOptionsChange.bind(this, index)}
+        onEncoderTypeChange={this.onEncoderTypeChange.bind(this, index as 0|1)}
+        onEncoderOptionsChange={this.onEncoderOptionsChange.bind(this, index as 0|1)}
+        onPreprocessorOptionsChange={this.onPreprocessorOptionsChange.bind(this, index as 0|1)}
       />
     ));
 
@@ -592,7 +592,7 @@ export default class Compress extends Component<Props, State> {
         source={source}
         loading={loading || side.loading}
         copyDirection={copyDirections[index]}
-        onCopyToOtherClick={this.onCopyToOtherClick.bind(this, index)}
+        onCopyToOtherClick={this.onCopyToOtherClick.bind(this, index as 0|1)}
         buttonPosition={mobileView ? 'stack-right' : buttonPositions[index]}
       >
         {!mobileView ? null : [
