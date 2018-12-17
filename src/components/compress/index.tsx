@@ -396,7 +396,6 @@ export default class Compress extends Component<Props, State> {
     const processor = this.leftProcessor;
 
     this.setState({ loadingCounter, loading: true }, this.signalProcessingStart);
-    // this.signalProcessingStart();
     // Abort any current encode jobs, as they're redundant now.
     this.leftProcessor.abortCurrent();
     this.rightProcessor.abortCurrent();
@@ -444,9 +443,7 @@ export default class Compress extends Component<Props, State> {
       this.updateDocumentTitle(file.name);
       this.setState(newState);
     } catch (err) {
-      if (err.name === 'AbortError') {
-        return;
-      }
+      if (err.name === 'AbortError') return;
       console.error(err);
       // Another file has been opened/processed before this one processed.
       if (this.state.loadingCounter !== loadingCounter) return;
@@ -468,8 +465,7 @@ export default class Compress extends Component<Props, State> {
 
     this.updateImageTimeoutIds[index] = self.setTimeout(
       () => {
-        this.updateImage(index, options)
-        .catch((err) => {
+        this.updateImage(index, options) .catch((err) => {
           console.error(err);
         });
       },
