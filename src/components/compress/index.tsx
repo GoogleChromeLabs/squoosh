@@ -469,7 +469,7 @@ export default class Compress extends Component<Props, State> {
 
     this.updateImageTimeoutIds[index] = self.setTimeout(
       () => {
-        this.updateImage(index, options) .catch((err) => {
+        this.updateImage(index, options).catch((err) => {
           console.error(err);
         });
       },
@@ -564,7 +564,7 @@ export default class Compress extends Component<Props, State> {
         }
       } catch (err) {
         if (err.name === 'AbortError') {
-          this.signalProcessingAbort(index as 0 | 1);
+          this.signalProcessingAbort(index as 0|1);
           return;
         }
         const errorMsg = `Processing error (type=${settings.encoderState.type}): ${err}`;
