@@ -1,4 +1,5 @@
 import App from './index';
+import { SideEvent, SideEventType } from '../compress/index';
 
 import { expose } from 'comlink';
 
@@ -22,7 +23,7 @@ class API {
   setFile(blob: Blob, name: string) {
     return new Promise((resolve) => {
       document.addEventListener(
-        'squoosh:processingstart',
+        SideEventType.START,
         () => resolve(),
         { once: true },
       );
@@ -43,30 +44,30 @@ class API {
 
     return new Promise((resolve, reject) => {
       document.addEventListener(
-        'squoosh:processingdone',
-        (event) => {
-          if ((event as CustomEvent).detail.side !== side) {
+        SideEventType.DONE,
+        (event: Event) => {
+          if ((event as SideEvent).side !== side) {
             return;
           }
           resolve(this._app.compressInstance!.state.sides[side].file);
         },
       );
       document.addEventListener(
-        'squoosh:processingabort',
+        SideEventType.ABORT,
         (event) => {
-          if ((event as CustomEvent).detail.side !== side) {
+          if ((event as SideEvent).side !== side) {
             return;
           }
           reject(new DOMException('Aborted', 'AbortError'));
         },
       );
       document.addEventListener(
-        'squoosh:processingerror',
+        SideEventType.ERROR,
         (event) => {
-          if ((event as CustomEvent).detail.side !== side) {
+          if ((event as SideEvent).side !== side) {
             return;
           }
-          reject(new Error((event as CustomEvent).detail.msg));
+          reject((event as SideEvent).error);
         },
       );
     });

@@ -38,6 +38,26 @@ import { ExpandIcon, CopyAcrossIconProps } from '../../lib/icons';
 import SnackBarElement from '../../lib/SnackBar';
 import { InputProcessorState, defaultInputProcessorState } from '../../codecs/input-processors';
 
+export enum SideEventType {
+  START = 'squoosh:START',
+  DONE = 'squoosh:done',
+  ABORT = 'squoosh:abort',
+  ERROR = 'squoosh:error',
+}
+export interface SideEventInit extends EventInit {
+  side?: 0|1;
+  error?: Error;
+}
+export class SideEvent extends Event {
+  public side?: 0|1;
+  public error?: Error;
+  constructor(name: SideEventType, init: SideEventInit) {
+    super(name, init);
+    this.side = init.side;
+    this.error = init.error;
+  }
+}
+
 export interface SourceImage {
   file: File | Fileish;
   decoded: ImageData;
@@ -478,28 +498,30 @@ export default class Compress extends Component<Props, State> {
   }
 
   @bind
-  private dispatchCustomEvent(name: string, detail?: {}) {
-    (this.base || document).dispatchEvent(new CustomEvent(name, { detail, bubbles: true }));
+  private dispatchSideEvent(type: SideEventType, init: SideEventInit = {}) {
+    document.dispatchEvent(
+      new SideEvent(type, init),
+    );
   }
 
   @bind
   private signalProcessingStart() {
-    this.dispatchCustomEvent('squoosh:processingstart');
+    this.dispatchSideEvent(SideEventType.START);
   }
 
   @bind
   private signalProcessingDone(side: 0|1) {
-    this.dispatchCustomEvent('squoosh:processingdone', { side });
+    this.dispatchSideEvent(SideEventType.DONE, { side });
   }
 
   @bind
   private signalProcessingAbort(side: 0|1) {
-    this.dispatchCustomEvent('squoosh:processingabort', { side });
+    this.dispatchSideEvent(SideEventType.ABORT, { side });
   }
 
   @bind
   private signalProcessingError(side: 0|1, msg: string) {
-    this.dispatchCustomEvent('squoosh:processingerror', { side, msg });
+    this.dispatchSideEvent(SideEventType.ERROR, { side, error: new Error(msg) });
   }
 
   private async updateImage(index: number, options: UpdateImageOptions = {}): Promise<void> {
