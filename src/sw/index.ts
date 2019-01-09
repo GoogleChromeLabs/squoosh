@@ -41,6 +41,7 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  if (event.request.mode === 'navigate') console.log('===Navigation in service worker===');
   const url = new URL(event.request.url);
 
   // Don't care about other-origin URLs
