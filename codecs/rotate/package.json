@@ -1,0 +1,9 @@
+{
+  "name": "rotate",
+  "scripts": {
+    "build": "asc rotate.ts -b rotate.wasm --validate --optimize"
+  },
+  "devDependencies": {
+    "assemblyscript": "github:AssemblyScript/assemblyscript"
+  }
+}
