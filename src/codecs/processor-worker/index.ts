@@ -28,7 +28,11 @@ async function rotate(
     '../rotate/processor',
   );
 
-  return rotate(data, opts);
+  performance.mark('rotate-start');
+  const r = rotate(data, opts);
+  performance.mark('rotate-end');
+  performance.measure('rotate', 'rotate-start', 'rotate-end');
+  return r;
 }
 
 async function optiPngEncode(
