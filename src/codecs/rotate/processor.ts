@@ -61,14 +61,13 @@ export function rotate(data: ImageData, opts: RotateOptions): ImageData {
     d2Multiplier = 1;
   }
 
+  const inB = new Uint32Array(data.data.buffer);
+  const outB = new Uint32Array(out.data.buffer);
   for (let d2 = d2Start; d2 >= 0 && d2 < d2Limit; d2 += d2Advance) {
     for (let d1 = d1Start; d1 >= 0 && d1 < d1Limit; d1 += d1Advance) {
-      // Iterate over channels:
-      const start = ((d1 * d1Multiplier) + (d2 * d2Multiplier)) * bpp;
-      for (let j = 0; j < bpp; j += 1) {
-        out.data[i] = data.data[start + j];
-        i += 1;
-      }
+      const start = ((d1 * d1Multiplier) + (d2 * d2Multiplier));
+      outB[i] = inB[start];
+      i += 1;
     }
   }
 
