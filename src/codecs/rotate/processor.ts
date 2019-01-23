@@ -1,7 +1,5 @@
 import { RotateOptions } from './processor-meta';
 
-const bpp = 4;
-
 export function rotate(data: ImageData, opts: RotateOptions): ImageData {
   const { rotate } = opts;
   const flipDimensions = rotate % 180 !== 0;
