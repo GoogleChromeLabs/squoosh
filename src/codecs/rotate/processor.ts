@@ -9,18 +9,14 @@ export async function rotate(
   // Number of wasm memory pages (á 64KiB) needed to store the image twice.
   const bytesPerImage = data.width * data.height * 4;
   const numPagesNeeded = Math.ceil(bytesPerImage * 2 / (64 * 1024));
-  // const memory = new Uint8ClampedArray(data.data.length * 2);
-  // const memory = new WebAssembly.Memory({
-  //   initial: Math.ceil(data.width * data.height * 4 * 2 / (64 * 1024)),
-  // });
   const { instance } = (await (WebAssembly as any).instantiateStreaming(
     fetch(wasmUrl),
   )) as { instance: RotateModuleInstance };
-
   instance.exports.memory.grow(numPagesNeeded);
+
   const view = new Uint8ClampedArray(instance.exports.memory.buffer);
   view.set(data.data);
-  (self as any).instance = instance;
+
   instance.exports.rotate(data.width, data.height, opts.rotate);
   return new ImageData(
     view.slice(bytesPerImage, bytesPerImage * 2),

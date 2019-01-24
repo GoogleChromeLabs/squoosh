@@ -54,8 +54,9 @@ export function rotate(inputWidth: i32, inputHeight: i32, rotate: i32): void {
   }
 
   for (let d2 = d2Start; d2 >= 0 && d2 < d2Limit; d2 += d2Advance) {
+    let d2offset = d2 * d2Multiplier;
     for (let d1 = d1Start; d1 >= 0 && d1 < d1Limit; d1 += d1Advance) {
-      let start = ((d1 * d1Multiplier) + (d2 * d2Multiplier));
+      let start = ((d1 * d1Multiplier) + d2offset);
       store<u32>(offset + i * 4, load<u32>(start * 4));
       i += 1;
     }
