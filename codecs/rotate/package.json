@@ -1,7 +1,7 @@
 {
   "name": "rotate",
   "scripts": {
-    "build": "asc rotate.ts -b rotate.wasm --validate --optimize"
+    "build": "mv rotate.{as,ts} && asc rotate.ts -b rotate.wasm --validate --optimize && mv rotate.{ts,as}"
   },
   "devDependencies": {
     "assemblyscript": "github:AssemblyScript/assemblyscript"
