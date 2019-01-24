@@ -11,8 +11,12 @@ export async function rotate(
   const numPagesNeeded = Math.ceil(bytesPerImage * 2 / (64 * 1024));
   const { instance } = (await (WebAssembly as any).instantiateStreaming(
     fetch(wasmUrl),
+    {
+      env: {
+        memory: new WebAssembly.Memory({ initial: numPagesNeeded }),
+      },
+    },
   )) as { instance: RotateModuleInstance };
-  instance.exports.memory.grow(numPagesNeeded);
 
   const view = new Uint8ClampedArray(instance.exports.memory.buffer);
   view.set(data.data);
