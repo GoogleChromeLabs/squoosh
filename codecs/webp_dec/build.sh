@@ -6,7 +6,18 @@ export OPTIMIZE="-Os"
 export LDFLAGS="${OPTIMIZE}"
 export CFLAGS="${OPTIMIZE}"
 export CPPFLAGS="${OPTIMIZE}"
+apt-get update
+apt-get install -qqy autoconf libtool libpng-dev pkg-config
 
+echo "============================================="
+echo "Compiling libwebp"
+echo "============================================="
+(
+  cd node_modules/libwebp
+  autoreconf -fiv
+  emcmake cmake .
+  emmake make webp
+)
 echo "============================================="
 echo "Compiling wasm bindings"
 echo "============================================="
@@ -20,9 +31,9 @@ echo "============================================="
     --std=c++11 \
     -I node_modules/libwebp \
     -o ./webp_dec.js \
-    node_modules/libwebp/src/{dec,dsp,demux,enc,mux,utils}/*.c \
     -x c++ \
-    webp_dec.cpp
+    webp_dec.cpp \
+    node_modules/libwebp/libwebp.a
 )
 echo "============================================="
 echo "Compiling wasm bindings done"
