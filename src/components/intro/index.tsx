@@ -122,7 +122,7 @@ export default class Intro extends Component<Props, State> {
                     <div class={style.demoDescription}>{demo.description}</div>
                   </div>
                 </button>
-              </li>,
+              </li>
             )}
           </ul>
         </div>

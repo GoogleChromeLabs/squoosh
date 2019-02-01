@@ -64,7 +64,7 @@ export default class Processor {
           // definition can't be overwritten.
           this._worker = new Worker(
             './processor-worker',
-            { name: 'processor-worker', type: 'module' },
+            { name: 'processor-worker', type: 'module' }
           ) as Worker;
           // Need to do some TypeScript trickery to make the type match.
           this._workerApi = proxy(this._worker) as any as ProcessorWorkerApi;
@@ -100,7 +100,7 @@ export default class Processor {
         this._worker.terminate();
         this._worker = undefined;
       },
-      workerTimeout,
+      workerTimeout
     );
   }
 
@@ -125,21 +125,21 @@ export default class Processor {
 
   @Processor._processingJob({ needsWorker: true })
   rotate(
-    data: ImageData, opts: import('./rotate/processor-meta').RotateOptions,
+    data: ImageData, opts: import('./rotate/processor-meta').RotateOptions
   ): Promise<ImageData> {
     return this._workerApi!.rotate(data, opts);
   }
 
   @Processor._processingJob({ needsWorker: true })
   mozjpegEncode(
-    data: ImageData, opts: MozJPEGEncoderOptions,
+    data: ImageData, opts: MozJPEGEncoderOptions
   ): Promise<ArrayBuffer> {
     return this._workerApi!.mozjpegEncode(data, opts);
   }
 
   @Processor._processingJob({ needsWorker: true })
   async optiPngEncode(
-    data: ImageData, opts: OptiPNGEncoderOptions,
+    data: ImageData, opts: OptiPNGEncoderOptions
   ): Promise<ArrayBuffer> {
     // OptiPNG expects PNG input.
     const pngBlob = await canvasEncode(data, 'image/png');

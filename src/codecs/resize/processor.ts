@@ -28,7 +28,7 @@ export function resize(data: ImageData, opts: BitmapResizeOptions): ImageData {
 
   return nativeResize(
     data, sx, sy, sw, sh, opts.width, opts.height,
-    opts.method.slice('browser-'.length) as NativeResizeMethod,
+    opts.method.slice('browser-'.length) as NativeResizeMethod
   );
 }
 

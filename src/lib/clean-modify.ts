@@ -2,7 +2,7 @@ function cleanSetOrMerge<A extends any[] | object>(
   source: A,
   keys: string | number | string[],
   toSetOrMerge: any[] | object,
-  merge: boolean,
+  merge: boolean
 ): A {
   const splitKeys = Array.isArray(keys) ? keys : ('' + keys).split('.');
 
@@ -43,7 +43,7 @@ function copy<A extends any[] | object>(source: A): A {
 export function cleanMerge<A extends any[] | object>(
   source: A,
   keys: string | number | string[],
-  toMerge: any[] | object,
+  toMerge: any[] | object
 ): A {
   return cleanSetOrMerge(source, keys, toMerge, true);
 }
@@ -56,7 +56,7 @@ export function cleanMerge<A extends any[] | object>(
 export function cleanSet<A extends any[] | object>(
   source: A,
   keys: string | number | string[],
-  newValue: any,
+  newValue: any
 ): A {
   return cleanSetOrMerge(source, keys, newValue, false);
 }

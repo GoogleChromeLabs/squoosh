@@ -33,7 +33,7 @@ export default class ResultCache {
   match(
     sourceData: ImageData,
     preprocessorState: PreprocessorState,
-    encoderState: EncoderState,
+    encoderState: EncoderState
   ): CacheResult | undefined {
     const matchingIndex = this._entries.findIndex((entry) => {
       // Check for quick exits:
@@ -45,7 +45,7 @@ export default class ResultCache {
         if (
           !shallowEqual(
             (preprocessorState as any)[prop],
-            (entry.preprocessorState as any)[prop],
+            (entry.preprocessorState as any)[prop]
           )
         ) return false;
       }

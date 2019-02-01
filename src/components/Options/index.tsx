@@ -98,21 +98,21 @@ export default class Options extends Component<Props, State> {
     const preprocessor = el.name.split('.')[0] as keyof PreprocessorState;
 
     this.props.onPreprocessorOptionsChange(
-      cleanSet(this.props.preprocessorState, `${preprocessor}.enabled`, el.checked),
+      cleanSet(this.props.preprocessorState, `${preprocessor}.enabled`, el.checked)
     );
   }
 
   @bind
   private onQuantizerOptionsChange(opts: QuantizeOptions) {
     this.props.onPreprocessorOptionsChange(
-      cleanMerge(this.props.preprocessorState, 'quantizer', opts),
+      cleanMerge(this.props.preprocessorState, 'quantizer', opts)
     );
   }
 
   @bind
   private onResizeOptionsChange(opts: ResizeOptions) {
     this.props.onPreprocessorOptionsChange(
-      cleanMerge(this.props.preprocessorState, 'resize', opts),
+      cleanMerge(this.props.preprocessorState, 'resize', opts)
     );
   }
 
@@ -123,7 +123,7 @@ export default class Options extends Component<Props, State> {
       preprocessorState,
       onEncoderOptionsChange,
     }: Props,
-    { encoderSupportMap }: State,
+    { encoderSupportMap }: State
   ) {
     // tslint:disable variable-name
     const EncoderOptionComponent = encoderOptionsComponentMap[encoderState.type];

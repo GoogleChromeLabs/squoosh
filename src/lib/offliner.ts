@@ -24,7 +24,7 @@ async function installingWorker(reg: ServiceWorkerRegistration): Promise<Service
     reg.addEventListener(
       'updatefound',
       () => resolve(reg.installing!),
-      { once: true },
+      { once: true }
     );
   });
 }

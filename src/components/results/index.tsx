@@ -47,7 +47,7 @@ export default class Results extends Component<Props, State> {
       // Just started loading
       this.loadingTimeoutId = self.setTimeout(
         () => this.setState({ showLoadingState: true }),
-        loadingReactionDelay,
+        loadingReactionDelay
       );
     }
   }
@@ -75,7 +75,7 @@ export default class Results extends Component<Props, State> {
 
   render(
     { source, imageFile, downloadUrl, children, copyDirection, buttonPosition }: Props,
-    { showLoadingState }: State,
+    { showLoadingState }: State
   ) {
 
     return (

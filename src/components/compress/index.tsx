@@ -88,7 +88,7 @@ interface UpdateImageOptions {
 async function processInput(
   data: ImageData,
   inputProcessData: InputProcessorState,
-  processor: Processor,
+  processor: Processor
 ) {
   let processedData = data;
 
@@ -102,7 +102,7 @@ async function processInput(
 async function preprocessImage(
   source: SourceImage,
   preprocessData: PreprocessorState,
-  processor: Processor,
+  processor: Processor
 ): Promise<ImageData> {
   let result = source.processed;
 
@@ -110,7 +110,7 @@ async function preprocessImage(
     if (preprocessData.resize.method === 'vector' && source.vectorImage) {
       result = processor.vectorResize(
         source.vectorImage,
-        preprocessData.resize as VectorResizeOptions,
+        preprocessData.resize as VectorResizeOptions
       );
     } else {
       result = processor.resize(result, preprocessData.resize as BitmapResizeOptions);
@@ -126,7 +126,7 @@ async function compressImage(
   image: ImageData,
   encodeData: EncoderState,
   sourceFilename: string,
-  processor: Processor,
+  processor: Processor
 ): Promise<Fileish> {
   const compressedData = await (() => {
     switch (encodeData.type) {
@@ -150,7 +150,7 @@ async function compressImage(
   return new Fileish(
     [compressedData],
     sourceFilename.replace(/.[^.]*$/, `.${encoder.extension}`),
-    { type: encoder.mimeType },
+    { type: encoder.mimeType }
   );
 }
 
@@ -474,7 +474,7 @@ export default class Compress extends Component<Props, State> {
           console.error(err);
         });
       },
-      delay,
+      delay
     );
   }
 
@@ -502,7 +502,7 @@ export default class Compress extends Component<Props, State> {
     let preprocessed: ImageData | undefined;
     let data: ImageData | undefined;
     const cacheResult = this.encodeCache.match(
-      source.processed, settings.preprocessorState, settings.encoderState,
+      source.processed, settings.preprocessorState, settings.encoderState
     );
     const processor = (index === 0) ? this.leftProcessor : this.rightProcessor;
 
@@ -525,7 +525,7 @@ export default class Compress extends Component<Props, State> {
             : await preprocessImage(source, settings.preprocessorState, processor);
 
           file = await compressImage(
-            preprocessed, settings.encoderState, source.file.name, processor,
+            preprocessed, settings.encoderState, source.file.name, processor
           );
           data = await decodeImage(file, processor);
 

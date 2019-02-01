@@ -228,7 +228,7 @@ export default class MultiPanel extends HTMLElement {
       // them using the heading as the source of truth.
       content.setAttribute(
         'aria-expanded',
-        heading.hasAttribute('content-expanded') ? 'true' : 'false',
+        heading.hasAttribute('content-expanded') ? 'true' : 'false'
       );
 
       // next sibling of content = next heading

@@ -12,7 +12,15 @@
     "variable-name": [true, "check-format", "allow-leading-underscore"],
     "no-duplicate-imports": false,
     "prefer-template": [true, "allow-single-concat"],
-    "import-name": false
+    "import-name": false,
+    "trailing-comma": [
+      true,
+      {
+        "multiline": {
+          "functions": "never"
+        }
+      }
+    ]
   },
   "linterOptions": {
     "exclude": [

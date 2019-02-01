@@ -61,7 +61,7 @@ export default class TwoUp extends HTMLElement {
       move: () => {
         this._pointerChange(
           pointerTracker.startPointers[0],
-          pointerTracker.currentPointers[0],
+          pointerTracker.currentPointers[0]
         );
       },
     });

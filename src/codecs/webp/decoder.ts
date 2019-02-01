@@ -12,7 +12,7 @@ export async function decode(data: ArrayBuffer): Promise<ImageData> {
   const result = new ImageData(
     new Uint8ClampedArray(rawImage.buffer),
     rawImage.width,
-    rawImage.height,
+    rawImage.height
   );
 
   module.free_result();
