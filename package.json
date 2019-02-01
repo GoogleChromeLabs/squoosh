@@ -58,7 +58,7 @@
     "tslint-config-semistandard": "7.0.0",
     "tslint-react": "3.6.0",
     "typed-css-modules": "0.3.7",
-    "typescript": "3.2.4",
+    "typescript": "3.3.1",
     "url-loader": "1.1.2",
     "webpack": "4.28.0",
     "webpack-bundle-analyzer": "3.0.3",
