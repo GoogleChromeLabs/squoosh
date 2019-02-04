@@ -40,6 +40,7 @@
   position: relative;
   display: flex;
   flex-flow: column;
+  overflow: hidden;
 
   // Reorder so headings appear after content:
   & > :nth-child(1) {
