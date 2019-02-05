@@ -41,6 +41,16 @@ async function optiPngEncode(
   return compress(data, options);
 }
 
+async function oxiPngEncode(
+  data: BufferSource, options: import('../oxipng/encoder-meta').EncodeOptions,
+): Promise<ArrayBuffer> {
+  const { compress } = await import(
+    /* webpackChunkName: "process-optipng" */
+    '../oxipng/encoder',
+  );
+  return compress(data, options);
+}
+
 async function webpEncode(
   data: ImageData, options: import('../webp/encoder-meta').EncodeOptions,
 ): Promise<ArrayBuffer> {
@@ -59,7 +69,15 @@ async function webpDecode(data: ArrayBuffer): Promise<ImageData> {
   return decode(data);
 }
 
-const exports = { mozjpegEncode, quantize, rotate, optiPngEncode, webpEncode, webpDecode };
+const exports = {
+  mozjpegEncode,
+  quantize,
+  rotate,
+  optiPngEncode,
+  oxiPngEncode,
+  webpEncode,
+  webpDecode,
+};
 export type ProcessorWorkerApi = typeof exports;
 
 expose(exports, self);

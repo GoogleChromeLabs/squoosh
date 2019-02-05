@@ -3,11 +3,11 @@ export interface EncodeOptions {
 }
 export interface EncoderState { type: typeof type; options: EncodeOptions; }
 
-export const type = 'optipng';
-export const label = 'OptiPNG';
+export const type = 'oxipng';
+export const label = 'OxiPNG';
 export const mimeType = 'image/png';
 export const extension = 'png';
 
 export const defaultOptions: EncodeOptions = {
-  level: 2,
+  level: 6,
 };

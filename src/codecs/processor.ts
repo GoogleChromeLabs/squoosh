@@ -3,6 +3,7 @@ import { QuantizeOptions } from './imagequant/processor-meta';
 import { canvasEncode, blobToArrayBuffer } from '../lib/util';
 import { EncodeOptions as MozJPEGEncoderOptions } from './mozjpeg/encoder-meta';
 import { EncodeOptions as OptiPNGEncoderOptions } from './optipng/encoder-meta';
+import { EncodeOptions as OxiPNGEncoderOptions } from './oxipng/encoder-meta';
 import { EncodeOptions as WebPEncoderOptions } from './webp/encoder-meta';
 import { EncodeOptions as BrowserJPEGOptions } from './browser-jpeg/encoder-meta';
 import { EncodeOptions as BrowserWebpEncodeOptions } from './browser-webp/encoder-meta';
@@ -145,6 +146,16 @@ export default class Processor {
     const pngBlob = await canvasEncode(data, 'image/png');
     const pngBuffer = await blobToArrayBuffer(pngBlob);
     return this._workerApi!.optiPngEncode(pngBuffer, opts);
+  }
+
+  @Processor._processingJob({ needsWorker: true })
+  async oxiPngEncode(
+    data: ImageData, opts: OxiPNGEncoderOptions,
+  ): Promise<ArrayBuffer> {
+    // OptiPNG expects PNG input.
+    const pngBlob = await canvasEncode(data, 'image/png');
+    const pngBuffer = await blobToArrayBuffer(pngBlob);
+    return this._workerApi!.oxiPngEncode(pngBuffer, opts);
   }
 
   @Processor._processingJob({ needsWorker: true })
