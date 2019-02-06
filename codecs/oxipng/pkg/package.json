@@ -1,0 +1,15 @@
+{
+  "name": "oxipng-wasm",
+  "collaborators": [
+    "Surma <surma@surma.link>"
+  ],
+  "version": "0.1.0",
+  "files": [
+    "oxipng_wasm_bg.wasm",
+    "oxipng_wasm.js",
+    "oxipng_wasm_bg.js",
+    "oxipng_wasm.d.ts"
+  ],
+  "main": "oxipng_wasm.js",
+  "types": "oxipng_wasm.d.ts"
+}

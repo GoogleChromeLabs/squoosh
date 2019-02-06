@@ -1,5 +1,5 @@
 [package]
-name = "oxipng"
+name = "oxipng-wasm"
 version = "0.1.0"
 authors = ["Surma <surma@surma.link>"]
 
