@@ -1,0 +1,5 @@
+[target.wasm32-unknown-unknown.dependencies]
+time = {}
+
+[target.wasm32-unknown-unknown.dependencies.std]
+features = ["wasm_syscall"]
