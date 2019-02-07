@@ -35,14 +35,6 @@ cfg_if! {
 //   }
 // }
 
-pub fn rust_wasm_syscall(index: usize, _data: *mut ()) -> usize {
-  if index == 6 {
-    1
-  } else {
-    0
-  }
-}
-
 #[wasm_bindgen]
 pub fn doit() -> u32 {
   let start = Instant::now();
