@@ -74,6 +74,7 @@ export default class Intro extends Component<Props, State> {
   private onBeforeInstallPrompt(e: Event) {
     this.setState({ canInstall: true });
     this.bipEvent = e as BeforeInstallPromptEvent;
+    e.preventDefault();
   }
 
   @bind
@@ -83,7 +84,6 @@ export default class Intro extends Component<Props, State> {
       this.bipEvent.prompt();
       this.bipEvent = undefined;
     }
-    e.preventDefault();
   }
 
   @bind
