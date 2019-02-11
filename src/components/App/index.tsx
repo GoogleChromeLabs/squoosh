@@ -121,7 +121,7 @@ export default class App extends Component<Props, State> {
                   ref={i => this.compressInstance = i}
                   file={file!}
                   showSnack={this.showSnack}
-                  onBack={this.onBack}
+                  onBack={back}
               />
               : <loading-spinner class={style.appLoader}/>
           }
