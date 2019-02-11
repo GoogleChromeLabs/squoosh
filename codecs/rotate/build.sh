@@ -20,5 +20,7 @@ echo "============================================="
 
 echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 echo "Did you update your docker image?"
+echo "Run \`docker pull ubuntu\`"
+echo "Run \`docker pull rust\`"
 echo "Run \`docker build -t squoosh-rotate .\`"
 echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
