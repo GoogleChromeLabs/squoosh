@@ -32,23 +32,48 @@ import { ExpandIcon, CopyAcrossIconProps } from '../../lib/icons';
 import SnackBarElement from '../../lib/SnackBar';
 import { InputProcessorState, defaultInputProcessorState } from '../../codecs/input-processors';
 
-export enum SideEventType {
-  START = 'squoosh:START',
+// Safari and Edge don't quite support extending Event, this works around it.
+function fixExtendedEvent(instance: Event, type: Function) {
+  if (!(instance instanceof type)) {
+    Object.setPrototypeOf(instance, type.prototype);
+  }
+}
+export enum SquooshStartEventType {
+  START = 'squoosh:start',
+}
+export class SquooshStartEvent extends Event {
+  constructor(init?: EventInit) {
+    super(SquooshStartEventType.START, init);
+    fixExtendedEvent(this, SquooshStartEvent);
+  }
+}
+
+export enum SquooshSideEventType {
   DONE = 'squoosh:done',
   ABORT = 'squoosh:abort',
   ERROR = 'squoosh:error',
 }
-export interface SideEventInit extends EventInit {
-  side?: 0|1;
+export interface SquooshSideEventInit extends EventInit {
+  side: 0|1;
   error?: Error;
 }
-export class SideEvent extends Event {
-  public side?: 0|1;
+export class SquooshSideEvent extends Event {
+  public side: 0|1;
   public error?: Error;
-  constructor(name: SideEventType, init: SideEventInit) {
+  constructor(name: SquooshSideEventType, init: SquooshSideEventInit) {
     super(name, init);
+    fixExtendedEvent(this, SquooshSideEvent);
     this.side = init.side;
     this.error = init.error;
+  }
+}
+
+declare global {
+  interface GlobalEventHandlersEventMap {
+    [SquooshStartEventType.START]: SquooshStartEvent;
+    [SquooshSideEventType.DONE]: SquooshSideEvent;
+    [SquooshSideEventType.ABORT]: SquooshSideEvent;
+    [SquooshSideEventType.ERROR]: SquooshSideEvent;
   }
 }
 
@@ -494,30 +519,32 @@ export default class Compress extends Component<Props, State> {
   }
 
   @bind
-  private dispatchSideEvent(type: SideEventType, init: SideEventInit = {}) {
+  private dispatchSideEvent(type: SquooshSideEventType, init: SquooshSideEventInit) {
     document.dispatchEvent(
-      new SideEvent(type, init),
+      new SquooshSideEvent(type, init),
     );
   }
 
   @bind
   private signalProcessingStart() {
-    this.dispatchSideEvent(SideEventType.START);
+    document.dispatchEvent(
+      new SquooshStartEvent(),
+    );
   }
 
   @bind
   private signalProcessingDone(side: 0|1) {
-    this.dispatchSideEvent(SideEventType.DONE, { side });
+    this.dispatchSideEvent(SquooshSideEventType.DONE, { side });
   }
 
   @bind
   private signalProcessingAbort(side: 0|1) {
-    this.dispatchSideEvent(SideEventType.ABORT, { side });
+    this.dispatchSideEvent(SquooshSideEventType.ABORT, { side });
   }
 
   @bind
   private signalProcessingError(side: 0|1, msg: string) {
-    this.dispatchSideEvent(SideEventType.ERROR, { side, error: new Error(msg) });
+    this.dispatchSideEvent(SquooshSideEventType.ERROR, { side, error: new Error(msg) });
   }
 
   private async updateImage(index: number, options: UpdateImageOptions = {}): Promise<void> {
