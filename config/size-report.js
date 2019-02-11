@@ -151,7 +151,7 @@ async function main() {
     return;
   }
 
-  const buildChanges = getChanges(buildInfo, previousBuildInfo);
+  const buildChanges = getChanges(previousBuildInfo, buildInfo);
 
   if (buildChanges.length === 0) {
     console.log('  No changes');
