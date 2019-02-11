@@ -1,0 +1,7 @@
+{
+  "name": "rotate",
+  "scripts": {
+    "build:image": "docker build -t squoosh-rotate .",
+    "build": "docker run --rm -v $(pwd):/src squoosh-rotate ./build.sh"
+  }
+}
