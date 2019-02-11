@@ -444,7 +444,7 @@ export default class Compress extends Component<Props, State> {
     // Either processor is good enough here.
     const processor = this.leftProcessor;
 
-    this.setState({ loadingCounter, loading: true }, this.signalProcessingStart);
+    this.setState({ loadingCounter, loading: true }, this.signalLoadingStart);
     // Abort any current encode jobs, as they're redundant now.
     this.leftProcessor.abortCurrent();
     this.rightProcessor.abortCurrent();
@@ -530,7 +530,7 @@ export default class Compress extends Component<Props, State> {
   }
 
   @bind
-  private signalProcessingStart() {
+  private signalLoadingStart() {
     document.dispatchEvent(
       new SquooshStartEvent(),
     );
