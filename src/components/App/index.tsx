@@ -72,8 +72,10 @@ export default class App extends Component<Props, State> {
     });
 
     window.addEventListener('popstate', this.onPopState);
-    /* webpackChunkName: "client-api" */
-    import('./client-api').then(m => m.exposeAPI(this));
+    import(
+      /* webpackChunkName: "client-api" */
+      './client-api',
+     ).then(m => m.exposeAPI(this));
   }
 
   @bind openFile(file: File | Fileish) {

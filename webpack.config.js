@@ -263,6 +263,7 @@ module.exports = async function (_, env) {
       // Inline constants during build, so they can be folded by UglifyJS.
       new webpack.DefinePlugin({
         VERSION: JSON.stringify(VERSION),
+        MAJOR_VERSION: JSON.stringify(VERSION.split(".")[0]),
         // We set node.process=false later in this config.
         // Here we make sure if (process && process.foo) still works:
         process: '{}'

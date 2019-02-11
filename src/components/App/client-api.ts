@@ -3,16 +3,14 @@ import { SideEvent, SideEventType } from '../compress/index';
 
 import { expose } from 'comlink';
 
-const API_VERSION = 1;
-
 export function exposeAPI(app: App) {
-  self.parent.postMessage({ type: 'READY', version: API_VERSION }, '*');
+  self.parent.postMessage({ type: 'READY', version: MAJOR_VERSION }, '*');
   self.addEventListener('message', (event: MessageEvent) => {
     if (event.data !== 'READY?') {
       return;
     }
     event.stopImmediatePropagation();
-    self.parent.postMessage({ type: 'READY', version: API_VERSION }, '*');
+    self.parent.postMessage({ type: 'READY', version: MAJOR_VERSION }, '*');
   });
   expose(new API(app), self.parent);
 }
