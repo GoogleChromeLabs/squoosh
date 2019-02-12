@@ -47,7 +47,11 @@ self.addEventListener('fetch', (event) => {
   // Don't care about other-origin URLs
   if (url.origin !== location.origin) return;
 
-  if (url.pathname === '/' && url.searchParams.has('share-target')) {
+  if (
+    url.pathname === '/' &&
+    url.searchParams.has('share-target') &&
+    event.request.method === 'POST'
+  ) {
     serveShareTarget(event);
     return;
   }

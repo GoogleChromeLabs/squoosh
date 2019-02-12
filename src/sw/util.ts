@@ -34,14 +34,10 @@ export function cacheOrNetworkAndCache(event: FetchEvent, cacheName: string): vo
 
 export function serveShareTarget(event: FetchEvent): void {
   const dataPromise = event.request.formData();
-  // Serve the page from the cache:
 
-  event.respondWith(async function () {
-    const rootPage = await caches.match('/');
-    if (rootPage) return rootPage;
-    // This shouldn't happen, but I've seen Safari lose items from the cache, so just in case:
-    return fetch('/');
-  }());
+  // Redirect so the user can refresh the page without resending data.
+  // @ts-ignore It doesn't like me giving a response to respondWith, although it's allowed.
+  event.respondWith(Response.redirect('/?share-target'));
 
   event.waitUntil(async function () {
     await new Promise(r => new BroadcastChannel('share-ready').onmessage = r);
