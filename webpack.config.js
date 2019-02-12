@@ -303,6 +303,7 @@ module.exports = async function (_, env) {
         new TerserPlugin({
           sourceMap: isProd,
           extractComments: 'build/licenses.txt',
+          exclude: /.*/,
           terserOptions: {
             compress: {
               inline: 1
