@@ -1,8 +1,18 @@
 #![no_std]
 #![no_main]
+#![feature(core_intrinsics)]
 
 use core::panic::PanicInfo;
 use core::slice::from_raw_parts_mut;
+
+#[inline]
+pub fn unwrap_abort<T>(o: Option<T>) -> T {
+    use core::intrinsics::abort;
+    match o {
+        Some(t) => t,
+        None => unsafe{abort()},
+    }
+}
 
 #[no_mangle]
 fn rotate(input_width: isize, input_height: isize, rotate: isize) {
@@ -69,7 +79,7 @@ fn rotate(input_width: isize, input_height: isize, rotate: isize) {
   for d2 in 0..d2_limit {
     for d1 in 0..d1_limit {
       let in_idx = (d1_start + d1 * d1_advance) * d1_multiplier + (d2_start + d2 * d2_advance) * d2_multiplier;
-      out_b[i as usize] = in_b[in_idx as usize];
+      *unwrap_abort(out_b.get_mut(i as usize)) = *unwrap_abort(in_b.get(in_idx as usize));
       i += 1;
     }
   }
