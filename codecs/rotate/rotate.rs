@@ -1,19 +1,25 @@
 use std::slice::from_raw_parts_mut;
 
-// This function is taken from
-// https://rustwasm.github.io/book/reference/code-size.html
-#[cfg(not(debug_assertions))]
-#[inline]
-fn unwrap_abort<T>(o: Option<T>) -> T {
-    match o {
-        Some(t) => t,
-        None => std::process::abort(),
-    }
+// This function is taken from Zachary Dremann
+// https://github.com/GoogleChromeLabs/squoosh/pull/462
+trait HardUnwrap<T> {
+    fn unwrap_hard(self) -> T;
 }
 
-#[cfg(debug_assertions)]
-fn unwrap_abort<T>(o: Option<T>) -> T {
-    o.unwrap()
+impl<T> HardUnwrap<T> for Option<T> {
+    #[cfg(not(debug_assertions))]
+    #[inline]
+    fn unwrap_hard(self) -> T {
+        match self {
+            Some(t) => t,
+            None => std::process::abort(),
+        }
+    }
+
+    #[cfg(debug_assertions)]
+    fn unwrap_hard(self) -> T {
+        o.unwrap()
+    }
 }
 
 #[no_mangle]
@@ -32,8 +38,8 @@ fn rotate(width: usize, height: usize, _rotate: usize) {
         for x in 0..width {
             let new_x = (new_width - 1) - y;
             let new_y = x;
-            *unwrap_abort(out_b.get_mut(new_y * new_width + new_x)) =
-                *unwrap_abort(in_b.get(y * width + x));
+            *out_b.get_mut(new_y * new_width + new_x).unwrap_hard() =
+                *in_b.get(y * width + x).unwrap_hard();
         }
     }
 }
