@@ -22,8 +22,8 @@ fn rotate(width: usize, height: usize, _rotate: usize) {
     let in_b: &mut [u32];
     let out_b: &mut [u32];
     unsafe {
-        in_b = from_raw_parts_mut::<u32>(4 as *mut u32, num_pixels);
-        out_b = from_raw_parts_mut::<u32>((num_pixels * 4 + 4) as *mut u32, num_pixels);
+        in_b = from_raw_parts_mut::<u32>(8 as *mut u32, num_pixels);
+        out_b = from_raw_parts_mut::<u32>((num_pixels * 4 + 8) as *mut u32, num_pixels);
     }
 
     let new_width = height;
