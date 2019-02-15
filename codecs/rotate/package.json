@@ -2,6 +2,7 @@
   "name": "rotate",
   "scripts": {
     "build:image": "docker build -t squoosh-rotate .",
-    "build": "docker run --rm -v $(pwd):/src squoosh-rotate ./build.sh"
+    "build": "docker run --rm -v $(pwd):/src squoosh-rotate ./build.sh",
+    "benchmark": "v8 --liftoff --no-wasm-tier-up --no-opt ./benchmark.js"
   }
 }
