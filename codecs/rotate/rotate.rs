@@ -1,17 +1,21 @@
-#![no_std]
-#![no_main]
-#![feature(core_intrinsics)]
+use std::slice::from_raw_parts_mut;
 
-use core::panic::PanicInfo;
-use core::slice::from_raw_parts_mut;
-
+// This function is taken from
+// https://rustwasm.github.io/book/reference/code-size.html
+#[cfg(not(debug_assertions))]
 #[inline]
 pub fn unwrap_abort<T>(o: Option<T>) -> T {
-    use core::intrinsics::abort;
+    use std::process;
     match o {
         Some(t) => t,
-        None => unsafe{abort()},
+        None => process::abort(),
     }
+}
+
+// Normal panic-y behavior for debug builds
+#[cfg(debug_assertions)]
+unsafe fn unchecked_unwrap<T>(o: Option<T>) -> T {
+    o.unwrap()
 }
 
 #[no_mangle]
@@ -83,9 +87,4 @@ fn rotate(input_width: isize, input_height: isize, rotate: isize) {
       i += 1;
     }
   }
-}
-
-#[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
-  loop {}
 }
