@@ -22,6 +22,8 @@ impl<T> HardUnwrap<T> for Option<T> {
     }
 }
 
+const TILE_SIZE: usize = 64;
+
 #[no_mangle]
 fn rotate(width: usize, height: usize, rotate: usize) {
     let num_pixels = width * height;
@@ -41,12 +43,16 @@ fn rotate(width: usize, height: usize, rotate: usize) {
         90 => {
             let new_width = height;
             let _new_height = width;
-            for y in 0..height {
-                for x in 0..width {
-                    let new_x = (new_width - 1) - y;
-                    let new_y = x;
-                    *out_b.get_mut(new_y * new_width + new_x).unwrap_hard() =
-                        *in_b.get(y * width + x).unwrap_hard();
+            for y_start in (0..height).step_by(TILE_SIZE) {
+                for x_start in (0..width).step_by(TILE_SIZE) {
+                    for y in y_start..(y_start + TILE_SIZE).min(height) {
+                        for x in x_start..(x_start + TILE_SIZE).min(width) {
+                            let new_x = (new_width - 1) - y;
+                            let new_y = x;
+                            *out_b.get_mut(new_y * new_width + new_x).unwrap_hard() =
+                                *in_b.get(y * width + x).unwrap_hard();
+                        }
+                    }
                 }
             }
         }
