@@ -1,73 +1,33 @@
-import { RotateOptions } from './processor-meta';
+import wasmUrl from '../../../codecs/rotate/rotate.wasm';
+import { RotateOptions, RotateModuleInstance } from './processor-meta';
 
-export function rotate(data: ImageData, opts: RotateOptions): ImageData {
-  const { rotate } = opts;
-  const flipDimensions = rotate % 180 !== 0;
-  const { width: inputWidth, height: inputHeight } = data;
-  const outputWidth = flipDimensions ? inputHeight : inputWidth;
-  const outputHeight = flipDimensions ? inputWidth : inputHeight;
-  const out = new ImageData(outputWidth, outputHeight);
-  let i = 0;
+const instancePromise = (WebAssembly as any).instantiateStreaming(fetch(wasmUrl));
 
-  // In the straight-copy case, d1 is x, d2 is y.
-  // x starts at 0 and increases.
-  // y starts at 0 and increases.
-  let d1Start = 0;
-  let d1Limit = inputWidth;
-  let d1Advance = 1;
-  let d1Multiplier = 1;
-  let d2Start = 0;
-  let d2Limit = inputHeight;
-  let d2Advance = 1;
-  let d2Multiplier = inputWidth;
+export async function rotate(
+  data: ImageData,
+  opts: RotateOptions,
+): Promise<ImageData> {
+  const { instance } = (await instancePromise) as {instance: RotateModuleInstance};
 
-  if (rotate === 90) {
-    // d1 is y, d2 is x.
-    // y starts at its max value and decreases.
-    // x starts at 0 and increases.
-    d1Start = inputHeight - 1;
-    d1Limit = inputHeight;
-    d1Advance = -1;
-    d1Multiplier = inputWidth;
-    d2Start = 0;
-    d2Limit = inputWidth;
-    d2Advance = 1;
-    d2Multiplier = 1;
-  } else if (rotate === 180) {
-    // d1 is x, d2 is y.
-    // x starts at its max and decreases.
-    // y starts at its max and decreases.
-    d1Start = inputWidth - 1;
-    d1Limit = inputWidth;
-    d1Advance = -1;
-    d1Multiplier = 1;
-    d2Start = inputHeight - 1;
-    d2Limit = inputHeight;
-    d2Advance = -1;
-    d2Multiplier = inputWidth;
-  } else if (rotate === 270) {
-    // d1 is y, d2 is x.
-    // y starts at 0 and increases.
-    // x starts at its max and decreases.
-    d1Start = 0;
-    d1Limit = inputHeight;
-    d1Advance = 1;
-    d1Multiplier = inputWidth;
-    d2Start = inputWidth - 1;
-    d2Limit = inputWidth;
-    d2Advance = -1;
-    d2Multiplier = 1;
+  // Number of wasm memory pages (á 64KiB) needed to store the image twice.
+  const bytesPerImage = data.width * data.height * 4;
+  const numPagesNeeded = Math.ceil((bytesPerImage * 2 + 4) / (64 * 1024));
+  // Only count full pages, just to be safe.
+  const numPagesAvailable = Math.floor(instance.exports.memory.buffer.byteLength / (64 * 1024));
+  const additionalPagesToAllocate = numPagesNeeded - numPagesAvailable;
+
+  if (additionalPagesToAllocate > 0) {
+    instance.exports.memory.grow(additionalPagesToAllocate);
   }
+  const view = new Uint8ClampedArray(instance.exports.memory.buffer);
+  view.set(data.data, 4);
 
-  const inB = new Uint32Array(data.data.buffer);
-  const outB = new Uint32Array(out.data.buffer);
-  for (let d2 = d2Start; d2 >= 0 && d2 < d2Limit; d2 += d2Advance) {
-    for (let d1 = d1Start; d1 >= 0 && d1 < d1Limit; d1 += d1Advance) {
-      const start = ((d1 * d1Multiplier) + (d2 * d2Multiplier));
-      outB[i] = inB[start];
-      i += 1;
-    }
-  }
+  instance.exports.rotate(data.width, data.height, opts.rotate);
 
-  return out;
+  const flipDimensions = opts.rotate % 180 !== 0;
+  return new ImageData(
+    view.slice(bytesPerImage + 4, bytesPerImage * 2 + 4),
+    flipDimensions ? data.height : data.width,
+    flipDimensions ? data.width : data.height,
+  );
 }
