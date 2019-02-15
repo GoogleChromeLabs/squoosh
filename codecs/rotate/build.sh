@@ -7,12 +7,11 @@ echo "Compiling wasm"
 echo "============================================="
 (
   rustup run nightly \
-    rustc \
-    --target=wasm32-unknown-unknown \
-    -C opt-level=3 \
-    -o rotate.wasm \
-    rotate.rs
-    wasm-strip rotate.wasm
+    cargo build \
+    --target wasm32-unknown-unknown \
+    --release
+  cp target/wasm32-unknown-unknown/release/rotate.wasm .
+  wasm-strip rotate.wasm
 )
 echo "============================================="
 echo "Compiling wasm  done"

@@ -1,0 +1,14 @@
+[package]
+name = "rotate"
+version = "0.1.0"
+authors = ["Surma <surma@google.com>"]
+edition = "2018"
+
+[lib]
+name = "rotate"
+path = "rotate.rs"
+crate-type = ["cdylib", "rlib"]
+
+[profile.release]
+lto = true
+opt-level = "s"
