@@ -3,6 +3,9 @@
   "scripts": {
     "build:image": "docker build -t squoosh-rotate .",
     "build": "docker run --rm -v $(pwd):/src squoosh-rotate ./build.sh",
-    "benchmark": "v8 --liftoff --no-wasm-tier-up --no-opt ./benchmark.js"
+    "benchmark": "echo File size after gzip && npm run benchmark:filesize && echo Baseline && npm run benchmark:baseline && echo Optimizing && npm run benchmark:optimizing",
+    "benchmark:baseline": "v8 --liftoff --no-wasm-tier-up --no-opt ./benchmark.js",
+    "benchmark:optimizing": "v8 ./benchmark.js",
+    "benchmark:filesize": "cat rotate.wasm | gzip -c9n | wc -c"
   }
 }
