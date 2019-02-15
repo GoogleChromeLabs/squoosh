@@ -18,58 +18,51 @@ unsafe fn unchecked_unwrap<T>(o: Option<T>) -> T {
     o.unwrap()
 }
 
+fn min<T: Ord>(a: T, b: T) -> T {
+  if a < b { a } else { b }
+}
+
 #[no_mangle]
 fn rotate(input_width: isize, input_height: isize, rotate: isize) {
-  let mut i = 0isize;
-
-  // In the straight-copy case, d1 is x, d2 is y.
+  // In the straight-copy case
   // x starts at 0 and increases.
   // y starts at 0 and increases.
-  let mut d1_start: isize = 0;
-  let mut d1_limit: isize = input_width;
-  let mut d1_advance: isize = 1;
-  let mut d1_multiplier: isize = 1;
-  let mut d2_start: isize = 0;
-  let mut d2_limit: isize = input_height;
-  let mut d2_advance: isize = 1;
-  let mut d2_multiplier: isize = input_width;
+  let mut x_start: isize = 0;
+  let mut x_advance: isize = 1;
+  let mut x_multiplier: isize = 1;
+  let mut y_start: isize = 0;
+  let mut y_advance: isize = 1;
+  let mut y_multiplier: isize = input_width;
 
   if rotate == 90 {
-    // d1 is y, d2 is x.
-    // y starts at its max value and decreases.
+    // Swap x and y.
     // x starts at 0 and increases.
-    d1_start = input_height - 1;
-    d1_limit = input_height;
-    d1_advance = -1;
-    d1_multiplier = input_width;
-    d2_start = 0;
-    d2_limit = input_width;
-    d2_advance = 1;
-    d2_multiplier = 1;
+    // y starts at its max value and decreases.
+    x_start = 0;
+    x_advance = 1;
+    x_multiplier = input_height;
+    y_start = input_height - 1;
+    y_advance = -1;
+    y_multiplier = 1;
   } else if rotate == 180 {
-    // d1 is x, d2 is y.
     // x starts at its max and decreases.
     // y starts at its max and decreases.
-    d1_start = input_width - 1;
-    d1_limit = input_width;
-    d1_advance = -1;
-    d1_multiplier = 1;
-    d2_start = input_height - 1;
-    d2_limit = input_height;
-    d2_advance = -1;
-    d2_multiplier = input_width;
+    x_start = input_width - 1;
+    x_advance = -1;
+    x_multiplier = 1;
+    y_start = input_height - 1;
+    y_advance = -1;
+    y_multiplier = input_width;
   } else if rotate == 270 {
-    // d1 is y, d2 is x.
-    // y starts at 0 and increases.
+    // Swap x and y.
     // x starts at its max and decreases.
-    d1_start = 0;
-    d1_limit = input_height;
-    d1_advance = 1;
-    d1_multiplier = input_width;
-    d2_start = input_width - 1;
-    d2_limit = input_width;
-    d2_advance = -1;
-    d2_multiplier = 1;
+    // y starts at 0 and increases.
+    x_start = input_width - 1;
+    x_advance = -1;
+    x_multiplier = input_height;
+    y_start = 0;
+    y_advance = 1;
+    y_multiplier = 1;
   }
 
   let num_pixels = (input_width * input_height) as usize;
@@ -80,11 +73,20 @@ fn rotate(input_width: isize, input_height: isize, rotate: isize) {
     out_b = from_raw_parts_mut::<u32>((input_width * input_height * 4 + 4) as *mut u32, num_pixels);
   }
 
-  for d2 in 0..d2_limit {
-    for d1 in 0..d1_limit {
-      let in_idx = (d1_start + d1 * d1_advance) * d1_multiplier + (d2_start + d2 * d2_advance) * d2_multiplier;
-      *unwrap_abort(out_b.get_mut(i as usize)) = *unwrap_abort(in_b.get(in_idx as usize));
-      i += 1;
+  let tile_size = 16isize;
+
+  for y_offset in (0..input_height).step_by(tile_size as usize) {
+    for x_offset in (0..input_width).step_by(tile_size as usize) {
+      for y in y_offset..min(y_offset + tile_size, input_height) {
+        let in_offset = y * input_width;
+        let out_offset = (y * y_advance + y_start) * y_multiplier;
+
+        for x in x_offset..min(x_offset + tile_size, input_width) {
+          let in_idx = in_offset + x;
+          let out_idx = out_offset + (x_start + x * x_advance) * x_multiplier;
+          *unwrap_abort(out_b.get_mut(out_idx as usize)) = *unwrap_abort(in_b.get(in_idx as usize));
+        }
+      }
     }
   }
 }
