@@ -17,6 +17,8 @@ const CrittersPlugin = require('critters-webpack-plugin');
 const AssetTemplatePlugin = require('./config/asset-template-plugin');
 const addCssTypes = require('./config/add-css-types');
 
+const regexpPathSep = path.sep === '\\' ? '\\\\' : '/';
+
 function readJson (filename) {
   return JSON.parse(fs.readFileSync(filename));
 }
@@ -172,7 +174,7 @@ module.exports = async function (_, env) {
     plugins: [
       new webpack.IgnorePlugin(
         /(fs|crypto|path)/,
-        new RegExp(`${path.sep}codecs${path.sep}`)
+        new RegExp(`${regexpPathSep}codecs${regexpPathSep}`)
       ),
 
       // Pretty progressbar showing build progress:
