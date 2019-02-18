@@ -248,7 +248,7 @@ export default class Compress extends Component<Props, State> {
     this.widthQuery.addListener(this.onMobileWidthChange);
     this.updateFile(props.file);
 
-    import('../../lib/offliner').then(({ mainAppLoaded }) => mainAppLoaded());
+    import('../../lib/sw-bridge').then(({ mainAppLoaded }) => mainAppLoaded());
   }
 
   @bind

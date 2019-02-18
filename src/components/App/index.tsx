@@ -15,9 +15,9 @@ const compressPromise = import(
   /* webpackChunkName: "main-app" */
   '../compress',
 );
-const offlinerPromise = import(
-  /* webpackChunkName: "offliner" */
-  '../../lib/offliner',
+const swBridgePromise = import(
+  /* webpackChunkName: "sw-bridge" */
+  '../../lib/sw-bridge',
 );
 
 function back() {
@@ -50,9 +50,11 @@ export default class App extends Component<Props, State> {
       this.showSnack('Failed to load app');
     });
 
-    offlinerPromise.then(async ({ offliner, sharedImage }) => {
+    swBridgePromise.then(async ({ offliner, getSharedImage }) => {
       offliner(this.showSnack);
-      const file = await sharedImage;
+      const file = await getSharedImage();
+      if (!file) return;
+      // Remove the ?share-target from the URL
       history.replaceState('', '', '/');
       this.openEditor();
       this.setState({ file });

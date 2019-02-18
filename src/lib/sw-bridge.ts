@@ -40,11 +40,25 @@ async function updateReady(reg: ServiceWorkerRegistration): Promise<void> {
   });
 }
 
-let sharedImageResolver: (value?: File | PromiseLike<File> | undefined) => void;
+/** Wait for a shared image, if one's expected */
+export function getSharedImage(): Promise<File | undefined> {
+  const pageUrl = new URL(location.href);
+  if (!pageUrl.searchParams.has('share-target')) return Promise.resolve(undefined);
 
-export const sharedImage: Promise<File> = new Promise((resolve) => {
-  sharedImageResolver = resolve;
-});
+  return new Promise((resolve) => {
+    const onmessage = (event: MessageEvent) => {
+      if (event.data.action !== 'load-image') return;
+      resolve(event.data.file);
+      navigator.serviceWorker.removeEventListener('message', onmessage);
+    };
+
+    navigator.serviceWorker.addEventListener('message', onmessage);
+
+    // This message is picked up by the service worker - it's how it knows we're ready to receive
+    // the file.
+    new BroadcastChannel('share-ready').postMessage('share-ready');
+  });
+}
 
 /** Set up the service worker and monitor changes */
 export async function offliner(showSnack: SnackBarElement['showSnackbar']) {
@@ -56,16 +70,6 @@ export async function offliner(showSnack: SnackBarElement['showSnackbar']) {
   }
 
   const hasController = !!navigator.serviceWorker.controller;
-  const pageUrl = new URL(location.href);
-
-  if (pageUrl.searchParams.has('share-target')) {
-    navigator.serviceWorker.addEventListener('message', (event) => {
-      if (event.data.action !== 'load-image') return;
-      sharedImageResolver(event.data.file);
-    });
-
-    new BroadcastChannel('share-ready').postMessage('share-ready');
-  }
 
   // Look for changes in the controller
   navigator.serviceWorker.addEventListener('controllerchange', async () => {

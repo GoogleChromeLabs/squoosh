@@ -40,6 +40,7 @@ export function serveShareTarget(event: FetchEvent): void {
   event.respondWith(Response.redirect('/?share-target'));
 
   event.waitUntil(async function () {
+    // The page sends this message to tell the service worker it's ready to receive the file.
     await new Promise(r => new BroadcastChannel('share-ready').onmessage = r);
     const client = await self.clients.get(event.resultingClientId);
     const data = await dataPromise;
