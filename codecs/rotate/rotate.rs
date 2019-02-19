@@ -22,7 +22,7 @@ impl<T> HardUnwrap<T> for Option<T> {
     }
 }
 
-const TILE_SIZE: usize = 64;
+const TILE_SIZE: usize = 16;
 
 #[no_mangle]
 fn rotate(width: usize, height: usize, rotate: usize) {
