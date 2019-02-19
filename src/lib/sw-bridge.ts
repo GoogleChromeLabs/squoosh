@@ -40,11 +40,8 @@ async function updateReady(reg: ServiceWorkerRegistration): Promise<void> {
   });
 }
 
-/** Wait for a shared image, if one's expected */
-export function getSharedImage(): Promise<File | undefined> {
-  const pageUrl = new URL(location.href);
-  if (!pageUrl.searchParams.has('share-target')) return Promise.resolve(undefined);
-
+/** Wait for a shared image */
+export function getSharedImage(): Promise<File> {
   return new Promise((resolve) => {
     const onmessage = (event: MessageEvent) => {
       if (event.data.action !== 'load-image') return;

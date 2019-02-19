@@ -27,6 +27,7 @@ function back() {
 interface Props {}
 
 interface State {
+  awaitingShareTarget: boolean;
   file?: File | Fileish;
   isEditorOpen: Boolean;
   Compress?: typeof import('../compress').default;
@@ -34,6 +35,7 @@ interface State {
 
 export default class App extends Component<Props, State> {
   state: State = {
+    awaitingShareTarget: new URL(location.href).searchParams.has('share-target'),
     isEditorOpen: false,
     file: undefined,
     Compress: undefined,
@@ -52,12 +54,12 @@ export default class App extends Component<Props, State> {
 
     swBridgePromise.then(async ({ offliner, getSharedImage }) => {
       offliner(this.showSnack);
+      if (!this.state.awaitingShareTarget) return;
       const file = await getSharedImage();
-      if (!file) return;
       // Remove the ?share-target from the URL
       history.replaceState('', '', '/');
       this.openEditor();
-      this.setState({ file });
+      this.setState({ file, awaitingShareTarget: false });
     });
 
     // In development, persist application state across hot reloads:
@@ -112,15 +114,18 @@ export default class App extends Component<Props, State> {
     this.setState({ isEditorOpen: true });
   }
 
-  render({}: Props, { file, isEditorOpen, Compress }: State) {
+  render({}: Props, { file, isEditorOpen, Compress, awaitingShareTarget }: State) {
     return (
       <div id="app" class={style.app}>
         <file-drop accept="image/*" onfiledrop={this.onFileDrop} class={style.drop}>
-          {!isEditorOpen
-            ? <Intro onFile={this.onIntroPickFile} showSnack={this.showSnack} />
-            : (Compress)
-              ? <Compress file={file!} showSnack={this.showSnack} onBack={back} />
-              : <loading-spinner class={style.appLoader}/>
+          {
+            awaitingShareTarget
+              ? <loading-spinner class={style.appLoader}/>
+              : !isEditorOpen
+                ? <Intro onFile={this.onIntroPickFile} showSnack={this.showSnack} />
+                : Compress
+                  ? <Compress file={file!} showSnack={this.showSnack} onBack={back} />
+                  : <loading-spinner class={style.appLoader}/>
           }
           <snack-bar ref={linkRef(this, 'snackbar')} />
         </file-drop>
