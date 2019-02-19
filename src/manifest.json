@@ -1,6 +1,6 @@
 {
-  "name": "Squoosh Share Target Demo",
-  "short_name": "Squoosh ST",
+  "name": "Squoosh",
+  "short_name": "Squoosh",
   "start_url": "/",
   "display": "standalone",
   "orientation": "any",
