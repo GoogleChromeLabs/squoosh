@@ -22,6 +22,7 @@ function fetchTravisBuildInfo(user, repo, branch) {
     'branch.name': branch,
     state: 'passed',
     limit: 1,
+    event_type: 'push',
   }).then(r => r.json());
 }
 
@@ -32,9 +33,7 @@ function fetchTravisText(path) {
 /**
  * Recursively-read a directory and turn it into an array of { name, size, gzipSize }
  */
-async function dirToInfoArray(startPath, {
-  namePrefix = '',
-} = {}) {
+async function dirToInfoArray(startPath) {
   const results = await new Promise((resolve, reject) => {
     readdirp({ root: startPath }, (err, results) => {
       if (err) reject(err); else resolve(results);
