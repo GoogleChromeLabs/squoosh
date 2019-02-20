@@ -36,8 +36,8 @@ fn rotate(width: usize, height: usize, rotate: usize) {
 
     match rotate {
         0 => {
-            for i in 0..num_pixels {
-                *out_b.get_mut(i).unwrap_hard() = *in_b.get(i).unwrap_hard();
+            for (in_p, out_p) in in_b.iter().zip(out_b.iter_mut()) {
+                *out_p = *in_p;
             }
         }
         90 => {
@@ -46,19 +46,22 @@ fn rotate(width: usize, height: usize, rotate: usize) {
             for y_start in (0..height).step_by(TILE_SIZE) {
                 for x_start in (0..width).step_by(TILE_SIZE) {
                     for y in y_start..(y_start + TILE_SIZE).min(height) {
-                        for x in x_start..(x_start + TILE_SIZE).min(width) {
+                        let in_chunk = in_b
+                            .get((y * width + x_start)..(y * width + x_start + TILE_SIZE))
+                            .unwrap_hard();
+
+                        for (x, in_p) in in_chunk.iter().enumerate() {
                             let new_x = (new_width - 1) - y;
-                            let new_y = x;
-                            *out_b.get_mut(new_y * new_width + new_x).unwrap_hard() =
-                                *in_b.get(y * width + x).unwrap_hard();
+                            let new_y = x + x_start;
+                            *out_b.get_mut(new_y * new_width + new_x).unwrap_hard() = *in_p;
                         }
                     }
                 }
             }
         }
         180 => {
-            for i in 0..num_pixels {
-                *out_b.get_mut(num_pixels - 1 - i).unwrap_hard() = *in_b.get(i).unwrap_hard();
+            for (in_p, out_p) in in_b.iter().zip(out_b.iter_mut().rev()) {
+                *out_p = *in_p;
             }
         }
         270 => {
@@ -67,11 +70,13 @@ fn rotate(width: usize, height: usize, rotate: usize) {
             for y_start in (0..height).step_by(TILE_SIZE) {
                 for x_start in (0..width).step_by(TILE_SIZE) {
                     for y in y_start..(y_start + TILE_SIZE).min(height) {
-                        for x in x_start..(x_start + TILE_SIZE).min(width) {
+                        let in_chunk = in_b
+                            .get((y * width + x_start)..(y * width + x_start + TILE_SIZE))
+                            .unwrap_hard();
+                        for (x, in_p) in in_chunk.iter().enumerate() {
                             let new_x = y;
-                            let new_y = new_height - 1 - x;
-                            *out_b.get_mut(new_y * new_width + new_x).unwrap_hard() =
-                                *in_b.get(y * width + x).unwrap_hard();
+                            let new_y = new_height - 1 - (x_start + x);
+                            *out_b.get_mut(new_y * new_width + new_x).unwrap_hard() = *in_p;
                         }
                     }
                 }
