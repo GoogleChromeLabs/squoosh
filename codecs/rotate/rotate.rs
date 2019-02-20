@@ -18,7 +18,7 @@ impl<T> HardUnwrap<T> for Option<T> {
 
     #[cfg(debug_assertions)]
     fn unwrap_hard(self) -> T {
-        o.unwrap()
+        self.unwrap()
     }
 }
 
