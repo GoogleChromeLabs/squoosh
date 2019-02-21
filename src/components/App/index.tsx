@@ -74,10 +74,10 @@ export default class App extends Component<Props, State> {
   }
 
   @bind
-  private onFileDrop({ file }: FileDropEvent) {
-    if (!file) return;
+  private onFileDrop({ files }: FileDropEvent) {
+    if (!files && files.length > 0) return;
     this.openEditor();
-    this.setState({ file });
+    this.setState({ files[0] });
   }
 
   @bind
