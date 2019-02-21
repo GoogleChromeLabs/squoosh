@@ -40,7 +40,7 @@ module.exports = async function (_, env) {
   return {
     mode: isProd ? 'production' : 'development',
     entry: {
-      'first-interaction': './src/index'
+      'first-interaction': path.join('.', 'src', 'index'),
     },
     devtool: isProd ? 'source-map' : 'inline-source-map',
     stats: 'minimal',
@@ -54,13 +54,13 @@ module.exports = async function (_, env) {
     resolve: {
       extensions: ['.ts', '.tsx', '.mjs', '.js', '.scss', '.css'],
       alias: {
-        style: path.join(__dirname, 'src/style')
+        style: path.join(__dirname, 'src', 'style')
       }
     },
     resolveLoader: {
       alias: {
         // async-component-loader returns a wrapper component that waits for the import to load before rendering:
-        async: path.join(__dirname, 'config/async-component-loader')
+        async: path.join(__dirname, 'config', 'async-component-loader')
       }
     },
     module: {
