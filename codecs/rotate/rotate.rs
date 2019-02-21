@@ -22,7 +22,7 @@ impl<T> HardUnwrap<T> for Option<T> {
     }
 }
 
-const TILE_SIZE: usize = 64;
+const TILE_SIZE: usize = 16;
 
 fn get_buffers<'a>(width: usize, height: usize) -> (&'a [u32], &'a mut [u32]) {
     let num_pixels = width * height;
