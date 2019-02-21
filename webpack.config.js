@@ -149,11 +149,11 @@ module.exports = async function (_, env) {
         },
         {
           // All the codec files define a global with the same name as their file name. `exports-loader` attaches those to `module.exports`.
-          test: /\/codecs\/.*\.js$/,
+          test: new RegExp(`${regexpPathSep}codecs${regexpPathSep}.*\.js`),
           loader: 'exports-loader'
         },
         {
-          test: /\/codecs\/.*\.wasm$/,
+          test: new RegExp(`${regexpPathSep}codecs${regexpPathSep}.*\.wasm`),
           // This is needed to make webpack NOT process wasm files.
           // See https://github.com/webpack/webpack/issues/6725
           type: 'javascript/auto',
