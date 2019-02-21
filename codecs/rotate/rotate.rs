@@ -22,7 +22,7 @@ impl<T> HardUnwrap<T> for Option<T> {
     }
 }
 
-const TILE_SIZE: usize = 16;
+const TILE_SIZE: usize = 64;
 
 fn get_buffers<'a>(width: usize, height: usize) -> (&'a [u32], &'a mut [u32]) {
     let num_pixels = width * height;
@@ -51,10 +51,13 @@ fn rotate_90(width: usize, height: usize) {
     for y_start in (0..height).step_by(TILE_SIZE) {
         for x_start in (0..width).step_by(TILE_SIZE) {
             for y in y_start..(y_start + TILE_SIZE).min(height) {
-                let in_chunk = in_b
-                    .get((y * width + x_start)..(y * width + x_start + TILE_SIZE))
-                    .unwrap_hard();
-
+                let in_offset = y * width;
+                let in_bounds = if x_start + TILE_SIZE < width {
+                    (in_offset + x_start)..(in_offset + x_start + TILE_SIZE)
+                } else {
+                    (in_offset + x_start)..(in_offset + width)
+                };
+                let in_chunk = in_b.get(in_bounds).unwrap_hard();
                 for (x, in_p) in in_chunk.iter().enumerate() {
                     let new_x = (new_width - 1) - y;
                     let new_y = x + x_start;
@@ -81,9 +84,13 @@ fn rotate_270(width: usize, height: usize) {
     for y_start in (0..height).step_by(TILE_SIZE) {
         for x_start in (0..width).step_by(TILE_SIZE) {
             for y in y_start..(y_start + TILE_SIZE).min(height) {
-                let in_chunk = in_b
-                    .get((y * width + x_start)..(y * width + x_start + TILE_SIZE))
-                    .unwrap_hard();
+                let in_offset = y * width;
+                let in_bounds = if x_start + TILE_SIZE < width {
+                    (in_offset + x_start)..(in_offset + x_start + TILE_SIZE)
+                } else {
+                    (in_offset + x_start)..(in_offset + width)
+                };
+                let in_chunk = in_b.get(in_bounds).unwrap_hard();
                 for (x, in_p) in in_chunk.iter().enumerate() {
                     let new_x = y;
                     let new_y = new_height - 1 - (x_start + x);
