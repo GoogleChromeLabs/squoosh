@@ -3,6 +3,11 @@ import { SquooshStartEventType, SquooshSideEventType } from '../compress/index';
 
 import { expose } from 'comlink';
 
+export interface ReadyMessage {
+  type: 'READY';
+  version: string;
+}
+
 export function exposeAPI(app: App) {
   self.parent.postMessage({ type: 'READY', version: MAJOR_VERSION }, '*');
   self.addEventListener('message', (event: MessageEvent) => {
@@ -10,7 +15,7 @@ export function exposeAPI(app: App) {
       return;
     }
     event.stopImmediatePropagation();
-    self.parent.postMessage({ type: 'READY', version: MAJOR_VERSION }, '*');
+    self.parent.postMessage({ type: 'READY', version: MAJOR_VERSION } as ReadyMessage, '*');
   });
   expose(new API(app), self.parent);
 }
@@ -22,9 +27,20 @@ function addRemovableGlobalListener<
   return () => document.removeEventListener(name, listener);
 }
 
-class API {
+/**
+ * The API class contains the methods that are exposed via Comlink to the outside world.
+ */
+export class API {
+  /**
+   * Internal constructor. Do not call.
+   */
   constructor(private _app: App) {}
 
+  /**
+   * Loads a given file into Squoosh.
+   * @param blob The `Blob` to load
+   * @param name The name of the file. The extension of this name will be used to deterime which decoder to use.
+   */
   async setFile(blob: Blob, name: string) {
     return new Promise((resolve) => {
       document.addEventListener(SquooshStartEventType.START, () => resolve(), {
@@ -34,6 +50,10 @@ class API {
     });
   }
 
+  /**
+   * Grabs one side from Squoosh as a `File`.
+   * @param side The side which to grab. 0 = left, 1 = right.
+   */
   async getBlob(side: 0 | 1) {
     if (!this._app.state.file || !this._app.compressInstance) {
       throw new Error('No file has been loaded');

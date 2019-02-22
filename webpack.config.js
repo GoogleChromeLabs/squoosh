@@ -38,7 +38,8 @@ module.exports = async function (_, env) {
   return {
     mode: isProd ? 'production' : 'development',
     entry: {
-      'first-interaction': './src/index'
+      'first-interaction': './src/index',
+      'sdk': './src/sdk'
     },
     devtool: isProd ? 'source-map' : 'inline-source-map',
     stats: 'minimal',
