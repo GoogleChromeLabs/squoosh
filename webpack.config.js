@@ -232,7 +232,7 @@ module.exports = async function (_, env) {
       // For now we're not doing SSR.
       new HtmlPlugin({
         filename: path.join(__dirname, 'build/index.html'),
-        template: isProd ? '!!prerender-loader?string!src/index.html' : 'src/index.html',
+        template: isProd ? '!!prerender-loader?string&entry=./src/index!src/index.html' : 'src/index.html',
         minify: isProd && {
           collapseWhitespace: true,
           removeScriptTypeAttributes: true,
