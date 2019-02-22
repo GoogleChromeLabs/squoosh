@@ -1,52 +1,52 @@
 import { expose } from 'comlink';
 
 async function mozjpegEncode(
-  data: ImageData, options: import('../mozjpeg/encoder-meta').EncodeOptions
+  data: ImageData, options: import('../mozjpeg/encoder-meta').EncodeOptions,
 ): Promise<ArrayBuffer> {
   const { encode } = await import(
     /* webpackChunkName: "process-mozjpeg-enc" */
-    '../mozjpeg/encoder'
+    '../mozjpeg/encoder',
   );
   return encode(data, options);
 }
 
 async function quantize(
-  data: ImageData, opts: import('../imagequant/processor-meta').QuantizeOptions
+  data: ImageData, opts: import('../imagequant/processor-meta').QuantizeOptions,
 ): Promise<ImageData> {
   const { process } = await import(
     /* webpackChunkName: "process-imagequant" */
-    '../imagequant/processor'
+    '../imagequant/processor',
   );
   return process(data, opts);
 }
 
 async function rotate(
-  data: ImageData, opts: import('../rotate/processor-meta').RotateOptions
+  data: ImageData, opts: import('../rotate/processor-meta').RotateOptions,
 ): Promise<ImageData> {
   const { rotate } = await import(
     /* webpackChunkName: "process-rotate" */
-    '../rotate/processor'
+    '../rotate/processor',
   );
 
   return rotate(data, opts);
 }
 
 async function optiPngEncode(
-  data: BufferSource, options: import('../optipng/encoder-meta').EncodeOptions
+  data: BufferSource, options: import('../optipng/encoder-meta').EncodeOptions,
 ): Promise<ArrayBuffer> {
   const { compress } = await import(
     /* webpackChunkName: "process-optipng" */
-    '../optipng/encoder'
+    '../optipng/encoder',
   );
   return compress(data, options);
 }
 
 async function webpEncode(
-  data: ImageData, options: import('../webp/encoder-meta').EncodeOptions
+  data: ImageData, options: import('../webp/encoder-meta').EncodeOptions,
 ): Promise<ArrayBuffer> {
   const { encode } = await import(
     /* webpackChunkName: "process-webp-enc" */
-    '../webp/encoder'
+    '../webp/encoder',
   );
   return encode(data, options);
 }
@@ -54,7 +54,7 @@ async function webpEncode(
 async function webpDecode(data: ArrayBuffer): Promise<ImageData> {
   const { decode } = await import(
     /* webpackChunkName: "process-webp-dec" */
-    '../webp/decoder'
+    '../webp/decoder',
   );
   return decode(data);
 }

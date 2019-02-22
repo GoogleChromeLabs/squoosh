@@ -1,10 +1,10 @@
 type ModuleFactory<M extends EmscriptenWasm.Module> = (
-  opts: EmscriptenWasm.ModuleOpts
+  opts: EmscriptenWasm.ModuleOpts,
 ) => M;
 
 export function initWasmModule<T extends EmscriptenWasm.Module>(
   moduleFactory: ModuleFactory<T>,
-  wasmUrl: string
+  wasmUrl: string,
 ): Promise<T> {
   return new Promise((resolve) => {
     const module = moduleFactory({

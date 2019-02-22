@@ -164,7 +164,7 @@ export default class Output extends Component<Props, State> {
     const newState = cleanSet(
       inputProcessorState,
       'rotate.rotate',
-      (inputProcessorState.rotate.rotate + 90) % 360
+      (inputProcessorState.rotate.rotate + 90) % 360,
     );
 
     this.props.onInputProcessorChange(newState);
@@ -250,7 +250,7 @@ export default class Output extends Component<Props, State> {
 
   render(
     { mobileView, leftImgContain, rightImgContain, source, onBack }: Props,
-    { scale, editingScale, altBackground }: State
+    { scale, editingScale, altBackground }: State,
   ) {
     const leftDraw = this.leftDrawable();
     const rightDraw = this.rightDrawable();

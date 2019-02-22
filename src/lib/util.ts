@@ -141,7 +141,7 @@ interface DrawableToImageDataOptions {
 
 export function drawableToImageData(
   drawable: ImageBitmap | HTMLImageElement,
-  opts: DrawableToImageDataOptions = {}
+  opts: DrawableToImageDataOptions = {},
 ): ImageData {
   const {
     width = drawable.width,
@@ -177,7 +177,7 @@ export function nativeResize(
   data: ImageData,
   sx: number, sy: number, sw: number, sh: number,
   dw: number, dh: number,
-  method: NativeResizeMethod
+  method: NativeResizeMethod,
 ): ImageData {
   const canvasSource = document.createElement('canvas');
   canvasSource.width = data.width;

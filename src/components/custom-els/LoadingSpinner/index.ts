@@ -54,7 +54,7 @@ export default class LoadingSpinner extends HTMLElement {
 
     this._delayTimeout = self.setTimeout(
       () => { this.style.display = ''; },
-      delayNum
+      delayNum,
     );
   }
 }

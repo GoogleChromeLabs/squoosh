@@ -41,7 +41,7 @@ function createSnack(message: string, options: SnackOptions): [Element, Promise<
     if (timeout) {
       timeoutId = self.setTimeout(
         () => resolve(''),
-        timeout
+        timeout,
       );
     }
   });
