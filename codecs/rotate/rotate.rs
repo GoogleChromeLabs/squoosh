@@ -1,81 +1,113 @@
-#![no_std]
-#![no_main]
+use std::slice::{from_raw_parts, from_raw_parts_mut};
 
-use core::panic::PanicInfo;
-use core::slice::from_raw_parts_mut;
-
-#[no_mangle]
-fn rotate(input_width: isize, input_height: isize, rotate: isize) {
-  let mut i = 0isize;
-
-  // In the straight-copy case, d1 is x, d2 is y.
-  // x starts at 0 and increases.
-  // y starts at 0 and increases.
-  let mut d1_start: isize = 0;
-  let mut d1_limit: isize = input_width;
-  let mut d1_advance: isize = 1;
-  let mut d1_multiplier: isize = 1;
-  let mut d2_start: isize = 0;
-  let mut d2_limit: isize = input_height;
-  let mut d2_advance: isize = 1;
-  let mut d2_multiplier: isize = input_width;
-
-  if rotate == 90 {
-    // d1 is y, d2 is x.
-    // y starts at its max value and decreases.
-    // x starts at 0 and increases.
-    d1_start = input_height - 1;
-    d1_limit = input_height;
-    d1_advance = -1;
-    d1_multiplier = input_width;
-    d2_start = 0;
-    d2_limit = input_width;
-    d2_advance = 1;
-    d2_multiplier = 1;
-  } else if rotate == 180 {
-    // d1 is x, d2 is y.
-    // x starts at its max and decreases.
-    // y starts at its max and decreases.
-    d1_start = input_width - 1;
-    d1_limit = input_width;
-    d1_advance = -1;
-    d1_multiplier = 1;
-    d2_start = input_height - 1;
-    d2_limit = input_height;
-    d2_advance = -1;
-    d2_multiplier = input_width;
-  } else if rotate == 270 {
-    // d1 is y, d2 is x.
-    // y starts at 0 and increases.
-    // x starts at its max and decreases.
-    d1_start = 0;
-    d1_limit = input_height;
-    d1_advance = 1;
-    d1_multiplier = input_width;
-    d2_start = input_width - 1;
-    d2_limit = input_width;
-    d2_advance = -1;
-    d2_multiplier = 1;
-  }
-
-  let num_pixels = (input_width * input_height) as usize;
-  let in_b: &mut [u32];
-  let out_b: &mut [u32];
-  unsafe {
-    in_b = from_raw_parts_mut::<u32>(4 as *mut u32, num_pixels);
-    out_b = from_raw_parts_mut::<u32>((input_width * input_height * 4 + 4) as *mut u32, num_pixels);
-  }
-
-  for d2 in 0..d2_limit {
-    for d1 in 0..d1_limit {
-      let in_idx = (d1_start + d1 * d1_advance) * d1_multiplier + (d2_start + d2 * d2_advance) * d2_multiplier;
-      out_b[i as usize] = in_b[in_idx as usize];
-      i += 1;
-    }
-  }
+// This function is taken from Zachary Dremann
+// https://github.com/GoogleChromeLabs/squoosh/pull/462
+trait HardUnwrap<T> {
+    fn unwrap_hard(self) -> T;
 }
 
-#[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
-  loop {}
+impl<T> HardUnwrap<T> for Option<T> {
+    #[cfg(not(debug_assertions))]
+    #[inline]
+    fn unwrap_hard(self) -> T {
+        match self {
+            Some(t) => t,
+            None => std::process::abort(),
+        }
+    }
+
+    #[cfg(debug_assertions)]
+    fn unwrap_hard(self) -> T {
+        self.unwrap()
+    }
+}
+
+const TILE_SIZE: usize = 16;
+
+fn get_buffers<'a>(width: usize, height: usize) -> (&'a [u32], &'a mut [u32]) {
+    let num_pixels = width * height;
+    let in_b: &[u32];
+    let out_b: &mut [u32];
+    unsafe {
+        in_b = from_raw_parts::<u32>(8 as *const u32, num_pixels);
+        out_b = from_raw_parts_mut::<u32>((num_pixels * 4 + 8) as *mut u32, num_pixels);
+    }
+    return (in_b, out_b);
+}
+
+#[inline(never)]
+fn rotate_0(width: usize, height: usize) {
+    let (in_b, out_b) = get_buffers(width, height);
+    for (in_p, out_p) in in_b.iter().zip(out_b.iter_mut()) {
+        *out_p = *in_p;
+    }
+}
+
+#[inline(never)]
+fn rotate_90(width: usize, height: usize) {
+    let (in_b, out_b) = get_buffers(width, height);
+    let new_width = height;
+    let _new_height = width;
+    for y_start in (0..height).step_by(TILE_SIZE) {
+        for x_start in (0..width).step_by(TILE_SIZE) {
+            for y in y_start..(y_start + TILE_SIZE).min(height) {
+                let in_offset = y * width;
+                let in_bounds = if x_start + TILE_SIZE < width {
+                    (in_offset + x_start)..(in_offset + x_start + TILE_SIZE)
+                } else {
+                    (in_offset + x_start)..(in_offset + width)
+                };
+                let in_chunk = in_b.get(in_bounds).unwrap_hard();
+                for (x, in_p) in in_chunk.iter().enumerate() {
+                    let new_x = (new_width - 1) - y;
+                    let new_y = x + x_start;
+                    *out_b.get_mut(new_y * new_width + new_x).unwrap_hard() = *in_p;
+                }
+            }
+        }
+    }
+}
+
+#[inline(never)]
+fn rotate_180(width: usize, height: usize) {
+    let (in_b, out_b) = get_buffers(width, height);
+    for (in_p, out_p) in in_b.iter().zip(out_b.iter_mut().rev()) {
+        *out_p = *in_p;
+    }
+}
+
+#[inline(never)]
+fn rotate_270(width: usize, height: usize) {
+    let (in_b, out_b) = get_buffers(width, height);
+    let new_width = height;
+    let new_height = width;
+    for y_start in (0..height).step_by(TILE_SIZE) {
+        for x_start in (0..width).step_by(TILE_SIZE) {
+            for y in y_start..(y_start + TILE_SIZE).min(height) {
+                let in_offset = y * width;
+                let in_bounds = if x_start + TILE_SIZE < width {
+                    (in_offset + x_start)..(in_offset + x_start + TILE_SIZE)
+                } else {
+                    (in_offset + x_start)..(in_offset + width)
+                };
+                let in_chunk = in_b.get(in_bounds).unwrap_hard();
+                for (x, in_p) in in_chunk.iter().enumerate() {
+                    let new_x = y;
+                    let new_y = new_height - 1 - (x_start + x);
+                    *out_b.get_mut(new_y * new_width + new_x).unwrap_hard() = *in_p;
+                }
+            }
+        }
+    }
+}
+
+#[no_mangle]
+fn rotate(width: usize, height: usize, rotate: usize) {
+    match rotate {
+        0 => rotate_0(width, height),
+        90 => rotate_90(width, height),
+        180 => rotate_180(width, height),
+        270 => rotate_270(width, height),
+        _ => std::process::abort(),
+    }
 }
