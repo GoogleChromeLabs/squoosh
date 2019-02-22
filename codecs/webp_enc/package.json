@@ -5,7 +5,7 @@
     "build": "docker run --rm -v $(pwd):/src trzeci/emscripten ./build.sh"
   },
   "napa": {
-    "libwebp": "webmproject/libwebp#v1.0.0"
+    "libwebp": "webmproject/libwebp#v1.0.2"
   },
   "devDependencies": {
     "napa": "3.0.0"
