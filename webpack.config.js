@@ -44,7 +44,15 @@ module.exports = async function (_, env) {
     devtool: isProd ? 'source-map' : 'inline-source-map',
     stats: 'minimal',
     output: {
-      filename: isProd ? '[name].[chunkhash:5].js' : '[name].js',
+      filename: chunkData => {
+        if(chunkData.chunk.name === 'sdk') {
+          return 'sdk.js';
+        }
+        if(!isProd) {
+          return '[name].js';
+        }
+        return '[name].[chunkhash:5].js'
+      },
       chunkFilename: '[name].[chunkhash:5].js',
       path: path.join(__dirname, 'build'),
       publicPath: '/',

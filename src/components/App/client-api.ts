@@ -28,7 +28,8 @@ function addRemovableGlobalListener<
 }
 
 /**
- * The API class contains the methods that are exposed via Comlink to the outside world.
+ * The API class contains the methods that are exposed via Comlink to the
+ * outside world.
  */
 export class API {
   /**
@@ -39,7 +40,8 @@ export class API {
   /**
    * Loads a given file into Squoosh.
    * @param blob The `Blob` to load
-   * @param name The name of the file. The extension of this name will be used to deterime which decoder to use.
+   * @param name The name of the file. The extension of this name will be used
+   * to deterime which decoder to use.
    */
   async setFile(blob: Blob, name: string) {
     return new Promise((resolve) => {
