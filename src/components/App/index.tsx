@@ -13,12 +13,10 @@ const ROUTE_EDITOR = '/editor';
 
 const compressPromise = import(
   /* webpackChunkName: "main-app" */
-  '../compress',
-);
+  '../compress');
 const offlinerPromise = import(
   /* webpackChunkName: "offliner" */
-  '../../lib/offliner',
-);
+  '../../lib/offliner');
 
 function back() {
   window.history.back();
