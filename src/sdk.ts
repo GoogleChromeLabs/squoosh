@@ -2,6 +2,10 @@ import { proxy, ProxyResult } from 'comlink';
 
 import { API, ReadyMessage } from './components/App/client-api';
 
+// @ts-ignore
+import { version } from '../package.json';
+const MAJOR_VERSION = (version.split('.')[0] as string);
+
 /**
  * This function will load an iFrame
  * @param {HTMLIFrameElement} ifr iFrame that will be used to load squoosh

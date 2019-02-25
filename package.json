@@ -4,9 +4,10 @@
   "version": "1.6.0",
   "license": "apache-2.0",
   "scripts": {
+    "build:sdk": "microbundle --compress -f es -o build -i src/sdk.ts",
     "start": "webpack-dev-server --host 0.0.0.0 --hot",
-    "build": "webpack -p",
-    "lint": "tslint -c tslint.json  -p tsconfig.json -t verbose",
+    "build": "webpack -p && npm run build:sdk",
+    "lint": "tslint -c tslint.json -p tsconfig.json -t verbose 'src/**/*.{ts,tsx,js,jsx}'",
     "lintfix": "tslint -c tslint.json -p tsconfig.json -t verbose --fix 'src/**/*.{ts,tsx,js,jsx}'",
     "sizereport": "node config/size-report.js"
   },
@@ -41,6 +42,7 @@
     "idb-keyval": "3.1.0",
     "linkstate": "1.1.1",
     "loader-utils": "1.2.3",
+    "microbundle": "^0.10.1",
     "mini-css-extract-plugin": "0.5.0",
     "minimatch": "3.0.4",
     "node-fetch": "2.3.0",
