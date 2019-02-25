@@ -348,7 +348,8 @@ export default class Compress extends Component<Props, State> {
 
     const oldRotate = source.inputProcessorState.rotate.rotate;
     const newRotate = options.rotate.rotate;
-    const orientationChanged = oldRotate % 180 !== newRotate % 180;
+
+    const orientationChanged = (newRotate === 0) || oldRotate % 180 !== newRotate % 180;
     const loadingCounter = this.state.loadingCounter + 1;
     // Either processor is good enough here.
     const processor = this.leftProcessor;

@@ -2,6 +2,8 @@ interface CanvasRenderingContext2D {
   filter: string;
 }
 
+declare module 'intersection-observer';
+
 // Handling file-loader imports:
 declare module '*.png' {
   const content: string;

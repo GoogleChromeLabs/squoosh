@@ -34,6 +34,12 @@ interface State {
   scale: number;
   editingScale: boolean;
   altBackground: boolean;
+  isIntersecting: boolean;
+}
+
+interface IntersectionObserverEntry {
+  readonly intersectionRatio: number;
+  readonly isIntersecting: boolean;
 }
 
 const scaleToOpts: ScaleToOpts = {
@@ -48,26 +54,19 @@ export default class Output extends Component<Props, State> {
     scale: 1,
     editingScale: false,
     altBackground: false,
+    isIntersecting: true,
   };
   canvasLeft?: HTMLCanvasElement;
   canvasRight?: HTMLCanvasElement;
   pinchZoomLeft?: PinchZoom;
   pinchZoomRight?: PinchZoom;
   scaleInput?: HTMLInputElement;
+  threshold: number = 0;
   retargetedEvents = new WeakSet<Event>();
 
   componentDidMount() {
     const leftDraw = this.leftDrawable();
     const rightDraw = this.rightDrawable();
-
-    // Reset the pinch zoom, which may have an position set from the previous view, after pressing
-    // the back button.
-    this.pinchZoomLeft!.setTransform({
-      allowChangeEvent: true,
-      x: 0,
-      y: 0,
-      scale: 1,
-    });
 
     if (this.canvasLeft && leftDraw) {
       drawDataToCanvas(this.canvasLeft, leftDraw);
@@ -75,6 +74,11 @@ export default class Output extends Component<Props, State> {
     if (this.canvasRight && rightDraw) {
       drawDataToCanvas(this.canvasRight, rightDraw);
     }
+
+    // Reset the pinch zoom, which may have an position set from the previous view, after pressing
+    // the back button.
+    this.resetPosition();
+    this.observeIntersection();
   }
 
   componentDidUpdate(prevProps: Props, prevState: State) {
@@ -127,12 +131,78 @@ export default class Output extends Component<Props, State> {
     return !shallowEqual(this.props, nextProps) || !shallowEqual(this.state, nextState);
   }
 
+  @bind
+  private async initializeImage() {
+    await this.setRotation(true)();
+    this.setZoom(1)();
+    this.resetPosition();
+    this.setState({ altBackground: false });
+  }
+
+  @bind
+  private handleIntersect(entries: IntersectionObserverEntry[]) {
+    entries.forEach((entry: IntersectionObserverEntry) => {
+      // Value of isIntersecting is depended on threshold value on chrome.
+      // However, for safari, firefox and polyfill we just need to check also intersectionRatio.
+      // Realized different behavior: https://github.com/w3c/IntersectionObserver/issues/345
+      const isIntersecting = entry.isIntersecting && entry.intersectionRatio > this.threshold;
+      this.setState({ isIntersecting });
+    });
+  }
+
+  @bind
+  private async observeIntersection() {
+    if (!('intersectionObserver' in window)) {
+      await import('intersection-observer');
+    }
+
+    if (!this.pinchZoomLeft || !this.canvasLeft) return;
+
+    const options = {
+      root: this.pinchZoomLeft,
+      rootMargin: '0px',
+      threshold: this.threshold,
+    };
+    const observer = new IntersectionObserver(this.handleIntersect, options);
+
+    observer.observe(this.canvasLeft);
+  }
+
   private leftDrawable(props: Props = this.props): ImageData | undefined {
     return props.leftCompressed || (props.source && props.source.processed);
   }
 
   private rightDrawable(props: Props = this.props): ImageData | undefined {
     return props.rightCompressed || (props.source && props.source.processed);
+  }
+
+  // initial coordinates depends on the current scale and dimensions of the image.
+  @bind
+  private resetPosition(scaleRatio: number = this.state.scale) {
+    if (this.canvasLeft) {
+      const { width, height } = this.canvasLeft;
+
+      this.pinchZoomLeft!.setTransform({
+        allowChangeEvent: true,
+        x: (width / 2) * (1 - scaleRatio),
+        y: (height / 2) * (1 - scaleRatio),
+        scale: scaleRatio,
+      });
+    }
+  }
+
+  private setZoom(scaleRatio: number = 1) {
+    return () => {
+      if (!this.pinchZoomLeft) throw Error('Missing pinch-zoom element');
+
+      this.pinchZoomLeft.scaleTo(scaleRatio, scaleToOpts);
+
+      // Now, reset position will be triggered when the image
+      // has been lost from the viewport with 0.2 threshold.
+      if (!this.state.isIntersecting) {
+        this.resetPosition(scaleRatio);
+      }
+    };
   }
 
   @bind
@@ -143,31 +213,19 @@ export default class Output extends Component<Props, State> {
   }
 
   @bind
-  private zoomIn() {
-    if (!this.pinchZoomLeft) throw Error('Missing pinch-zoom element');
+  private setRotation(resetRotation?: boolean) {
+    return async() => {
+      const { inputProcessorState } = this.props;
+      if (!inputProcessorState) return;
 
-    this.pinchZoomLeft.scaleTo(this.state.scale * 1.25, scaleToOpts);
-  }
+      const newState = cleanSet(
+        inputProcessorState,
+        'rotate.rotate',
+        resetRotation ? 0 : (inputProcessorState.rotate.rotate + 90) % 360,
+      );
 
-  @bind
-  private zoomOut() {
-    if (!this.pinchZoomLeft) throw Error('Missing pinch-zoom element');
-
-    this.pinchZoomLeft.scaleTo(this.state.scale / 1.25, scaleToOpts);
-  }
-
-  @bind
-  private onRotateClick() {
-    const { inputProcessorState } = this.props;
-    if (!inputProcessorState) return;
-
-    const newState = cleanSet(
-      inputProcessorState,
-      'rotate.rotate',
-      (inputProcessorState.rotate.rotate + 90) % 360,
-    );
-
-    this.props.onInputProcessorChange(newState);
+      return this.props.onInputProcessorChange(newState);
+    };
   }
 
   @bind
@@ -311,7 +369,7 @@ export default class Output extends Component<Props, State> {
 
         <div class={style.controls}>
           <div class={style.zoomControls}>
-            <button class={style.button} onClick={this.zoomOut}>
+            <button class={style.button} onClick={this.setZoom(this.state.scale / 1.25)}>
               <RemoveIcon />
             </button>
             {editingScale ? (
@@ -325,6 +383,7 @@ export default class Output extends Component<Props, State> {
                 value={Math.round(scale * 100)}
                 onInput={this.onScaleInputChanged}
                 onBlur={this.onScaleInputBlur}
+                onDblClick={this.initializeImage}
               />
             ) : (
               <span class={style.zoom} tabIndex={0} onFocus={this.onScaleValueFocus}>
@@ -332,12 +391,12 @@ export default class Output extends Component<Props, State> {
                 %
               </span>
             )}
-            <button class={style.button} onClick={this.zoomIn}>
+            <button class={style.button} onClick={this.setZoom(this.state.scale * 1.25)}>
               <AddIcon />
             </button>
           </div>
           <div class={style.buttonsNoWrap}>
-            <button class={style.button} onClick={this.onRotateClick} title="Rotate image">
+            <button class={style.button} onClick={this.setRotation()} title="Rotate image">
               <RotateIcon />
             </button>
             <button

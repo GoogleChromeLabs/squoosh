@@ -45,6 +45,8 @@ export async function offliner(showSnack: SnackBarElement['showSnackbar']) {
   // This needs to be a typeof because Webpack.
   if (typeof PRERENDER === 'boolean') return;
 
+  if (!('serviceWorker' in navigator)) return;
+
   if (process.env.NODE_ENV === 'production') {
     navigator.serviceWorker.register('../sw');
   }
