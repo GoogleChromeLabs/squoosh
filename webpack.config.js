@@ -38,21 +38,12 @@ module.exports = async function (_, env) {
   return {
     mode: isProd ? 'production' : 'development',
     entry: {
-      'first-interaction': './src/index',
-      'sdk': './src/sdk'
+      'first-interaction': './src/index'
     },
     devtool: isProd ? 'source-map' : 'inline-source-map',
     stats: 'minimal',
     output: {
-      filename: chunkData => {
-        if(chunkData.chunk.name === 'sdk') {
-          return 'sdk.js';
-        }
-        if(!isProd) {
-          return '[name].js';
-        }
-        return '[name].[chunkhash:5].js'
-      },
+      filename: isProd ? '[name].[chunkhash:5].js' : '[name].js',
       chunkFilename: '[name].[chunkhash:5].js',
       path: path.join(__dirname, 'build'),
       publicPath: '/',
@@ -240,7 +231,7 @@ module.exports = async function (_, env) {
       // For now we're not doing SSR.
       new HtmlPlugin({
         filename: path.join(__dirname, 'build/index.html'),
-        template: isProd ? '!!prerender-loader?string&entry=./src/index!src/index.html' : 'src/index.html',
+        template: isProd ? '!!prerender-loader?string!src/index.html' : 'src/index.html',
         minify: isProd && {
           collapseWhitespace: true,
           removeScriptTypeAttributes: true,
