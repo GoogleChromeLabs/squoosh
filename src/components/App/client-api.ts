@@ -43,7 +43,7 @@ export class API {
    * @param name The name of the file. The extension of this name will be used
    * to deterime which decoder to use.
    */
-  async setFile(blob: Blob, name: string) {
+  setFile(blob: Blob, name: string) {
     return new Promise((resolve) => {
       document.addEventListener(SquooshStartEventType.START, () => resolve(), {
         once: true,
