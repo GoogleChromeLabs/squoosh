@@ -27,7 +27,16 @@ pub fn resize(
     input_height: usize,
     output_width: usize,
     output_height: usize,
+    typ_idx: usize,
 ) -> Vec<u8> {
+    let typ = match typ_idx {
+        0 => Type::Point,
+        1 => Type::Triangle,
+        2 => Type::Catrom,
+        3 => Type::Mitchell,
+        4 => Type::Lanczos3,
+        _ => panic!("Nope"),
+    };
     let num_output_pixels = output_width * output_height;
     let mut resizer = resize::new(
         input_width,
@@ -35,7 +44,7 @@ pub fn resize(
         output_width,
         output_height,
         RGBA,
-        Type::Lanczos3,
+        typ,
     );
     let mut output_image = Vec::<u8>::with_capacity(num_output_pixels * 4);
     output_image.resize(num_output_pixels * 4, 0);

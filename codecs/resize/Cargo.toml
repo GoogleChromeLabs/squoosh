@@ -12,7 +12,7 @@ default = ["console_error_panic_hook", "wee_alloc"]
 
 [dependencies]
 cfg-if = "0.1.2"
-wasm-bindgen = "0.2"
+wasm-bindgen = "0.2.38"
 resize = "0.3.0"
 
 # The `console_error_panic_hook` crate provides better debugging of panics by
