@@ -87,6 +87,7 @@ export default class ResizerOptions extends Component<Props, State> {
             onChange={this.onChange}
           >
             {isVector && <option value="vector">Vector</option>}
+            <option value="lanczos3">Lanczos3</option>
             <option value="browser-pixelated">Browser pixelated</option>
             <option value="browser-low">Browser low quality</option>
             <option value="browser-medium">Browser medium quality</option>

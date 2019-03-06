@@ -1,12 +1,12 @@
 import optipng, { OptiPngModule } from '../../../codecs/optipng/optipng';
 import wasmUrl from '../../../codecs/optipng/optipng.wasm';
 import { EncodeOptions } from './encoder-meta';
-import { initWasmModule } from '../util';
+import { initEmscriptenModule } from '../util';
 
 let emscriptenModule: Promise<OptiPngModule>;
 
 export async function compress(data: BufferSource, options: EncodeOptions): Promise<ArrayBuffer> {
-  if (!emscriptenModule) emscriptenModule = initWasmModule(optipng, wasmUrl);
+  if (!emscriptenModule) emscriptenModule = initEmscriptenModule(optipng, wasmUrl);
 
   const module = await emscriptenModule;
   const resultView = module.compress(data, options);

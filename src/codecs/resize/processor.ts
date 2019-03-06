@@ -1,49 +1,26 @@
-import { nativeResize, NativeResizeMethod, drawableToImageData } from '../../lib/util';
-import { BitmapResizeOptions, VectorResizeOptions } from './processor-meta';
+import wasmUrl from '../../../codecs/resize/pkg/resize_bg.wasm';
+import '../../../codecs/resize/pkg/resize';
+import { WorkerResizeOptions } from './processor-meta';
+// import { getContainOffsets } from './util';
 
-function getContainOffsets(sw: number, sh: number, dw: number, dh: number) {
-  const currentAspect = sw / sh;
-  const endAspect = dw / dh;
+declare var wasm_bindgen: { resize: typeof import('../../../codecs/resize/pkg/resize').resize };
 
-  if (endAspect > currentAspect) {
-    const newSh = sw / endAspect;
-    const newSy = (sh - newSh) / 2;
-    return { sw, sh: newSh, sx: 0, sy: newSy };
-  }
-
-  const newSw = sh * endAspect;
-  const newSx = (sw - newSw) / 2;
-  return { sh, sw: newSw, sx: newSx, sy: 0 };
-}
-
-export function resize(data: ImageData, opts: BitmapResizeOptions): ImageData {
-  let sx = 0;
-  let sy = 0;
-  let sw = data.width;
-  let sh = data.height;
+export async function resize(data: ImageData, opts: WorkerResizeOptions): Promise<ImageData> {
+  // let sx = 0;
+  // let sy = 0;
+  const sw = opts.width;
+  const sh = opts.height;
 
   if (opts.fitMethod === 'contain') {
-    ({ sx, sy, sw, sh } = getContainOffsets(sw, sh, opts.width, opts.height));
+    throw Error('Not implemented');
+    // ({ sx, sy, sw, sh } = getContainOffsets(sw, sh, opts.width, opts.height));
   }
 
-  return nativeResize(
-    data, sx, sy, sw, sh, opts.width, opts.height,
-    opts.method.slice('browser-'.length) as NativeResizeMethod,
+  // @ts-ignore
+  await wasm_bindgen(wasmUrl);
+
+  const result = wasm_bindgen.resize(
+    new Uint8Array(data.data.buffer), data.width, data.height, sw, sh, 4,
   );
-}
-
-export function vectorResize(data: HTMLImageElement, opts: VectorResizeOptions): ImageData {
-  let sx = 0;
-  let sy = 0;
-  let sw = data.width;
-  let sh = data.height;
-
-  if (opts.fitMethod === 'contain') {
-    ({ sx, sy, sw, sh } = getContainOffsets(sw, sh, opts.width, opts.height));
-  }
-
-  return drawableToImageData(data, {
-    sx, sy, sw, sh,
-    width: opts.width, height: opts.height,
-  });
+  return new ImageData(new Uint8ClampedArray(result.buffer), sw, sh);
 }

@@ -1,11 +1,11 @@
 import webp_dec, { WebPModule } from '../../../codecs/webp_dec/webp_dec';
 import wasmUrl from '../../../codecs/webp_dec/webp_dec.wasm';
-import { initWasmModule } from '../util';
+import { initEmscriptenModule } from '../util';
 
 let emscriptenModule: Promise<WebPModule>;
 
 export async function decode(data: ArrayBuffer): Promise<ImageData> {
-  if (!emscriptenModule) emscriptenModule = initWasmModule(webp_dec, wasmUrl);
+  if (!emscriptenModule) emscriptenModule = initEmscriptenModule(webp_dec, wasmUrl);
 
   const module = await emscriptenModule;
   const rawImage = module.decode(data);

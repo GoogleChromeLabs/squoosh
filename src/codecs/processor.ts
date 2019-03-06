@@ -6,8 +6,8 @@ import { EncodeOptions as OptiPNGEncoderOptions } from './optipng/encoder-meta';
 import { EncodeOptions as WebPEncoderOptions } from './webp/encoder-meta';
 import { EncodeOptions as BrowserJPEGOptions } from './browser-jpeg/encoder-meta';
 import { EncodeOptions as BrowserWebpEncodeOptions } from './browser-webp/encoder-meta';
-import { BitmapResizeOptions, VectorResizeOptions } from './resize/processor-meta';
-import { resize, vectorResize } from './resize/processor';
+import { BrowserResizeOptions, VectorResizeOptions } from './resize/processor-meta';
+import { browserResize, vectorResize } from './resize/processor-sync';
 import * as browserBMP from './browser-bmp/encoder';
 import * as browserPNG from './browser-png/encoder';
 import * as browserJPEG from './browser-jpeg/encoder';
@@ -131,6 +131,13 @@ export default class Processor {
   }
 
   @Processor._processingJob({ needsWorker: true })
+  workerResize(
+    data: ImageData, opts: import('./resize/processor-meta').WorkerResizeOptions,
+  ): Promise<ImageData> {
+    return this._workerApi!.resize(data, opts);
+  }
+
+  @Processor._processingJob({ needsWorker: true })
   mozjpegEncode(
     data: ImageData, opts: MozJPEGEncoderOptions,
   ): Promise<ArrayBuffer> {
@@ -202,9 +209,9 @@ export default class Processor {
 
   // Synchronous jobs
 
-  resize(data: ImageData, opts: BitmapResizeOptions) {
+  resize(data: ImageData, opts: BrowserResizeOptions) {
     this.abortCurrent();
-    return resize(data, opts);
+    return browserResize(data, opts);
   }
 
   vectorResize(data: HTMLImageElement, opts: VectorResizeOptions) {

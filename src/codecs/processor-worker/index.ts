@@ -28,6 +28,16 @@ async function rotate(
   return rotate(data, opts);
 }
 
+async function resize(
+  data: ImageData, opts: import('../resize/processor-meta').WorkerResizeOptions,
+): Promise<ImageData> {
+  const { resize } = await import(
+    /* webpackChunkName: "process-rotate" */
+    '../resize/processor');
+
+  return resize(data, opts);
+}
+
 async function optiPngEncode(
   data: BufferSource, options: import('../optipng/encoder-meta').EncodeOptions,
 ): Promise<ArrayBuffer> {
@@ -53,7 +63,7 @@ async function webpDecode(data: ArrayBuffer): Promise<ImageData> {
   return decode(data);
 }
 
-const exports = { mozjpegEncode, quantize, rotate, optiPngEncode, webpEncode, webpDecode };
+const exports = { mozjpegEncode, quantize, rotate, resize, optiPngEncode, webpEncode, webpDecode };
 export type ProcessorWorkerApi = typeof exports;
 
 expose(exports, self);
