@@ -30,11 +30,10 @@ pub fn resize(
     typ_idx: usize,
 ) -> Vec<u8> {
     let typ = match typ_idx {
-        0 => Type::Point,
-        1 => Type::Triangle,
-        2 => Type::Catrom,
-        3 => Type::Mitchell,
-        4 => Type::Lanczos3,
+        0 => Type::Triangle,
+        1 => Type::Catrom,
+        2 => Type::Mitchell,
+        3 => Type::Lanczos3,
         _ => panic!("Nope"),
     };
     let num_output_pixels = output_width * output_height;

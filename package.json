@@ -6,7 +6,7 @@
   "scripts": {
     "start": "webpack-dev-server --host 0.0.0.0 --hot",
     "build": "webpack -p",
-    "lint": "tslint -c tslint.json  -p tsconfig.json -t verbose 'src/**/*.{ts,tsx,js,jsx}'",
+    "lint": "tslint -c tslint.json  -p tsconfig.json -t verbose",
     "lintfix": "tslint -c tslint.json -p tsconfig.json -t verbose --fix 'src/**/*.{ts,tsx,js,jsx}'",
     "sizereport": "node config/size-report.js"
   },

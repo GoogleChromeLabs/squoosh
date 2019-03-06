@@ -1,26 +1,50 @@
 import wasmUrl from '../../../codecs/resize/pkg/resize_bg.wasm';
 import '../../../codecs/resize/pkg/resize';
 import { WorkerResizeOptions } from './processor-meta';
-// import { getContainOffsets } from './util';
+import { getContainOffsets } from './util';
 
-declare var wasm_bindgen: { resize: typeof import('../../../codecs/resize/pkg/resize').resize };
+interface WasmBindgenExports {
+  resize: typeof import('../../../codecs/resize/pkg/resize').resize;
+}
 
-export async function resize(data: ImageData, opts: WorkerResizeOptions): Promise<ImageData> {
-  // let sx = 0;
-  // let sy = 0;
-  const sw = opts.width;
-  const sh = opts.height;
+type WasmBindgen = ((url: string) => Promise<void>) & WasmBindgenExports;
 
-  if (opts.fitMethod === 'contain') {
-    throw Error('Not implemented');
-    // ({ sx, sy, sw, sh } = getContainOffsets(sw, sh, opts.width, opts.height));
+declare var wasm_bindgen: WasmBindgen;
+
+function crop(data: ImageData, sx: number, sy: number, sw: number, sh: number): ImageData {
+  const inputPixels = new Uint32Array(data.data.buffer);
+
+  // Copy within the same buffer for speed and memory efficiency.
+  for (let y = 0; y < sh; y += 1) {
+    const start = ((y + sy) * data.width) + sx;
+    inputPixels.copyWithin(y * sw, start, start + sw);
   }
 
-  // @ts-ignore
+  return new ImageData(
+    new Uint8ClampedArray(inputPixels.buffer.slice(0, sw * sh * 4)),
+    sw, sh,
+  );
+}
+
+/** Resize methods by index */
+const resizeMethods: WorkerResizeOptions['method'][] = [
+  'triangle', 'catrom', 'mitchell', 'lanczos3',
+];
+
+export async function resize(data: ImageData, opts: WorkerResizeOptions): Promise<ImageData> {
+  let input = data;
+
+  if (opts.fitMethod === 'contain') {
+    const { sx, sy, sw, sh } = getContainOffsets(data.width, data.height, opts.width, opts.height);
+    input = crop(input, Math.round(sx), Math.round(sy), Math.round(sw), Math.round(sh));
+  }
+
   await wasm_bindgen(wasmUrl);
 
   const result = wasm_bindgen.resize(
-    new Uint8Array(data.data.buffer), data.width, data.height, sw, sh, 4,
+    new Uint8Array(input.data.buffer), input.width, input.height, opts.width, opts.height,
+    resizeMethods.indexOf(opts.method),
   );
-  return new ImageData(new Uint8ClampedArray(result.buffer), sw, sh);
+
+  return new ImageData(new Uint8ClampedArray(result.buffer), opts.width, opts.height);
 }
