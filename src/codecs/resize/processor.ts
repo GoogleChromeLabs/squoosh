@@ -11,6 +11,8 @@ type WasmBindgen = ((url: string) => Promise<void>) & WasmBindgenExports;
 
 declare var wasm_bindgen: WasmBindgen;
 
+const ready = wasm_bindgen(wasmUrl);
+
 function crop(data: ImageData, sx: number, sy: number, sw: number, sh: number): ImageData {
   const inputPixels = new Uint32Array(data.data.buffer);
 
@@ -39,7 +41,7 @@ export async function resize(data: ImageData, opts: WorkerResizeOptions): Promis
     input = crop(input, Math.round(sx), Math.round(sy), Math.round(sw), Math.round(sh));
   }
 
-  await wasm_bindgen(wasmUrl);
+  await ready;
 
   const result = wasm_bindgen.resize(
     new Uint8Array(input.data.buffer), input.width, input.height, opts.width, opts.height,
