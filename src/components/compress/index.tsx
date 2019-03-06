@@ -31,7 +31,11 @@ import {
 import { decodeImage } from '../../codecs/decoders';
 import { cleanMerge, cleanSet } from '../../lib/clean-modify';
 import Processor from '../../codecs/processor';
-import { VectorResizeOptions, BitmapResizeOptions } from '../../codecs/resize/processor-meta';
+import {
+    VectorResizeOptions,
+    BrowserResizeOptions,
+    WorkerResizeOptions,
+} from '../../codecs/resize/processor-meta';
 import './custom-els/MultiPanel';
 import Results from '../results';
 import { ExpandIcon, CopyAcrossIconProps } from '../../lib/icons';
@@ -112,8 +116,10 @@ async function preprocessImage(
         source.vectorImage,
         preprocessData.resize as VectorResizeOptions,
       );
+    } else if (preprocessData.resize.method.startsWith('browser-')) {
+      result = processor.resize(result, preprocessData.resize as BrowserResizeOptions);
     } else {
-      result = processor.resize(result, preprocessData.resize as BitmapResizeOptions);
+      result = await processor.workerResize(result, preprocessData.resize as WorkerResizeOptions);
     }
   }
   if (preprocessData.quantizer.enabled) {
@@ -441,7 +447,7 @@ export default class Compress extends Component<Props, State> {
         newState = cleanMerge(newState, `sides.${i}.latestSettings.preprocessorState.resize`, {
           width: processed.width,
           height: processed.height,
-          method: vectorImage ? 'vector' : 'browser-high',
+          method: vectorImage ? 'vector' : 'lanczos3',
         });
       }
 

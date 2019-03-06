@@ -1,14 +1,19 @@
-type BitmapResizeMethods = 'browser-pixelated' | 'browser-low' | 'browser-medium' | 'browser-high';
+type BrowserResizeMethods = 'browser-pixelated' | 'browser-low' | 'browser-medium' | 'browser-high';
+type WorkerResizeMethods = 'point' | 'triangle' | 'catrom' | 'mitchell' | 'lanczos3';
 
 export interface ResizeOptions {
   width: number;
   height: number;
-  method: 'vector' | BitmapResizeMethods;
+  method: 'vector' | BrowserResizeMethods | WorkerResizeMethods;
   fitMethod: 'stretch' | 'contain';
 }
 
-export interface BitmapResizeOptions extends ResizeOptions {
-  method: BitmapResizeMethods;
+export interface BrowserResizeOptions extends ResizeOptions {
+  method: BrowserResizeMethods;
+}
+
+export interface WorkerResizeOptions extends ResizeOptions {
+  method: WorkerResizeMethods;
 }
 
 export interface VectorResizeOptions extends ResizeOptions {
@@ -21,6 +26,6 @@ export const defaultOptions: ResizeOptions = {
   width: 1,
   height: 1,
   // This will be set to 'vector' if the input is SVG.
-  method: 'browser-high',
+  method: 'lanczos3',
   fitMethod: 'stretch',
 };
