@@ -32,7 +32,7 @@ async function resize(
   data: ImageData, opts: import('../resize/processor-meta').WorkerResizeOptions,
 ): Promise<ImageData> {
   const { resize } = await import(
-    /* webpackChunkName: "process-rotate" */
+    /* webpackChunkName: "process-resize" */
     '../resize/processor');
 
   return resize(data, opts);
