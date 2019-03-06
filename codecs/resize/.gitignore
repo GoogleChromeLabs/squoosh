@@ -2,3 +2,4 @@
 target
 Cargo.lock
 bin/
+pkg/README.md
