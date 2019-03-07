@@ -26,7 +26,7 @@ const VERSION = readJson('./package.json').version;
 
 module.exports = async function (_, env) {
   const isProd = env.mode === 'production';
-  const isCI = true; // process.env.CI === 'true',
+  const isCI = process.env.CI === 'true',
   const nodeModules = path.join(__dirname, 'node_modules');
   const componentStyleDirs = [
     path.join(__dirname, 'src/components'),
