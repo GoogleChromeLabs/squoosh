@@ -9,6 +9,7 @@ const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const HtmlPlugin = require('html-webpack-plugin');
 const ScriptExtHtmlPlugin = require('script-ext-html-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
+const PacktrackerPlugin = require('@packtracker/webpack-plugin')
 const WatchTimestampsPlugin = require('./config/watch-timestamps-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const WorkerPlugin = require('worker-plugin');
@@ -25,6 +26,7 @@ const VERSION = readJson('./package.json').version;
 
 module.exports = async function (_, env) {
   const isProd = env.mode === 'production';
+  const isCI = true; // process.env.CI === 'true',
   const nodeModules = path.join(__dirname, 'node_modules');
   const componentStyleDirs = [
     path.join(__dirname, 'src/components'),
@@ -295,6 +297,12 @@ module.exports = async function (_, env) {
         inlineFonts: true,
         // (and don't lazy load them):
         preloadFonts: false
+      }),
+
+      isCI && new PacktrackerPlugin({
+        upload: true,
+        branch: process.env.TRAVIS_PULL_REQUEST_BRANCH || process.env.TRAVIS_BRANCH,
+        commit: process.env.TRAVIS_PULL_REQUEST_SHA || process.env.TRAVIS_COMMIT,
       })
     ].filter(Boolean), // Filter out any falsey plugin array entries.
 
