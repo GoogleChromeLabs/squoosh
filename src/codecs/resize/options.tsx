@@ -17,11 +17,13 @@ interface Props {
 
 interface State {
   maintainAspect: boolean;
+  premultiply: boolean;
 }
 
 export default class ResizerOptions extends Component<Props, State> {
   state: State = {
     maintainAspect: true,
+    premultiply: true,
   };
 
   form?: HTMLFormElement;
@@ -38,6 +40,7 @@ export default class ResizerOptions extends Component<Props, State> {
       width: inputFieldValueAsNumber(width),
       height: inputFieldValueAsNumber(height),
       method: form.resizeMethod.value,
+      premultiply: form.premultiply.checked,
       // Casting, as the formfield only returns the correct values.
       fitMethod: inputFieldValue(form.fitMethod, options.fitMethod) as ResizeOptions['fitMethod'],
     };
@@ -144,6 +147,15 @@ export default class ResizerOptions extends Component<Props, State> {
             </label>
           }
         </Expander>
+        <label class={style.optionInputFirst}>
+          <Checkbox
+            name="premultiply"
+            checked={options.premultiply}
+            onChange={this.onChange}
+          />
+          Premultiply alpha channel
+        </label>
+
       </form>
     );
   }

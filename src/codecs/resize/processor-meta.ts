@@ -6,6 +6,7 @@ export interface ResizeOptions {
   height: number;
   method: 'vector' | BrowserResizeMethods | WorkerResizeMethods;
   fitMethod: 'stretch' | 'contain';
+  premultiply: boolean;
 }
 
 export interface BrowserResizeOptions extends ResizeOptions {
@@ -28,4 +29,5 @@ export const defaultOptions: ResizeOptions = {
   // This will be set to 'vector' if the input is SVG.
   method: 'lanczos3',
   fitMethod: 'stretch',
+  premultiply: true,
 };
