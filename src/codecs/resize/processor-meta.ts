@@ -17,6 +17,7 @@ export interface BrowserResizeOptions extends ResizeOptionsCommon {
 export interface WorkerResizeOptions extends ResizeOptionsCommon {
   method: WorkerResizeMethods;
   premultiply: boolean;
+  colorspace: boolean;
 }
 
 export interface VectorResizeOptions extends ResizeOptionsCommon {
@@ -41,4 +42,5 @@ export const defaultOptions: ResizeOptions = {
   method: 'lanczos3',
   fitMethod: 'stretch',
   premultiply: true,
+  colorspace: false,
 };

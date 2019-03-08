@@ -20,12 +20,14 @@ interface Props {
 interface State {
   maintainAspect: boolean;
   premultiply: boolean;
+  colorspace: boolean;
 }
 
 export default class ResizerOptions extends Component<Props, State> {
   state: State = {
     maintainAspect: true,
     premultiply: true,
+    colorspace: false,
   };
 
   form?: HTMLFormElement;
@@ -43,6 +45,7 @@ export default class ResizerOptions extends Component<Props, State> {
       height: inputFieldValueAsNumber(height),
       method: form.resizeMethod.value,
       premultiply: inputFieldChecked(form.premultiply, true),
+      colorspace: inputFieldChecked(form.colorspace, true),
       // Casting, as the formfield only returns the correct values.
       fitMethod: inputFieldValue(form.fitMethod, options.fitMethod) as ResizeOptions['fitMethod'],
     };
@@ -135,6 +138,17 @@ export default class ResizerOptions extends Component<Props, State> {
                 onChange={this.onChange}
               />
               Premultiply alpha channel
+            </label>
+            : null
+          }
+          {isWorkerOptions(options) ?
+            <label class={style.optionInputFirst}>
+              <Checkbox
+                name="colorspace"
+                checked={options.colorspace}
+                onChange={this.onChange}
+              />
+              Convert from sRGB to RGB before resizing
             </label>
             : null
           }
