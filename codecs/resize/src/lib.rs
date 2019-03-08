@@ -22,14 +22,16 @@ cfg_if! {
     }
 }
 
+include!("./lut.inc");
+
 // If `with_space_conversion` is true, this function returns 2 functions that
 // convert from sRGB to linear RGB and vice versa. If `with_space_conversion` is
 // false, the 2 functions returned do nothing.
 fn converter_funcs(with_space_conversion: bool) -> ((fn(u8) -> f32), (fn(f32) -> u8)) {
     if with_space_conversion {
         (
-            |v| srgb::srgb_to_linear((v as f32) / 255.0) * 255.0,
-            |v| (srgb::linear_to_srgb(v / 255.0) * 255.0) as u8,
+            |v| SRGB_TO_LINEAR_LUT[v as usize] * 255.0,
+            |v| (LINEAR_TO_SRGB_LUT[v as usize] * 255.0) as u8,
         )
     } else {
         (|v| v as f32, |v| v as u8)
