@@ -1,24 +1,35 @@
 type BrowserResizeMethods = 'browser-pixelated' | 'browser-low' | 'browser-medium' | 'browser-high';
-type WorkerResizeMethods = 'point' | 'triangle' | 'catrom' | 'mitchell' | 'lanczos3';
+type WorkerResizeMethods = 'triangle' | 'catrom' | 'mitchell' | 'lanczos3';
+const workerResizeMethods: WorkerResizeMethods[] = ['triangle', 'catrom', 'mitchell', 'lanczos3'];
 
-export interface ResizeOptions {
+export type ResizeOptions = BrowserResizeOptions | WorkerResizeOptions | VectorResizeOptions;
+
+export interface ResizeOptionsCommon {
   width: number;
   height: number;
-  method: 'vector' | BrowserResizeMethods | WorkerResizeMethods;
   fitMethod: 'stretch' | 'contain';
-  premultiply: boolean;
 }
 
-export interface BrowserResizeOptions extends ResizeOptions {
+export interface BrowserResizeOptions extends ResizeOptionsCommon {
   method: BrowserResizeMethods;
 }
 
-export interface WorkerResizeOptions extends ResizeOptions {
+export interface WorkerResizeOptions extends ResizeOptionsCommon {
   method: WorkerResizeMethods;
+  premultiply: boolean;
 }
 
-export interface VectorResizeOptions extends ResizeOptions {
+export interface VectorResizeOptions extends ResizeOptionsCommon {
   method: 'vector';
+}
+
+/**
+ * Return whether a set of options are worker resize options.
+ *
+ * @param opts
+ */
+export function isWorkerOptions(opts: ResizeOptions): opts is WorkerResizeOptions {
+  return (workerResizeMethods as string[]).includes(opts.method);
 }
 
 export const defaultOptions: ResizeOptions = {
