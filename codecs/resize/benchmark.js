@@ -4,7 +4,7 @@
 // [1]: https://github.com/GoogleChromeLabs/jsvu
 
 self = global = this;
-load('./pkg/resize.js');
+load("./pkg/resize.js");
 
 async function init() {
   //  Adjustable constants.
@@ -19,23 +19,35 @@ async function init() {
 
   const module = await WebAssembly.compile(readbuffer("./pkg/resize_bg.wasm"));
   await wasm_bindgen(module);
-  [false, true].forEach(premulti => {
-    print(`\npremultiplication: ${premulti}`);
-    print(`==============================`);
-    for (let i = 0; i < 100; i++) {
-      const start = Date.now();
-      wasm_bindgen.resize(imageBuffer, inputDimensions, inputDimensions, outputDimensions, outputDimensions, algorithm, premulti);
-      iterations[i] = Date.now() - start;
+  [[false, false], [true, false], [false, true], [true, true]].forEach(
+    opts => {
+      print(`\npremultiplication: ${opts[0]}`);
+      print(`color space conversion: ${opts[1]}`);
+      print(`==============================`);
+      for (let i = 0; i < 100; i++) {
+        const start = Date.now();
+        wasm_bindgen.resize(
+          imageBuffer,
+          inputDimensions,
+          inputDimensions,
+          outputDimensions,
+          outputDimensions,
+          algorithm,
+          ...opts
+        );
+        iterations[i] = Date.now() - start;
+      }
+      const average =
+        iterations.reduce((sum, c) => sum + c) / iterations.length;
+      const stddev = Math.sqrt(
+        iterations
+          .map(i => Math.pow(i - average, 2))
+          .reduce((sum, c) => sum + c) / iterations.length
+      );
+      print(`n = ${iterations.length}`);
+      print(`Average: ${average}`);
+      print(`StdDev: ${stddev}`);
     }
-    const average = iterations.reduce((sum, c) => sum + c) / iterations.length;
-    const stddev = Math.sqrt(
-      iterations
-        .map(i => Math.pow(i - average, 2))
-        .reduce((sum, c) => sum + c) / iterations.length
-    );
-    print(`n = ${iterations.length}`);
-    print(`Average: ${average}`);
-    print(`StdDev: ${stddev}`);
-  });
+  );
 }
 init().catch(e => console.error(e, e.stack));
