@@ -19,6 +19,20 @@ cfg_if! {
     }
 }
 
+trait Clamp: std::cmp::PartialOrd + Sized {
+    fn clamp(self, min: Self, max: Self) -> Self {
+        if self.lt(&min) {
+            min
+        } else if self.gt(&max) {
+            max
+        } else {
+            self
+        }
+    }
+}
+
+impl Clamp for f32 {}
+
 // If `with_space_conversion` is true, this function returns 2 functions that
 // convert from sRGB to linear RGB and vice versa. If `with_space_conversion` is
 // false, the 2 functions returned do nothing.
@@ -27,11 +41,11 @@ fn converter_funcs(with_space_conversion: bool) -> ((fn(u8) -> f32), (fn(f32) ->
         (
             |v| {
                 let x = (v as f32) / 255.0;
-                (x + 0.055 / 1.055).powf(2.4) * 255.0
+                ((x + 0.055 / 1.055).powf(2.4) * 255.0).clamp(0.0, 255.0)
             },
             |v| {
                 let x = v / 255.0;
-                ((1.055 * x.powf(1.0 / 2.4) - 0.055) * 255.0) as u8
+                ((1.055 * x.powf(1.0 / 2.4) - 0.055) * 255.0).clamp(0.0, 255.0) as u8
             },
         )
     } else {
@@ -47,7 +61,10 @@ fn alpha_multiplier_funcs(
     with_alpha_premultiplication: bool,
 ) -> ((fn(f32, f32) -> u8), (fn(u8, u8) -> f32)) {
     if with_alpha_premultiplication {
-        (|v, a| (v * a / 255.0) as u8, |v, a| (v as f32) * 255.0 / (a as f32))
+        (
+            |v, a| (v * a / 255.0) as u8,
+            |v, a| (v as f32) * 255.0 / (a as f32),
+        )
     } else {
         (|v, _a| v as u8, |v, _a| v as f32)
     }
