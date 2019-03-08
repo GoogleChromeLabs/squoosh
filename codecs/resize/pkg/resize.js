@@ -46,13 +46,14 @@
     * @param {number} arg3
     * @param {number} arg4
     * @param {number} arg5
+    * @param {boolean} arg6
     * @returns {Uint8Array}
     */
-    __exports.resize = function(arg0, arg1, arg2, arg3, arg4, arg5) {
+    __exports.resize = function(arg0, arg1, arg2, arg3, arg4, arg5, arg6) {
         const ptr0 = passArray8ToWasm(arg0);
         const len0 = WASM_VECTOR_LEN;
         const retptr = globalArgumentPtr();
-        wasm.resize(retptr, ptr0, len0, arg1, arg2, arg3, arg4, arg5);
+        wasm.resize(retptr, ptr0, len0, arg1, arg2, arg3, arg4, arg5, arg6);
         const mem = getUint32Memory();
         const rustptr = mem[retptr / 4];
         const rustlen = mem[retptr / 4 + 1];

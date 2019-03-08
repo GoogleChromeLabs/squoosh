@@ -6,6 +6,7 @@
 * @param {number} arg3 
 * @param {number} arg4 
 * @param {number} arg5 
+* @param {boolean} arg6 
 * @returns {Uint8Array} 
 */
-export function resize(arg0: Uint8Array, arg1: number, arg2: number, arg3: number, arg4: number, arg5: number): Uint8Array;
+export function resize(arg0: Uint8Array, arg1: number, arg2: number, arg3: number, arg4: number, arg5: number, arg6: boolean): Uint8Array;

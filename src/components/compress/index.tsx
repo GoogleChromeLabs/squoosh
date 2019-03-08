@@ -18,23 +18,13 @@ import * as browserTIFF from '../../codecs/browser-tiff/encoder-meta';
 import * as browserJP2 from '../../codecs/browser-jp2/encoder-meta';
 import * as browserBMP from '../../codecs/browser-bmp/encoder-meta';
 import * as browserPDF from '../../codecs/browser-pdf/encoder-meta';
-import {
-    EncoderState,
-    EncoderType,
-    EncoderOptions,
-    encoderMap,
-} from '../../codecs/encoders';
-import {
-  PreprocessorState,
-  defaultPreprocessorState,
-} from '../../codecs/preprocessors';
+import { EncoderState, EncoderType, EncoderOptions, encoderMap } from '../../codecs/encoders';
+import { PreprocessorState, defaultPreprocessorState } from '../../codecs/preprocessors';
 import { decodeImage } from '../../codecs/decoders';
 import { cleanMerge, cleanSet } from '../../lib/clean-modify';
 import Processor from '../../codecs/processor';
 import {
-    VectorResizeOptions,
-    BrowserResizeOptions,
-    WorkerResizeOptions,
+  BrowserResizeOptions, isWorkerOptions as isWorkerResizeOptions,
 } from '../../codecs/resize/processor-meta';
 import './custom-els/MultiPanel';
 import Results from '../results';
@@ -114,12 +104,12 @@ async function preprocessImage(
     if (preprocessData.resize.method === 'vector' && source.vectorImage) {
       result = processor.vectorResize(
         source.vectorImage,
-        preprocessData.resize as VectorResizeOptions,
+        preprocessData.resize,
       );
-    } else if (preprocessData.resize.method.startsWith('browser-')) {
-      result = processor.resize(result, preprocessData.resize as BrowserResizeOptions);
+    } else if (isWorkerResizeOptions(preprocessData.resize)) {
+      result = await processor.workerResize(result, preprocessData.resize);
     } else {
-      result = await processor.workerResize(result, preprocessData.resize as WorkerResizeOptions);
+      result = processor.resize(result, preprocessData.resize as BrowserResizeOptions);
     }
   }
   if (preprocessData.quantizer.enabled) {
