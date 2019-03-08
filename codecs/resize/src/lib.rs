@@ -9,6 +9,9 @@ use resize::Pixel::RGBA;
 use resize::Type;
 use wasm_bindgen::prelude::*;
 
+mod srgb;
+use srgb::Clamp;
+
 cfg_if! {
     // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
     // allocator.
@@ -19,42 +22,14 @@ cfg_if! {
     }
 }
 
-trait Clamp: std::cmp::PartialOrd + Sized {
-    fn clamp(self, min: Self, max: Self) -> Self {
-        if self.lt(&min) {
-            min
-        } else if self.gt(&max) {
-            max
-        } else {
-            self
-        }
-    }
-}
-
-impl Clamp for f32 {}
-
 // If `with_space_conversion` is true, this function returns 2 functions that
 // convert from sRGB to linear RGB and vice versa. If `with_space_conversion` is
 // false, the 2 functions returned do nothing.
 fn converter_funcs(with_space_conversion: bool) -> ((fn(u8) -> f32), (fn(f32) -> u8)) {
     if with_space_conversion {
         (
-            |v| {
-                let x = (v as f32) / 255.0;
-                if x < 0.04045 {
-                  (x / 12.92) * 255.0
-                } else {
-                  (((x + 0.055) / 1.055).powf(2.4) * 255.0).clamp(0.0, 255.0)
-                }
-            },
-            |v| {
-                let x = v / 255.0;
-                if x < 0.0031308 {
-                  ((x * 12.92) * 255.0) as u8
-                } else {
-                  ((1.055 * x.powf(1.0 / 2.4) - 0.055) * 255.0).clamp(0.0, 255.0) as u8
-                }
-            },
+            |v| srgb::srgb_to_linear((v as f32) / 255.0) * 255.0,
+            |v| (srgb::linear_to_srgb(v / 255.0) * 255.0) as u8,
         )
     } else {
         (|v| v as f32, |v| v as u8)
@@ -67,11 +42,11 @@ fn converter_funcs(with_space_conversion: bool) -> ((fn(u8) -> f32), (fn(f32) ->
 // false, the functions just return the channel value.
 fn alpha_multiplier_funcs(
     with_alpha_premultiplication: bool,
-) -> ((fn(f32, f32) -> u8), (fn(u8, u8) -> f32)) {
+) -> ((fn(f32, u8) -> u8), (fn(u8, u8) -> f32)) {
     if with_alpha_premultiplication {
         (
-            |v, a| (v * a / 255.0) as u8,
-            |v, a| ((v as f32) * 255.0 / (a as f32)).clamp(0.0, 255.0),
+            |v, a| (v * (a as f32) / 255.0) as u8,
+            |v, a| (v as f32) * 255.0 / (a as f32).clamp(0.0, 255.0),
         )
     } else {
         (|v, _a| v as u8, |v, _a| v as f32)
@@ -108,10 +83,8 @@ pub fn resize(
     if premultiply || color_space_conversion {
         for i in 0..num_input_pixels {
             for j in 0..3 {
-                input_image[4 * i + j] = premultiplier(
-                    to_linear(input_image[4 * i + j]),
-                    input_image[4 * i + 3].into(),
-                );
+                input_image[4 * i + j] =
+                    premultiplier(to_linear(input_image[4 * i + j]), input_image[4 * i + 3]);
             }
         }
     }
