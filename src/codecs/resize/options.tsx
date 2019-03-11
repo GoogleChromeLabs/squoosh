@@ -148,7 +148,7 @@ export default class ResizerOptions extends Component<Props, State> {
                 checked={options.colorspace}
                 onChange={this.onChange}
               />
-              Convert from sRGB to RGB before resizing
+              Linear RGB
             </label>
             : null
           }
