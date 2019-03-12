@@ -45,7 +45,7 @@ export async function resize(data: ImageData, opts: WorkerResizeOptions): Promis
 
   const result = wasm_bindgen.resize(
     new Uint8Array(input.data.buffer), input.width, input.height, opts.width, opts.height,
-    resizeMethods.indexOf(opts.method), opts.premultiply, opts.colorspace,
+    resizeMethods.indexOf(opts.method), opts.premultiply, opts.linearRGB,
   );
 
   return new ImageData(new Uint8ClampedArray(result.buffer), opts.width, opts.height);

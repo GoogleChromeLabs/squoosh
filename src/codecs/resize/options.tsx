@@ -19,15 +19,11 @@ interface Props {
 
 interface State {
   maintainAspect: boolean;
-  premultiply: boolean;
-  colorspace: boolean;
 }
 
 export default class ResizerOptions extends Component<Props, State> {
   state: State = {
     maintainAspect: true,
-    premultiply: true,
-    colorspace: false,
   };
 
   form?: HTMLFormElement;
@@ -45,7 +41,7 @@ export default class ResizerOptions extends Component<Props, State> {
       height: inputFieldValueAsNumber(height),
       method: form.resizeMethod.value,
       premultiply: inputFieldChecked(form.premultiply, true),
-      colorspace: inputFieldChecked(form.colorspace, true),
+      linearRGB: inputFieldChecked(form.linearRGB, true),
       // Casting, as the formfield only returns the correct values.
       fitMethod: inputFieldValue(form.fitMethod, options.fitMethod) as ResizeOptions['fitMethod'],
     };
@@ -98,7 +94,7 @@ export default class ResizerOptions extends Component<Props, State> {
             <option value="lanczos3">Lanczos3</option>
             <option value="mitchell">Mitchell</option>
             <option value="catrom">Catmull-Rom</option>
-            <option value="triangle">Triangle</option>
+            <option value="triangle">Triangle (bilinear)</option>
             <option value="browser-pixelated">Browser pixelated</option>
             <option value="browser-low">Browser low quality</option>
             <option value="browser-medium">Browser medium quality</option>
@@ -144,8 +140,8 @@ export default class ResizerOptions extends Component<Props, State> {
           {isWorkerOptions(options) ?
             <label class={style.optionInputFirst}>
               <Checkbox
-                name="colorspace"
-                checked={options.colorspace}
+                name="linearRGB"
+                checked={options.linearRGB}
                 onChange={this.onChange}
               />
               Linear RGB
