@@ -1,7 +1,11 @@
+<img align="left" width="230px" src="https://squoosh.app/assets/icon-large.png" /><br>
+
 # [Squoosh]!
 
 [Squoosh] is an image compression web app that allows you to dive into the advanced options provided
 by various image compressors.
+
+<br><br><br>
 
 # Privacy
 
