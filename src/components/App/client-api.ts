@@ -9,6 +9,11 @@ export interface ReadyMessage {
 }
 
 export function exposeAPI(app: App) {
+  if (window === top) {
+    // Someone opened Squoosh in a window rather than an iframe.
+    // This can be deceiving and we won’t allow that.
+    return;
+  }
   self.parent.postMessage({ type: 'READY', version: MAJOR_VERSION }, '*');
   self.addEventListener('message', (event: MessageEvent) => {
     if (event.data !== 'READY?') {
