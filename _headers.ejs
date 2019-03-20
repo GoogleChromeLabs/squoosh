@@ -1,6 +1,7 @@
 # Long-term cache by default.
 /*
   Cache-Control: max-age=31536000
+  Access-Control-Allow-Origin: *
 
 # And here are the exceptions:
 /
@@ -9,9 +10,8 @@
 /serviceworker.js
   Cache-Control: no-cache
 
-# Module imports need CORS, so we enable it for the SDK file.
-/squoosh.mjs
-  Access-Control-Allow-Origin: *
+/sdk.mjs
+  Cache-Control: no-cache
 
 /manifest.json
   Cache-Control: must-revalidate, max-age=3600

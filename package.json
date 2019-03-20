@@ -4,7 +4,7 @@
   "version": "1.6.0",
   "license": "apache-2.0",
   "scripts": {
-    "build:sdk": "microbundle --compress -f es -o build -i src/sdk.ts",
+    "build:sdk": "microbundle --compress -f es -o build/sdk.mjs -i src/sdk.ts",
     "start": "webpack-dev-server --host 0.0.0.0 --hot",
     "build": "webpack -p && npm run build:sdk",
     "lint": "tslint -c tslint.json -p tsconfig.json -t verbose 'src/**/*.{ts,tsx,js,jsx}'",

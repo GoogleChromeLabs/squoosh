@@ -48,7 +48,7 @@ export class SquooshStartEvent extends Event {
   }
 }
 
-export enum SquooshSideEventType {
+export const enum SquooshSideEventType {
   DONE = 'squoosh:done',
   ABORT = 'squoosh:abort',
   ERROR = 'squoosh:error',
