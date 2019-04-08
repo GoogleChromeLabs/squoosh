@@ -55,7 +55,7 @@ export default class Intro extends Component<Props, State> {
 
   @bind
   private resetFileInput() {
-    this.fileInput!.value = "";
+    this.fileInput!.value = '';
   }
 
   @bind
