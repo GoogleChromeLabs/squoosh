@@ -61,7 +61,7 @@
     "ts-loader": "5.3.3",
     "tslint": "5.15.0",
     "tslint-config-airbnb": "5.11.1",
-    "tslint-config-semistandard": "7.0.0",
+    "tslint-config-semistandard": "8.0.0",
     "tslint-react": "4.0.0",
     "typed-css-modules": "0.4.2",
     "typescript": "3.4.3",
