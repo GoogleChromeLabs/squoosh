@@ -1,4 +1,4 @@
-import { SnackOptions, SnackShowResult } from '.';
+import SnackBarElement from '.';
 
 declare global {
   namespace JSX {
@@ -7,7 +7,7 @@ declare global {
     }
 
     interface SnackBarAttributes extends HTMLAttributes {
-      showSnackbar?: (options: SnackOptions) => Promise<SnackShowResult>;
+      showSnackbar?: SnackBarElement['showSnackbar'];
     }
   }
 }

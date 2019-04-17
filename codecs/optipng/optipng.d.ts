@@ -1,4 +1,4 @@
-import {EncodeOptions} from "src/codecs/optipng/encoder";
+import { EncodeOptions } from '../../src/codecs/optipng/encoder-meta';
 
 export interface OptiPngModule extends EmscriptenWasm.Module {
   compress(data: BufferSource, opts: EncodeOptions): Uint8Array;
