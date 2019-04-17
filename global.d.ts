@@ -17,7 +17,3 @@ declare namespace JSX {
     decoding?: string;
   }
 }
-
-declare module 'classnames' {
-  export default function classnames(...args: any[]): string;
-}
