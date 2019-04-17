@@ -178,7 +178,7 @@ export default class Options extends Component<Props, State> {
           {encoderSupportMap ?
             <Select value={encoderState.type} onChange={this.onEncoderTypeChange} large>
               {encoders.filter(encoder => encoderSupportMap[encoder.type]).map(encoder => (
-                <option value={encoder.type}>{encoder.label}</option>
+                <option key={encoder.type} value={encoder.type}>{encoder.label}</option>
               ))}
             </Select>
             :

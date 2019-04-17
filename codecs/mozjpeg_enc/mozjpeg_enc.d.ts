@@ -5,4 +5,4 @@ interface MozJPEGModule extends EmscriptenWasm.Module {
   free_result(): void;
 }
 
-export default function(opts: EmscriptenWasm.ModuleOpts): MozJPEGModule;
+export default function (opts: EmscriptenWasm.ModuleOpts): MozJPEGModule;

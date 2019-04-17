@@ -568,6 +568,7 @@ export default class Compress extends Component<Props, State> {
 
     const options = sides.map((side, index) => (
       <Options
+        key={index}
         source={source}
         mobileView={mobileView}
         preprocessorState={side.latestSettings.preprocessorState}
@@ -583,6 +584,7 @@ export default class Compress extends Component<Props, State> {
 
     const results = sides.map((side, index) => (
       <Results
+        key={index}
         downloadUrl={side.downloadUrl}
         imageFile={side.file}
         source={source}

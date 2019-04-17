@@ -5,6 +5,4 @@ export interface OptiPngModule extends EmscriptenWasm.Module {
   free_result(): void;
 }
 
-export default function(opts: EmscriptenWasm.ModuleOpts): OptiPngModule;
-
-
+export default function (opts: EmscriptenWasm.ModuleOpts): OptiPngModule;

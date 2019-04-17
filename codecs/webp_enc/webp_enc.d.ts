@@ -5,5 +5,4 @@ interface WebPModule extends EmscriptenWasm.Module {
   free_result(): void;
 }
 
-
-export default function(opts: EmscriptenWasm.ModuleOpts): WebPModule;
+export default function (opts: EmscriptenWasm.ModuleOpts): WebPModule;
