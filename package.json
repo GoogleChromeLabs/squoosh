@@ -6,6 +6,7 @@
   "scripts": {
     "start": "webpack-dev-server --host 0.0.0.0 --hot",
     "build": "webpack -p",
+    "test": "node test/test.js",
     "lint": "tslint -c tslint.json  -p tsconfig.json -t verbose",
     "lintfix": "tslint -c tslint.json -p tsconfig.json -t verbose --fix 'src/**/*.{ts,tsx,js,jsx}'",
     "sizereport": "node config/size-report.js"
@@ -16,14 +17,15 @@
     }
   },
   "devDependencies": {
+    "@pptr/testrunner": "^0.5.0",
     "@types/node": "10.14.5",
     "@types/pretty-bytes": "5.1.0",
     "@types/webassembly-js-api": "0.0.3",
     "@webcomponents/custom-elements": "1.2.4",
     "@webpack-cli/serve": "0.1.5",
     "assets-webpack-plugin": "3.9.10",
-    "chokidar": "2.1.5",
     "chalk": "2.4.2",
+    "chokidar": "2.1.5",
     "classnames": "2.2.6",
     "clean-webpack-plugin": "1.0.1",
     "comlink": "3.1.1",
@@ -51,10 +53,12 @@
     "prerender-loader": "1.3.0",
     "pretty-bytes": "5.1.0",
     "progress-bar-webpack-plugin": "1.12.1",
+    "puppeteer": "^1.14.0",
     "raw-loader": "2.0.0",
     "readdirp": "3.0.0",
     "sass-loader": "7.1.0",
     "script-ext-html-webpack-plugin": "2.1.3",
+    "serve-handler": "^6.0.0",
     "source-map-loader": "0.2.4",
     "style-loader": "0.23.1",
     "terser-webpack-plugin": "1.2.3",

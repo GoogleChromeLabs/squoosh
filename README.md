@@ -28,4 +28,15 @@ You can run the development server with:
 npm start
 ```
 
+# Tests
+Tests can be run with:
+``sh
+npm test
+``
+
+To run the tests slowed down in headful mode:
+``sh
+HEADLESS=false SLOWMO=500 npm test
+``
+
 [Squoosh]: https://squoosh.app
