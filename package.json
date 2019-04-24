@@ -49,7 +49,7 @@
     "pointer-tracker": "2.0.3",
     "preact": "8.4.2",
     "prerender-loader": "1.3.0",
-    "pretty-bytes": "5.1.0",
+    "pretty-bytes": "5.2.0",
     "progress-bar-webpack-plugin": "1.12.1",
     "raw-loader": "2.0.0",
     "readdirp": "3.0.0",
