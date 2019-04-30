@@ -160,12 +160,16 @@ export default class Output extends Component<Props, State> {
   @bind
   private onCenterViewClick() {
     if (!this.pinchZoomLeft) throw Error('Missing pinch-zoom element');
-    this.pinchZoomLeft.setTransform({
-      allowChangeEvent: true,
-      x: 0,
-      y: 0,
-      scale: 1,
-    });
+    // hacky way to get around "bounds later"
+    // /home/kirill/Documents/squu/src/components/Output/custom-els/PinchZoom/index.ts : 189
+    for (let t = 0; t < 2; t += 1) {
+      this.pinchZoomLeft.setTransform({
+        allowChangeEvent: true,
+        x: 0,
+        y: 0,
+        scale: 1,
+      });
+    }
   }
 
   @bind
