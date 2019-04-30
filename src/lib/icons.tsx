@@ -30,6 +30,12 @@ export const RotateIcon = (props: JSX.HTMLAttributes) => (
   </Icon>
 );
 
+export const CenterIcon = (props: JSX.HTMLAttributes) => (
+  <Icon {...props}>
+    <path d="M15.6 5.5L11 1v3a8 8 0 0 0 0 16v-2a6 6 0 0 1 0-12v4l4.5-4.5zm4.3 5.5a8 8 0 0 0-1.6-3.9L17 8.5c.5.8.9 1.6 1 2.5h2zM13 17.9v2a8 8 0 0 0 3.9-1.6L15.5 17c-.8.5-1.6.9-2.5 1zm3.9-2.4l1.4 1.4A8 8 0 0 0 20 13h-2c-.1.9-.5 1.7-1 2.5z"/>
+  </Icon>
+);
+
 export const AddIcon = (props: JSX.HTMLAttributes) => (
   <Icon {...props}>
     <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>

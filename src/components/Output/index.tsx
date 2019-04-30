@@ -12,6 +12,7 @@ import {
     BackIcon,
     ToggleBackgroundActiveIcon,
     RotateIcon,
+    CenterIcon,
 } from '../../lib/icons';
 import { twoUpHandle } from './custom-els/TwoUp/styles.css';
 import { InputProcessorState } from '../../codecs/input-processors';
@@ -154,6 +155,17 @@ export default class Output extends Component<Props, State> {
     if (!this.pinchZoomLeft) throw Error('Missing pinch-zoom element');
 
     this.pinchZoomLeft.scaleTo(this.state.scale / 1.25, scaleToOpts);
+  }
+
+  @bind
+  private onCenterViewClick() {
+    if (!this.pinchZoomLeft) throw Error('Missing pinch-zoom element');
+    this.pinchZoomLeft.setTransform({
+      allowChangeEvent: true,
+      x: 0,
+      y: 0,
+      scale: 1,
+    });
   }
 
   @bind
@@ -337,6 +349,9 @@ export default class Output extends Component<Props, State> {
             </button>
           </div>
           <div class={style.buttonsNoWrap}>
+            <button class={style.button} onClick={this.onCenterViewClick} title="Center view">
+              <CenterIcon />
+            </button>
             <button class={style.button} onClick={this.onRotateClick} title="Rotate image">
               <RotateIcon />
             </button>
