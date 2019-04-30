@@ -22,8 +22,8 @@
     "@webcomponents/custom-elements": "1.2.4",
     "@webpack-cli/serve": "0.1.5",
     "assets-webpack-plugin": "3.9.10",
-    "chokidar": "2.1.5",
     "chalk": "2.4.2",
+    "chokidar": "2.1.5",
     "classnames": "2.2.6",
     "clean-webpack-plugin": "1.0.1",
     "comlink": "3.1.1",
@@ -44,7 +44,7 @@
     "mini-css-extract-plugin": "0.6.0",
     "minimatch": "3.0.4",
     "node-fetch": "2.3.0",
-    "node-sass": "4.11.0",
+    "node-sass": "4.12.0",
     "optimize-css-assets-webpack-plugin": "5.0.1",
     "pointer-tracker": "2.0.3",
     "preact": "8.4.2",
@@ -69,7 +69,7 @@
     "webpack": "4.28.0",
     "webpack-bundle-analyzer": "3.3.2",
     "webpack-cli": "3.3.1",
-    "webpack-dev-server": "3.2.1",
+    "webpack-dev-server": "^3.3.1",
     "worker-plugin": "3.1.0"
   }
 }
