@@ -1,6 +1,8 @@
 import { proxy } from 'comlink';
+
+import { canvasEncode, blobToArrayBuffer } from 'lib/util';
+
 import { QuantizeOptions } from './imagequant/processor-meta';
-import { canvasEncode, blobToArrayBuffer } from '../lib/util';
 import { EncodeOptions as MozJPEGEncoderOptions } from './mozjpeg/encoder-meta';
 import { EncodeOptions as OptiPNGEncoderOptions } from './optipng/encoder-meta';
 import { EncodeOptions as WebPEncoderOptions } from './webp/encoder-meta';

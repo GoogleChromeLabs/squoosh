@@ -11,8 +11,13 @@
     "jsx": "react",
     "jsxFactory": "h",
     "allowJs": false,
-    "baseUrl": "."
-  },
+    "baseUrl": ".",
+    "paths": {
+      "codecs/*": ["src/codecs/*"],
+      "lib/*": ["src/lib/*"],
+      "@codecs/*": ["codecs/*"]
+    }
+	},
   "exclude": [
     "src/sw/**/*",
     "src/codecs/processor-worker/**/*"

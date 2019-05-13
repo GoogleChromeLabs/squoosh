@@ -1,9 +1,11 @@
 import { h, Component } from 'preact';
 import linkState from 'linkstate';
-import { bind, linkRef } from '../../lib/initial-util';
+
+import { bind, linkRef } from 'lib/initial-util';
 import {
   inputFieldValueAsNumber, inputFieldValue, preventDefault, inputFieldChecked,
-} from '../../lib/util';
+} from 'lib/util';
+
 import { ResizeOptions, isWorkerOptions } from './processor-meta';
 import * as style from '../../components/Options/style.scss';
 import Checkbox from '../../components/checkbox';

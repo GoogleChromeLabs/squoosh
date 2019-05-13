@@ -1,6 +1,8 @@
 import { h, Component, ComponentChild, ComponentChildren } from 'preact';
+
+import { transitionHeight } from 'lib/util';
+
 import * as style from './style.scss';
-import { transitionHeight } from '../../lib/util';
 
 interface Props {
   children: ComponentChildren;

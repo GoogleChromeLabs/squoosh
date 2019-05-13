@@ -52,7 +52,10 @@ module.exports = async function (_, env) {
     resolve: {
       extensions: ['.ts', '.tsx', '.mjs', '.js', '.scss', '.css'],
       alias: {
-        style: path.join(__dirname, 'src/style')
+        style: path.join(__dirname, 'src/style'),
+        codecs: path.join(__dirname, 'src/codecs'),
+        lib: path.join(__dirname, 'src/lib'),
+        '@codecs': path.join(__dirname, 'codecs')
       }
     },
     resolveLoader: {

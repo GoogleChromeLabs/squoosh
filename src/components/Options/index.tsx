@@ -1,29 +1,27 @@
 import { h, Component } from 'preact';
 
-import * as style from './style.scss';
-import { bind } from '../../lib/initial-util';
-import { cleanSet, cleanMerge } from '../../lib/clean-modify';
-import OptiPNGEncoderOptions from '../../codecs/optipng/options';
-import MozJpegEncoderOptions from '../../codecs/mozjpeg/options';
-import BrowserJPEGEncoderOptions from '../../codecs/browser-jpeg/options';
-import WebPEncoderOptions from '../../codecs/webp/options';
-import BrowserWebPEncoderOptions from '../../codecs/browser-webp/options';
+import { bind } from 'lib/initial-util';
+import { cleanSet, cleanMerge } from 'lib/clean-modify';
 
-import QuantizerOptionsComponent from '../../codecs/imagequant/options';
-import ResizeOptionsComponent from '../../codecs/resize/options';
-
-import * as identity from '../../codecs/identity/encoder-meta';
-import * as optiPNG from '../../codecs/optipng/encoder-meta';
-import * as mozJPEG from '../../codecs/mozjpeg/encoder-meta';
-import * as webP from '../../codecs/webp/encoder-meta';
-import * as browserPNG from '../../codecs/browser-png/encoder-meta';
-import * as browserJPEG from '../../codecs/browser-jpeg/encoder-meta';
-import * as browserWebP from '../../codecs/browser-webp/encoder-meta';
-import * as browserGIF from '../../codecs/browser-gif/encoder-meta';
-import * as browserTIFF from '../../codecs/browser-tiff/encoder-meta';
-import * as browserJP2 from '../../codecs/browser-jp2/encoder-meta';
-import * as browserBMP from '../../codecs/browser-bmp/encoder-meta';
-import * as browserPDF from '../../codecs/browser-pdf/encoder-meta';
+import OptiPNGEncoderOptions from 'codecs/optipng/options';
+import MozJpegEncoderOptions from 'codecs/mozjpeg/options';
+import BrowserJPEGEncoderOptions from 'codecs/browser-jpeg/options';
+import WebPEncoderOptions from 'codecs/webp/options';
+import BrowserWebPEncoderOptions from 'codecs/browser-webp/options';
+import QuantizerOptionsComponent from 'codecs/imagequant/options';
+import ResizeOptionsComponent from 'codecs/resize/options';
+import * as identity from 'codecs/identity/encoder-meta';
+import * as optiPNG from 'codecs/optipng/encoder-meta';
+import * as mozJPEG from 'codecs/mozjpeg/encoder-meta';
+import * as webP from 'codecs/webp/encoder-meta';
+import * as browserPNG from 'codecs/browser-png/encoder-meta';
+import * as browserJPEG from 'codecs/browser-jpeg/encoder-meta';
+import * as browserWebP from 'codecs/browser-webp/encoder-meta';
+import * as browserGIF from 'codecs/browser-gif/encoder-meta';
+import * as browserTIFF from 'codecs/browser-tiff/encoder-meta';
+import * as browserJP2 from 'codecs/browser-jp2/encoder-meta';
+import * as browserBMP from 'codecs/browser-bmp/encoder-meta';
+import * as browserPDF from 'codecs/browser-pdf/encoder-meta';
 import {
   EncoderState,
   EncoderType,
@@ -31,14 +29,17 @@ import {
   encoders,
   encodersSupported,
   EncoderSupportMap,
-} from '../../codecs/encoders';
-import { QuantizeOptions } from '../../codecs/imagequant/processor-meta';
-import { ResizeOptions } from '../../codecs/resize/processor-meta';
-import { PreprocessorState } from '../../codecs/preprocessors';
+} from 'codecs/encoders';
+import { QuantizeOptions } from 'codecs/imagequant/processor-meta';
+import { ResizeOptions } from 'codecs/resize/processor-meta';
+import { PreprocessorState } from 'codecs/preprocessors';
+
 import { SourceImage } from '../compress';
 import Checkbox from '../checkbox';
 import Expander from '../expander';
 import Select from '../select';
+
+import * as style from './style.scss';
 
 const encoderOptionsComponentMap: {
   [x: string]: (new (...args: any[]) => Component<any, any>) | undefined;
@@ -178,7 +179,7 @@ export default class Options extends Component<Props, State> {
           {encoderSupportMap ?
             <Select value={encoderState.type} onChange={this.onEncoderTypeChange} large>
               {encoders.filter(encoder => encoderSupportMap[encoder.type]).map(encoder => (
-                <option value={encoder.type}>{encoder.label}</option>
+                <option key={encoder.type} value={encoder.type}>{encoder.label}</option>
               ))}
             </Select>
             :

@@ -1,5 +1,6 @@
-import webp_enc, { WebPModule } from '../../../codecs/webp_enc/webp_enc';
-import wasmUrl from '../../../codecs/webp_enc/webp_enc.wasm';
+import webp_enc, { WebPModule } from '@codecs/webp_enc/webp_enc';
+import wasmUrl from '@codecs/webp_enc/webp_enc.wasm';
+
 import { EncodeOptions } from './encoder-meta';
 import { initEmscriptenModule } from '../util';
 

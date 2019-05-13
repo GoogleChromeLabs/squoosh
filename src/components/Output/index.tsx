@@ -1,10 +1,12 @@
 import { h, Component } from 'preact';
+
 import PinchZoom, { ScaleToOpts } from './custom-els/PinchZoom';
 import './custom-els/PinchZoom';
 import './custom-els/TwoUp';
-import * as style from './style.scss';
-import { bind, linkRef } from '../../lib/initial-util';
-import { shallowEqual, drawDataToCanvas } from '../../lib/util';
+import { SourceImage } from '../compress';
+
+import { bind, linkRef } from 'lib/initial-util';
+import { shallowEqual, drawDataToCanvas } from 'lib/util';
 import {
     ToggleBackgroundIcon,
     AddIcon,
@@ -12,11 +14,13 @@ import {
     BackIcon,
     ToggleBackgroundActiveIcon,
     RotateIcon,
-} from '../../lib/icons';
+} from 'lib/icons';
+import { cleanSet } from 'lib/clean-modify';
+
+import { InputProcessorState } from 'codecs/input-processors';
+
 import { twoUpHandle } from './custom-els/TwoUp/styles.css';
-import { InputProcessorState } from '../../codecs/input-processors';
-import { cleanSet } from '../../lib/clean-modify';
-import { SourceImage } from '../compress';
+import * as style from './style.scss';
 
 interface Props {
   source?: SourceImage;

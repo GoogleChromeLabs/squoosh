@@ -1,8 +1,11 @@
 import { h, Component } from 'preact';
-import * as style from './style.scss';
+
+import { linkRef, bind } from 'lib/initial-util';
+
 import RangeInputElement from '../../custom-els/RangeInput';
 import '../../custom-els/RangeInput';
-import { linkRef, bind } from '../../lib/initial-util';
+
+import * as style from './style.scss';
 
 interface Props extends JSX.HTMLAttributes {}
 interface State {}

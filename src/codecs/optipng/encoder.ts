@@ -1,5 +1,6 @@
-import optipng, { OptiPngModule } from '../../../codecs/optipng/optipng';
-import wasmUrl from '../../../codecs/optipng/optipng.wasm';
+import optipng, { OptiPngModule } from '@codecs/optipng/optipng';
+import wasmUrl from '@codecs/optipng/optipng.wasm';
+
 import { EncodeOptions } from './encoder-meta';
 import { initEmscriptenModule } from '../util';
 

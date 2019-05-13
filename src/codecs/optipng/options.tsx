@@ -1,8 +1,11 @@
 import { h, Component } from 'preact';
-import { bind } from '../../lib/initial-util';
-import { inputFieldValueAsNumber, preventDefault } from '../../lib/util';
+
+import { bind } from 'lib/initial-util';
+import { inputFieldValueAsNumber, preventDefault } from 'lib/util';
+
 import { EncodeOptions } from './encoder-meta';
 import Range from '../../components/range';
+
 import * as style from '../../components/Options/style.scss';
 
 type Props = {

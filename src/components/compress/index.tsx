@@ -1,36 +1,40 @@
 import { h, Component } from 'preact';
 
-import { bind, Fileish } from '../../lib/initial-util';
-import { blobToImg, drawableToImageData, blobToText } from '../../lib/util';
-import * as style from './style.scss';
-import Output from '../Output';
-import Options from '../Options';
-import ResultCache from './result-cache';
-import * as identity from '../../codecs/identity/encoder-meta';
-import * as optiPNG from '../../codecs/optipng/encoder-meta';
-import * as mozJPEG from '../../codecs/mozjpeg/encoder-meta';
-import * as webP from '../../codecs/webp/encoder-meta';
-import * as browserPNG from '../../codecs/browser-png/encoder-meta';
-import * as browserJPEG from '../../codecs/browser-jpeg/encoder-meta';
-import * as browserWebP from '../../codecs/browser-webp/encoder-meta';
-import * as browserGIF from '../../codecs/browser-gif/encoder-meta';
-import * as browserTIFF from '../../codecs/browser-tiff/encoder-meta';
-import * as browserJP2 from '../../codecs/browser-jp2/encoder-meta';
-import * as browserBMP from '../../codecs/browser-bmp/encoder-meta';
-import * as browserPDF from '../../codecs/browser-pdf/encoder-meta';
-import { EncoderState, EncoderType, EncoderOptions, encoderMap } from '../../codecs/encoders';
-import { PreprocessorState, defaultPreprocessorState } from '../../codecs/preprocessors';
-import { decodeImage } from '../../codecs/decoders';
-import { cleanMerge, cleanSet } from '../../lib/clean-modify';
-import Processor from '../../codecs/processor';
+import { bind, Fileish } from 'lib/initial-util';
+import { blobToImg, drawableToImageData, blobToText } from 'lib/util';
+import { cleanMerge, cleanSet } from 'lib/clean-modify';
+import { ExpandIcon, CopyAcrossIconProps } from 'lib/icons';
+import SnackBarElement from 'lib/SnackBar';
+
+import * as identity from 'codecs/identity/encoder-meta';
+import * as optiPNG from 'codecs/optipng/encoder-meta';
+import * as mozJPEG from 'codecs/mozjpeg/encoder-meta';
+import * as webP from 'codecs/webp/encoder-meta';
+import * as browserPNG from 'codecs/browser-png/encoder-meta';
+import * as browserJPEG from 'codecs/browser-jpeg/encoder-meta';
+import * as browserWebP from 'codecs/browser-webp/encoder-meta';
+import * as browserGIF from 'codecs/browser-gif/encoder-meta';
+import * as browserTIFF from 'codecs/browser-tiff/encoder-meta';
+import * as browserJP2 from 'codecs/browser-jp2/encoder-meta';
+import * as browserBMP from 'codecs/browser-bmp/encoder-meta';
+import * as browserPDF from 'codecs/browser-pdf/encoder-meta';
+import { EncoderState, EncoderType, EncoderOptions, encoderMap } from 'codecs/encoders';
+import { PreprocessorState, defaultPreprocessorState } from 'codecs/preprocessors';
+import { decodeImage } from 'codecs/decoders';
+import Processor from 'codecs/processor';
 import {
   BrowserResizeOptions, isWorkerOptions as isWorkerResizeOptions,
-} from '../../codecs/resize/processor-meta';
-import './custom-els/MultiPanel';
+} from 'codecs/resize/processor-meta';
+import { InputProcessorState, defaultInputProcessorState } from 'codecs/input-processors';
+
+import Output from '../Output';
+import Options from '../Options';
 import Results from '../results';
-import { ExpandIcon, CopyAcrossIconProps } from '../../lib/icons';
-import SnackBarElement from '../../lib/SnackBar';
-import { InputProcessorState, defaultInputProcessorState } from '../../codecs/input-processors';
+import ResultCache from './result-cache';
+
+import './custom-els/MultiPanel';
+
+import * as style from './style.scss';
 
 export interface SourceImage {
   file: File | Fileish;
@@ -244,7 +248,7 @@ export default class Compress extends Component<Props, State> {
     this.widthQuery.addListener(this.onMobileWidthChange);
     this.updateFile(props.file);
 
-    import('../../lib/offliner').then(({ mainAppLoaded }) => mainAppLoaded());
+    import('lib/offliner').then(({ mainAppLoaded }) => mainAppLoaded());
   }
 
   @bind
@@ -568,6 +572,7 @@ export default class Compress extends Component<Props, State> {
 
     const options = sides.map((side, index) => (
       <Options
+        key={index}
         source={source}
         mobileView={mobileView}
         preprocessorState={side.latestSettings.preprocessorState}
@@ -583,6 +588,7 @@ export default class Compress extends Component<Props, State> {
 
     const results = sides.map((side, index) => (
       <Results
+        key={index}
         downloadUrl={side.downloadUrl}
         imageFile={side.file}
         source={source}

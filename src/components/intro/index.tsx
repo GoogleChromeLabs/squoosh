@@ -1,8 +1,9 @@
 import { h, Component } from 'preact';
 
-import { bind, linkRef, Fileish } from '../../lib/initial-util';
-import '../custom-els/LoadingSpinner';
+import { bind, linkRef, Fileish } from 'lib/initial-util';
+import SnackBarElement from 'lib/SnackBar';
 
+import '../custom-els/LoadingSpinner';
 import logo from './imgs/logo.svg';
 import largePhoto from './imgs/demos/demo-large-photo.jpg';
 import artwork from './imgs/demos/demo-artwork.jpg';
@@ -11,8 +12,8 @@ import largePhotoIcon from './imgs/demos/icon-demo-large-photo.jpg';
 import artworkIcon from './imgs/demos/icon-demo-artwork.jpg';
 import deviceScreenIcon from './imgs/demos/icon-demo-device-screen.jpg';
 import logoIcon from './imgs/demos/icon-demo-logo.png';
+
 import * as style from './style.scss';
-import SnackBarElement from '../../lib/SnackBar';
 
 const demos = [
   {

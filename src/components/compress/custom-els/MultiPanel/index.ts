@@ -1,5 +1,6 @@
+import { transitionHeight } from 'lib/util';
+
 import * as style from './styles.css';
-import { transitionHeight } from '../../../../lib/util';
 
 interface CloseAllOptions {
   exceptFirst?: boolean;

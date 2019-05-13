@@ -1,7 +1,10 @@
 import { h, Component } from 'preact';
-import { bind } from '../../lib/initial-util';
-import * as style from '../../components/Options/style.scss';
+
+import { bind } from 'lib/initial-util';
+
 import Range from '../../components/range';
+
+import * as style from '../../components/Options/style.scss';
 
 interface EncodeOptions {
   quality: number;

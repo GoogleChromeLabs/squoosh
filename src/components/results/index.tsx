@@ -1,11 +1,13 @@
 import { h, Component, ComponentChildren, ComponentChild } from 'preact';
 
-import * as style from './style.scss';
+import { DownloadIcon, CopyAcrossIcon, CopyAcrossIconProps } from 'lib/icons';
+import { Fileish, bind } from 'lib/initial-util';
+
 import FileSize from './FileSize';
-import { DownloadIcon, CopyAcrossIcon, CopyAcrossIconProps } from '../../lib/icons';
 import '../custom-els/LoadingSpinner';
 import { SourceImage } from '../compress';
-import { Fileish, bind } from '../../lib/initial-util';
+
+import * as style from './style.scss';
 
 interface Props {
   loading: boolean;

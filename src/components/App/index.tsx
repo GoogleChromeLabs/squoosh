@@ -1,13 +1,16 @@
 import { h, Component } from 'preact';
 
-import { bind, linkRef, Fileish } from '../../lib/initial-util';
-import * as style from './style.scss';
 import { FileDropEvent } from 'file-drop-element';
 import 'file-drop-element';
-import SnackBarElement, { SnackOptions } from '../../lib/SnackBar';
-import '../../lib/SnackBar';
+
+import { bind, linkRef, Fileish } from 'lib/initial-util';
+import SnackBarElement, { SnackOptions } from 'lib/SnackBar';
+import 'lib/SnackBar';
+
 import Intro from '../intro';
 import '../custom-els/LoadingSpinner';
+
+import * as style from './style.scss';
 
 const ROUTE_EDITOR = '/editor';
 

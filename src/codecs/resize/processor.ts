@@ -1,10 +1,11 @@
-import wasmUrl from '../../../codecs/resize/pkg/resize_bg.wasm';
-import '../../../codecs/resize/pkg/resize';
+import wasmUrl from '@codecs/resize/pkg/resize_bg.wasm';
+import '@codecs/resize/pkg/resize';
+
 import { WorkerResizeOptions } from './processor-meta';
 import { getContainOffsets } from './util';
 
 interface WasmBindgenExports {
-  resize: typeof import('../../../codecs/resize/pkg/resize').resize;
+  resize: typeof import('@codecs/resize/pkg/resize').resize;
 }
 
 type WasmBindgen = ((url: string) => Promise<void>) & WasmBindgenExports;

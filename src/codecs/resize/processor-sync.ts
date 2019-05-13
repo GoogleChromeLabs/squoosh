@@ -1,4 +1,5 @@
-import { nativeResize, NativeResizeMethod, drawableToImageData } from '../../lib/util';
+import { nativeResize, NativeResizeMethod, drawableToImageData } from 'lib/util';
+
 import { BrowserResizeOptions, VectorResizeOptions } from './processor-meta';
 import { getContainOffsets } from './util';
 

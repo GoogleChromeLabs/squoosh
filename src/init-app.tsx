@@ -1,5 +1,5 @@
 import { h, render } from 'preact';
-import './lib/fix-pmc';
+import 'lib/fix-pmc';
 import './style';
 import App from './components/App';
 
