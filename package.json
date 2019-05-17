@@ -58,7 +58,7 @@
     "source-map-loader": "0.2.4",
     "style-loader": "0.23.1",
     "terser-webpack-plugin": "1.2.4",
-    "ts-loader": "5.4.5",
+    "ts-loader": "6.0.0",
     "tslint": "5.16.0",
     "tslint-config-airbnb": "5.11.1",
     "tslint-config-semistandard": "8.0.0",
