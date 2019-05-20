@@ -17,7 +17,7 @@
       "lib/*": ["src/lib/*"],
       "@codecs/*": ["codecs/*"]
     }
-	},
+  },
   "exclude": [
     "src/sw/**/*",
     "src/codecs/processor-worker/**/*"
