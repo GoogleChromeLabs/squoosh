@@ -52,7 +52,7 @@
     "pretty-bytes": "5.2.0",
     "progress-bar-webpack-plugin": "1.12.1",
     "raw-loader": "3.0.0",
-    "readdirp": "3.0.1",
+    "readdirp": "3.0.2",
     "sass-loader": "7.1.0",
     "script-ext-html-webpack-plugin": "2.1.3",
     "source-map-loader": "0.2.4",
