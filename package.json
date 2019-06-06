@@ -23,7 +23,7 @@
     "@webpack-cli/serve": "0.1.5",
     "assets-webpack-plugin": "3.9.10",
     "chalk": "2.4.2",
-    "chokidar": "3.0.0",
+    "chokidar": "3.0.1",
     "classnames": "2.2.6",
     "clean-webpack-plugin": "1.0.1",
     "comlink": "3.1.1",
