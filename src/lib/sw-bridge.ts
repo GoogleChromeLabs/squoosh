@@ -53,7 +53,7 @@ export function getSharedImage(): Promise<File> {
 
     // This message is picked up by the service worker - it's how it knows we're ready to receive
     // the file.
-    new BroadcastChannel('share-ready').postMessage('share-ready');
+    navigator.serviceWorker.controller!.postMessage('share-ready');
   });
 }
 

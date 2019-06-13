@@ -41,7 +41,7 @@ export function serveShareTarget(event: FetchEvent): void {
 
   event.waitUntil(async function () {
     // The page sends this message to tell the service worker it's ready to receive the file.
-    await new Promise(r => new BroadcastChannel('share-ready').onmessage = r);
+    await nextMessage('share-ready');
     const client = await self.clients.get(event.resultingClientId);
     const data = await dataPromise;
     const file = data.get('file');
@@ -124,3 +124,26 @@ export async function cacheAdditionalProcessors(cacheName: string, buildAssets: 
   const cache = await caches.open(cacheName);
   await cache.addAll(toCache);
 }
+
+const nextMessageResolveMap = new Map<string, (() => void)[]>();
+
+/**
+ * Wait on a message with a particular event.data value.
+ *
+ * @param dataVal The event.data value.
+ */
+function nextMessage(dataVal: string): Promise<void> {
+  return new Promise((resolve) => {
+    if (!nextMessageResolveMap.has(dataVal)) {
+      nextMessageResolveMap.set(dataVal, []);
+    }
+    nextMessageResolveMap.get(dataVal)!.push(resolve);
+  });
+}
+
+self.addEventListener('message', (event) => {
+  const resolvers = nextMessageResolveMap.get(event.data);
+  if (!resolvers) return;
+  nextMessageResolveMap.delete(event.data);
+  for (const resolve of resolvers) resolve();
+});
