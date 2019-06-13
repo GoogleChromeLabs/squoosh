@@ -1,8 +1,10 @@
 import { h, Component } from 'preact';
 import linkState from 'linkstate';
 import { bind, linkRef } from '../../lib/initial-util';
-import { inputFieldValueAsNumber, inputFieldValue, preventDefault } from '../../lib/util';
-import { ResizeOptions } from './processor-meta';
+import {
+  inputFieldValueAsNumber, inputFieldValue, preventDefault, inputFieldChecked,
+} from '../../lib/util';
+import { ResizeOptions, isWorkerOptions } from './processor-meta';
 import * as style from '../../components/Options/style.scss';
 import Checkbox from '../../components/checkbox';
 import Expander from '../../components/expander';
@@ -38,6 +40,8 @@ export default class ResizerOptions extends Component<Props, State> {
       width: inputFieldValueAsNumber(width),
       height: inputFieldValueAsNumber(height),
       method: form.resizeMethod.value,
+      premultiply: inputFieldChecked(form.premultiply, true),
+      linearRGB: inputFieldChecked(form.linearRGB, true),
       // Casting, as the formfield only returns the correct values.
       fitMethod: inputFieldValue(form.fitMethod, options.fitMethod) as ResizeOptions['fitMethod'],
     };
@@ -87,6 +91,10 @@ export default class ResizerOptions extends Component<Props, State> {
             onChange={this.onChange}
           >
             {isVector && <option value="vector">Vector</option>}
+            <option value="lanczos3">Lanczos3</option>
+            <option value="mitchell">Mitchell</option>
+            <option value="catrom">Catmull-Rom</option>
+            <option value="triangle">Triangle (bilinear)</option>
             <option value="browser-pixelated">Browser pixelated</option>
             <option value="browser-low">Browser low quality</option>
             <option value="browser-medium">Browser medium quality</option>
@@ -117,6 +125,30 @@ export default class ResizerOptions extends Component<Props, State> {
             onInput={this.onHeightInput}
           />
         </label>
+        <Expander>
+          {isWorkerOptions(options) ?
+            <label class={style.optionInputFirst}>
+              <Checkbox
+                name="premultiply"
+                checked={options.premultiply}
+                onChange={this.onChange}
+              />
+              Premultiply alpha channel
+            </label>
+            : null
+          }
+          {isWorkerOptions(options) ?
+            <label class={style.optionInputFirst}>
+              <Checkbox
+                name="linearRGB"
+                checked={options.linearRGB}
+                onChange={this.onChange}
+              />
+              Linear RGB
+            </label>
+            : null
+          }
+        </Expander>
         <label class={style.optionInputFirst}>
           <Checkbox
             name="maintainAspect"

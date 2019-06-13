@@ -1,49 +1,52 @@
-import { nativeResize, NativeResizeMethod, drawableToImageData } from '../../lib/util';
-import { BitmapResizeOptions, VectorResizeOptions } from './processor-meta';
+import wasmUrl from '../../../codecs/resize/pkg/resize_bg.wasm';
+import '../../../codecs/resize/pkg/resize';
+import { WorkerResizeOptions } from './processor-meta';
+import { getContainOffsets } from './util';
 
-function getContainOffsets(sw: number, sh: number, dw: number, dh: number) {
-  const currentAspect = sw / sh;
-  const endAspect = dw / dh;
-
-  if (endAspect > currentAspect) {
-    const newSh = sw / endAspect;
-    const newSy = (sh - newSh) / 2;
-    return { sw, sh: newSh, sx: 0, sy: newSy };
-  }
-
-  const newSw = sh * endAspect;
-  const newSx = (sw - newSw) / 2;
-  return { sh, sw: newSw, sx: newSx, sy: 0 };
+interface WasmBindgenExports {
+  resize: typeof import('../../../codecs/resize/pkg/resize').resize;
 }
 
-export function resize(data: ImageData, opts: BitmapResizeOptions): ImageData {
-  let sx = 0;
-  let sy = 0;
-  let sw = data.width;
-  let sh = data.height;
+type WasmBindgen = ((url: string) => Promise<void>) & WasmBindgenExports;
 
-  if (opts.fitMethod === 'contain') {
-    ({ sx, sy, sw, sh } = getContainOffsets(sw, sh, opts.width, opts.height));
+declare var wasm_bindgen: WasmBindgen;
+
+const ready = wasm_bindgen(wasmUrl);
+
+function crop(data: ImageData, sx: number, sy: number, sw: number, sh: number): ImageData {
+  const inputPixels = new Uint32Array(data.data.buffer);
+
+  // Copy within the same buffer for speed and memory efficiency.
+  for (let y = 0; y < sh; y += 1) {
+    const start = ((y + sy) * data.width) + sx;
+    inputPixels.copyWithin(y * sw, start, start + sw);
   }
 
-  return nativeResize(
-    data, sx, sy, sw, sh, opts.width, opts.height,
-    opts.method.slice('browser-'.length) as NativeResizeMethod,
+  return new ImageData(
+    new Uint8ClampedArray(inputPixels.buffer.slice(0, sw * sh * 4)),
+    sw, sh,
   );
 }
 
-export function vectorResize(data: HTMLImageElement, opts: VectorResizeOptions): ImageData {
-  let sx = 0;
-  let sy = 0;
-  let sw = data.width;
-  let sh = data.height;
+/** Resize methods by index */
+const resizeMethods: WorkerResizeOptions['method'][] = [
+  'triangle', 'catrom', 'mitchell', 'lanczos3',
+];
+
+export async function resize(data: ImageData, opts: WorkerResizeOptions): Promise<ImageData> {
+  let input = data;
 
   if (opts.fitMethod === 'contain') {
-    ({ sx, sy, sw, sh } = getContainOffsets(sw, sh, opts.width, opts.height));
+    const { sx, sy, sw, sh } = getContainOffsets(data.width, data.height, opts.width, opts.height);
+    input = crop(input, Math.round(sx), Math.round(sy), Math.round(sw), Math.round(sh));
   }
 
-  return drawableToImageData(data, {
-    sx, sy, sw, sh,
-    width: opts.width, height: opts.height,
-  });
+  await ready;
+
+  const result = wasm_bindgen.resize(
+    new Uint8Array(input.data.buffer), input.width, input.height, opts.width, opts.height,
+    resizeMethods.indexOf(opts.method), opts.premultiply, opts.linearRGB,
+  );
+
+  return new ImageData(new Uint8ClampedArray(result.buffer), opts.width, opts.height);
 }

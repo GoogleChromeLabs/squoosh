@@ -1,12 +1,12 @@
 import imagequant, { QuantizerModule } from '../../../codecs/imagequant/imagequant';
 import wasmUrl from '../../../codecs/imagequant/imagequant.wasm';
 import { QuantizeOptions } from './processor-meta';
-import { initWasmModule } from '../util';
+import { initEmscriptenModule } from '../util';
 
 let emscriptenModule: Promise<QuantizerModule>;
 
 export async function process(data: ImageData, opts: QuantizeOptions): Promise<ImageData> {
-  if (!emscriptenModule) emscriptenModule = initWasmModule(imagequant, wasmUrl);
+  if (!emscriptenModule) emscriptenModule = initEmscriptenModule(imagequant, wasmUrl);
 
   const module = await emscriptenModule;
 

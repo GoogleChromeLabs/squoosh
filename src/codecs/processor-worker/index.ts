@@ -5,8 +5,7 @@ async function mozjpegEncode(
 ): Promise<ArrayBuffer> {
   const { encode } = await import(
     /* webpackChunkName: "process-mozjpeg-enc" */
-    '../mozjpeg/encoder',
-  );
+    '../mozjpeg/encoder');
   return encode(data, options);
 }
 
@@ -15,8 +14,7 @@ async function quantize(
 ): Promise<ImageData> {
   const { process } = await import(
     /* webpackChunkName: "process-imagequant" */
-    '../imagequant/processor',
-  );
+    '../imagequant/processor');
   return process(data, opts);
 }
 
@@ -25,10 +23,19 @@ async function rotate(
 ): Promise<ImageData> {
   const { rotate } = await import(
     /* webpackChunkName: "process-rotate" */
-    '../rotate/processor',
-  );
+    '../rotate/processor');
 
   return rotate(data, opts);
+}
+
+async function resize(
+  data: ImageData, opts: import('../resize/processor-meta').WorkerResizeOptions,
+): Promise<ImageData> {
+  const { resize } = await import(
+    /* webpackChunkName: "process-resize" */
+    '../resize/processor');
+
+  return resize(data, opts);
 }
 
 async function optiPngEncode(
@@ -36,8 +43,7 @@ async function optiPngEncode(
 ): Promise<ArrayBuffer> {
   const { compress } = await import(
     /* webpackChunkName: "process-optipng" */
-    '../optipng/encoder',
-  );
+    '../optipng/encoder');
   return compress(data, options);
 }
 
@@ -46,20 +52,18 @@ async function webpEncode(
 ): Promise<ArrayBuffer> {
   const { encode } = await import(
     /* webpackChunkName: "process-webp-enc" */
-    '../webp/encoder',
-  );
+    '../webp/encoder');
   return encode(data, options);
 }
 
 async function webpDecode(data: ArrayBuffer): Promise<ImageData> {
   const { decode } = await import(
     /* webpackChunkName: "process-webp-dec" */
-    '../webp/decoder',
-  );
+    '../webp/decoder');
   return decode(data);
 }
 
-const exports = { mozjpegEncode, quantize, rotate, optiPngEncode, webpEncode, webpDecode };
+const exports = { mozjpegEncode, quantize, rotate, resize, optiPngEncode, webpEncode, webpDecode };
 export type ProcessorWorkerApi = typeof exports;
 
 expose(exports, self);

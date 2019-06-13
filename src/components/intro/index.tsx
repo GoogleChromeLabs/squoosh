@@ -54,10 +54,16 @@ export default class Intro extends Component<Props, State> {
   private fileInput?: HTMLInputElement;
 
   @bind
+  private resetFileInput() {
+    this.fileInput!.value = '';
+  }
+
+  @bind
   private onFileChange(event: Event): void {
     const fileInput = event.target as HTMLInputElement;
     const file = fileInput.files && fileInput.files[0];
     if (!file) return;
+    this.resetFileInput();
     this.props.onFile(file);
   }
 
