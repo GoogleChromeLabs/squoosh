@@ -13,12 +13,11 @@ const ROUTE_EDITOR = '/editor';
 
 const compressPromise = import(
   /* webpackChunkName: "main-app" */
-  '../compress',
-);
+  '../compress');
+
 const swBridgePromise = import(
   /* webpackChunkName: "sw-bridge" */
-  '../../lib/sw-bridge',
-);
+  '../../lib/sw-bridge');
 
 function back() {
   window.history.back();

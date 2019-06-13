@@ -567,6 +567,7 @@ export default class Compress extends Component<Props, State> {
     const [leftImageData, rightImageData] = sides.map(i => i.data);
 
     const options = sides.map((side, index) => (
+      // tslint:disable-next-line:jsx-key
       <Options
         source={source}
         mobileView={mobileView}
@@ -582,6 +583,7 @@ export default class Compress extends Component<Props, State> {
       (mobileView ? ['down', 'up'] : ['right', 'left']) as CopyAcrossIconProps['copyDirection'][];
 
     const results = sides.map((side, index) => (
+      // tslint:disable-next-line:jsx-key
       <Results
         downloadUrl={side.downloadUrl}
         imageFile={side.file}
