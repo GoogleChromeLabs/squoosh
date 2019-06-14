@@ -16,7 +16,7 @@
     }
   },
   "devDependencies": {
-    "@types/node": "10.14.7",
+    "@types/node": "10.14.9",
     "@types/pretty-bytes": "5.1.0",
     "@types/webassembly-js-api": "0.0.3",
     "@webcomponents/custom-elements": "1.2.4",
