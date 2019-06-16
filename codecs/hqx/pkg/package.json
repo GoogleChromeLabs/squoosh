@@ -9,7 +9,6 @@
     "squooshhqx.js",
     "squooshhqx.d.ts"
   ],
-  "module": "squooshhqx.js",
-  "types": "squooshhqx.d.ts",
-  "sideEffects": "false"
+  "browser": "squooshhqx.js",
+  "types": "squooshhqx.d.ts"
 }

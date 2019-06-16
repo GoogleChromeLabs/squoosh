@@ -7,7 +7,7 @@ echo "Compiling wasm"
 echo "============================================="
 (
   rustup run nightly \
-    wasm-pack build --target web
+    wasm-pack build --target no-modules
   wasm-strip pkg/squooshhqx_bg.wasm
   rm pkg/.gitignore
 )

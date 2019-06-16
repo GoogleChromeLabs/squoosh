@@ -100,6 +100,9 @@ async function preprocessImage(
 ): Promise<ImageData> {
   let result = source.processed;
 
+  if (preprocessData.hqx.enabled) {
+    result = await processor.hqx(result, preprocessData.hqx);
+  }
   if (preprocessData.resize.enabled) {
     if (preprocessData.resize.method === 'vector' && source.vectorImage) {
       result = processor.vectorResize(

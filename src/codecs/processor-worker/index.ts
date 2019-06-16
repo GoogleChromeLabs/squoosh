@@ -38,6 +38,15 @@ async function resize(
   return resize(data, opts);
 }
 
+async function hqx(
+  data: ImageData, opts: import('../hqx/processor-meta').HqxOptions,
+): Promise<ImageData> {
+  const { hqx } = await import(
+    /* webpackChunkName: "process-hqx" */
+    '../hqx/processor');
+  return hqx(data, opts);
+}
+
 async function optiPngEncode(
   data: BufferSource, options: import('../optipng/encoder-meta').EncodeOptions,
 ): Promise<ArrayBuffer> {
@@ -63,7 +72,16 @@ async function webpDecode(data: ArrayBuffer): Promise<ImageData> {
   return decode(data);
 }
 
-const exports = { mozjpegEncode, quantize, rotate, resize, optiPngEncode, webpEncode, webpDecode };
+const exports = {
+  mozjpegEncode,
+  quantize,
+  rotate,
+  resize,
+  optiPngEncode,
+  webpEncode,
+  webpDecode,
+  hqx,
+};
 export type ProcessorWorkerApi = typeof exports;
 
 expose(exports, self);
