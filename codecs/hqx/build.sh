@@ -8,7 +8,8 @@ echo "============================================="
 (
   rustup run nightly \
     wasm-pack build --target web
-  # wasm-strip pkg/squooshhqx_bg.wasm
+  wasm-strip pkg/squooshhqx_bg.wasm
+  rm pkg/.gitignore
 )
 echo "============================================="
 echo "Compiling wasm  done"

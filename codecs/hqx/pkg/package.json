@@ -1,0 +1,15 @@
+{
+  "name": "squooshhqx",
+  "collaborators": [
+    "Surma <surma@surma.link>"
+  ],
+  "version": "0.1.0",
+  "files": [
+    "squooshhqx_bg.wasm",
+    "squooshhqx.js",
+    "squooshhqx.d.ts"
+  ],
+  "module": "squooshhqx.js",
+  "types": "squooshhqx.d.ts",
+  "sideEffects": "false"
+}
