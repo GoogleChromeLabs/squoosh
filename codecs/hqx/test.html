@@ -1,0 +1,21 @@
+<!doctype html>
+<script type="module">
+  import init, {resize} from "./pkg/squooshhqx.js";
+
+  async function run() {
+    const api = await init();
+    self.api = api;
+    const bitmap = await createImageBitmap(await fetch("/test.png").then(r => r.blob()));
+    const canvas = document.createElement("canvas");
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(bitmap, 0, 0);
+    const imgdata = ctx.getImageData(0, 0, bitmap.width, bitmap.height);
+    self.img = imgdata;
+    const r = resize(imgdata.data.buffer, bitmap.width, bitmap.height, 2);
+    console.log("Done", r);
+    self.r = r;
+  }
+  run();
+</script>
