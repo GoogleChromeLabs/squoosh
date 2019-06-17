@@ -256,6 +256,7 @@ export default class Output extends Component<Props, State> {
     const rightDraw = this.rightDrawable();
     // To keep position stable, the output is put in a square using the longest dimension.
     const originalImage = source && source.processed;
+    const fileName = source && source.file.name;
 
     return (
       <div class={`${style.output} ${altBackground ? style.altBackground : ''}`}>
@@ -308,6 +309,12 @@ export default class Output extends Component<Props, State> {
             <BackIcon />
           </button>
         </div>
+
+        {
+          fileName && <div class={style.filename}>
+            <h3 class={style.filenameText}>{fileName}</h3>
+          </div>
+        }
 
         <div class={style.controls}>
           <div class={style.zoomControls}>

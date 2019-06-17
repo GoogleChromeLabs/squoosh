@@ -156,6 +156,32 @@
   padding: 9px;
 }
 
+.filename {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0;
+  max-width: 300px;
+
+  @media (max-width: 860px) {
+    display: none;  // hide filename when controls are collapsed
+  }
+}
+
+.filename-text {
+  color: #fff;
+  background: rgba(0, 0, 0, 0.7);
+  margin: 0;
+  padding: 10px;
+  font-weight: normal;
+  font-size: 1.4rem;
+  border-bottom: 1px solid #000;
+
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 .buttons-no-wrap {
   display: flex;
   pointer-events: none;
