@@ -115,17 +115,17 @@ export default class App extends Component<Props, State> {
   }
 
   render({}: Props, { file, isEditorOpen, Compress, awaitingShareTarget }: State) {
+    const showSpinner = awaitingShareTarget || (isEditorOpen && !Compress);
+
     return (
       <div id="app" class={style.app}>
         <file-drop accept="image/*" onfiledrop={this.onFileDrop} class={style.drop}>
           {
-            awaitingShareTarget
+            showSpinner
               ? <loading-spinner class={style.appLoader}/>
-              : !isEditorOpen
-                ? <Intro onFile={this.onIntroPickFile} showSnack={this.showSnack} />
-                : Compress
-                  ? <Compress file={file!} showSnack={this.showSnack} onBack={back} />
-                  : <loading-spinner class={style.appLoader}/>
+              : isEditorOpen
+                ? Compress && <Compress file={file!} showSnack={this.showSnack} onBack={back} />
+                : <Intro onFile={this.onIntroPickFile} showSnack={this.showSnack} />
           }
           <snack-bar ref={linkRef(this, 'snackbar')} />
         </file-drop>
