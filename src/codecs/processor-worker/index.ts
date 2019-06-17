@@ -1,4 +1,6 @@
 import { expose } from 'comlink';
+import { isHqx } from '../resize/processor-meta';
+import { clamp } from '../util';
 
 async function mozjpegEncode(
   data: ImageData, options: import('../mozjpeg/encoder-meta').EncodeOptions,
@@ -31,6 +33,20 @@ async function rotate(
 async function resize(
   data: ImageData, opts: import('../resize/processor-meta').WorkerResizeOptions,
 ): Promise<ImageData> {
+  if (isHqx(opts)) {
+    const { hqx } = await import(
+      /* webpackChunkName: "process-hqx" */
+      '../hqx/processor');
+
+    const widthRatio = opts.width / data.width;
+    const heightRatio = opts.height / data.height;
+    const ratio = Math.max(widthRatio, heightRatio);
+    const factor = clamp(Math.floor(ratio), { min: 2, max: 4 }) as 2|3|4;
+    if (ratio < 2) {
+      return data;
+    }
+    return hqx(data, { factor });
+  }
   const { resize } = await import(
     /* webpackChunkName: "process-resize" */
     '../resize/processor');

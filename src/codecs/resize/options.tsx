@@ -4,7 +4,7 @@ import { bind, linkRef } from '../../lib/initial-util';
 import {
   inputFieldValueAsNumber, inputFieldValue, preventDefault, inputFieldChecked,
 } from '../../lib/util';
-import { ResizeOptions, isWorkerOptions } from './processor-meta';
+import { ResizeOptions, isWorkerOptions, isHqx } from './processor-meta';
 import * as style from '../../components/Options/style.scss';
 import Checkbox from '../../components/checkbox';
 import Expander from '../../components/expander';
@@ -95,6 +95,7 @@ export default class ResizerOptions extends Component<Props, State> {
             <option value="mitchell">Mitchell</option>
             <option value="catrom">Catmull-Rom</option>
             <option value="triangle">Triangle (bilinear)</option>
+            <option value="hqx">HQX</option>
             <option value="browser-pixelated">Browser pixelated</option>
             <option value="browser-low">Browser low quality</option>
             <option value="browser-medium">Browser medium quality</option>
@@ -126,7 +127,7 @@ export default class ResizerOptions extends Component<Props, State> {
           />
         </label>
         <Expander>
-          {isWorkerOptions(options) ?
+          {(isWorkerOptions(options) && !isHqx(options)) ?
             <label class={style.optionInputFirst}>
               <Checkbox
                 name="premultiply"
@@ -137,7 +138,7 @@ export default class ResizerOptions extends Component<Props, State> {
             </label>
             : null
           }
-          {isWorkerOptions(options) ?
+          {(isWorkerOptions(options) && !isHqx(options)) ?
             <label class={style.optionInputFirst}>
               <Checkbox
                 name="linearRGB"

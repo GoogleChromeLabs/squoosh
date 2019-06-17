@@ -25,3 +25,12 @@ export function initEmscriptenModule<T extends EmscriptenWasm.Module>(
     });
   });
 }
+
+interface ClampOpts {
+  min: number;
+  max: number;
+}
+
+export function clamp(x: number, opts: Partial<ClampOpts>): number {
+  return Math.min(Math.max(x, opts.min || Number.MIN_VALUE), opts.max || Number.MAX_VALUE);
+}

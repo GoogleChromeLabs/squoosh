@@ -11,7 +11,6 @@ import BrowserWebPEncoderOptions from '../../codecs/browser-webp/options';
 
 import QuantizerOptionsComponent from '../../codecs/imagequant/options';
 import ResizeOptionsComponent from '../../codecs/resize/options';
-import HqxOptionsComponent from '../../codecs/hqx/options';
 
 import * as identity from '../../codecs/identity/encoder-meta';
 import * as optiPNG from '../../codecs/optipng/encoder-meta';
@@ -40,7 +39,6 @@ import { SourceImage } from '../compress';
 import Checkbox from '../checkbox';
 import Expander from '../expander';
 import Select from '../select';
-import { HqxOptions } from 'src/codecs/hqx/processor-meta';
 
 const encoderOptionsComponentMap: {
   [x: string]: (new (...args: any[]) => Component<any, any>) | undefined;
@@ -118,13 +116,6 @@ export default class Options extends Component<Props, State> {
     );
   }
 
-  @bind
-  private onHqxOptionsChange(opts: HqxOptions) {
-    this.props.onPreprocessorOptionsChange(
-      cleanMerge(this.props.preprocessorState, 'hqx', opts),
-    );
-  }
-
   render(
     {
       source,
@@ -143,22 +134,6 @@ export default class Options extends Component<Props, State> {
           {encoderState.type === identity.type ? null :
             <div>
               <h3 class={style.optionsTitle}>Edit</h3>
-              <label class={style.sectionEnabler}>
-                <Checkbox
-                  name="hqx.enable"
-                  checked={!!preprocessorState.hqx.enabled}
-                  onChange={this.onPreprocessorEnabledChange}
-                />
-                Pixel Art
-              </label>
-              <Expander>
-                {preprocessorState.hqx.enabled ?
-                  <HqxOptionsComponent
-                    options={preprocessorState.hqx}
-                    onChange={this.onHqxOptionsChange}
-                  />
-                : null}
-              </Expander>
               <label class={style.sectionEnabler}>
                 <Checkbox
                   name="resize.enable"

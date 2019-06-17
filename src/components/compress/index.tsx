@@ -24,7 +24,7 @@ import { decodeImage } from '../../codecs/decoders';
 import { cleanMerge, cleanSet } from '../../lib/clean-modify';
 import Processor from '../../codecs/processor';
 import {
-  BrowserResizeOptions, isWorkerOptions as isWorkerResizeOptions,
+  BrowserResizeOptions, isWorkerOptions as isWorkerResizeOptions, isHqx,
 } from '../../codecs/resize/processor-meta';
 import './custom-els/MultiPanel';
 import Results from '../results';
@@ -100,8 +100,8 @@ async function preprocessImage(
 ): Promise<ImageData> {
   let result = source.processed;
 
-  if (preprocessData.hqx.enabled) {
-    result = await processor.hqx(result, preprocessData.hqx);
+  if (isWorkerResizeOptions(preprocessData.resize) && isHqx(preprocessData.resize)) {
+    result = await processor.workerResize(result, preprocessData.resize);
   }
   if (preprocessData.resize.enabled) {
     if (preprocessData.resize.method === 'vector' && source.vectorImage) {
@@ -109,6 +109,13 @@ async function preprocessImage(
         source.vectorImage,
         preprocessData.resize,
       );
+    } else if (isHqx(preprocessData.resize)) {
+      // Hqx can only do x2, x3 or x4. That part has already been done above.
+      // If the target size is not a clean x2, x3 or x4, use nearest neighbor
+      // for the remaining scaling.
+      const pixelOpts = { ...preprocessData.resize, method: 'browser-pixelated' };
+      console.log('Remaining resize', pixelOpts);
+      result = processor.resize(result, pixelOpts as BrowserResizeOptions);
     } else if (isWorkerResizeOptions(preprocessData.resize)) {
       result = await processor.workerResize(result, preprocessData.resize);
     } else {

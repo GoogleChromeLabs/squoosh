@@ -131,13 +131,6 @@ export default class Processor {
   }
 
   @Processor._processingJob({ needsWorker: true })
-  hqx(
-    data: ImageData, opts: import('./hqx/processor-meta').HqxOptions,
-  ): Promise<ImageData> {
-    return this._workerApi!.hqx(data, opts);
-  }
-
-  @Processor._processingJob({ needsWorker: true })
   workerResize(
     data: ImageData, opts: import('./resize/processor-meta').WorkerResizeOptions,
   ): Promise<ImageData> {
