@@ -1,12 +1,7 @@
-#[macro_use]
-extern crate lazy_static;
 extern crate cfg_if;
+extern crate hqx;
 extern crate wasm_bindgen;
 
-mod common;
-mod hq2x;
-mod hq3x;
-mod hq4x;
 mod utils;
 
 use cfg_if::cfg_if;
@@ -35,19 +30,19 @@ pub fn resize(
     output_image.resize(num_output_pixels, 0);
 
     match factor {
-        2 => hq2x::calculate(
+        2 => hqx::hq2x(
             input_image.as_slice(),
             output_image.as_mut_slice(),
             input_width,
             input_height,
         ),
-        3 => hq3x::calculate(
+        3 => hqx::hq3x(
             input_image.as_slice(),
             output_image.as_mut_slice(),
             input_width,
             input_height,
         ),
-        4 => hq4x::calculate(
+        4 => hqx::hq4x(
             input_image.as_slice(),
             output_image.as_mut_slice(),
             input_width,
