@@ -178,6 +178,7 @@ export default class Options extends Component<Props, State> {
           {encoderSupportMap ?
             <Select value={encoderState.type} onChange={this.onEncoderTypeChange} large>
               {encoders.filter(encoder => encoderSupportMap[encoder.type]).map(encoder => (
+                // tslint:disable-next-line:jsx-key
                 <option value={encoder.type}>{encoder.label}</option>
               ))}
             </Select>

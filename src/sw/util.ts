@@ -1,8 +1,11 @@
 import webpDataUrl from 'url-loader!../codecs/tiny.webp';
 
+// Give TypeScript the correct global.
+declare var self: ServiceWorkerGlobalScope;
+
 export function cacheOrNetwork(event: FetchEvent): void {
   event.respondWith(async function () {
-    const cachedResponse = await caches.match(event.request);
+    const cachedResponse = await caches.match(event.request, { ignoreSearch: true });
     return cachedResponse || fetch(event.request);
   }());
 }
@@ -26,6 +29,23 @@ export function cacheOrNetworkAndCache(event: FetchEvent, cacheName: string): vo
 
     // Return the network response.
     return response;
+  }());
+}
+
+export function serveShareTarget(event: FetchEvent): void {
+  const dataPromise = event.request.formData();
+
+  // Redirect so the user can refresh the page without resending data.
+  // @ts-ignore It doesn't like me giving a response to respondWith, although it's allowed.
+  event.respondWith(Response.redirect('/?share-target'));
+
+  event.waitUntil(async function () {
+    // The page sends this message to tell the service worker it's ready to receive the file.
+    await nextMessage('share-ready');
+    const client = await self.clients.get(event.resultingClientId);
+    const data = await dataPromise;
+    const file = data.get('file');
+    client.postMessage({ file, action: 'load-image' });
   }());
 }
 
@@ -104,3 +124,26 @@ export async function cacheAdditionalProcessors(cacheName: string, buildAssets: 
   const cache = await caches.open(cacheName);
   await cache.addAll(toCache);
 }
+
+const nextMessageResolveMap = new Map<string, (() => void)[]>();
+
+/**
+ * Wait on a message with a particular event.data value.
+ *
+ * @param dataVal The event.data value.
+ */
+function nextMessage(dataVal: string): Promise<void> {
+  return new Promise((resolve) => {
+    if (!nextMessageResolveMap.has(dataVal)) {
+      nextMessageResolveMap.set(dataVal, []);
+    }
+    nextMessageResolveMap.get(dataVal)!.push(resolve);
+  });
+}
+
+self.addEventListener('message', (event) => {
+  const resolvers = nextMessageResolveMap.get(event.data);
+  if (!resolvers) return;
+  nextMessageResolveMap.delete(event.data);
+  for (const resolve of resolvers) resolve();
+});

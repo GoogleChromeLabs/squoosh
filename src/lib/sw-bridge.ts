@@ -40,6 +40,23 @@ async function updateReady(reg: ServiceWorkerRegistration): Promise<void> {
   });
 }
 
+/** Wait for a shared image */
+export function getSharedImage(): Promise<File> {
+  return new Promise((resolve) => {
+    const onmessage = (event: MessageEvent) => {
+      if (event.data.action !== 'load-image') return;
+      resolve(event.data.file);
+      navigator.serviceWorker.removeEventListener('message', onmessage);
+    };
+
+    navigator.serviceWorker.addEventListener('message', onmessage);
+
+    // This message is picked up by the service worker - it's how it knows we're ready to receive
+    // the file.
+    navigator.serviceWorker.controller!.postMessage('share-ready');
+  });
+}
+
 /** Set up the service worker and monitor changes */
 export async function offliner(showSnack: SnackBarElement['showSnackbar']) {
   // This needs to be a typeof because Webpack.
