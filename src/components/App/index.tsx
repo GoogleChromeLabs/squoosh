@@ -110,7 +110,10 @@ export default class App extends Component<Props, State> {
   @bind
   private openEditor() {
     if (this.state.isEditorOpen) return;
-    history.pushState(null, '', ROUTE_EDITOR);
+    // Change path, but preserve query string.
+    const editorURL = new URL(location.href);
+    editorURL.pathname = ROUTE_EDITOR;
+    history.pushState(null, '', editorURL.href);
     this.setState({ isEditorOpen: true });
   }
 
