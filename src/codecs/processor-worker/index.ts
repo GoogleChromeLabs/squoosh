@@ -1,4 +1,6 @@
 import { expose } from 'comlink';
+import { isHqx } from '../resize/processor-meta';
+import { clamp } from '../util';
 
 async function mozjpegEncode(
   data: ImageData, options: import('../mozjpeg/encoder-meta').EncodeOptions,
@@ -31,6 +33,18 @@ async function rotate(
 async function resize(
   data: ImageData, opts: import('../resize/processor-meta').WorkerResizeOptions,
 ): Promise<ImageData> {
+  if (isHqx(opts)) {
+    const { hqx } = await import(
+      /* webpackChunkName: "process-hqx" */
+      '../hqx/processor');
+
+    const widthRatio = opts.width / data.width;
+    const heightRatio = opts.height / data.height;
+    const ratio = Math.max(widthRatio, heightRatio);
+    if (ratio <= 1) return data;
+    const factor = clamp(Math.ceil(ratio), { min: 2, max: 4 }) as 2|3|4;
+    return hqx(data, { factor });
+  }
   const { resize } = await import(
     /* webpackChunkName: "process-resize" */
     '../resize/processor');
@@ -63,7 +77,15 @@ async function webpDecode(data: ArrayBuffer): Promise<ImageData> {
   return decode(data);
 }
 
-const exports = { mozjpegEncode, quantize, rotate, resize, optiPngEncode, webpEncode, webpDecode };
+const exports = {
+  mozjpegEncode,
+  quantize,
+  rotate,
+  resize,
+  optiPngEncode,
+  webpEncode,
+  webpDecode,
+};
 export type ProcessorWorkerApi = typeof exports;
 
 expose(exports, self);

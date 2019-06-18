@@ -1,8 +1,26 @@
-type BrowserResizeMethods = 'browser-pixelated' | 'browser-low' | 'browser-medium' | 'browser-high';
-type WorkerResizeMethods = 'triangle' | 'catrom' | 'mitchell' | 'lanczos3';
-const workerResizeMethods: WorkerResizeMethods[] = ['triangle', 'catrom', 'mitchell', 'lanczos3'];
+type BrowserResizeMethods =
+  | 'browser-pixelated'
+  | 'browser-low'
+  | 'browser-medium'
+  | 'browser-high';
+type WorkerResizeMethods =
+  | 'triangle'
+  | 'catrom'
+  | 'mitchell'
+  | 'lanczos3'
+  | 'hqx';
+const workerResizeMethods: WorkerResizeMethods[] = [
+  'triangle',
+  'catrom',
+  'mitchell',
+  'lanczos3',
+  'hqx',
+];
 
-export type ResizeOptions = BrowserResizeOptions | WorkerResizeOptions | VectorResizeOptions;
+export type ResizeOptions =
+  | BrowserResizeOptions
+  | WorkerResizeOptions
+  | VectorResizeOptions;
 
 export interface ResizeOptionsCommon {
   width: number;
@@ -29,8 +47,19 @@ export interface VectorResizeOptions extends ResizeOptionsCommon {
  *
  * @param opts
  */
-export function isWorkerOptions(opts: ResizeOptions): opts is WorkerResizeOptions {
+export function isWorkerOptions(
+  opts: ResizeOptions,
+): opts is WorkerResizeOptions {
   return (workerResizeMethods as string[]).includes(opts.method);
+}
+
+/**
+ * Return whether a set of options are from the HQ<n>X set
+ *
+ * @param opts
+ */
+export function isHqx(opts: ResizeOptions): opts is WorkerResizeOptions {
+  return opts.method === 'hqx';
 }
 
 export const defaultOptions: ResizeOptions = {

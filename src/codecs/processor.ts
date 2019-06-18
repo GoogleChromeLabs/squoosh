@@ -16,6 +16,7 @@ import * as browserGIF from './browser-gif/encoder';
 import * as browserTIFF from './browser-tiff/encoder';
 import * as browserJP2 from './browser-jp2/encoder';
 import * as browserPDF from './browser-pdf/encoder';
+import { bind } from '../lib/initial-util';
 
 type ProcessorWorkerApi = import('./processor-worker').ProcessorWorkerApi;
 
@@ -94,14 +95,7 @@ export default class Processor {
     if (!this._worker) return;
 
     // If the worker is unused for 10 seconds, remove it to save memory.
-    this._workerTimeoutId = self.setTimeout(
-      () => {
-        if (!this._worker) return;
-        this._worker.terminate();
-        this._worker = undefined;
-      },
-      workerTimeout,
-    );
+    this._workerTimeoutId = self.setTimeout(this.terminateWorker, workerTimeout);
   }
 
   /** Abort the current job, if any */
@@ -111,7 +105,11 @@ export default class Processor {
     this._abortRejector(new DOMException('Aborted', 'AbortError'));
     this._abortRejector = undefined;
     this._busy = false;
+    this.terminateWorker();
+  }
 
+  @bind
+  terminateWorker() {
     if (!this._worker) return;
     this._worker.terminate();
     this._worker = undefined;

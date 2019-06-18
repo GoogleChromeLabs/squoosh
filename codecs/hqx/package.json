@@ -1,0 +1,7 @@
+{
+  "name": "hqx",
+  "scripts": {
+    "build:image": "docker build -t squoosh-hqx .",
+    "build": "docker run --rm -v $(pwd):/src squoosh-hqx ./build.sh"
+  }
+}

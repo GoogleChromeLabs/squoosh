@@ -1,0 +1,37 @@
+[package]
+name = "squooshhqx"
+version = "0.1.0"
+authors = ["Surma <surma@surma.link>"]
+
+[lib]
+crate-type = ["cdylib"]
+
+[features]
+default = ["console_error_panic_hook", "wee_alloc"]
+
+[dependencies]
+cfg-if = "0.1.2"
+wasm-bindgen = "0.2.38"
+# lazy_static = "1.0.0"
+hqx = {git = "https://github.com/CryZe/wasmboy-rs", tag="v0.1.2"}
+
+# The `console_error_panic_hook` crate provides better debugging of panics by
+# logging them with `console.error`. This is great for development, but requires
+# all the `std::fmt` and `std::panicking` infrastructure, so isn't great for
+# code size when deploying.
+console_error_panic_hook = { version = "0.1.1", optional = true }
+
+# `wee_alloc` is a tiny allocator for wasm that is only ~1K in code size
+# compared to the default allocator's ~10K. It is slower than the default
+# allocator, however.
+#
+# Unfortunately, `wee_alloc` requires nightly Rust when targeting wasm for now.
+wee_alloc = { version = "0.4.2", optional = true }
+
+[dev-dependencies]
+wasm-bindgen-test = "0.2"
+
+[profile.release]
+# Tell `rustc` to optimize for small code size.
+opt-level = "s"
+lto = true
