@@ -24,7 +24,7 @@ import { decodeImage } from '../../codecs/decoders';
 import { cleanMerge, cleanSet } from '../../lib/clean-modify';
 import Processor from '../../codecs/processor';
 import {
-  BrowserResizeOptions, isWorkerOptions as isWorkerResizeOptions, isHqx,
+  BrowserResizeOptions, isWorkerOptions as isWorkerResizeOptions, isHqx, WorkerResizeOptions,
 } from '../../codecs/resize/processor-meta';
 import './custom-els/MultiPanel';
 import Results from '../results';
@@ -109,10 +109,15 @@ async function preprocessImage(
     } else if (isHqx(preprocessData.resize)) {
       // Hqx can only do x2, x3 or x4.
       result = await processor.workerResize(result, preprocessData.resize);
-      // If the target size is not a clean x2, x3 or x4, use nearest neighbor
+      // Seems like the globals from Rust from hqx and resize are conflicting.
+      // For now we can fix that by terminating the worker.
+      // TODO: Use wasm-bindgen’s new --web target to create a proper ES6 module
+      // and remove this.
+      processor.terminateWorker();
+      // If the target size is not a clean x2, x3 or x4, use Catmull-Rom
       // for the remaining scaling.
       const pixelOpts = { ...preprocessData.resize, method: 'catrom' };
-      result = processor.resize(result, pixelOpts as BrowserResizeOptions);
+      result = await processor.workerResize(result, pixelOpts as WorkerResizeOptions);
     } else if (isWorkerResizeOptions(preprocessData.resize)) {
       result = await processor.workerResize(result, preprocessData.resize);
     } else {
