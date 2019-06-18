@@ -41,7 +41,7 @@ async function resize(
     const widthRatio = opts.width / data.width;
     const heightRatio = opts.height / data.height;
     const ratio = Math.max(widthRatio, heightRatio);
-    if (ratio < 1) return data;
+    if (ratio <= 1) return data;
     const factor = clamp(Math.ceil(ratio), { min: 2, max: 4 }) as 2|3|4;
     return hqx(data, { factor });
   }
