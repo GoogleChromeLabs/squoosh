@@ -14,5 +14,10 @@ RUN rustup install nightly && \
   cargo install wasm-pack
 
 COPY --from=0 /opt/wabt /opt/wabt
-ENV PATH="/opt/wabt/bin:${PATH}"
+
+RUN mkdir /opt/binaryen && \
+  curl -L https://github.com/WebAssembly/binaryen/releases/download/1.38.32/binaryen-1.38.32-x86-linux.tar.gz  | tar -xzf - -C /opt/binaryen --strip 1
+
+ENV PATH="/opt/binaryen:/opt/wabt/bin:${PATH}"
+
 WORKDIR /src
