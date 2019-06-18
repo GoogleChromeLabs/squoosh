@@ -41,10 +41,8 @@ async function resize(
     const widthRatio = opts.width / data.width;
     const heightRatio = opts.height / data.height;
     const ratio = Math.max(widthRatio, heightRatio);
-    const factor = clamp(Math.floor(ratio), { min: 2, max: 4 }) as 2|3|4;
-    if (ratio < 2) {
-      return data;
-    }
+    if (ratio < 1) return data;
+    const factor = clamp(Math.ceil(ratio), { min: 2, max: 4 }) as 2|3|4;
     return hqx(data, { factor });
   }
   const { resize } = await import(
@@ -52,15 +50,6 @@ async function resize(
     '../resize/processor');
 
   return resize(data, opts);
-}
-
-async function hqx(
-  data: ImageData, opts: import('../hqx/processor-meta').HqxOptions,
-): Promise<ImageData> {
-  const { hqx } = await import(
-    /* webpackChunkName: "process-hqx" */
-    '../hqx/processor');
-  return hqx(data, opts);
 }
 
 async function optiPngEncode(
@@ -96,7 +85,6 @@ const exports = {
   optiPngEncode,
   webpEncode,
   webpDecode,
-  hqx,
 };
 export type ProcessorWorkerApi = typeof exports;
 

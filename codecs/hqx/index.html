@@ -2,7 +2,7 @@
 <script src ="./pkg/squooshhqx.js"></script>
 <script type="module">
   async function run() {
-    const lol = await wasm_bindgen("./pkg/squooshhqx_bg.wasm");
+    await wasm_bindgen("./pkg/squooshhqx_bg.wasm");
     const bitmap = await createImageBitmap(await fetch("https://i.imgur.com/MNDnBSc.png").then(r => r.blob()));
     const canvas = document.createElement("canvas");
     canvas.width = bitmap.width;

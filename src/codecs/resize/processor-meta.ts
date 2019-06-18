@@ -58,7 +58,7 @@ export function isWorkerOptions(
  *
  * @param opts
  */
-export function isHqx(opts: ResizeOptions): boolean {
+export function isHqx(opts: ResizeOptions): opts is WorkerResizeOptions {
   return opts.method === 'hqx';
 }
 
