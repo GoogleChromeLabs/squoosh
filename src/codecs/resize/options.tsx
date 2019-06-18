@@ -27,6 +27,7 @@ const sizePresets = [0.25, 0.3333, 0.5, 1, 2, 3, 4];
 /**
  * Should we allow the user to select hqx? Chrome currently has a wasm bug, so we currently avoid it
  * there, unless overridden.
+ * crbug.com/974804
  */
 const allowHqx: boolean = (() => {
   const url = new URL(location.href);
