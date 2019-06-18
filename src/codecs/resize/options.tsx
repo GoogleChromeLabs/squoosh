@@ -30,9 +30,10 @@ const sizePresets = [0.25, 0.3333, 0.5, 1, 2, 3, 4];
  */
 const allowHqx: boolean = (() => {
   const url = new URL(location.href);
-  // Yep. UA sniffing. Let's hope we can remove this soon.
   return url.searchParams.has('allow-hqx')
-    || navigator.userAgent.includes('Edge/') || !navigator.userAgent.includes('Chrome/');
+    // Yep. UA sniffing. Let's hope we can remove this soon.
+    // Block browsers with Chrome/, unless they also have Edge/ (since the Edge UA includes Chrome/)
+    || !navigator.userAgent.includes('Chrome/') || navigator.userAgent.includes('Edge/');
 })();
 
 export default class ResizerOptions extends Component<Props, State> {
