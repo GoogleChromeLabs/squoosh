@@ -9,7 +9,7 @@ echo "============================================="
   rustup run nightly \
     wasm-pack build --target no-modules
   wasm-strip pkg/squooshhqx_bg.wasm
-  echo "Optimising WASM so it doesn't break Chrome (this takes like 10-15mins. get a cup of tea)"
+  echo "Optimising wasm so it doesn't break Chrome (this takes like 10-15mins. get a cup of tea)"
   echo "Once https://bugs.chromium.org/p/chromium/issues/detail?id=97480 is fixed, we can remove this step"
   wasm-opt -Os --no-validation -o pkg/squooshhqx_bg.wasm pkg/squooshhqx_bg.wasm
   rm pkg/.gitignore
