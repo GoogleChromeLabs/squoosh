@@ -24,19 +24,6 @@ interface State {
 
 const sizePresets = [0.25, 0.3333, 0.5, 1, 2, 3, 4];
 
-/**
- * Should we allow the user to select hqx? Chrome currently has a wasm bug, so we currently avoid it
- * there, unless overridden.
- * crbug.com/974804
- */
-const allowHqx: boolean = (() => {
-  const url = new URL(location.href);
-  return url.searchParams.has('allow-hqx')
-    // Yep. UA sniffing. Let's hope we can remove this soon.
-    // Block browsers with Chrome/, unless they also have Edge/ (since the Edge UA includes Chrome/)
-    || !navigator.userAgent.includes('Chrome/') || navigator.userAgent.includes('Edge/');
-})();
-
 export default class ResizerOptions extends Component<Props, State> {
   state: State = {
     maintainAspect: true,
@@ -163,7 +150,7 @@ export default class ResizerOptions extends Component<Props, State> {
             <option value="mitchell">Mitchell</option>
             <option value="catrom">Catmull-Rom</option>
             <option value="triangle">Triangle (bilinear)</option>
-            {allowHqx && <option value="hqx">hqx (pixel art)</option>}
+            <option value="hqx">hqx (pixel art)</option>
             <option value="browser-pixelated">Browser pixelated</option>
             <option value="browser-low">Browser low quality</option>
             <option value="browser-medium">Browser medium quality</option>
