@@ -347,7 +347,8 @@ module.exports = async function (_, env) {
       // Supress the extensive stats normally printed after a dev build (since sizes are mostly useless):
       stats: 'minimal',
       // Don't embed an error overlay ("redbox") into the client bundle:
-      overlay: false
+      overlay: false,
+      allowedHosts: ['localhost', '.gitpod.io'],
     }
   };
 };
