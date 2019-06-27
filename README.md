@@ -27,5 +27,10 @@ You can run the development server with:
 ```sh
 npm start
 ```
+### Run in Gitpod
+
+You can also run the development server in Gitpod ( a free online IDE and dev environment for GitHub ) with a single click.
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/https://github.com/GoogleChromeLabs/squoosh)
 
 [Squoosh]: https://squoosh.app
