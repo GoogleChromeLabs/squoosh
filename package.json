@@ -66,7 +66,7 @@
     "tslint-react": "4.0.0",
     "typed-css-modules": "0.4.2",
     "typescript": "3.5.2",
-    "url-loader": "2.0.0",
+    "url-loader": "2.0.1",
     "webpack": "4.28.0",
     "webpack-bundle-analyzer": "3.3.2",
     "webpack-cli": "3.3.4",
