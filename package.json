@@ -28,7 +28,7 @@
     "clean-webpack-plugin": "1.0.1",
     "comlink": "3.1.1",
     "copy-webpack-plugin": "5.0.3",
-    "critters-webpack-plugin": "2.3.0",
+    "critters-webpack-plugin": "2.4.0",
     "css-loader": "1.0.1",
     "ejs": "2.6.2",
     "escape-string-regexp": "2.0.0",
