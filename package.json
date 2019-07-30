@@ -68,7 +68,7 @@
     "typescript": "3.5.3",
     "url-loader": "2.0.1",
     "webpack": "4.28.0",
-    "webpack-bundle-analyzer": "3.3.2",
+    "webpack-bundle-analyzer": "3.4.1",
     "webpack-cli": "3.3.4",
     "webpack-dev-server": "3.7.1",
     "worker-plugin": "3.1.0"
