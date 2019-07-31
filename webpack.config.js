@@ -1,4 +1,3 @@
-const fs = require('fs');
 const path = require('path');
 const webpack = require('webpack');
 const CleanPlugin = require('clean-webpack-plugin');
@@ -17,11 +16,7 @@ const CrittersPlugin = require('critters-webpack-plugin');
 const AssetTemplatePlugin = require('./config/asset-template-plugin');
 const addCssTypes = require('./config/add-css-types');
 
-function readJson (filename) {
-  return JSON.parse(fs.readFileSync(filename));
-}
-
-const VERSION = readJson('./package.json').version;
+const VERSION = require('./package.json').version;
 
 module.exports = async function (_, env) {
   const isProd = env.mode === 'production';
@@ -239,7 +234,7 @@ module.exports = async function (_, env) {
           removeRedundantAttributes: true,
           removeComments: true
         },
-        manifest: readJson('./src/manifest.json'),
+        manifest: require('./src/manifest.json'),
         inject: 'body',
         compile: true
       }),
