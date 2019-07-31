@@ -1,4 +1,3 @@
-const fs = require('fs');
 const path = require('path');
 const webpack = require('webpack');
 const CleanPlugin = require('clean-webpack-plugin');
@@ -17,11 +16,7 @@ const CrittersPlugin = require('critters-webpack-plugin');
 const AssetTemplatePlugin = require('./config/asset-template-plugin');
 const addCssTypes = require('./config/add-css-types');
 
-function readJson (filename) {
-  return JSON.parse(fs.readFileSync(filename));
-}
-
-const VERSION = readJson('./package.json').version;
+const VERSION = require('./package.json').version;
 
 module.exports = async function (_, env) {
   const isProd = env.mode === 'production';
@@ -147,11 +142,13 @@ module.exports = async function (_, env) {
         },
         {
           // All the codec files define a global with the same name as their file name. `exports-loader` attaches those to `module.exports`.
-          test: /\/codecs\/.*\.js$/,
+          test: /\.js$/,
+          include: path.join(__dirname, 'src/codecs'),
           loader: 'exports-loader'
         },
         {
-          test: /\/codecs\/.*\.wasm$/,
+          // For some reason using `include` here breaks the build.
+          test: /[/\\]codecs[/\\].*\.wasm$/,
           // This is needed to make webpack NOT process wasm files.
           // See https://github.com/webpack/webpack/issues/6725
           type: 'javascript/auto',
@@ -172,7 +169,7 @@ module.exports = async function (_, env) {
     plugins: [
       new webpack.IgnorePlugin(
         /(fs|crypto|path)/,
-        new RegExp(`${path.sep}codecs${path.sep}`)
+        /[/\\]codecs[/\\]/
       ),
 
       // Pretty progressbar showing build progress:
@@ -239,7 +236,7 @@ module.exports = async function (_, env) {
           removeRedundantAttributes: true,
           removeComments: true
         },
-        manifest: readJson('./src/manifest.json'),
+        manifest: require('./src/manifest.json'),
         inject: 'body',
         compile: true
       }),
