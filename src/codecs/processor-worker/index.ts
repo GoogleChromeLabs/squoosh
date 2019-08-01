@@ -57,13 +57,13 @@ async function resize(
   return timed('resize', () => resize(data, opts));
 }
 
-async function optiPngEncode(
-  data: BufferSource, options: import('../optipng/encoder-meta').EncodeOptions,
+async function oxiPngEncode(
+  data: ArrayBuffer, options: import('../oxipng/encoder-meta').EncodeOptions,
 ): Promise<ArrayBuffer> {
   const { compress } = await import(
-    /* webpackChunkName: "process-optipng" */
-    '../optipng/encoder');
-  return timed('optiPngEncode', () => compress(data, options));
+    /* webpackChunkName: "process-oxipng" */
+    '../oxipng/encoder');
+  return timed('oxiPngEncode', () => compress(data, options));
 }
 
 async function webpEncode(
@@ -87,7 +87,7 @@ const exports = {
   quantize,
   rotate,
   resize,
-  optiPngEncode,
+  oxiPngEncode,
   webpEncode,
   webpDecode,
 };

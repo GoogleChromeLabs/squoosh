@@ -1,0 +1,15 @@
+{
+  "name": "oxipng",
+  "collaborators": [
+    "Ingvar Stepanyan <me@rreverser.com>"
+  ],
+  "version": "0.1.0",
+  "files": [
+    "oxipng_bg.wasm",
+    "oxipng.js",
+    "oxipng.d.ts"
+  ],
+  "module": "oxipng.js",
+  "types": "oxipng.d.ts",
+  "sideEffects": "false"
+}
