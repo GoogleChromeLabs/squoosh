@@ -19,16 +19,16 @@
         return ptr;
     }
 
-    function getArrayU32FromWasm(ptr, len) {
-        return getUint32Memory().subarray(ptr / 4, ptr / 4 + len);
+    let cachegetInt32Memory = null;
+    function getInt32Memory() {
+        if (cachegetInt32Memory === null || cachegetInt32Memory.buffer !== wasm.memory.buffer) {
+            cachegetInt32Memory = new Int32Array(wasm.memory.buffer);
+        }
+        return cachegetInt32Memory;
     }
 
-    let cachedGlobalArgumentPtr = null;
-    function globalArgumentPtr() {
-        if (cachedGlobalArgumentPtr === null) {
-            cachedGlobalArgumentPtr = wasm.__wbindgen_global_argument_ptr();
-        }
-        return cachedGlobalArgumentPtr;
+    function getArrayU32FromWasm(ptr, len) {
+        return getUint32Memory().subarray(ptr / 4, ptr / 4 + len);
     }
     /**
     * @param {Uint32Array} input_image
@@ -38,18 +38,12 @@
     * @returns {Uint32Array}
     */
     __exports.resize = function(input_image, input_width, input_height, factor) {
-        const ptr0 = passArray32ToWasm(input_image);
-        const len0 = WASM_VECTOR_LEN;
-        const retptr = globalArgumentPtr();
-        wasm.resize(retptr, ptr0, len0, input_width, input_height, factor);
-        const mem = getUint32Memory();
-        const rustptr = mem[retptr / 4];
-        const rustlen = mem[retptr / 4 + 1];
-
-        const realRet = getArrayU32FromWasm(rustptr, rustlen).slice();
-        wasm.__wbindgen_free(rustptr, rustlen * 4);
-        return realRet;
-
+        const retptr = 8;
+        const ret = wasm.resize(retptr, passArray32ToWasm(input_image), WASM_VECTOR_LEN, input_width, input_height, factor);
+        const memi32 = getInt32Memory();
+        const v0 = getArrayU32FromWasm(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1]).slice();
+        wasm.__wbindgen_free(memi32[retptr / 4 + 0], memi32[retptr / 4 + 1] * 4);
+        return v0;
     };
 
     function init(module) {

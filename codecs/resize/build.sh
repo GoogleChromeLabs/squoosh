@@ -6,8 +6,7 @@ echo "============================================="
 echo "Compiling wasm"
 echo "============================================="
 (
-  rustup run nightly \
-    wasm-pack build --target no-modules
+  wasm-pack build --target no-modules
   wasm-strip pkg/resize_bg.wasm
 )
 echo "============================================="

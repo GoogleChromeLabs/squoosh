@@ -6,8 +6,7 @@ echo "============================================="
 echo "Compiling wasm"
 echo "============================================="
 (
-  rustup run nightly \
-    cargo build \
+  cargo build \
     --target wasm32-unknown-unknown \
     --release
   cp target/wasm32-unknown-unknown/release/rotate.wasm .
