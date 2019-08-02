@@ -9,8 +9,7 @@ RUN cmake .. -DCMAKE_INSTALL_PREFIX=/opt/wabt && \
   make install
 
 FROM rust
-RUN rustup install nightly && \
-  rustup target add --toolchain nightly wasm32-unknown-unknown
+RUN rustup target add wasm32-unknown-unknown
 
 COPY --from=0 /opt/wabt /opt/wabt
 ENV PATH="/opt/wabt/bin:${PATH}"
