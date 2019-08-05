@@ -6,7 +6,7 @@ echo "============================================="
 echo "Compiling wasm"
 echo "============================================="
 (
-  wasm-pack build --target no-modules
+  wasm-pack build
   wasm-strip pkg/squooshhqx_bg.wasm
   echo "Optimising Wasm so it doesn't break Chrome (this takes like 10-15mins. get a cup of tea)"
   echo "Once https://crbug.com/974804 is fixed, we can remove this step"

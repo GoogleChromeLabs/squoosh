@@ -2,7 +2,6 @@
   "name": "resize",
   "scripts": {
     "build:image": "docker build -t squoosh-resize .",
-    "build": "docker run --rm -v $(pwd):/src squoosh-resize ./build.sh",
-    "benchmark": "v8 --no-liftoff --no-wasm-tier-up ./benchmark.js"
+    "build": "docker run --rm -v $(pwd):/src squoosh-resize ./build.sh"
   }
 }
