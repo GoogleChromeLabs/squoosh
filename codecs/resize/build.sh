@@ -6,7 +6,7 @@ echo "============================================="
 echo "Compiling wasm"
 echo "============================================="
 (
-  wasm-pack build --target no-modules
+  wasm-pack build
   wasm-strip pkg/resize_bg.wasm
 )
 echo "============================================="

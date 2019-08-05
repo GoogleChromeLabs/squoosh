@@ -1,17 +1,6 @@
-import wasmUrl from '../../../codecs/resize/pkg/resize_bg.wasm';
-import '../../../codecs/resize/pkg/resize';
 import { WorkerResizeOptions } from './processor-meta';
 import { getContainOffsets } from './util';
-
-interface WasmBindgenExports {
-  resize: typeof import('../../../codecs/resize/pkg/resize').resize;
-}
-
-type WasmBindgen = ((url: string) => Promise<void>) & WasmBindgenExports;
-
-declare var wasm_bindgen: WasmBindgen;
-
-const ready = wasm_bindgen(wasmUrl);
+import { resize as codecResize } from '../../../codecs/resize/pkg';
 
 function crop(data: ImageData, sx: number, sy: number, sw: number, sh: number): ImageData {
   const inputPixels = new Uint32Array(data.data.buffer);
@@ -41,9 +30,7 @@ export async function resize(data: ImageData, opts: WorkerResizeOptions): Promis
     input = crop(input, Math.round(sx), Math.round(sy), Math.round(sw), Math.round(sh));
   }
 
-  await ready;
-
-  const result = wasm_bindgen.resize(
+  const result = codecResize(
     new Uint8Array(input.data.buffer), input.width, input.height, opts.width, opts.height,
     resizeMethods.indexOf(opts.method), opts.premultiply, opts.linearRGB,
   );

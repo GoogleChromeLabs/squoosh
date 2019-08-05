@@ -1,24 +1,12 @@
-import wasmUrl from '../../../codecs/hqx/pkg/squooshhqx_bg.wasm';
-import '../../../codecs/hqx/pkg/squooshhqx';
+import { resize } from '../../../codecs/hqx/pkg';
 import { HqxOptions } from './processor-meta';
-
-interface WasmBindgenExports {
-  resize: typeof import('../../../codecs/hqx/pkg/squooshhqx').resize;
-}
-
-type WasmBindgen = ((url: string) => Promise<void>) & WasmBindgenExports;
-
-declare var wasm_bindgen: WasmBindgen;
-
-const ready = wasm_bindgen(wasmUrl);
 
 export async function hqx(
   data: ImageData,
   opts: HqxOptions,
 ): Promise<ImageData> {
   const input = data;
-  await ready;
-  const result = wasm_bindgen.resize(
+  const result = resize(
     new Uint32Array(input.data.buffer),
     input.width,
     input.height,
