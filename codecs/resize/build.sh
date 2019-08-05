@@ -8,6 +8,7 @@ echo "============================================="
 (
   wasm-pack build
   wasm-strip pkg/resize_bg.wasm
+  rm pkg/.gitignore
 )
 echo "============================================="
 echo "Compiling wasm  done"

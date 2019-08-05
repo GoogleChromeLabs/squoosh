@@ -1,0 +1,15 @@
+{
+  "name": "resize",
+  "collaborators": [
+    "Surma <surma@surma.link>"
+  ],
+  "version": "0.1.0",
+  "files": [
+    "resize_bg.wasm",
+    "resize.js",
+    "resize.d.ts"
+  ],
+  "module": "resize.js",
+  "types": "resize.d.ts",
+  "sideEffects": "false"
+}
