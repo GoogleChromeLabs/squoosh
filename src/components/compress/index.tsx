@@ -295,9 +295,13 @@ export default class Compress extends Component<Props, State> {
   private updateLoadingIndicator(isLoading: boolean = false): void {
     // Update the title if the editor loading state changes
     if (isLoading) {
-      document.title = loadingIndicator + document.title;
-    } else if (document.title.startsWith(loadingIndicator)){
-      document.title = document.title.slice(loadingIndicator.length);
+      if (!document.title.startsWith(loadingIndicator)) {
+        document.title = loadingIndicator + document.title;
+      }
+    } else {
+      if (document.title.startsWith(loadingIndicator)) {
+        document.title = document.title.slice(loadingIndicator.length);
+      }
     }
   }
 
@@ -315,7 +319,8 @@ export default class Compress extends Component<Props, State> {
     const { loading, source, sides } = this.state;
 
     const isLoading = loading || sides[0].loading || sides[1].loading;
-    const loadingStateChanged = isLoading !== (prevState.loading || prevState.sides[0].loading || prevState.sides[1].loading);
+    const loadingStateChanged = isLoading !==
+      prevState.loading || prevState.sides[0].loading || prevState.sides[1].loading;
 
     if (loadingStateChanged) {
       this.updateLoadingIndicator(isLoading);
