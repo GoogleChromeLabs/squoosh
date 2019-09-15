@@ -1,0 +1,56 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "env": {
+    "browser": true,
+    "es6": true
+  },
+  "globals": {
+    "VERSION": false,
+    "ga": false
+  },
+  "settings": {
+    "react": {
+      "pragma": "h"
+    }
+  },
+  "extends": [
+    "eslint:recommended",
+    "airbnb",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:react/recommended"
+  ],
+  "parserOptions": {
+    "ecmaVersion": 2018,
+    "sourceType": "module"
+  },
+  "rules": {
+    "no-param-reassign": ["error", {
+      "props": false
+    }],
+    "react/jsx-boolean-value": [2, "never"],
+    "react/jsx-no-multiline-js": 0,
+    "react/jsx-no-bind": 2,
+    "import/no-webpack-loader-syntax": 0,
+    "import/no-unresolved": 0,
+    "func-names": 0,
+    "@typescript-eslint/explicit-function-return-type": 0,
+    "@typescript-eslint/no-use-before-define": 0,
+    "@typescript-eslint/no-explicit-any": 0,
+    "no-restricted-syntax": 0,
+    "no-useless-escape": 0,
+    "no-control-regex": 0,
+    "@typescript-eslint/no-inferrable-types": [2, {
+      "ignoreProperties": true,
+      "ignoreParameters": true
+    }],
+    "react/jsx-filename-extension": [2, {
+      "extensions": [".jsx", ".tsx"]
+    }],
+    "react/jsx-props-no-spreading": 0,
+    "no-underscore-dangle": [2, {
+      "allowAfterThis": true
+    }],
+    "@typescript-eslint/no-unused-vars": 0
+  }
+}
