@@ -33,9 +33,9 @@ declare module 'url-loader!*' {
   export default value;
 }
 
-declare var VERSION: string;
+declare const VERSION: string;
 
-declare var ga: {
+declare const ga: {
   (...args: any[]): void;
   q: any[];
 };

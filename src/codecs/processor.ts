@@ -30,14 +30,19 @@ interface ProcessingJobOptions {
 export default class Processor {
   /** Worker instance associated with this processor. */
   private _worker?: Worker;
+
   /** Comlinked worker API. */
   private _workerApi?: ProcessorWorkerApi;
+
   /** Rejector for a pending promise. */
   private _abortRejector?: (err: Error) => void;
+
   /** Is work currently happening? */
   private _busy = false;
+
   /** Incementing ID so we can tell if a job has been superseded. */
   private _latestJobId: number = 0;
+
   /** setTimeout ID for killing the worker when idle. */
   private _workerTimeoutId: number = 0;
 

@@ -1,7 +1,7 @@
 import { canvasEncodeTest } from '../generic/util';
 
-export interface EncodeOptions { quality: number; }
-export interface EncoderState { type: typeof type; options: EncodeOptions; }
+export interface EncodeOptions { quality: number }
+export interface EncoderState { type: typeof type; options: EncodeOptions }
 
 export const type = 'browser-webp';
 export const label = 'Browser WebP';

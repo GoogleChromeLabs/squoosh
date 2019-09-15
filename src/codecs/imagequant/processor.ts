@@ -10,10 +10,9 @@ export async function process(data: ImageData, opts: QuantizeOptions): Promise<I
 
   const module = await emscriptenModule;
 
-  const result = opts.zx ?
-      module.zx_quantize(data.data, data.width, data.height, opts.dither)
-    :
-      module.quantize(data.data, data.width, data.height, opts.maxNumColors, opts.dither);
+  const result = opts.zx
+    ? module.zx_quantize(data.data, data.width, data.height, opts.dither)
+    : module.quantize(data.data, data.width, data.height, opts.maxNumColors, opts.dither);
 
   module.free_result();
 

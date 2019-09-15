@@ -1,6 +1,6 @@
+import webpDataUrl from 'url-loader!./tiny.webp';
 import { nativeDecode, sniffMimeType, canDecodeImage } from '../lib/util';
 import Processor from './processor';
-import webpDataUrl from 'url-loader!./tiny.webp';
 
 const nativeWebPSupported = canDecodeImage(webpDataUrl);
 

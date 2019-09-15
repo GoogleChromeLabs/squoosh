@@ -37,6 +37,7 @@ export function linkRef<T>(obj: any, name: string) {
   const refName = `$$ref_${name}`;
   let ref = obj[refName];
   if (!ref) {
+    // eslint-disable-next-line no-multi-assign
     ref = obj[refName] = (c: T) => {
       obj[name] = c;
     };

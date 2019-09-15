@@ -1,23 +1,27 @@
 import { h, Component } from 'preact';
 
+import { FileDropEvent } from 'file-drop-element';
 import { bind, linkRef, Fileish } from '../../lib/initial-util';
 import * as style from './style.scss';
-import { FileDropEvent } from 'file-drop-element';
-import 'file-drop-element';
+
 import SnackBarElement, { SnackOptions } from '../../lib/SnackBar';
-import '../../lib/SnackBar';
+
 import Intro from '../intro';
 import '../custom-els/LoadingSpinner';
+import '../../lib/SnackBar'; // eslint-disable-line import/no-duplicates
+import 'file-drop-element'; // eslint-disable-line import/no-duplicates
 
 const ROUTE_EDITOR = '/editor';
 
 const compressPromise = import(
   /* webpackChunkName: "main-app" */
-  '../compress');
+  '../compress',
+);
 
 const swBridgePromise = import(
   /* webpackChunkName: "sw-bridge" */
-  '../../lib/sw-bridge');
+  '../../lib/sw-bridge',
+);
 
 function back() {
   window.history.back();
@@ -28,7 +32,7 @@ interface Props {}
 interface State {
   awaitingShareTarget: boolean;
   file?: File | Fileish;
-  isEditorOpen: Boolean;
+  isEditorOpen: boolean;
   Compress?: typeof import('../compress').default;
 }
 
@@ -117,15 +121,17 @@ export default class App extends Component<Props, State> {
     this.setState({ isEditorOpen: true });
   }
 
-  render({}: Props, { file, isEditorOpen, Compress, awaitingShareTarget }: State) {
+  render({}: Props, {
+    file, isEditorOpen, Compress, awaitingShareTarget,
+  }: State) {
     const showSpinner = awaitingShareTarget || (isEditorOpen && !Compress);
 
     return (
-      <div id="app" class={style.app}>
+      <div id="app" className={style.app}>
         <file-drop accept="image/*" onfiledrop={this.onFileDrop} class={style.drop}>
           {
             showSpinner
-              ? <loading-spinner class={style.appLoader}/>
+              ? <loading-spinner class={style.appLoader} />
               : isEditorOpen
                 ? Compress && <Compress file={file!} showSnack={this.showSnack} onBack={back} />
                 : <Intro onFile={this.onIntroPickFile} showSnack={this.showSnack} />

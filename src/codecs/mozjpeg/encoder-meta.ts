@@ -23,7 +23,7 @@ export interface EncodeOptions {
   chroma_quality: number;
 }
 
-export interface EncoderState { type: typeof type; options: EncodeOptions; }
+export interface EncoderState { type: typeof type; options: EncodeOptions }
 
 export const type = 'mozjpeg';
 export const label = 'MozJPEG';

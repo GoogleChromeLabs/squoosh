@@ -33,7 +33,7 @@ export async function canvasEncode(data: ImageData, type: string, quality?: numb
   let blob: Blob | null;
 
   if ('toBlob' in canvas) {
-    blob = await new Promise<Blob | null>(r => canvas.toBlob(r, type, quality));
+    blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, type, quality));
   } else {
     // Welcome to Edge.
     // TypeScript thinks `canvas` is 'never', so it needs casting.
@@ -44,13 +44,13 @@ export async function canvasEncode(data: ImageData, type: string, quality?: numb
 
     const outputType = result[1];
     const binaryStr = atob(result[2]);
-    const data = new Uint8Array(binaryStr.length);
+    const blobData = new Uint8Array(binaryStr.length);
 
     for (let i = 0; i < data.length; i += 1) {
-      data[i] = binaryStr.charCodeAt(i);
+      blobData[i] = binaryStr.charCodeAt(i);
     }
 
-    blob = new Blob([data], { type: outputType });
+    blob = new Blob([blobData], { type: outputType });
   }
 
   if (!blob) throw Error('Encoding failed');
@@ -108,10 +108,9 @@ const magicNumberToMimeType = new Map<RegExp, string>([
 
 export async function sniffMimeType(blob: Blob): Promise<string> {
   const firstChunk = await blobToArrayBuffer(blob.slice(0, 16));
-  const firstChunkString =
-    Array.from(new Uint8Array(firstChunk))
-      .map(v => String.fromCodePoint(v))
-      .join('');
+  const firstChunkString = Array.from(new Uint8Array(firstChunk))
+    .map((v) => String.fromCodePoint(v))
+    .join('');
   for (const [detector, mimeType] of magicNumberToMimeType) {
     if (detector.test(firstChunkString)) {
       return mimeType;
@@ -165,8 +164,9 @@ export function drawableToImageData(
 
 export async function nativeDecode(blob: Blob): Promise<ImageData> {
   // Prefer createImageBitmap as it's the off-thread option for Firefox.
-  const drawable = 'createImageBitmap' in self ?
-    await createImageBitmap(blob) : await blobToImg(blob);
+  // eslint-disable-next-line no-restricted-globals
+  const drawable = 'createImageBitmap' in self
+    ? await createImageBitmap(blob) : await blobToImg(blob);
 
   return drawableToImageData(drawable);
 }
@@ -265,7 +265,7 @@ interface TransitionOptions {
   easing?: string;
 }
 
-export async function transitionHeight(el: HTMLElement, opts: TransitionOptions): Promise<void> {
+export function transitionHeight(el: HTMLElement, opts: TransitionOptions): Promise<void> {
   const {
     from = el.getBoundingClientRect().height,
     to = el.getBoundingClientRect().height,
@@ -274,15 +274,15 @@ export async function transitionHeight(el: HTMLElement, opts: TransitionOptions)
   } = opts;
 
   if (from === to || duration === 0) {
-    el.style.height = to + 'px';
-    return;
+    el.style.height = `${to}px`;
+    return Promise.resolve();
   }
 
-  el.style.height = from + 'px';
+  el.style.height = `${from}px`;
   // Force a style calc so the browser picks up the start value.
-  getComputedStyle(el).transform;
+  getComputedStyle(el).transform; // eslint-disable-line no-unused-expressions
   el.style.transition = `height ${duration}ms ${easing}`;
-  el.style.height = to + 'px';
+  el.style.height = `${to}px`;
 
   return new Promise<void>((resolve) => {
     const listener = (event: Event) => {

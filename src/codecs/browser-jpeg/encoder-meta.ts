@@ -1,5 +1,5 @@
-export interface EncodeOptions { quality: number; }
-export interface EncoderState { type: typeof type; options: EncodeOptions; }
+export interface EncodeOptions { quality: number }
+export interface EncoderState { type: typeof type; options: EncodeOptions }
 
 export const type = 'browser-jpeg';
 export const label = 'Browser JPEG';

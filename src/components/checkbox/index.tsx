@@ -8,12 +8,11 @@ interface State {}
 export default class Checkbox extends Component<Props, State> {
   render(props: Props) {
     return (
-      <div class={style.checkbox}>
+      <div className={style.checkbox}>
         {props.checked
           ? <CheckedIcon class={`${style.icon} ${style.checked}`} />
-          : <UncheckedIcon class={style.icon} />
-        }
-        <input class={style.realCheckbox} type="checkbox" {...props}/>
+          : <UncheckedIcon class={style.icon} />}
+        <input className={style.realCheckbox} type="checkbox" {...props} />
       </div>
     );
   }

@@ -79,7 +79,7 @@ export default class Options extends Component<Props, State> {
 
   constructor() {
     super();
-    encodersSupported.then(encoderSupportMap => this.setState({ encoderSupportMap }));
+    encodersSupported.then((encoderSupportMap) => this.setState({ encoderSupportMap }));
   }
 
   @bind
@@ -129,77 +129,84 @@ export default class Options extends Component<Props, State> {
     const EncoderOptionComponent = encoderOptionsComponentMap[encoderState.type];
 
     return (
-      <div class={style.optionsScroller}>
+      <div className={style.optionsScroller}>
         <Expander>
-          {encoderState.type === identity.type ? null :
-            <div>
-              <h3 class={style.optionsTitle}>Edit</h3>
-              <label class={style.sectionEnabler}>
-                <Checkbox
-                  name="resize.enable"
-                  checked={!!preprocessorState.resize.enabled}
-                  onChange={this.onPreprocessorEnabledChange}
-                />
+          {encoderState.type === identity.type ? null
+            : (
+              <div>
+                <h3 className={style.optionsTitle}>Edit</h3>
+                <label className={style.sectionEnabler}>
+                  <Checkbox
+                    name="resize.enable"
+                    checked={!!preprocessorState.resize.enabled}
+                    onChange={this.onPreprocessorEnabledChange}
+                  />
                 Resize
-              </label>
-              <Expander>
-                {preprocessorState.resize.enabled ?
-                  <ResizeOptionsComponent
-                    isVector={Boolean(source && source.vectorImage)}
-                    inputWidth={source ? source.processed.width : 1}
-                    inputHeight={source ? source.processed.height : 1}
-                    options={preprocessorState.resize}
-                    onChange={this.onResizeOptionsChange}
-                  />
-                : null}
-              </Expander>
+                </label>
+                <Expander>
+                  {preprocessorState.resize.enabled
+                    ? (
+                      <ResizeOptionsComponent
+                        isVector={Boolean(source && source.vectorImage)}
+                        inputWidth={source ? source.processed.width : 1}
+                        inputHeight={source ? source.processed.height : 1}
+                        options={preprocessorState.resize}
+                        onChange={this.onResizeOptionsChange}
+                      />
+                    )
+                    : null}
+                </Expander>
 
-              <label class={style.sectionEnabler}>
-                <Checkbox
-                  name="quantizer.enable"
-                  checked={!!preprocessorState.quantizer.enabled}
-                  onChange={this.onPreprocessorEnabledChange}
-                />
-                Reduce palette
-              </label>
-              <Expander>
-                {preprocessorState.quantizer.enabled ?
-                  <QuantizerOptionsComponent
-                    options={preprocessorState.quantizer}
-                    onChange={this.onQuantizerOptionsChange}
+                <label className={style.sectionEnabler}>
+                  <Checkbox
+                    name="quantizer.enable"
+                    checked={!!preprocessorState.quantizer.enabled}
+                    onChange={this.onPreprocessorEnabledChange}
                   />
-                : null}
-              </Expander>
-            </div>
-          }
+                Reduce palette
+                </label>
+                <Expander>
+                  {preprocessorState.quantizer.enabled
+                    ? (
+                      <QuantizerOptionsComponent
+                        options={preprocessorState.quantizer}
+                        onChange={this.onQuantizerOptionsChange}
+                      />
+                    )
+                    : null}
+                </Expander>
+              </div>
+            )}
         </Expander>
 
-        <h3 class={style.optionsTitle}>Compress</h3>
+        <h3 className={style.optionsTitle}>Compress</h3>
 
-        <section class={`${style.optionOneCell} ${style.optionsSection}`}>
-          {encoderSupportMap ?
-            <Select value={encoderState.type} onChange={this.onEncoderTypeChange} large>
-              {encoders.filter(encoder => encoderSupportMap[encoder.type]).map(encoder => (
+        <section className={`${style.optionOneCell} ${style.optionsSection}`}>
+          {encoderSupportMap
+            ? (
+              <Select value={encoderState.type} onChange={this.onEncoderTypeChange} large>
+                {encoders.filter((encoder) => encoderSupportMap[encoder.type]).map((encoder) => (
                 // tslint:disable-next-line:jsx-key
-                <option value={encoder.type}>{encoder.label}</option>
-              ))}
-            </Select>
-            :
-            <Select large><option>Loading…</option></Select>
-          }
+                  <option value={encoder.type}>{encoder.label}</option>
+                ))}
+              </Select>
+            )
+            : <Select large><option>Loading…</option></Select>}
         </section>
 
         <Expander>
-          {EncoderOptionComponent ?
-            <EncoderOptionComponent
-              options={
+          {EncoderOptionComponent
+            ? (
+              <EncoderOptionComponent
+                options={
                 // Casting options, as encoderOptionsComponentMap[encodeData.type] ensures
                 // the correct type, but typescript isn't smart enough.
                 encoderState.options as any
               }
-              onChange={onEncoderOptionsChange}
-            />
-          : null}
+                onChange={onEncoderOptionsChange}
+              />
+            )
+            : null}
         </Expander>
       </div>
     );

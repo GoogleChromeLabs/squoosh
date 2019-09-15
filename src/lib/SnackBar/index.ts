@@ -30,6 +30,7 @@ function createSnack(message: string, options: SnackOptions): [Element, Promise<
       const button = document.createElement('button');
       button.className = style.button;
       button.textContent = action;
+      // eslint-disable-next-line no-loop-func
       button.addEventListener('click', () => {
         clearTimeout(timeoutId);
         resolve(action);
@@ -39,6 +40,7 @@ function createSnack(message: string, options: SnackOptions): [Element, Promise<
 
     // Add timeout
     if (timeout) {
+      // eslint-disable-next-line no-restricted-globals
       timeoutId = self.setTimeout(
         () => resolve(''),
         timeout,
@@ -51,6 +53,7 @@ function createSnack(message: string, options: SnackOptions): [Element, Promise<
 
 export default class SnackBarElement extends HTMLElement {
   private _snackbars: [string, SnackOptions, (action: Promise<string>) => void][] = [];
+
   private _processingQueue = false;
 
   /**
@@ -75,10 +78,12 @@ export default class SnackBarElement extends HTMLElement {
       this.appendChild(el);
 
       // Wait for the user to click an action, or for the snack to timeout.
+      // eslint-disable-next-line no-await-in-loop
       await result;
 
       // Transition the snack away.
       el.setAttribute('aria-hidden', 'true');
+      // eslint-disable-next-line no-await-in-loop
       await new Promise((resolve) => {
         el.addEventListener('animationend', () => resolve());
       });

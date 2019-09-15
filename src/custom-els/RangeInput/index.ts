@@ -14,7 +14,9 @@ function getPrescision(value: string): number {
 
 class RangeInputElement extends HTMLElement {
   private _input: HTMLInputElement;
+
   private _valueDisplay?: HTMLDivElement;
+
   private _ignoreChange = false;
 
   static get observedAttributes() {
@@ -49,14 +51,13 @@ class RangeInputElement extends HTMLElement {
 
   connectedCallback() {
     if (this.contains(this._input)) return;
-    this.innerHTML =
-      `<div class="${style.thumbWrapper}">` +
-        `<div class="${style.thumb}"></div>` +
-        `<div class="${style.valueDisplay}"></div>` +
-      '</div>';
+    this.innerHTML = `<div class="${style.thumbWrapper}">`
+        + `<div class="${style.thumb}"></div>`
+        + `<div class="${style.valueDisplay}"></div>`
+      + '</div>';
 
     this.insertBefore(this._input, this.firstChild);
-    this._valueDisplay = this.querySelector('.' + style.valueDisplay) as HTMLDivElement;
+    this._valueDisplay = this.querySelector(`.${style.valueDisplay}`) as HTMLDivElement;
     // Set inline styles (this is useful when used with frameworks which might clear inline styles)
     this._update();
   }
@@ -94,12 +95,12 @@ class RangeInputElement extends HTMLElement {
     const max = Number(this.max) || 100;
     const labelPrecision = Number(this.labelPrecision) || getPrescision(this.step) || 0;
     const percent = 100 * (value - min) / (max - min);
-    const displayValue = labelPrecision ? value.toFixed(labelPrecision) :
-      Math.round(value).toString();
+    const displayValue = labelPrecision ? value.toFixed(labelPrecision)
+      : Math.round(value).toString();
 
     this._valueDisplay!.textContent = displayValue;
-    this.style.setProperty('--value-percent', percent + '%');
-    this.style.setProperty('--value-width', '' + displayValue.length);
+    this.style.setProperty('--value-percent', `${percent}%`);
+    this.style.setProperty('--value-width', `${displayValue.length}`);
   }
 
   private _reflectAttributes() {

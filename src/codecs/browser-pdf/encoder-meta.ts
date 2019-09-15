@@ -1,7 +1,7 @@
 import { canvasEncodeTest } from '../generic/util';
 
 export interface EncodeOptions { }
-export interface EncoderState { type: typeof type; options: EncodeOptions; }
+export interface EncoderState { type: typeof type; options: EncodeOptions }
 
 export const type = 'browser-pdf';
 export const label = 'Browser PDF';

@@ -1,4 +1,5 @@
 import { h, Component } from 'preact';
+import linkState from 'linkstate';
 import { bind } from '../../lib/initial-util';
 import { inputFieldChecked, inputFieldValueAsNumber, preventDefault } from '../../lib/util';
 import { EncodeOptions, MozJpegColorSpace } from './encoder-meta';
@@ -7,7 +8,6 @@ import Checkbox from '../../components/checkbox';
 import Expander from '../../components/expander';
 import Select from '../../components/select';
 import Range from '../../components/range';
-import linkState from 'linkstate';
 
 interface Props {
   options: EncodeOptions;
@@ -58,8 +58,8 @@ export default class MozJPEGEncoderOptions extends Component<Props, State> {
     // I'm rendering both lossy and lossless forms, as it becomes much easier when
     // gathering the data.
     return (
-      <form class={style.optionsSection} onSubmit={preventDefault}>
-        <div class={style.optionOneCell}>
+      <form className={style.optionsSection} onSubmit={preventDefault}>
+        <div className={style.optionOneCell}>
           <Range
             name="quality"
             min="0"
@@ -70,7 +70,7 @@ export default class MozJPEGEncoderOptions extends Component<Props, State> {
             Quality:
           </Range>
         </div>
-        <label class={style.optionInputFirst}>
+        <label className={style.optionInputFirst}>
           <Checkbox
             checked={showAdvanced}
             onChange={linkState(this, 'showAdvanced')}
@@ -78,179 +78,186 @@ export default class MozJPEGEncoderOptions extends Component<Props, State> {
           Show advanced settings
         </label>
         <Expander>
-          {showAdvanced ?
-            <div>
-              <label class={style.optionTextFirst}>
+          {showAdvanced
+            ? (
+              <div>
+                <label className={style.optionTextFirst}>
                 Channels:
-                <Select
-                  name="color_space"
-                  value={options.color_space}
-                  onChange={this.onChange}
-                >
-                  <option value={MozJpegColorSpace.GRAYSCALE}>Grayscale</option>
-                  <option value={MozJpegColorSpace.RGB}>RGB</option>
-                  <option value={MozJpegColorSpace.YCbCr}>YCbCr</option>
-                </Select>
-              </label>
-              <Expander>
-                {options.color_space === MozJpegColorSpace.YCbCr ?
-                  <div>
-                    <label class={style.optionInputFirst}>
-                      <Checkbox
-                        name="auto_subsample"
-                        checked={options.auto_subsample}
-                        onChange={this.onChange}
-                      />
+                  <Select
+                    name="color_space"
+                    value={options.color_space}
+                    onChange={this.onChange}
+                  >
+                    <option value={MozJpegColorSpace.GRAYSCALE}>Grayscale</option>
+                    <option value={MozJpegColorSpace.RGB}>RGB</option>
+                    <option value={MozJpegColorSpace.YCbCr}>YCbCr</option>
+                  </Select>
+                </label>
+                <Expander>
+                  {options.color_space === MozJpegColorSpace.YCbCr
+                    ? (
+                      <div>
+                        <label className={style.optionInputFirst}>
+                          <Checkbox
+                            name="auto_subsample"
+                            checked={options.auto_subsample}
+                            onChange={this.onChange}
+                          />
                       Auto subsample chroma
-                    </label>
-                    <Expander>
-                      {options.auto_subsample ? null :
-                        <div class={style.optionOneCell}>
-                          <Range
-                            name="chroma_subsample"
-                            min="1"
-                            max="4"
-                            value={options.chroma_subsample}
-                            onInput={this.onChange}
-                          >
+                        </label>
+                        <Expander>
+                          {options.auto_subsample ? null
+                            : (
+                              <div className={style.optionOneCell}>
+                                <Range
+                                  name="chroma_subsample"
+                                  min="1"
+                                  max="4"
+                                  value={options.chroma_subsample}
+                                  onInput={this.onChange}
+                                >
                             Subsample chroma by:
-                          </Range>
-                        </div>
-                      }
-                    </Expander>
-                    <label class={style.optionInputFirst}>
-                      <Checkbox
-                        name="separate_chroma_quality"
-                        checked={options.separate_chroma_quality}
-                        onChange={this.onChange}
-                      />
+                                </Range>
+                              </div>
+                            )}
+                        </Expander>
+                        <label className={style.optionInputFirst}>
+                          <Checkbox
+                            name="separate_chroma_quality"
+                            checked={options.separate_chroma_quality}
+                            onChange={this.onChange}
+                          />
                       Separate chroma quality
-                    </label>
-                    <Expander>
-                      {options.separate_chroma_quality ?
-                        <div class={style.optionOneCell}>
-                          <Range
-                            name="chroma_quality"
-                            min="0"
-                            max="100"
-                            value={options.chroma_quality}
-                            onInput={this.onChange}
-                          >
+                        </label>
+                        <Expander>
+                          {options.separate_chroma_quality
+                            ? (
+                              <div className={style.optionOneCell}>
+                                <Range
+                                  name="chroma_quality"
+                                  min="0"
+                                  max="100"
+                                  value={options.chroma_quality}
+                                  onInput={this.onChange}
+                                >
                             Chroma quality:
-                          </Range>
-                        </div>
-                        : null
-                      }
-                    </Expander>
-                  </div>
-                  : null
-                }
-              </Expander>
-              <label class={style.optionInputFirst}>
-                <Checkbox
-                  name="baseline"
-                  checked={options.baseline}
-                  onChange={this.onChange}
-                />
+                                </Range>
+                              </div>
+                            )
+                            : null}
+                        </Expander>
+                      </div>
+                    )
+                    : null}
+                </Expander>
+                <label className={style.optionInputFirst}>
+                  <Checkbox
+                    name="baseline"
+                    checked={options.baseline}
+                    onChange={this.onChange}
+                  />
                 Pointless spec compliance
-              </label>
-              <Expander>
-                {options.baseline ? null :
-                  <label class={style.optionInputFirst}>
-                    <Checkbox
-                      name="progressive"
-                      checked={options.progressive}
-                      onChange={this.onChange}
-                    />
+                </label>
+                <Expander>
+                  {options.baseline ? null
+                    : (
+                      <label className={style.optionInputFirst}>
+                        <Checkbox
+                          name="progressive"
+                          checked={options.progressive}
+                          onChange={this.onChange}
+                        />
                     Progressive rendering
-                  </label>
-                }
-              </Expander>
-              <Expander>
-                {options.baseline ?
-                  <label class={style.optionInputFirst}>
-                    <Checkbox
-                      name="optimize_coding"
-                      checked={options.optimize_coding}
-                      onChange={this.onChange}
-                    />
+                      </label>
+                    )}
+                </Expander>
+                <Expander>
+                  {options.baseline
+                    ? (
+                      <label className={style.optionInputFirst}>
+                        <Checkbox
+                          name="optimize_coding"
+                          checked={options.optimize_coding}
+                          onChange={this.onChange}
+                        />
                     Optimize Huffman table
-                  </label>
-                  : null
-                }
-              </Expander>
-              <div class={style.optionOneCell}>
-                <Range
-                  name="smoothing"
-                  min="0"
-                  max="100"
-                  value={options.smoothing}
-                  onInput={this.onChange}
-                >
+                      </label>
+                    )
+                    : null}
+                </Expander>
+                <div className={style.optionOneCell}>
+                  <Range
+                    name="smoothing"
+                    min="0"
+                    max="100"
+                    value={options.smoothing}
+                    onInput={this.onChange}
+                  >
                   Smoothing:
-                </Range>
-              </div>
-              <label class={style.optionTextFirst}>
+                  </Range>
+                </div>
+                <label className={style.optionTextFirst}>
                 Quantization:
-                <Select
-                  name="quant_table"
-                  value={options.quant_table}
-                  onChange={this.onChange}
-                >
-                  <option value="0">JPEG Annex K</option>
-                  <option value="1">Flat</option>
-                  <option value="2">MSSIM-tuned Kodak</option>
-                  <option value="3">ImageMagick</option>
-                  <option value="4">PSNR-HVS-M-tuned Kodak</option>
-                  <option value="5">Klein et al</option>
-                  <option value="6">Watson et al</option>
-                  <option value="7">Ahumada et al</option>
-                  <option value="8">Peterson et al</option>
-                </Select>
-              </label>
-              <label class={style.optionInputFirst}>
-                <Checkbox
-                  name="trellis_multipass"
-                  checked={options.trellis_multipass}
-                  onChange={this.onChange}
-                />
+                  <Select
+                    name="quant_table"
+                    value={options.quant_table}
+                    onChange={this.onChange}
+                  >
+                    <option value="0">JPEG Annex K</option>
+                    <option value="1">Flat</option>
+                    <option value="2">MSSIM-tuned Kodak</option>
+                    <option value="3">ImageMagick</option>
+                    <option value="4">PSNR-HVS-M-tuned Kodak</option>
+                    <option value="5">Klein et al</option>
+                    <option value="6">Watson et al</option>
+                    <option value="7">Ahumada et al</option>
+                    <option value="8">Peterson et al</option>
+                  </Select>
+                </label>
+                <label className={style.optionInputFirst}>
+                  <Checkbox
+                    name="trellis_multipass"
+                    checked={options.trellis_multipass}
+                    onChange={this.onChange}
+                  />
                 Trellis multipass
-              </label>
-              <Expander>
-                {options.trellis_multipass ?
-                  <label class={style.optionInputFirst}>
-                    <Checkbox
-                      name="trellis_opt_zero"
-                      checked={options.trellis_opt_zero}
-                      onChange={this.onChange}
-                    />
+                </label>
+                <Expander>
+                  {options.trellis_multipass
+                    ? (
+                      <label className={style.optionInputFirst}>
+                        <Checkbox
+                          name="trellis_opt_zero"
+                          checked={options.trellis_opt_zero}
+                          onChange={this.onChange}
+                        />
                     Optimize zero block runs
-                  </label>
-                  : null
-                }
-              </Expander>
-              <label class={style.optionInputFirst}>
-                <Checkbox
-                  name="trellis_opt_table"
-                  checked={options.trellis_opt_table}
-                  onChange={this.onChange}
-                />
+                      </label>
+                    )
+                    : null}
+                </Expander>
+                <label className={style.optionInputFirst}>
+                  <Checkbox
+                    name="trellis_opt_table"
+                    checked={options.trellis_opt_table}
+                    onChange={this.onChange}
+                  />
                 Optimize after trellis quantization
-              </label>
-              <div class={style.optionOneCell}>
-                <Range
-                  name="trellis_loops"
-                  min="1"
-                  max="50"
-                  value={options.trellis_loops}
-                  onInput={this.onChange}
-                >
+                </label>
+                <div className={style.optionOneCell}>
+                  <Range
+                    name="trellis_loops"
+                    min="1"
+                    max="50"
+                    value={options.trellis_loops}
+                    onInput={this.onChange}
+                  >
                   Trellis quantization passes:
-                </Range>
+                  </Range>
+                </div>
               </div>
-            </div>
-            : null
-          }
+            )
+            : null}
         </Expander>
       </form>
     );

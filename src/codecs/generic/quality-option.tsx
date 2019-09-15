@@ -8,8 +8,8 @@ interface EncodeOptions {
 }
 
 type Props = {
-  options: EncodeOptions,
-  onChange(newOptions: EncodeOptions): void,
+  options: EncodeOptions;
+  onChange(newOptions: EncodeOptions): void;
 };
 
 interface QualityOptionArg {
@@ -34,8 +34,8 @@ export default function qualityOption(opts: QualityOptionArg = {}) {
 
     render({ options }: Props) {
       return (
-        <div class={style.optionsSection}>
-          <div class={style.optionOneCell}>
+        <div className={style.optionsSection}>
+          <div className={style.optionOneCell}>
             <Range
               name="quality"
               min={min}

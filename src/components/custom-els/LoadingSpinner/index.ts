@@ -20,20 +20,20 @@ export default class LoadingSpinner extends HTMLElement {
     // You can't set attributes/content in a custom element constructor, so I'm waiting a microtask.
     Promise.resolve().then(() => {
       this.style.display = 'none';
-      this.innerHTML = '' +
-        `<div class="${styles.spinnerContainer}">` +
-          `<div class="${styles.spinnerLayer}">` +
-            `<div class="${styles.spinnerCircleClipper} ${styles.spinnerLeft}">` +
-              `<div class="${styles.spinnerCircle}"></div>` +
-            '</div>' +
-            `<div class="${styles.spinnerGapPatch}">` +
-              `<div class="${styles.spinnerCircle}"></div>` +
-            '</div>' +
-            `<div class="${styles.spinnerCircleClipper} ${styles.spinnerRight}">` +
-              `<div class="${styles.spinnerCircle}"></div>` +
-            '</div>' +
-          '</div>' +
-        '</div>';
+      this.innerHTML = ''
+        + `<div class="${styles.spinnerContainer}">`
+          + `<div class="${styles.spinnerLayer}">`
+            + `<div class="${styles.spinnerCircleClipper} ${styles.spinnerLeft}">`
+              + `<div class="${styles.spinnerCircle}"></div>`
+            + '</div>'
+            + `<div class="${styles.spinnerGapPatch}">`
+              + `<div class="${styles.spinnerCircle}"></div>`
+            + '</div>'
+            + `<div class="${styles.spinnerCircleClipper} ${styles.spinnerRight}">`
+              + `<div class="${styles.spinnerCircle}"></div>`
+            + '</div>'
+          + '</div>'
+        + '</div>';
     });
   }
 
