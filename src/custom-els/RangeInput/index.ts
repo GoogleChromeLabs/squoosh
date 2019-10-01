@@ -69,7 +69,7 @@ class RangeInputElement extends HTMLElement {
     this.setAttribute('label-precision', precision);
   }
 
-  attributeChangedCallback(name: string, oldValue: string, newValue: string | null) {
+  attributeChangedCallback(name: string, _oldValue: string, newValue: string | null) {
     if (this._ignoreChange) return;
     if (newValue === null) {
       this._input.removeAttribute(name);

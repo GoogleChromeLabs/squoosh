@@ -87,7 +87,7 @@ export default class MultiPanel extends HTMLElement {
     this._childrenChange();
   }
 
-  attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null) {
+  attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
     if (name === openOneOnlyAttr && newValue === null) {
       this._closeAll({ exceptFirst: true });
     }
@@ -257,6 +257,8 @@ export default class MultiPanel extends HTMLElement {
     if (previousContent) {
       return previousContent.previousElementSibling as HTMLElement;
     }
+
+    return undefined;
   }
 
   // returns heading that is after currently selected one.
@@ -267,6 +269,8 @@ export default class MultiPanel extends HTMLElement {
     if (nextContent) {
       return nextContent.nextElementSibling as HTMLElement;
     }
+
+    return undefined;
   }
 
   // returns first heading in multi-panel.
@@ -287,6 +291,8 @@ export default class MultiPanel extends HTMLElement {
     if (lastContent) {
       return lastContent.previousElementSibling as HTMLElement;
     }
+
+    return undefined;
   }
 
   /**

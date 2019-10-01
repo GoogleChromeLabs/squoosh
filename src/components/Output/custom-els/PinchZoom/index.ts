@@ -98,7 +98,7 @@ export default class PinchZoom extends HTMLElement {
 
     // Watch for pointers
     const pointerTracker: PointerTracker = new PointerTracker(this, {
-      start: (pointer, event) => {
+      start: (_pointer, event) => {
         // We only want to track 2 pointers at most
         if (pointerTracker.currentPointers.length === 2 || !this._positioningEl) return false;
         event.preventDefault();

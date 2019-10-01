@@ -38,7 +38,7 @@ export default class Results extends Component<Props, State> {
   /** The timeout ID between entering the loading state, and changing UI */
   private loadingTimeoutId: number = 0;
 
-  componentDidUpdate(prevProps: Props, prevState: State) {
+  componentDidUpdate(prevProps: Props, _prevState: State) {
     if (prevProps.loading && !this.props.loading) {
       // Just stopped loading
       clearTimeout(this.loadingTimeoutId);

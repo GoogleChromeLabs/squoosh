@@ -49,7 +49,7 @@ export default class Processor {
   private static _processingJob(options: ProcessingJobOptions = {}) {
     const { needsWorker = false } = options;
 
-    return (target: Processor, propertyKey: string, descriptor: PropertyDescriptor): void => {
+    return (_target: Processor, _propertyKey: string, descriptor: PropertyDescriptor): void => {
       const processingFunc = descriptor.value;
 
       descriptor.value = async function (this: Processor, ...args: any[]) {

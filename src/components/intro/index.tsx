@@ -73,7 +73,7 @@ export default class Intro extends Component<Props, State> {
   }
 
   @bind
-  private async onDemoClick(index: number, event: Event) {
+  private async onDemoClick(index: number, _event: Event) {
     try {
       this.setState({ fetchingDemoIndex: index });
       const demo = demos[index];
