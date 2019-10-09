@@ -28,4 +28,22 @@ You can run the development server with:
 npm start
 ```
 
+# Build with Docker
+
+```sh
+docker build -t squoosh .
+```
+
+with new version
+
+```sh
+docker build -t squoosh-1.8.0 --build-arg VERSION=v1.8.0 .
+```
+
+run the container
+
+```sh
+docker run --name squoosh -p 8080:8080 squoosh-1.8.0
+```
+
 [Squoosh]: https://squoosh.app
