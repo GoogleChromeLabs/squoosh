@@ -1,6 +1,6 @@
 #!/bin/bash
 
-npx webpack-dev-server --port 9000 &
+npx http-server -c0 -p 9000 build &
 
 npm install -g @lhci/cli@next
 
