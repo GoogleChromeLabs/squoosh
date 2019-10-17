@@ -1,4 +1,12 @@
+sudo: required
+dist: xenial
 language: node_js
+node_js:
+  - '10'
+addons:
+  chrome: stable
 cache: npm
-script: npm run build
+script:
+  - npm run build
+  - ./run_lighthouse.sh
 after_success: npm run sizereport
