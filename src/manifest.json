@@ -11,6 +11,12 @@
       "src": "/assets/icon-large.png",
       "type": "image/png",
       "sizes": "1024x1024"
+    },
+    {
+      "src": "/assets/icon-large-maskable.png",
+      "type": "image/png",
+      "sizes": "1024x1024",
+      "purpose": "maskable"
     }
   ],
   "share_target": {
