@@ -10,7 +10,7 @@ crate-type = ["cdylib"]
 default = ["console_error_panic_hook", "wee_alloc"]
 
 [dependencies]
-cfg-if = "0.1.2"
+cfg-if = "0.1.10"
 wasm-bindgen = "0.2.38"
 # lazy_static = "1.0.0"
 hqx = {git = "https://github.com/CryZe/wasmboy-rs", tag="v0.1.2"}
