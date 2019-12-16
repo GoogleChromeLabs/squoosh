@@ -549,6 +549,8 @@ export default class Compress extends Component<Props, State> {
       } catch (err) {
         if (err.name === 'AbortError') return;
         this.props.showSnack(`Processing error (type=${settings.encoderState.type}): ${err}`);
+        sides = cleanMerge(this.state.sides, index, { loading: false });
+        this.setState({ sides });
         throw err;
       }
     }
