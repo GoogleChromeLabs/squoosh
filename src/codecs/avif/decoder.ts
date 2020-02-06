@@ -1,8 +1,8 @@
-import avif_dec, { WebPModule } from '../../../codecs/avif_dec/avif_dec';
+import avif_dec, { AVIFModule } from '../../../codecs/avif_dec/avif_dec';
 import wasmUrl from '../../../codecs/avif_dec/avif_dec.wasm';
 import { initEmscriptenModule } from '../util';
 
-let emscriptenModule: Promise<WebPModule>;
+let emscriptenModule: Promise<AVIFModule>;
 
 export async function decode(data: ArrayBuffer): Promise<ImageData> {
   if (!emscriptenModule) emscriptenModule = initEmscriptenModule(avif_dec, wasmUrl);
