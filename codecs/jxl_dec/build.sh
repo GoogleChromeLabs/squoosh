@@ -28,7 +28,7 @@ test -n "$SKIP_LIBJXL" || (
   mkdir -p build
   cd build
   emcmake cmake ../
-  emmake make jpegxl-static brunslidec-static brunslicommon-static brunslienc-static
+  emmake make jpegxl-static 
 )
 
 echo "============================================="

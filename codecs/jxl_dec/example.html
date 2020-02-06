@@ -1,7 +1,7 @@
 <!doctype html>
-<script src='avif_dec.js'></script>
+<script src='jxl_dec.js'></script>
 <script>
-  const Module = avif_dec();
+  const Module = jxl_dec();
 
   async function loadFile(src) {
     const resp = await fetch(src);
@@ -9,7 +9,7 @@
   }
 
   Module.onRuntimeInitialized = async _ => {
-    const image = await loadFile('../example.avif');
+    const image = await loadFile('../example.jxl');
     const result = Module.decode(image);
     console.log(result.width, result.height, result.buffer);
     const imageData = new ImageData(new Uint8ClampedArray(result.buffer), result.width, result.height);

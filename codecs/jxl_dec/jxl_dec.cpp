@@ -14,7 +14,18 @@ public:
   RawImage(val b, int w, int h) : buffer(b), width(w), height(h) {}
 };
 
-val decode(std::string data) {
+uint8_t clamp(float v, float min, float max) {
+  if (v < min) {
+    return min;
+  }
+  if (v > max) {
+    return max;
+  }
+  return v;
+}
+
+uint8_t *result;
+RawImage decode(std::string data) {
   jxl::Span<const uint8_t> compressed((uint8_t *)data.c_str(), data.length());
   jxl::DecompressParams dparams;
   // jxl::ThreadPool pool;
@@ -22,11 +33,34 @@ val decode(std::string data) {
   jxl::AuxOut aux_out;
 
   if (!DecodeFile(dparams, compressed, &io, &aux_out, NULL)) {
-    printf("FAIL\n");
+    return RawImage(val::null(), -1, -1);
   }
-  printf("YAY\n");
-  return val(1);
+  jxl::ImageBundle *main = &io.Main();
+  if (!main->HasColor()) {
+    return RawImage(val::null(), -1, -1);
+  }
+  const jxl::Image3F *buffer = &main->color();
+  int width = buffer->xsize();
+  int height = buffer->ysize();
+  result = new uint8_t[width * height * 4];
+  for (int y = 0; y < height; y++) {
+    const float *red = buffer->PlaneRow(0, y);
+    const float *green = buffer->PlaneRow(1, y);
+    const float *blue = buffer->PlaneRow(2, y);
+    for (int x = 0; x < width; x++) {
+      int pixelOffset = width * y + x;
+      result[pixelOffset * 4 + 0] = clamp(red[x], 0, 255);
+      result[pixelOffset * 4 + 1] = clamp(green[x], 0, 255);
+      result[pixelOffset * 4 + 2] = clamp(blue[x], 0, 255);
+      result[pixelOffset * 4 + 3] = 255;
+    }
+  }
+
+  return RawImage(val(typed_memory_view(width * height * 4, result)), width,
+                  height);
 }
+
+void free_result() { delete result; }
 
 EMSCRIPTEN_BINDINGS(my_module) {
   class_<RawImage>("RawImage")
@@ -35,4 +69,5 @@ EMSCRIPTEN_BINDINGS(my_module) {
       .property("height", &RawImage::height);
 
   function("decode", &decode);
+  function("free_result", &free_result);
 }
