@@ -7,6 +7,7 @@ import OxiPNGEncoderOptions from '../../codecs/oxipng/options';
 import MozJpegEncoderOptions from '../../codecs/mozjpeg/options';
 import BrowserJPEGEncoderOptions from '../../codecs/browser-jpeg/options';
 import WebPEncoderOptions from '../../codecs/webp/options';
+import AvifEncoderOptions from '../../codecs/avif/options';
 import BrowserWebPEncoderOptions from '../../codecs/browser-webp/options';
 
 import QuantizerOptionsComponent from '../../codecs/imagequant/options';
@@ -16,6 +17,7 @@ import * as identity from '../../codecs/identity/encoder-meta';
 import * as oxiPNG from '../../codecs/oxipng/encoder-meta';
 import * as mozJPEG from '../../codecs/mozjpeg/encoder-meta';
 import * as webP from '../../codecs/webp/encoder-meta';
+import * as avif from '../../codecs/avif/encoder-meta';
 import * as browserPNG from '../../codecs/browser-png/encoder-meta';
 import * as browserJPEG from '../../codecs/browser-jpeg/encoder-meta';
 import * as browserWebP from '../../codecs/browser-webp/encoder-meta';
@@ -47,6 +49,7 @@ const encoderOptionsComponentMap: {
   [oxiPNG.type]: OxiPNGEncoderOptions,
   [mozJPEG.type]: MozJpegEncoderOptions,
   [webP.type]: WebPEncoderOptions,
+  [avif.type]: AvifEncoderOptions,
   [browserPNG.type]: undefined,
   [browserJPEG.type]: BrowserJPEGEncoderOptions,
   [browserWebP.type]: BrowserWebPEncoderOptions,

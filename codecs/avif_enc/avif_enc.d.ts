@@ -1,7 +1,7 @@
-// import { EncodeOptions } from '../../src/codecs/webp/encoder-meta';
+import { EncodeOptions } from '../../src/codecs/avif/encoder-meta';
 
 interface AVIFModule extends EmscriptenWasm.Module {
-  encode(data: BufferSource, width: number, height: number): Uint8Array;
+  encode(data: BufferSource, width: number, height: number, options: EncodeOptions): Uint8Array;
   free_result(): void;
 }
 
