@@ -98,6 +98,15 @@ async function avifDecode(data: ArrayBuffer): Promise<ImageData> {
   return timed('avifDencode', () => decode(data));
 }
 
+async function jxlEncode(
+  data: ImageData, options: import('../jxl/encoder-meta').EncodeOptions,
+): Promise<ArrayBuffer> {
+  const { encode } = await import(
+    /* webpackChunkName: "process-jxl-enc" */
+    '../jxl/encoder');
+  return encode(data, options);
+}
+
 async function jxlDecode(data: ArrayBuffer): Promise<ImageData> {
   const { decode } = await import(
     /* webpackChunkName: "process-jxl-dec" */
@@ -115,6 +124,7 @@ const exports = {
   webpDecode,
   avifEncode,
   avifDecode,
+  jxlEncode,
   jxlDecode,
 };
 export type ProcessorWorkerApi = typeof exports;
