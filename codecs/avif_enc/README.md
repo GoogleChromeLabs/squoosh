@@ -9,10 +9,33 @@ Run example.js
 
 ## API
 
-### `RawImage decode(std::string buffer)`
+### `Uint8Array encode(std::string image_in, int image_width, int image_height, AvifOptions opts)`
 
-Decodes the given avif buffer into raw RGBA. `RawImage` is a class with 3 fields: `buffer`, `width`, and `height`.
+Encodes the given image with given dimension to AVIF. Options looks like this:
+
+```c++
+struct AvifOptions {
+  // 0 = lossless
+  // 63 = worst quality
+  int minQuantizer;
+  int maxQuantizer;
+
+  // [0 - 6]
+  // Creates 2^n tiles in that dimension
+  int tileRowsLog2;
+  int tileColsLog2;
+
+  // 0 = slowest
+  // 10 = fastest
+  int speed;
+
+  // 0 = 4:2:0
+  // 1 = 4:2:2
+  // 2 = 4:4:4
+  int subsample;
+};
+```
 
 ### `void free_result()`
 
-Frees the result created by `decode()`.
+Frees the result created by `encode()`.
