@@ -1,0 +1,12 @@
+{
+  "name": "jxl_dec",
+  "scripts": {
+    "install": "napa",
+    "build": "docker run --rm -v $(pwd):/src trzeci/emscripten ./build.sh"
+  },
+  "napa": {
+  },
+  "devDependencies": {
+    "napa": "3.0.0"
+  }
+}
