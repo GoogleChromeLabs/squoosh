@@ -56,16 +56,40 @@ RawImage decode(std::string avifimage) {
   // ... image->rgbPlanes;
   // ... image->rgbRowBytes;
 
-  for (int y = 0; y < height; y++) {
-    for (int x = 0; x < width; x++) {
-      int pixelOffset = y * image->width + x;
-      result[pixelOffset * 4 + 0] = image->rgbPlanes[0][pixelOffset];
-      result[pixelOffset * 4 + 1] = image->rgbPlanes[1][pixelOffset];
-      result[pixelOffset * 4 + 2] = image->rgbPlanes[2][pixelOffset];
-      if (image->alphaPlane) {
-        result[pixelOffset * 4 + 3] = image->alphaPlane[pixelOffset];
-      } else {
-        result[pixelOffset * 4 + 3] = 255;
+  if (image->depth > 8) {
+    uint16_t depthDivistor = 1 << (image->depth - 8);
+    // Plane ptrs are uint16_t*
+    for (int y = 0; y < height; y++) {
+      for (int x = 0; x < width; x++) {
+        int pixelOffset = y * image->width + x;
+        result[pixelOffset * 4 + 0] = (uint8_t)(
+            ((uint16_t *)(image->rgbPlanes[0]))[pixelOffset] / depthDivistor);
+        result[pixelOffset * 4 + 1] = (uint8_t)(
+            ((uint16_t *)(image->rgbPlanes[1]))[pixelOffset] / depthDivistor);
+        result[pixelOffset * 4 + 2] = (uint8_t)(
+            ((uint16_t *)(image->rgbPlanes[2]))[pixelOffset] / depthDivistor);
+        if (image->alphaPlane) {
+          result[pixelOffset * 4 + 3] = (uint8_t)(
+              ((uint16_t *)(image->alphaPlane))[pixelOffset] / depthDivistor);
+        } else {
+          result[pixelOffset * 4 + 3] = 255;
+        }
+      }
+    }
+
+  } else {
+    // Plane ptrs are uint8_t*
+    for (int y = 0; y < height; y++) {
+      for (int x = 0; x < width; x++) {
+        int pixelOffset = y * image->width + x;
+        result[pixelOffset * 4 + 0] = image->rgbPlanes[0][pixelOffset];
+        result[pixelOffset * 4 + 1] = image->rgbPlanes[1][pixelOffset];
+        result[pixelOffset * 4 + 2] = image->rgbPlanes[2][pixelOffset];
+        if (image->alphaPlane) {
+          result[pixelOffset * 4 + 3] = image->alphaPlane[pixelOffset];
+        } else {
+          result[pixelOffset * 4 + 3] = 255;
+        }
       }
     }
   }
