@@ -10,7 +10,7 @@ export CPPFLAGS="${OPTIMIZE}"
 echo "============================================="
 echo "Compiling libaom"
 echo "============================================="
-(
+test -n "$SKIP_LIBAOM" || (
   cd node_modules/libavif/ext  
   test -d aom || git clone -b v1.0.0-errata1-avif --depth 1 https://aomedia.googlesource.com/aom aom
 
@@ -40,7 +40,7 @@ echo "============================================="
 echo "============================================="
 echo "Compiling libavif"
 echo "============================================="
-(
+test -n "$SKIP_LIBAVIF" || (
   cd node_modules/libavif
   mkdir -p build
   cd build
