@@ -2,6 +2,7 @@ import * as identity from './identity/encoder-meta';
 import * as optiPNG from './optipng/encoder-meta';
 import * as mozJPEG from './mozjpeg/encoder-meta';
 import * as webP from './webp/encoder-meta';
+import * as jxl from './jxl/encoder-meta';
 import * as browserPNG from './browser-png/encoder-meta';
 import * as browserJPEG from './browser-jpeg/encoder-meta';
 import * as browserWebP from './browser-webp/encoder-meta';
@@ -20,6 +21,7 @@ export type EncoderState =
   optiPNG.EncoderState |
   mozJPEG.EncoderState |
   webP.EncoderState |
+  jxl.EncoderState |
   browserPNG.EncoderState |
   browserJPEG.EncoderState |
   browserWebP.EncoderState |
@@ -34,6 +36,7 @@ export type EncoderOptions =
   optiPNG.EncodeOptions |
   mozJPEG.EncodeOptions |
   webP.EncodeOptions |
+  jxl.EncodeOptions |
   browserPNG.EncodeOptions |
   browserJPEG.EncodeOptions |
   browserWebP.EncodeOptions |
@@ -50,6 +53,7 @@ export const encoderMap = {
   [optiPNG.type]: optiPNG,
   [mozJPEG.type]: mozJPEG,
   [webP.type]: webP,
+  [jxl.type]: jxl,
   [browserPNG.type]: browserPNG,
   [browserJPEG.type]: browserJPEG,
   [browserWebP.type]: browserWebP,

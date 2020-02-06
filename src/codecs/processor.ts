@@ -4,6 +4,7 @@ import { canvasEncode, blobToArrayBuffer } from '../lib/util';
 import { EncodeOptions as MozJPEGEncoderOptions } from './mozjpeg/encoder-meta';
 import { EncodeOptions as OptiPNGEncoderOptions } from './optipng/encoder-meta';
 import { EncodeOptions as WebPEncoderOptions } from './webp/encoder-meta';
+import { EncodeOptions as JXLEncoderOptions } from './jxl/encoder-meta';
 import { EncodeOptions as BrowserJPEGOptions } from './browser-jpeg/encoder-meta';
 import { EncodeOptions as BrowserWebpEncodeOptions } from './browser-webp/encoder-meta';
 import { BrowserResizeOptions, VectorResizeOptions } from './resize/processor-meta';
@@ -161,6 +162,11 @@ export default class Processor {
   async webpDecode(blob: Blob): Promise<ImageData> {
     const data = await blobToArrayBuffer(blob);
     return this._workerApi!.webpDecode(data);
+  }
+
+  @Processor._processingJob({ needsWorker: true })
+  jxlEncode(data: ImageData, opts: JXLEncoderOptions): Promise<ArrayBuffer> {
+    return this._workerApi!.jxlEncode(data, opts);
   }
 
   @Processor._processingJob({ needsWorker: true })

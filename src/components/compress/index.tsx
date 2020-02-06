@@ -10,6 +10,7 @@ import * as identity from '../../codecs/identity/encoder-meta';
 import * as optiPNG from '../../codecs/optipng/encoder-meta';
 import * as mozJPEG from '../../codecs/mozjpeg/encoder-meta';
 import * as webP from '../../codecs/webp/encoder-meta';
+import * as jxl from '../../codecs/jxl/encoder-meta';
 import * as browserPNG from '../../codecs/browser-png/encoder-meta';
 import * as browserJPEG from '../../codecs/browser-jpeg/encoder-meta';
 import * as browserWebP from '../../codecs/browser-webp/encoder-meta';
@@ -141,6 +142,7 @@ async function compressImage(
       case optiPNG.type: return processor.optiPngEncode(image, encodeData.options);
       case mozJPEG.type: return processor.mozjpegEncode(image, encodeData.options);
       case webP.type: return processor.webpEncode(image, encodeData.options);
+      case jxl.type: return processor.jxlEncode(image, encodeData.options);
       case browserPNG.type: return processor.browserPngEncode(image);
       case browserJPEG.type: return processor.browserJpegEncode(image, encodeData.options);
       case browserWebP.type: return processor.browserWebpEncode(image, encodeData.options);

@@ -7,6 +7,7 @@ import OptiPNGEncoderOptions from '../../codecs/optipng/options';
 import MozJpegEncoderOptions from '../../codecs/mozjpeg/options';
 import BrowserJPEGEncoderOptions from '../../codecs/browser-jpeg/options';
 import WebPEncoderOptions from '../../codecs/webp/options';
+import JXLEncoderOptions from '../../codecs/jxl/options';
 import BrowserWebPEncoderOptions from '../../codecs/browser-webp/options';
 
 import QuantizerOptionsComponent from '../../codecs/imagequant/options';
@@ -16,6 +17,7 @@ import * as identity from '../../codecs/identity/encoder-meta';
 import * as optiPNG from '../../codecs/optipng/encoder-meta';
 import * as mozJPEG from '../../codecs/mozjpeg/encoder-meta';
 import * as webP from '../../codecs/webp/encoder-meta';
+import * as jxl from '../../codecs/jxl/encoder-meta';
 import * as browserPNG from '../../codecs/browser-png/encoder-meta';
 import * as browserJPEG from '../../codecs/browser-jpeg/encoder-meta';
 import * as browserWebP from '../../codecs/browser-webp/encoder-meta';
@@ -47,6 +49,7 @@ const encoderOptionsComponentMap: {
   [optiPNG.type]: OptiPNGEncoderOptions,
   [mozJPEG.type]: MozJpegEncoderOptions,
   [webP.type]: WebPEncoderOptions,
+  [jxl.type]: JXLEncoderOptions,
   [browserPNG.type]: undefined,
   [browserJPEG.type]: BrowserJPEGEncoderOptions,
   [browserWebP.type]: BrowserWebPEncoderOptions,
