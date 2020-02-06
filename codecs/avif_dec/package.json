@@ -1,0 +1,13 @@
+{
+  "name": "avif_dec",
+  "scripts": {
+    "install": "napa",
+    "build": "docker run --rm -v $(pwd):/src trzeci/emscripten ./build.sh"
+  },
+  "napa": {
+    "libavif": "AOMediaCodec/libavif#v0.5.4"
+  },
+  "devDependencies": {
+    "napa": "3.0.0"
+  }
+}
