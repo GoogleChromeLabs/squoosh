@@ -9,6 +9,7 @@ export async function decodeImage(blob: Blob, processor: Processor): Promise<Ima
     if (!canDecode) {
       if (mimeType === 'image/avif') return await processor.avifDecode(blob);
       if (mimeType === 'image/webp') return await processor.webpDecode(blob);
+      if (mimeType === 'image/jpegxl') return await processor.jxlDecode(blob);
       // If it's not one of those types, fall through and try built-in decoding for a laugh.
     }
     return await builtinDecode(blob);

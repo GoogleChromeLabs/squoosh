@@ -98,6 +98,13 @@ async function avifDecode(data: ArrayBuffer): Promise<ImageData> {
   return timed('avifDencode', () => decode(data));
 }
 
+async function jxlDecode(data: ArrayBuffer): Promise<ImageData> {
+  const { decode } = await import(
+    /* webpackChunkName: "process-jxl-dec" */
+    '../jxl/decoder');
+  return decode(data);
+}
+
 const exports = {
   mozjpegEncode,
   quantize,
@@ -108,6 +115,7 @@ const exports = {
   webpDecode,
   avifEncode,
   avifDecode,
+  jxlDecode,
 };
 export type ProcessorWorkerApi = typeof exports;
 

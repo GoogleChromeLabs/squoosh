@@ -4,10 +4,10 @@ interface RawImage {
   height: number;
 }
 
-interface AVIFModule extends EmscriptenWasm.Module {
+interface JXLModule extends EmscriptenWasm.Module {
   decode(data: BufferSource): RawImage;
   free_result(): void;
 }
 
-export default function(opts: EmscriptenWasm.ModuleOpts): AVIFModule;
+export default function(opts: EmscriptenWasm.ModuleOpts): JXLModule;
 
