@@ -104,6 +104,7 @@ const magicNumberToMimeType = new Map<RegExp, string>([
   [/^II*/, 'image/tiff'],
   [/^MM\x00*/, 'image/tiff'],
   [/^RIFF....WEBPVP8[LX ]/, 'image/webp'],
+  [/^\xff\x0a/, 'image/jpegxl'],
 ]);
 
 export async function sniffMimeType(blob: Blob): Promise<string> {

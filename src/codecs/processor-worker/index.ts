@@ -77,6 +77,13 @@ async function webpDecode(data: ArrayBuffer): Promise<ImageData> {
   return decode(data);
 }
 
+async function jxlDecode(data: ArrayBuffer): Promise<ImageData> {
+  const { decode } = await import(
+    /* webpackChunkName: "process-jxl-dec" */
+    '../jxl/decoder');
+  return decode(data);
+}
+
 const exports = {
   mozjpegEncode,
   quantize,
@@ -85,6 +92,7 @@ const exports = {
   optiPngEncode,
   webpEncode,
   webpDecode,
+  jxlDecode,
 };
 export type ProcessorWorkerApi = typeof exports;
 

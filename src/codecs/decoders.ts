@@ -8,6 +8,9 @@ export async function decodeImage(blob: Blob, processor: Processor): Promise<Ima
   const mimeType = await sniffMimeType(blob);
 
   try {
+    if (mimeType === 'image/jpegxl') {
+      return await processor.jxlDecode(blob);
+    }
     if (mimeType === 'image/webp' && !(await nativeWebPSupported)) {
       return await processor.webpDecode(blob);
     }

@@ -163,6 +163,12 @@ export default class Processor {
     return this._workerApi!.webpDecode(data);
   }
 
+  @Processor._processingJob({ needsWorker: true })
+  async jxlDecode(blob: Blob): Promise<ImageData> {
+    const data = await blobToArrayBuffer(blob);
+    return this._workerApi!.jxlDecode(data);
+  }
+
   // Not-worker jobs:
 
   @Processor._processingJob()
