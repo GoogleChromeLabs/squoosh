@@ -12,10 +12,11 @@ val encode(std::string image, int width, int height) {
   // jxl::ThreadPool pool;
   jxl::CodecInOut io;
   jxl::PaddedBytes bytes;
+  jxl::ImageBundle *main = &io.Main();
 
   cparams.speed_tier = jxl::SpeedTier::kFalcon;
-
-  jxl::ImageBundle *main = &io.Main();
+  cparams.color_transform = jxl::ColorTransform::kNone;
+  uint8_t *inBuffer = (uint8_t *)image.c_str();
 
   auto result = main->SetFromSRGB(
       width, height, false, true, true, (uint8_t *)image.c_str(),
