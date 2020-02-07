@@ -5,17 +5,23 @@
 
 using namespace emscripten;
 
+struct JXLOptions {
+  // 1 = slowest
+  // 7 = fastest
+  int speed;
+};
+
 uint8_t *result;
-val encode(std::string image, int width, int height) {
+val encode(std::string image, int width, int height, JXLOptions options) {
   jxl::CompressParams cparams;
   jxl::PassesEncoderState passes_enc_state;
-  // jxl::ThreadPool pool;
   jxl::CodecInOut io;
   jxl::PaddedBytes bytes;
   jxl::ImageBundle *main = &io.Main();
 
-  cparams.speed_tier = jxl::SpeedTier::kFalcon;
+  cparams.speed_tier = static_cast<jxl::SpeedTier>(options.speed);
   cparams.color_transform = jxl::ColorTransform::kNone;
+
   uint8_t *inBuffer = (uint8_t *)image.c_str();
 
   auto result = main->SetFromSRGB(
@@ -36,6 +42,9 @@ val encode(std::string image, int width, int height) {
 void free_result() { delete result; }
 
 EMSCRIPTEN_BINDINGS(my_module) {
+    value_object<JXLOptions>("JXLOptions")
+    .field("speed", &JXLOptions::speed);
+
   function("encode", &encode);
   function("free_result", &free_result);
 }
