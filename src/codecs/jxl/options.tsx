@@ -1,12 +1,12 @@
 import { h, Component } from 'preact';
 import { bind } from '../../lib/initial-util';
-import { /*inputFieldCheckedAsNumber, inputFieldValueAsNumber,*/ preventDefault } from '../../lib/util';
+import { inputFieldValueAsNumber, preventDefault } from '../../lib/util';
 import { EncodeOptions } from './encoder-meta';
 import * as style from '../../components/Options/style.scss';
 // import Checkbox from '../../components/checkbox';
 // import Expander from '../../components/expander';
 // import Select from '../../components/select';
-// import Range from '../../components/range';
+import Range from '../../components/range';
 // import linkState from 'linkstate';
 
 interface Props {
@@ -14,29 +14,40 @@ interface Props {
   onChange(newOptions: EncodeOptions): void;
 }
 
-interface State {
-}
+interface State {}
 
 export default class JXLEncoderOptions extends Component<Props, State> {
-  state: State = {
-  };
+  state: State = {};
 
   @bind
   onChange(event: Event) {
-    // const form = (event.currentTarget as HTMLInputElement).closest('form') as HTMLFormElement;
-    // const { options } = this.props;
+    const form = (event.currentTarget as HTMLInputElement).closest(
+      'form',
+    ) as HTMLFormElement;
+    const { options } = this.props;
 
-    // const newOptions: EncodeOptions = {
-    //   // Copy over options the form doesn't care about, eg emulate_jpeg_size
-    //   ...options,
-    // };
-    // this.props.onChange(newOptions);
+    const newOptions: EncodeOptions = {
+      // Copy over options the form doesn't care about, eg emulate_jpeg_size
+      ...options,
+      speed: inputFieldValueAsNumber(form.speed, options.speed),
+    };
+    this.props.onChange(newOptions);
   }
 
   render({ options }: Props) {
     return (
       <form class={style.optionsSection} onSubmit={preventDefault}>
-        Lol
+        <div class={style.optionOneCell}>
+          <Range
+            name="speed"
+            min="1"
+            max="7"
+            value={options.speed}
+            onInput={this.onChange}
+          >
+            Speed:
+          </Range>
+        </div>
       </form>
     );
   }
