@@ -259,7 +259,7 @@ module.exports = async function (_, env) {
         filename: '_redirects',
       }),
 
-      new ScriptExtHtmlPlugin({
+      isProd && new ScriptExtHtmlPlugin({
         inline: ['first']
       }),
 
