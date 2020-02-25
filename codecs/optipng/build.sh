@@ -42,43 +42,32 @@ echo "============================================="
 echo "Compiling optipng"
 echo "============================================="
 (
-  emcc \
-    ${OPTIMIZE} \
-    -Wno-implicit-function-declaration \
-    -I ${PREFIX}/include \
-    -I node_modules/optipng/src/opngreduc \
-    -I node_modules/optipng/src/pngxtern \
-    -I node_modules/optipng/src/cexcept \
-    -I node_modules/optipng/src/gifread \
-    -I node_modules/optipng/src/pnmio \
-    -I node_modules/optipng/src/minitiff \
-    --std=c99 -c \
-    node_modules/optipng/src/opngreduc/*.c \
-    node_modules/optipng/src/pngxtern/*.c \
-    node_modules/optipng/src/gifread/*.c \
-    node_modules/optipng/src/minitiff/*.c \
-    node_modules/optipng/src/pnmio/*.c \
-    node_modules/optipng/src/optipng/*.c
+  cd node_modules/optipng
+  emconfigure ./configure --prefix=${PREFIX} --with-system-libs
+  emmake make
+  emmake make install
+  mkdir -p ${PREFIX}/lib
+  mv ${PREFIX}/bin/optipng ${PREFIX}/lib/liboptipng.so
+)
+echo "============================================="
+echo "Compiling optipng done"
+echo "============================================="
 
+echo "============================================="
+echo "Compiling optipng wrapper"
+echo "============================================="
+(
   emcc \
     --bind \
     ${OPTIMIZE} \
     -s ALLOW_MEMORY_GROWTH=1 -s MODULARIZE=1 -s 'EXPORT_NAME="optipng"' \
-    -I ${PREFIX}/include \
-    -I node_modules/optipng/src/opngreduc \
-    -I node_modules/optipng/src/pngxtern \
-    -I node_modules/optipng/src/cexcept \
-    -I node_modules/optipng/src/gifread \
-    -I node_modules/optipng/src/pnmio \
-    -I node_modules/optipng/src/minitiff \
     -o "optipng.js" \
     --std=c++11 \
     optipng.cpp \
-    *.o \
-    ${PREFIX}/lib/libz.so ${PREFIX}/lib/libpng.a
+    ${PREFIX}/lib/liboptipng.so
 )
 echo "============================================="
-echo "Compiling optipng done"
+echo "Compiling optipng wrapper done"
 echo "============================================="
 
 echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
