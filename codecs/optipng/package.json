@@ -3,7 +3,7 @@
   "scripts": {
     "install": "tar-dependency install && napa",
     "build": "npm run build:wasm",
-    "build:wasm": "docker run --rm -v $(pwd):/src -e SKIP_ZLIB=\"${SKIP_ZLIB}\" -e SKIP_LIBPNG=\"${SKIP_LIBPNG}\" trzeci/emscripten ./build.sh"
+    "build:wasm": "docker run --rm -v $(pwd):/src -e SKIP_ZLIB=\"${SKIP_ZLIB}\" -e SKIP_LIBPNG=\"${SKIP_LIBPNG}\" trzeci/emscripten-upstream ./build.sh"
   },
   "tarDependencies": {
     "node_modules/optipng": {
