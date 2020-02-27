@@ -1,9 +1,9 @@
 {
   "name": "optipng",
   "scripts": {
-    "install": "tar-dependency install && napa",
+    "install": "tar-dependency install",
     "build": "npm run build:wasm",
-    "build:wasm": "docker run --rm -v $(pwd):/src -e SKIP_ZLIB=\"${SKIP_ZLIB}\" -e SKIP_LIBPNG=\"${SKIP_LIBPNG}\" trzeci/emscripten ./build.sh"
+    "build:wasm": "docker run --rm -v $(pwd):/src trzeci/emscripten-upstream ./build.sh"
   },
   "tarDependencies": {
     "node_modules/optipng": {
@@ -11,12 +11,7 @@
       "strip": 1
     }
   },
-  "napa": {
-    "libpng": "emscripten-ports/libpng",
-    "zlib": "emscripten-ports/zlib"
-  },
   "dependencies": {
-    "napa": "3.0.0",
     "tar-dependency": "0.0.3"
   }
 }
