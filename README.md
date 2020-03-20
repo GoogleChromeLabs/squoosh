@@ -28,4 +28,14 @@ You can run the development server with:
 npm start
 ```
 
+# Online one-click setup
+
+You can use Gitpod (a free online VS Code-like IDE) for contributng. With a single click it will launch a workspace and automatically:
+
+- clone the squoosh repo.
+- install the dependencies.
+- run `npm start`.
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/GoogleChromeLabs/squoosh)
+
 [Squoosh]: https://squoosh.app
