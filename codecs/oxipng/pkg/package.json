@@ -11,5 +11,5 @@
   ],
   "module": "oxipng.js",
   "types": "oxipng.d.ts",
-  "sideEffects": "false"
+  "sideEffects": false
 }

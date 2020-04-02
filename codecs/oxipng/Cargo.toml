@@ -9,7 +9,7 @@ publish = false
 crate-type = ["cdylib"]
 
 [dependencies]
-oxipng = { version = "2.2.2", default-features = false }
+oxipng = { version = "2.3.0", default-features = false }
 wasm-bindgen = "0.2.48"
 
 [profile.release]
@@ -17,4 +17,4 @@ lto = true
 opt-level = "s"
 
 [patch.crates-io]
-oxipng = { git = "https://github.com/RReverser/oxipng.git", branch = "wasm" }
+oxipng = { git = "https://github.com/shssoichiro/oxipng.git", branch = "master" }

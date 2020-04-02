@@ -1,4 +1,5 @@
 /* tslint:disable */
+/* eslint-disable */
 /**
 * @param {Uint8Array} data 
 * @param {number} level 
