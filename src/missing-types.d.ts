@@ -33,6 +33,11 @@ declare module 'url-loader!*' {
   export default value;
 }
 
+// Handling style-loader imports:
+declare module "*.scss";
+
+declare module "*.css";
+
 declare var VERSION: string;
 
 declare var ga: {
