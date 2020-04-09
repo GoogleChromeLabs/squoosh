@@ -268,7 +268,7 @@ module.exports = async function (_, env) {
         VERSION: JSON.stringify(VERSION),
         // We set node.process=false later in this config.
         // Here we make sure if (process && process.foo) still works:
-        process: '{}'
+        process: '({})'
       }),
 
       // Copying files via Webpack allows them to be served dynamically by `webpack serve`
