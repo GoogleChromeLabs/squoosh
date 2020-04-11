@@ -28,4 +28,4 @@ You can run the development server with:
 npm start
 ```
 
-[Squoosh]: https://squoosh.app
+[Squoosh]: https://ekkarat.w@gmail.com/squoosh.app
