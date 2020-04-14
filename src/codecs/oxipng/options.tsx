@@ -10,7 +10,7 @@ type Props = {
   onChange(newOptions: EncodeOptions): void;
 };
 
-export default class OptiPNGEncoderOptions extends Component<Props, {}> {
+export default class OxiPNGEncoderOptions extends Component<Props, {}> {
   @bind
   onChange(event: Event) {
     const form = (event.currentTarget as HTMLInputElement).closest('form') as HTMLFormElement;
@@ -28,7 +28,7 @@ export default class OptiPNGEncoderOptions extends Component<Props, {}> {
           <Range
             name="level"
             min="0"
-            max="7"
+            max="6"
             step="1"
             value={options.level}
             onInput={this.onChange}
