@@ -4,7 +4,7 @@ export interface EncodeOptions {
 export interface EncoderState { type: typeof type; options: EncodeOptions; }
 
 export const type = 'png';
-export const label = 'OptiPNG';
+export const label = 'OxiPNG';
 export const mimeType = 'image/png';
 export const extension = 'png';
 
