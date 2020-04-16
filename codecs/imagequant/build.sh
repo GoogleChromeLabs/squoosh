@@ -12,11 +12,7 @@ echo "Compiling libimagequant"
 echo "============================================="
 (
   emcc \
-    --bind \
     ${OPTIMIZE} \
-    -s ALLOW_MEMORY_GROWTH=1 \
-    -s MODULARIZE=1 \
-    -s 'EXPORT_NAME="imagequant"' \
     -I node_modules/libimagequant \
     --std=c99 \
     -c \
@@ -29,6 +25,7 @@ echo "============================================="
   emcc \
     --bind \
     ${OPTIMIZE} \
+    --closure 1 \
     -s ALLOW_MEMORY_GROWTH=1 \
     -s MODULARIZE=1 \
     -s 'EXPORT_NAME="imagequant"' \
