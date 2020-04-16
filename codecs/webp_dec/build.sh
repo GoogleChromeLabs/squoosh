@@ -39,6 +39,7 @@ echo "============================================="
 (
   emcc \
     ${OPTIMIZE} \
+    --closure 1 \
     --bind \
     -s ALLOW_MEMORY_GROWTH=1 \
     -s MODULARIZE=1 \
