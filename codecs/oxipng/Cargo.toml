@@ -9,9 +9,12 @@ publish = false
 crate-type = ["cdylib"]
 
 [dependencies]
-oxipng = { version = "3.0.0", default-features = false }
+oxipng = { version = "3.0.0", default-features = false, features = ["parallel"] }
 wasm-bindgen = "0.2.64"
 log = { version = "0.4", features = ["release_max_level_off"] }
+rayon = "1.3.0"
+js-sys = "0.3.37"
+console_log = "0.2.0"
 
 [profile.release]
 lto = true
