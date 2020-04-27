@@ -1,32 +1,23 @@
-let main = new Worker("./main.js", { type: "module" });
+import initOxiPNG, { worker_initializer, start_main_thread, optimise } from './pkg/oxipng.js';
+import wasmUrl from "./pkg/oxipng_bg.wasm";
 
-let workers = Array.from(
-  { length: navigator.hardwareConcurrency },
-  () => new Worker("./worker.js", { type: "module" })
-);
-
-main.addEventListener('message', ({ data: { type, data } }) => {
-  if (type === 'spawn') {
-    workers.pop().postMessage(data);
+async function startMainThread() {
+  let num = navigator.hardwareConcurrency;
+  await initOxiPNG(fetch(wasmUrl));
+  let workerInit = worker_initializer();
+  let workers = [];
+  for (let i = 0; i < num; i++) {
+    workers.push(new Promise(resolve => {
+      let worker = new Worker("./worker.js", { type: "module" });
+      worker.postMessage(workerInit);
+      worker.addEventListener('message', resolve, { once: true });
+    }));
   }
-});
-
-let ID = 0;
-
-export function optimise(...args) {
-  return new Promise((resolve, reject) => {
-    let sendId = ID++;
-
-    main.addEventListener('message', function onMessage({ data: { ok, id, result } }) {
-      if (id !== sendId) return;
-      main.removeEventListener('message', onMessage);
-      if (ok) {
-        resolve(result);
-      } else {
-        reject(result);
-      }
-    });
-
-    main.postMessage({ id: sendId, args });
-  });
+  await Promise.all(workers);
+  start_main_thread(num);
+  return {
+    optimise
+  };
 }
+
+export default startMainThread();
