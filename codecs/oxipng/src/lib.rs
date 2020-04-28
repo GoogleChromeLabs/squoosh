@@ -8,13 +8,8 @@ use oxipng::AlphaOptim;
 
 #[wasm_bindgen]
 extern "C" {
-    type Worker;
-
     #[wasm_bindgen(js_namespace = Array, js_name = of)]
     fn array_of_2(a: JsValue, b: JsValue) -> JsValue;
-
-    #[wasm_bindgen(method, js_name = postMessage)]
-    fn post_message(worker: &Worker, msg: JsValue);
 }
 
 static TASKS: OnceCell<Injector<rayon::ThreadBuilder>> = OnceCell::new();
