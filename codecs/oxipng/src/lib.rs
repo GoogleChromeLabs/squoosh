@@ -1,4 +1,5 @@
 use wasm_bindgen::prelude::*;
+use oxipng::AlphaOptim;
 
 mod malloc_shim;
 
