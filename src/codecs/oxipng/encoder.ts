@@ -1,5 +1,5 @@
 // @ts-ignore
-import optimiser from '../../../codecs/oxipng/spawn.js';
+import optimiser from '../../../codecs/oxipng/spawn';
 import { EncodeOptions } from './encoder-meta';
 
 export async function compress(data: ArrayBuffer, options: EncodeOptions): Promise<ArrayBuffer> {
