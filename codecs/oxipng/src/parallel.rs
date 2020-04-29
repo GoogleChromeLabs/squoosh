@@ -1,4 +1,4 @@
-use crossbeam_deque::Injector;
+use crossbeam_channel::{Sender, Receiver, bounded};
 use once_cell::sync::OnceCell;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsValue;
@@ -9,31 +9,27 @@ extern "C" {
     fn array_of_2(a: JsValue, b: JsValue) -> JsValue;
 }
 
-static TASKS: OnceCell<Injector<rayon::ThreadBuilder>> = OnceCell::new();
+static CHANNEL: OnceCell<(Sender<rayon::ThreadBuilder>, Receiver<rayon::ThreadBuilder>)> = OnceCell::new();
 
 #[wasm_bindgen]
-pub fn worker_initializer() -> JsValue {
-    TASKS.get_or_init(Injector::new);
+pub fn worker_initializer(num: usize) -> JsValue {
+    CHANNEL.get_or_init(|| bounded(num));
     array_of_2(wasm_bindgen::module(), wasm_bindgen::memory())
 }
 
 #[wasm_bindgen]
-pub fn start_main_thread(num: usize) {
-    let tasks = TASKS.get().unwrap();
+pub fn start_main_thread() {
+    let (sender, _) = CHANNEL.get().unwrap();
 
     rayon::ThreadPoolBuilder::new()
-        .num_threads(num)
-        .spawn_handler(|thread| Ok(tasks.push(thread)))
+        .num_threads(sender.capacity().unwrap())
+        .spawn_handler(|thread| Ok(sender.send(thread).unwrap_throw()))
         .build_global()
         .unwrap_throw()
 }
 
 #[wasm_bindgen]
 pub fn start_worker_thread() {
-    let tasks = TASKS.get().unwrap();
-    loop {
-        if let crossbeam_deque::Steal::Success(task) = tasks.steal() {
-            return task.run();
-        }
-    }
+    let (_, receiver) = CHANNEL.get().unwrap();
+    receiver.recv().unwrap_throw().run()
 }
