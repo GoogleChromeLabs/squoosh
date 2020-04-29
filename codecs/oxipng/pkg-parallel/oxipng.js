@@ -33,40 +33,6 @@ function getStringFromWasm0(ptr, len) {
     return cachedTextDecoder.decode(getUint8Memory0().slice(ptr, ptr + len));
 }
 
-function getObject(idx) { return heap[idx]; }
-
-function dropObject(idx) {
-    if (idx < 36) return;
-    heap[idx] = heap_next;
-    heap_next = idx;
-}
-
-function takeObject(idx) {
-    const ret = getObject(idx);
-    dropObject(idx);
-    return ret;
-}
-/**
-* @returns {any}
-*/
-export function worker_initializer() {
-    var ret = wasm.worker_initializer();
-    return takeObject(ret);
-}
-
-/**
-* @param {number} num
-*/
-export function start_main_thread(num) {
-    wasm.start_main_thread(num);
-}
-
-/**
-*/
-export function start_worker_thread() {
-    wasm.start_worker_thread();
-}
-
 let WASM_VECTOR_LEN = 0;
 
 function passArray8ToWasm0(arg, malloc) {
@@ -101,6 +67,40 @@ export function optimise(data, level) {
     var v1 = getArrayU8FromWasm0(r0, r1).slice();
     wasm.__wbindgen_free(r0, r1 * 1);
     return v1;
+}
+
+function getObject(idx) { return heap[idx]; }
+
+function dropObject(idx) {
+    if (idx < 36) return;
+    heap[idx] = heap_next;
+    heap_next = idx;
+}
+
+function takeObject(idx) {
+    const ret = getObject(idx);
+    dropObject(idx);
+    return ret;
+}
+/**
+* @param {number} num
+* @returns {any}
+*/
+export function worker_initializer(num) {
+    var ret = wasm.worker_initializer(num);
+    return takeObject(ret);
+}
+
+/**
+*/
+export function start_main_thread() {
+    wasm.start_main_thread();
+}
+
+/**
+*/
+export function start_worker_thread() {
+    wasm.start_worker_thread();
 }
 
 async function load(module, imports, maybe_memory) {
