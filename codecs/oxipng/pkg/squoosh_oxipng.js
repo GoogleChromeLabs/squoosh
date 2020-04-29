@@ -94,7 +94,7 @@ async function load(module, imports) {
 
 async function init(input) {
     if (typeof input === 'undefined') {
-        input = import.meta.url.replace(/\.js$/, '_bg.wasm');
+        
     }
     const imports = {};
     imports.wbg = {};
