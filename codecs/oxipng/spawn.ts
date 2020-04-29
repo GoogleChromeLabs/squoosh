@@ -17,9 +17,9 @@ async function startMainThread() {
   const num = navigator.hardwareConcurrency;
   const workers = Array.from({ length: num }, () => new Worker('./worker', { type: 'module' }));
   await initOxiPNG(fetch(wasmUrl), undefined as any);
-  const workerInit: WorkerInit = worker_initializer();
+  const workerInit: WorkerInit = worker_initializer(num);
   await Promise.all(workers.map(worker => initWorker(worker, workerInit)));
-  start_main_thread(num);
+  start_main_thread();
   return {
     optimise,
   };
