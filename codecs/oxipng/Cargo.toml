@@ -12,13 +12,16 @@ crate-type = ["cdylib"]
 oxipng = { version = "3.0.0", default-features = false, features = ["parallel"] }
 wasm-bindgen = "0.2.64"
 log = { version = "0.4", features = ["release_max_level_off"] }
-rayon = "1.3.0"
-crossbeam-deque = "0.7.3"
-once_cell = "1.3.1"
+rayon = { version = "1.3.0", optional = true }
+crossbeam-deque = { version = "0.7.3", optional = true }
+once_cell = { version = "1.3.1", optional = true }
 
 [profile.release]
 lto = true
 opt-level = "s"
+
+[features]
+parallel = ["oxipng/parallel", "rayon", "crossbeam-deque", "once_cell"]
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = ["-O", "--no-validation"]

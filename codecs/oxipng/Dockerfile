@@ -1,4 +1,4 @@
-FROM rust
+FROM rustlang/rust:nightly
 RUN rustup target add wasm32-unknown-unknown
 RUN curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
