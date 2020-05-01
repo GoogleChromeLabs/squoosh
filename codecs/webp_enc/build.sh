@@ -8,7 +8,7 @@ export CFLAGS="${OPTIMIZE}"
 export CPPFLAGS="${OPTIMIZE}"
 
 apt-get update
-apt-get install -qqy autoconf libtool libpng-dev pkg-config
+apt-get install -qqy autoconf libtool pkg-config
 
 echo "============================================="
 echo "Compiling libwebp"
