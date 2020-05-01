@@ -61,21 +61,21 @@ RawImage quantize(std::string rawimage, int image_width, int image_height, int n
 }
 
 const liq_color zx_colors[] = {
-  {.a = 255, .r = 0, .g = 0, .b = 0},       // regular black
-  {.a = 255, .r = 0, .g = 0, .b = 215},     // regular blue
-  {.a = 255, .r = 215, .g = 0, .b = 0},     // regular red
-  {.a = 255, .r = 215, .g = 0, .b = 215},   // regular magenta
-  {.a = 255, .r = 0, .g = 215, .b = 0},     // regular green
-  {.a = 255, .r = 0, .g = 215, .b = 215},   // regular cyan
-  {.a = 255, .r = 215, .g = 215, .b = 0},   // regular yellow
-  {.a = 255, .r = 215, .g = 215, .b = 215}, // regular white
-  {.a = 255, .r = 0, .g = 0, .b = 255},     // bright blue
-  {.a = 255, .r = 255, .g = 0, .b = 0},     // bright red
-  {.a = 255, .r = 255, .g = 0, .b = 255},   // bright magenta
-  {.a = 255, .r = 0, .g = 255, .b = 0},     // bright green
-  {.a = 255, .r = 0, .g = 255, .b = 255},   // bright cyan
-  {.a = 255, .r = 255, .g = 255, .b = 0},   // bright yellow
-  {.a = 255, .r = 255, .g = 255, .b = 255}  // bright white
+  {.r = 0, .g = 0, .b = 0, .a = 255},       // regular black
+  {.r = 0, .g = 0, .b = 215, .a = 255},     // regular blue
+  {.r = 215, .g = 0, .b = 0, .a = 255},     // regular red
+  {.r = 215, .g = 0, .b = 215, .a = 255},   // regular magenta
+  {.r = 0, .g = 215, .b = 0, .a = 255},     // regular green
+  {.r = 0, .g = 215, .b = 215, .a = 255},   // regular cyan
+  {.r = 215, .g = 215, .b = 0, .a = 255},   // regular yellow
+  {.r = 215, .g = 215, .b = 215, .a = 255}, // regular white
+  {.r = 0, .g = 0, .b = 255, .a = 255},     // bright blue
+  {.r = 255, .g = 0, .b = 0, .a = 255},     // bright red
+  {.r = 255, .g = 0, .b = 255, .a = 255},   // bright magenta
+  {.r = 0, .g = 255, .b = 0, .a = 255},     // bright green
+  {.r = 0, .g = 255, .b = 255, .a = 255},   // bright cyan
+  {.r = 255, .g = 255, .b = 0, .a = 255},   // bright yellow
+  {.r = 255, .g = 255, .b = 255, .a = 255}  // bright white
 };
 
 uint8_t block[8 * 8 * 4];

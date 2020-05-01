@@ -57,5 +57,5 @@ echo "============================================="
 
 echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 echo "Did you update your docker image?"
-echo "Run \`docker pull trzeci/emscripten\`"
+echo "Run \`docker pull trzeci/emscripten-upstream\`"
 echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
