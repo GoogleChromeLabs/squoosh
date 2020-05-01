@@ -28,7 +28,7 @@ export default class OxiPNGEncoderOptions extends Component<Props, {}> {
           <Range
             name="level"
             min="0"
-            max="6"
+            max="3"
             step="1"
             value={options.level}
             onInput={this.onChange}
