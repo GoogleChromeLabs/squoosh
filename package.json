@@ -53,7 +53,7 @@
     "progress-bar-webpack-plugin": "1.12.1",
     "raw-loader": "3.1.0",
     "readdirp": "3.1.2",
-    "sass-loader": "7.3.1",
+    "sass-loader": "8.0.2",
     "script-ext-html-webpack-plugin": "2.1.4",
     "source-map-loader": "0.2.4",
     "style-loader": "1.0.0",
