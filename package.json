@@ -57,7 +57,7 @@
     "script-ext-html-webpack-plugin": "2.1.4",
     "source-map-loader": "0.2.4",
     "style-loader": "1.0.0",
-    "terser-webpack-plugin": "1.4.1",
+    "terser-webpack-plugin": "2.3.6",
     "travis-size-report": "1.1.0",
     "ts-loader": "6.0.3",
     "tslint": "5.19.0",
