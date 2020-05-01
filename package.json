@@ -67,7 +67,7 @@
     "typed-css-modules": "0.4.2",
     "typescript": "3.5.3",
     "url-loader": "2.1.0",
-    "webpack": "4.39.3",
+    "webpack": "4.43.0",
     "webpack-bundle-analyzer": "3.4.1",
     "webpack-cli": "3.3.4",
     "webpack-dev-server": "3.8.0",
