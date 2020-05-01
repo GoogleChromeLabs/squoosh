@@ -17,7 +17,7 @@ echo "============================================="
   cd node_modules/mozjpeg
   autoreconf -fiv
   emconfigure ./configure --without-simd
-  emmake make libjpeg.la
+  emmake make libjpeg.la -j`nproc`
 )
 echo "============================================="
 echo "Compiling mozjpeg done"
