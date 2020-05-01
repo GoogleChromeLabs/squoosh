@@ -29,7 +29,7 @@
     "comlink": "3.1.1",
     "copy-webpack-plugin": "5.0.4",
     "critters-webpack-plugin": "2.4.0",
-    "css-loader": "1.0.1",
+    "css-loader": "3.5.3",
     "ejs": "2.6.2",
     "escape-string-regexp": "2.0.0",
     "exports-loader": "0.7.0",
