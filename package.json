@@ -30,7 +30,7 @@
     "copy-webpack-plugin": "5.0.4",
     "critters-webpack-plugin": "2.4.0",
     "css-loader": "1.0.1",
-    "ejs": "2.6.2",
+    "ejs": "2.7.4",
     "escape-string-regexp": "2.0.0",
     "exports-loader": "0.7.0",
     "file-drop-element": "0.2.0",
