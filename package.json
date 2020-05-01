@@ -59,7 +59,7 @@
     "style-loader": "1.0.0",
     "terser-webpack-plugin": "1.4.1",
     "travis-size-report": "1.1.0",
-    "ts-loader": "6.0.3",
+    "ts-loader": "6.2.2",
     "tslint": "5.19.0",
     "tslint-config-airbnb": "5.11.1",
     "tslint-config-semistandard": "8.0.1",
