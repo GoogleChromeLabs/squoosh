@@ -32,7 +32,7 @@ test -n "$SKIP_LIBWEBP" || (
     --disable-neon \
     --disable-sse2 \
     --disable-sse4.1
-  emmake make
+  emmake make -j`nproc`
 )
 echo "============================================="
 echo "Compiling wasm bindings"
