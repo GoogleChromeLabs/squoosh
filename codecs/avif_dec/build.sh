@@ -31,7 +31,7 @@ test -n "$SKIP_LIBAOM" || (
         -DCONFIG_WEBM_IO=0 \
         ../
 
-  emmake make
+  emmake make -j`nproc`
 )
 echo "============================================="
 echo "Compiling libaom done"
@@ -50,7 +50,7 @@ test -n "$SKIP_LIBAVIF" || (
     -DAVIF_LOCAL_AOM=1 \
     ../
 
-  emmake make
+  emmake make -j`nproc`
 )
 echo "============================================="
 echo "Compiling libavif done"
