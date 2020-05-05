@@ -2,7 +2,7 @@
 
 set -e
 
-export OPTIMIZE="-Os"
+export OPTIMIZE="-Os -flto --llvm-lto 1"
 export LDFLAGS="${OPTIMIZE}"
 export CFLAGS="${OPTIMIZE}"
 export CPPFLAGS="${OPTIMIZE}"
@@ -17,7 +17,7 @@ echo "============================================="
   cd node_modules/mozjpeg
   autoreconf -fiv
   emconfigure ./configure --without-simd
-  emmake make libjpeg.la
+  emmake make libjpeg.la -j`nproc`
 )
 echo "============================================="
 echo "Compiling mozjpeg done"
@@ -30,6 +30,7 @@ echo "============================================="
   emcc \
     --bind \
     ${OPTIMIZE} \
+    --closure 1 \
     -s WASM=1 \
     -s ALLOW_MEMORY_GROWTH=1 \
     -s MODULARIZE=1 \
@@ -49,5 +50,5 @@ echo "============================================="
 
 echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 echo "Did you update your docker image?"
-echo "Run \`docker pull trzeci/emscripten\`"
+echo "Run \`docker pull trzeci/emscripten-upstream\`"
 echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"

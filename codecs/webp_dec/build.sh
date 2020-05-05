@@ -2,12 +2,12 @@
 
 set -e
 
-export OPTIMIZE="-Os"
+export OPTIMIZE="-Os -flto --llvm-lto 1"
 export LDFLAGS="${OPTIMIZE}"
 export CFLAGS="${OPTIMIZE}"
 export CPPFLAGS="${OPTIMIZE}"
 apt-get update
-apt-get install -qqy autoconf libtool libpng-dev pkg-config
+apt-get install -qqy autoconf libtool pkg-config
 
 echo "============================================="
 echo "Compiling libwebp"
@@ -31,7 +31,7 @@ test -n "$SKIP_LIBWEBP" || (
     --disable-neon \
     --disable-sse2 \
     --disable-sse4.1
-  emmake make
+  emmake make -j`nproc`
 )
 echo "============================================="
 echo "Compiling wasm bindings"
@@ -39,6 +39,7 @@ echo "============================================="
 (
   emcc \
     ${OPTIMIZE} \
+    --closure 1 \
     --bind \
     -s ALLOW_MEMORY_GROWTH=1 \
     -s MODULARIZE=1 \
@@ -56,5 +57,5 @@ echo "============================================="
 
 echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 echo "Did you update your docker image?"
-echo "Run \`docker pull trzeci/emscripten\`"
+echo "Run \`docker pull trzeci/emscripten-upstream\`"
 echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"

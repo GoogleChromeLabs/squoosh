@@ -1,0 +1,21 @@
+[package]
+name = "oxipng"
+version = "0.1.0"
+authors = ["Ingvar Stepanyan <me@rreverser.com>"]
+edition = "2018"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+oxipng = { version = "2.3.0", default-features = false }
+wasm-bindgen = "0.2.48"
+log = { version = "0.4", features = ["release_max_level_off"] }
+
+[profile.release]
+lto = true
+opt-level = "s"
+
+[patch.crates-io]
+oxipng = { git = "https://github.com/shssoichiro/oxipng.git", branch = "master" }
