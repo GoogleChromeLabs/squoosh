@@ -2,7 +2,7 @@
 
 set -e
 
-export OPTIMIZE="-Os"
+export export OPTIMIZE="-Os -flto --llvm-lto 1"
 export LDFLAGS="${OPTIMIZE}"
 export CFLAGS="${OPTIMIZE}"
 export CPPFLAGS="${OPTIMIZE}"
