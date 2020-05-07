@@ -11,10 +11,7 @@ echo "============================================="
 echo "Compiling libaom"
 echo "============================================="
 test -n "$SKIP_LIBAOM" || (
-  cd node_modules/libavif/ext
-  test -d aom || git clone -b v1.0.0-errata1-avif --depth 1 https://aomedia.googlesource.com/aom aom
-
-  cd aom
+  cd node_modules/libavif/ext/aom
   mkdir -p build.libavif
   cd build.libavif
 
