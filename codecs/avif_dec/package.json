@@ -5,7 +5,7 @@
     "build": "docker run --rm -v $(pwd):/src trzeci/emscripten-upstream ./build.sh"
   },
   "napa": {
-    "libavif": "AOMediaCodec/libavif#v0.5.4"
+    "libavif": "AOMediaCodec/libavif#v0.7.3"
   },
   "devDependencies": {
     "napa": "3.0.0"
