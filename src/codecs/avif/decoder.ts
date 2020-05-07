@@ -15,6 +15,5 @@ export async function decode(data: ArrayBuffer): Promise<ImageData> {
     rawImage.height,
   );
 
-  module.free_result();
   return result;
 }
