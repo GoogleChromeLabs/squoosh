@@ -10,7 +10,7 @@
 
   Module.onRuntimeInitialized = async _ => {
     console.log('Version:', Module.version().toString(16));
-    const image = await loadFile('../example.webp');
+    const image = await loadFile('../../example.webp');
     const result = Module.decode(image);
     const imageData = new ImageData(new Uint8ClampedArray(result.buffer), result.width, result.height);
     Module.free_result();

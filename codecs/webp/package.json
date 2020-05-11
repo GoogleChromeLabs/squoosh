@@ -1,5 +1,5 @@
 {
-  "name": "webp_enc",
+  "name": "webp",
   "scripts": {
     "install": "napa",
     "build": "docker run -v $(pwd):/src trzeci/emscripten-upstream ./build.sh"

@@ -2,6 +2,7 @@
 
 set -e
 
+export EM_CACHE="${PWD}/node_modules/.em_cache"
 export OPTIMIZE="-Os -flto --llvm-lto 1"
 export LDFLAGS="${OPTIMIZE}"
 export CFLAGS="${OPTIMIZE}"
@@ -43,8 +44,21 @@ echo "============================================="
     -s MODULARIZE=1 \
     -s 'EXPORT_NAME="webp_dec"' \
     -I node_modules/libwebp \
-    -o ./webp_dec.js \
-    webp_dec.cpp \
+    -o dec/webp_dec.js \
+    dec/webp_dec.cpp \
+    node_modules/libwebp/src/.libs/libwebp.a
+)
+(
+  emcc \
+    ${OPTIMIZE} \
+    --closure 1 \
+    --bind \
+    -s ALLOW_MEMORY_GROWTH=1 \
+    -s MODULARIZE=1 \
+    -s 'EXPORT_NAME="webp_enc"' \
+    -I node_modules/libwebp \
+    -o enc/webp_enc.js \
+    enc/webp_enc.cpp \
     node_modules/libwebp/src/.libs/libwebp.a
 )
 echo "============================================="
