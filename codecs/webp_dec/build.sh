@@ -14,10 +14,8 @@ echo "Compiling libwebp"
 echo "============================================="
 test -n "$SKIP_LIBWEBP" || (
   cd node_modules/libwebp
-  autoreconf -fiv
-  rm -rf build || true
-  mkdir -p build && cd build
-  emconfigure ../configure \
+  autoreconf -iv
+  emconfigure ./configure -C \
     --disable-libwebpdemux \
     --disable-wic \
     --disable-gif \
@@ -44,12 +42,10 @@ echo "============================================="
     -s ALLOW_MEMORY_GROWTH=1 \
     -s MODULARIZE=1 \
     -s 'EXPORT_NAME="webp_dec"' \
-    --std=c++11 \
     -I node_modules/libwebp \
     -o ./webp_dec.js \
-    -x c++ \
     webp_dec.cpp \
-    node_modules/libwebp/build/src/.libs/libwebp.a
+    node_modules/libwebp/src/.libs/libwebp.a
 )
 echo "============================================="
 echo "Compiling wasm bindings done"

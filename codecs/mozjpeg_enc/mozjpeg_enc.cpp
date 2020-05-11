@@ -7,7 +7,10 @@
 #include <string.h>
 #include "config.h"
 #include "jpeglib.h"
+
+extern "C" {
 #include "cdjpeg.h"
+}
 
 using namespace emscripten;
 

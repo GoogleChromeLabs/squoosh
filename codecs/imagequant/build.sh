@@ -29,7 +29,6 @@ echo "============================================="
     -I node_modules/libimagequant \
     -o ./imagequant.js \
     --std=c++11 \
-    -x c++ \
     imagequant.cpp \
     node_modules/libimagequant/libimagequant.a
 )
