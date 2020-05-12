@@ -1,36 +1,37 @@
-#include "emscripten/bind.h"
-#include "emscripten/val.h"
-#include <stdlib.h>
+#include <emscripten/bind.h>
+#include <emscripten/val.h>
 #include <inttypes.h>
 #include <limits.h>
 #include <math.h>
+#include <stdlib.h>
 
 #include "libimagequant.h"
 
 using namespace emscripten;
 
 int version() {
-  return (((LIQ_VERSION/10000) % 100) << 16) |
-         (((LIQ_VERSION/100  ) % 100) << 8) |
-         (((LIQ_VERSION/1    ) % 100) << 0);
+  return (((LIQ_VERSION / 10000) % 100) << 16) | (((LIQ_VERSION / 100) % 100) << 8) |
+         (((LIQ_VERSION / 1) % 100) << 0);
 }
 
 class RawImage {
-public:
+ public:
   val buffer;
   int width;
   int height;
 
-  RawImage(val b, int w, int h)
-    : buffer(b), width(w), height(h) {}
+  RawImage(val b, int w, int h) : buffer(b), width(w), height(h) {}
 };
 
-
-liq_attr *attr;
-liq_image *image;
-liq_result *res;
+liq_attr* attr;
+liq_image* image;
+liq_result* res;
 uint8_t* result;
-RawImage quantize(std::string rawimage, int image_width, int image_height, int num_colors, float dithering) {
+RawImage quantize(std::string rawimage,
+                  int image_width,
+                  int image_height,
+                  int num_colors,
+                  float dithering) {
   const uint8_t* image_buffer = (uint8_t*)rawimage.c_str();
   int size = image_width * image_height;
   attr = liq_attr_create();
@@ -38,12 +39,12 @@ RawImage quantize(std::string rawimage, int image_width, int image_height, int n
   liq_set_max_colors(attr, num_colors);
   liq_image_quantize(image, attr, &res);
   liq_set_dithering_level(res, dithering);
-  uint8_t* image8bit = (uint8_t*) malloc(size);
-  result = (uint8_t*) malloc(size * 4);
+  uint8_t* image8bit = (uint8_t*)malloc(size);
+  result = (uint8_t*)malloc(size * 4);
   liq_write_remapped_image(res, image, image8bit, size);
-  const liq_palette *pal = liq_get_palette(res);
+  const liq_palette* pal = liq_get_palette(res);
   // Turn palletted image back into an RGBA image
-  for(int i = 0; i < size; i++) {
+  for (int i = 0; i < size; i++) {
     result[i * 4 + 0] = pal->entries[image8bit[i]].r;
     result[i * 4 + 1] = pal->entries[image8bit[i]].g;
     result[i * 4 + 2] = pal->entries[image8bit[i]].b;
@@ -53,43 +54,41 @@ RawImage quantize(std::string rawimage, int image_width, int image_height, int n
   liq_result_destroy(res);
   liq_image_destroy(image);
   liq_attr_destroy(attr);
-  return {
-    val(typed_memory_view(image_width*image_height*4, result)),
-    image_width,
-    image_height
-  };
+  return {val(typed_memory_view(image_width * image_height * 4, result)), image_width,
+          image_height};
 }
 
 const liq_color zx_colors[] = {
-  {.r = 0, .g = 0, .b = 0, .a = 255},       // regular black
-  {.r = 0, .g = 0, .b = 215, .a = 255},     // regular blue
-  {.r = 215, .g = 0, .b = 0, .a = 255},     // regular red
-  {.r = 215, .g = 0, .b = 215, .a = 255},   // regular magenta
-  {.r = 0, .g = 215, .b = 0, .a = 255},     // regular green
-  {.r = 0, .g = 215, .b = 215, .a = 255},   // regular cyan
-  {.r = 215, .g = 215, .b = 0, .a = 255},   // regular yellow
-  {.r = 215, .g = 215, .b = 215, .a = 255}, // regular white
-  {.r = 0, .g = 0, .b = 255, .a = 255},     // bright blue
-  {.r = 255, .g = 0, .b = 0, .a = 255},     // bright red
-  {.r = 255, .g = 0, .b = 255, .a = 255},   // bright magenta
-  {.r = 0, .g = 255, .b = 0, .a = 255},     // bright green
-  {.r = 0, .g = 255, .b = 255, .a = 255},   // bright cyan
-  {.r = 255, .g = 255, .b = 0, .a = 255},   // bright yellow
-  {.r = 255, .g = 255, .b = 255, .a = 255}  // bright white
+    {.r = 0, .g = 0, .b = 0, .a = 255},        // regular black
+    {.r = 0, .g = 0, .b = 215, .a = 255},      // regular blue
+    {.r = 215, .g = 0, .b = 0, .a = 255},      // regular red
+    {.r = 215, .g = 0, .b = 215, .a = 255},    // regular magenta
+    {.r = 0, .g = 215, .b = 0, .a = 255},      // regular green
+    {.r = 0, .g = 215, .b = 215, .a = 255},    // regular cyan
+    {.r = 215, .g = 215, .b = 0, .a = 255},    // regular yellow
+    {.r = 215, .g = 215, .b = 215, .a = 255},  // regular white
+    {.r = 0, .g = 0, .b = 255, .a = 255},      // bright blue
+    {.r = 255, .g = 0, .b = 0, .a = 255},      // bright red
+    {.r = 255, .g = 0, .b = 255, .a = 255},    // bright magenta
+    {.r = 0, .g = 255, .b = 0, .a = 255},      // bright green
+    {.r = 0, .g = 255, .b = 255, .a = 255},    // bright cyan
+    {.r = 255, .g = 255, .b = 0, .a = 255},    // bright yellow
+    {.r = 255, .g = 255, .b = 255, .a = 255}   // bright white
 };
 
 uint8_t block[8 * 8 * 4];
 
 /**
- * The ZX has one bit per pixel, but can assign two colours to an 8x8 block. The two colours must
- * both be 'regular' or 'bright'. Black exists as both regular and bright.
+ * The ZX has one bit per pixel, but can assign two colours to an 8x8 block. The
+ * two colours must both be 'regular' or 'bright'. Black exists as both regular
+ * and bright.
  */
 RawImage zx_quantize(std::string rawimage, int image_width, int image_height, float dithering) {
-  const uint8_t* image_buffer = (uint8_t*) rawimage.c_str();
+  const uint8_t* image_buffer = (uint8_t*)rawimage.c_str();
   int size = image_width * image_height;
   int bytes_per_pixel = 4;
-  result = (uint8_t*) malloc(size * bytes_per_pixel);
-  uint8_t* image8bit = (uint8_t*) malloc(8 * 8);
+  result = (uint8_t*)malloc(size * bytes_per_pixel);
+  uint8_t* image8bit = (uint8_t*)malloc(8 * 8);
 
   // For each 8x8 grid
   for (int block_start_y = 0; block_start_y < image_height; block_start_y += 8) {
@@ -99,7 +98,8 @@ RawImage zx_quantize(std::string rawimage, int image_width, int image_height, fl
       int block_width = 8;
       int block_height = 8;
 
-      // If the block hangs off the right/bottom of the image dimensions, make it smaller to fit.
+      // If the block hangs off the right/bottom of the image dimensions, make
+      // it smaller to fit.
       if (block_start_y + block_height > image_height) {
         block_height = image_height - block_start_y;
       }
@@ -125,12 +125,11 @@ RawImage zx_quantize(std::string rawimage, int image_width, int image_height, fl
           for (int color_index = 0; color_index < 15; color_index++) {
             liq_color color = zx_colors[color_index];
 
-            // Using Euclidean distance. LibQuant has better methods, but it requires conversion to
-            // LAB, so I don't think it's worth it.
-            int distance =
-              pow(color.r - image_buffer[pixel_start + 0], 2) +
-              pow(color.g - image_buffer[pixel_start + 1], 2) +
-              pow(color.b - image_buffer[pixel_start + 2], 2);
+            // Using Euclidean distance. LibQuant has better methods, but it
+            // requires conversion to LAB, so I don't think it's worth it.
+            int distance = pow(color.r - image_buffer[pixel_start + 0], 2) +
+                           pow(color.g - image_buffer[pixel_start + 1], 2) +
+                           pow(color.b - image_buffer[pixel_start + 2], 2);
 
             if (distance < smallest_distance) {
               winning_index = color_index;
@@ -151,7 +150,8 @@ RawImage zx_quantize(std::string rawimage, int image_width, int image_height, fl
 
       for (int color_index = 0; color_index < 15; color_index++) {
         if (color_popularity[color_index] > highest_popularity) {
-          // Store this as the most popular pixel, and demote the current values:
+          // Store this as the most popular pixel, and demote the current
+          // values:
           third_color_index = second_color_index;
           third_highest_popularity = second_highest_popularity;
           second_color_index = first_color_index;
@@ -169,8 +169,8 @@ RawImage zx_quantize(std::string rawimage, int image_width, int image_height, fl
         }
       }
 
-      // ZX images can't mix bright and regular colours, except black which appears in both.
-      // Resolve any conflict:
+      // ZX images can't mix bright and regular colours, except black which
+      // appears in both. Resolve any conflict:
       while (1) {
         // If either colour is black, there's no conflict to resolve.
         if (first_color_index != 0 && second_color_index != 0) {
@@ -183,12 +183,13 @@ RawImage zx_quantize(std::string rawimage, int image_width, int image_height, fl
           }
         }
 
-        // If, during conflict resolving, we now have two of the same colour (because we initially
-        // selected the bright & regular version of the same colour), retry again with the third
-        // most popular colour.
+        // If, during conflict resolving, we now have two of the same colour
+        // (because we initially selected the bright & regular version of the
+        // same colour), retry again with the third most popular colour.
         if (first_color_index == second_color_index) {
           second_color_index = third_color_index;
-        } else break;
+        } else
+          break;
       }
 
       // Quantize
@@ -200,13 +201,15 @@ RawImage zx_quantize(std::string rawimage, int image_width, int image_height, fl
       liq_image_quantize(image, attr, &res);
       liq_set_dithering_level(res, dithering);
       liq_write_remapped_image(res, image, image8bit, size);
-      const liq_palette *pal = liq_get_palette(res);
+      const liq_palette* pal = liq_get_palette(res);
 
-      // Turn palletted image back into an RGBA image, and write it into the full size result image.
-      for(int y = 0; y < block_height; y++) {
-        for(int x = 0; x < block_width; x++) {
+      // Turn palletted image back into an RGBA image, and write it into the
+      // full size result image.
+      for (int y = 0; y < block_height; y++) {
+        for (int x = 0; x < block_width; x++) {
           int image8BitPos = y * block_width + x;
-          int resultStartPos = ((block_start_y + y) * bytes_per_pixel * image_width) + ((block_start_x + x) * bytes_per_pixel);
+          int resultStartPos = ((block_start_y + y) * bytes_per_pixel * image_width) +
+                               ((block_start_x + x) * bytes_per_pixel);
           result[resultStartPos + 0] = pal->entries[image8bit[image8BitPos]].r;
           result[resultStartPos + 1] = pal->entries[image8bit[image8BitPos]].g;
           result[resultStartPos + 2] = pal->entries[image8bit[image8BitPos]].b;
@@ -221,11 +224,8 @@ RawImage zx_quantize(std::string rawimage, int image_width, int image_height, fl
   }
 
   free(image8bit);
-  return {
-    val(typed_memory_view(image_width*image_height*4, result)),
-    image_width,
-    image_height
-  };
+  return {val(typed_memory_view(image_width * image_height * 4, result)), image_width,
+          image_height};
 }
 
 void free_result() {
@@ -234,9 +234,9 @@ void free_result() {
 
 EMSCRIPTEN_BINDINGS(my_module) {
   class_<RawImage>("RawImage")
-    .property("buffer", &RawImage::buffer)
-    .property("width", &RawImage::width)
-    .property("height", &RawImage::height);
+      .property("buffer", &RawImage::buffer)
+      .property("width", &RawImage::width)
+      .property("height", &RawImage::height);
 
   function("quantize", &quantize);
   function("zx_quantize", &zx_quantize);
