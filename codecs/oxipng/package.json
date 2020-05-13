@@ -2,6 +2,6 @@
   "name": "oxipng",
   "scripts": {
     "build:image": "docker build -t squoosh-oxipng .",
-    "build": "docker run -v $(pwd):/src squoosh-oxipng ./build.sh"
+    "build": "docker run --rm -v $(pwd):/src squoosh-oxipng ./build.sh"
   }
 }
