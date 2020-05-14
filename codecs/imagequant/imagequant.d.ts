@@ -7,7 +7,7 @@ interface RawImage {
 interface QuantizerModule extends EmscriptenWasm.Module {
   quantize(data: BufferSource, width: number, height: number, numColors: number, dither: number): RawImage;
   zx_quantize(data: BufferSource, width: number, height: number, dither: number): RawImage;
-  free_result(): void;
+  free_result(ptr: number): void;
 }
 
 export default function(opts: EmscriptenWasm.ModuleOpts): QuantizerModule;

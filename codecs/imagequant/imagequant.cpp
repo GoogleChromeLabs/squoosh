@@ -23,10 +23,6 @@ class RawImage {
   RawImage(val b, int w, int h) : buffer(b), width(w), height(h) {}
 };
 
-liq_attr* attr;
-liq_image* image;
-liq_result* res;
-uint8_t* result;
 RawImage quantize(std::string rawimage,
                   int image_width,
                   int image_height,
@@ -34,13 +30,14 @@ RawImage quantize(std::string rawimage,
                   float dithering) {
   const uint8_t* image_buffer = (uint8_t*)rawimage.c_str();
   int size = image_width * image_height;
-  attr = liq_attr_create();
-  image = liq_image_create_rgba(attr, image_buffer, image_width, image_height, 0);
+  liq_attr* attr = liq_attr_create();
+  liq_image* image = liq_image_create_rgba(attr, image_buffer, image_width, image_height, 0);
   liq_set_max_colors(attr, num_colors);
+  liq_result* res = nullptr;
   liq_image_quantize(image, attr, &res);
   liq_set_dithering_level(res, dithering);
   uint8_t* image8bit = (uint8_t*)malloc(size);
-  result = (uint8_t*)malloc(size * 4);
+  uint8_t* result = (uint8_t*)malloc(size * 4);
   liq_write_remapped_image(res, image, image8bit, size);
   const liq_palette* pal = liq_get_palette(res);
   // Turn palletted image back into an RGBA image
@@ -76,8 +73,6 @@ const liq_color zx_colors[] = {
     {.r = 255, .g = 255, .b = 255, .a = 255}   // bright white
 };
 
-uint8_t block[8 * 8 * 4];
-
 /**
  * The ZX has one bit per pixel, but can assign two colours to an 8x8 block. The
  * two colours must both be 'regular' or 'bright'. Black exists as both regular
@@ -87,7 +82,8 @@ RawImage zx_quantize(std::string rawimage, int image_width, int image_height, fl
   const uint8_t* image_buffer = (uint8_t*)rawimage.c_str();
   int size = image_width * image_height;
   int bytes_per_pixel = 4;
-  result = (uint8_t*)malloc(size * bytes_per_pixel);
+  uint8_t block[8 * 8 * bytes_per_pixel];
+  uint8_t* result = (uint8_t*)malloc(size * bytes_per_pixel);
   uint8_t* image8bit = (uint8_t*)malloc(8 * 8);
 
   // For each 8x8 grid
@@ -193,11 +189,12 @@ RawImage zx_quantize(std::string rawimage, int image_width, int image_height, fl
       }
 
       // Quantize
-      attr = liq_attr_create();
-      image = liq_image_create_rgba(attr, block, block_width, block_height, 0);
+      liq_attr* attr = liq_attr_create();
+      liq_image* image = liq_image_create_rgba(attr, block, block_width, block_height, 0);
       liq_set_max_colors(attr, 2);
       liq_image_add_fixed_color(image, zx_colors[first_color_index]);
       liq_image_add_fixed_color(image, zx_colors[second_color_index]);
+      liq_result *res = nullptr;
       liq_image_quantize(image, attr, &res);
       liq_set_dithering_level(res, dithering);
       liq_write_remapped_image(res, image, image8bit, size);
@@ -228,7 +225,7 @@ RawImage zx_quantize(std::string rawimage, int image_width, int image_height, fl
           image_height};
 }
 
-void free_result() {
+void free_result(uint8_t* result) {
   free(result);
 }
 
@@ -241,5 +238,5 @@ EMSCRIPTEN_BINDINGS(my_module) {
   function("quantize", &quantize);
   function("zx_quantize", &zx_quantize);
   function("version", &version);
-  function("free_result", &free_result);
+  function("free_result", &free_result, allow_raw_pointers());
 }
