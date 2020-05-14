@@ -52,8 +52,6 @@
     console.log('size', result.length);
     const blob = new Blob([result], {type: 'image/webp'});
 
-    module.free_result();
-
     const blobURL = URL.createObjectURL(blob);
     const img = document.createElement('img');
     img.src = blobURL;

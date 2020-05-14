@@ -10,33 +10,17 @@ int version() {
   return WebPGetDecoderVersion();
 }
 
-class RawImage {
- public:
-  val buffer;
-  int width;
-  int height;
+const val Uint8ClampedArray = val::global("Uint8ClampedArray");
+const val ImageData = val::global("ImageData");
 
-  RawImage(val b, int w, int h) : buffer(b), width(w), height(h) {}
-};
-
-uint8_t* last_result;
-RawImage decode(std::string buffer) {
+val decode(std::string buffer) {
   int width, height;
-  last_result = WebPDecodeRGBA((const uint8_t*)buffer.c_str(), buffer.size(), &width, &height);
-  return RawImage(val(typed_memory_view(width * height * 4, last_result)), width, height);
-}
-
-void free_result() {
-  free(last_result);
+  std::unique_ptr<uint8_t[]> rgba(
+      WebPDecodeRGBA((const uint8_t*)buffer.c_str(), buffer.size(), &width, &height));
+  return ImageData.new_(Uint8ClampedArray.new_(typed_memory_view(width * height * 4, rgba.get())), width, height);
 }
 
 EMSCRIPTEN_BINDINGS(my_module) {
-  class_<RawImage>("RawImage")
-      .property("buffer", &RawImage::buffer)
-      .property("width", &RawImage::width)
-      .property("height", &RawImage::height);
-
   function("decode", &decode);
   function("version", &version);
-  function("free_result", &free_result);
 }
