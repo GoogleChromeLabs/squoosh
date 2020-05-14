@@ -15,5 +15,5 @@ export async function process(data: ImageData, opts: QuantizeOptions): Promise<I
     :
       module.quantize(data.data, data.width, data.height, opts.maxNumColors, opts.dither);
 
-  return new ImageData(new Uint8ClampedArray(result), data.width, data.height);
+  return new ImageData(result, data.width, data.height);
 }

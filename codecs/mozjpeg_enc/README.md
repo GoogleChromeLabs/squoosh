@@ -17,10 +17,6 @@ See `example.html`
 
 Returns the version of MozJPEG as a number. va.b.c is encoded as 0x0a0b0c
 
-### `void free_result()`
-
-Frees the result created by `encode()`.
-
 ### `Uint8Array encode(std::string image_in, int image_width, int image_height, MozJpegOptions opts)`
 
 Encodes the given image with given dimension to JPEG. Options looks like this:
