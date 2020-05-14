@@ -14,20 +14,13 @@ int version() {
          (((LIQ_VERSION / 1) % 100) << 0);
 }
 
-class RawImage {
- public:
-  val buffer;
-  int width;
-  int height;
+const val Uint8ClampedArray = val::global("Uint8ClampedArray");
 
-  RawImage(val b, int w, int h) : buffer(b), width(w), height(h) {}
-};
-
-RawImage quantize(std::string rawimage,
-                  int image_width,
-                  int image_height,
-                  int num_colors,
-                  float dithering) {
+val quantize(std::string rawimage,
+             int image_width,
+             int image_height,
+             int num_colors,
+             float dithering) {
   const uint8_t* image_buffer = (uint8_t*)rawimage.c_str();
   int size = image_width * image_height;
   liq_attr* attr = liq_attr_create();
@@ -51,8 +44,9 @@ RawImage quantize(std::string rawimage,
   liq_result_destroy(res);
   liq_image_destroy(image);
   liq_attr_destroy(attr);
-  return {val(typed_memory_view(image_width * image_height * 4, result)), image_width,
-          image_height};
+  val js_result = Uint8ClampedArray.new_(typed_memory_view(image_width * image_height * 4, result));
+  free(result);
+  return js_result;
 }
 
 const liq_color zx_colors[] = {
@@ -78,7 +72,7 @@ const liq_color zx_colors[] = {
  * two colours must both be 'regular' or 'bright'. Black exists as both regular
  * and bright.
  */
-RawImage zx_quantize(std::string rawimage, int image_width, int image_height, float dithering) {
+val zx_quantize(std::string rawimage, int image_width, int image_height, float dithering) {
   const uint8_t* image_buffer = (uint8_t*)rawimage.c_str();
   int size = image_width * image_height;
   int bytes_per_pixel = 4;
@@ -194,7 +188,7 @@ RawImage zx_quantize(std::string rawimage, int image_width, int image_height, fl
       liq_set_max_colors(attr, 2);
       liq_image_add_fixed_color(image, zx_colors[first_color_index]);
       liq_image_add_fixed_color(image, zx_colors[second_color_index]);
-      liq_result *res = nullptr;
+      liq_result* res = nullptr;
       liq_image_quantize(image, attr, &res);
       liq_set_dithering_level(res, dithering);
       liq_write_remapped_image(res, image, image8bit, size);
@@ -221,22 +215,13 @@ RawImage zx_quantize(std::string rawimage, int image_width, int image_height, fl
   }
 
   free(image8bit);
-  return {val(typed_memory_view(image_width * image_height * 4, result)), image_width,
-          image_height};
-}
-
-void free_result(uint8_t* result) {
+  val js_result = Uint8ClampedArray.new_(typed_memory_view(size * 4, result));
   free(result);
+  return js_result;
 }
 
 EMSCRIPTEN_BINDINGS(my_module) {
-  class_<RawImage>("RawImage")
-      .property("buffer", &RawImage::buffer)
-      .property("width", &RawImage::width)
-      .property("height", &RawImage::height);
-
   function("quantize", &quantize);
   function("zx_quantize", &zx_quantize);
   function("version", &version);
-  function("free_result", &free_result, allow_raw_pointers());
 }
