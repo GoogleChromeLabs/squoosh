@@ -11,5 +11,5 @@
   ],
   "module": "resize.js",
   "types": "resize.d.ts",
-  "sideEffects": "false"
+  "sideEffects": false
 }
