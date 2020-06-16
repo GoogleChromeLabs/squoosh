@@ -2,6 +2,15 @@ interface CanvasRenderingContext2D {
   filter: string;
 }
 
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[];
+  readonly userChoice: Promise<{
+    outcome: 'accepted' | 'dismissed',
+    platform: string,
+  }>;
+  prompt(): Promise<void>;
+}
+
 // Handling file-loader imports:
 declare module '*.png' {
   const content: string;

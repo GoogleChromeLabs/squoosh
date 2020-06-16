@@ -47,11 +47,15 @@ interface Props {
 }
 interface State {
   fetchingDemoIndex?: number;
+  canInstall: boolean;
 }
 
 export default class Intro extends Component<Props, State> {
-  state: State = {};
+  state: State = {
+    canInstall: false,
+  };
   private fileInput?: HTMLInputElement;
+  private bipEvent?: BeforeInstallPromptEvent;
 
   @bind
   private resetFileInput() {
@@ -73,6 +77,22 @@ export default class Intro extends Component<Props, State> {
   }
 
   @bind
+  private onBeforeInstallPrompt(e: Event) {
+    this.setState({ canInstall: true });
+    this.bipEvent = e as BeforeInstallPromptEvent;
+    e.preventDefault();
+  }
+
+  @bind
+  private onInstallClick(e: Event) {
+    this.setState({ canInstall: false });
+    if (this.bipEvent) {
+      this.bipEvent.prompt();
+      this.bipEvent = undefined;
+    }
+  }
+
+  @bind
   private async onDemoClick(index: number, event: Event) {
     try {
       this.setState({ fetchingDemoIndex: index });
@@ -88,6 +108,11 @@ export default class Intro extends Component<Props, State> {
       this.setState({ fetchingDemoIndex: undefined });
       this.props.showSnack("Couldn't fetch demo image");
     }
+  }
+
+  constructor() {
+    super();
+    window.addEventListener('beforeinstallprompt', this.onBeforeInstallPrompt);
   }
 
   render({ }: Props, { fetchingDemoIndex }: State) {
@@ -133,6 +158,9 @@ export default class Intro extends Component<Props, State> {
           </ul>
         </div>
         <ul class={style.relatedLinks}>
+          {this.state.canInstall &&
+            <li><a href="" onClick={this.onInstallClick}>Install</a></li>
+          }
           <li><a href="https://github.com/GoogleChromeLabs/squoosh/">View the code</a></li>
           <li><a href="https://github.com/GoogleChromeLabs/squoosh/issues">Report a bug</a></li>
           <li>
