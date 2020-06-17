@@ -9,7 +9,9 @@ export function browserResize(data: ImageData, opts: BrowserResizeOptions): Imag
   let sh = data.height;
 
   if (opts.fitMethod === 'contain') {
-    ({ sx, sy, sw, sh } = getContainOffsets(sw, sh, opts.width, opts.height));
+    ({
+      sx, sy, sw, sh,
+    } = getContainOffsets(sw, sh, opts.width, opts.height));
   }
 
   return nativeResize(
@@ -25,11 +27,17 @@ export function vectorResize(data: HTMLImageElement, opts: VectorResizeOptions):
   let sh = data.height;
 
   if (opts.fitMethod === 'contain') {
-    ({ sx, sy, sw, sh } = getContainOffsets(sw, sh, opts.width, opts.height));
+    ({
+      sx, sy, sw, sh,
+    } = getContainOffsets(sw, sh, opts.width, opts.height));
   }
 
   return drawableToImageData(data, {
-    sx, sy, sw, sh,
-    width: opts.width, height: opts.height,
+    sx,
+    sy,
+    sw,
+    sh,
+    width: opts.width,
+    height: opts.height,
   });
 }

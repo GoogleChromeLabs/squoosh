@@ -1,7 +1,7 @@
 import { canvasEncodeTest } from '../generic/util';
 
 export interface EncodeOptions { }
-export interface EncoderState { type: typeof type; options: EncodeOptions; }
+export interface EncoderState { type: typeof type; options: EncodeOptions }
 
 export const type = 'browser-jp2';
 export const label = 'Browser JPEG 2000';

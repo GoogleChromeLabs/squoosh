@@ -4,7 +4,7 @@ function cleanSetOrMerge<A extends any[] | object>(
   toSetOrMerge: any[] | object,
   merge: boolean,
 ): A {
-  const splitKeys = Array.isArray(keys) ? keys : ('' + keys).split('.');
+  const splitKeys = Array.isArray(keys) ? keys : (`${keys}`).split('.');
 
   // Going off road in terms of types, otherwise TypeScript doesn't like the access-by-index.
   // The assumptions in this code break if the object contains things which aren't arrays or
@@ -17,12 +17,13 @@ function cleanSetOrMerge<A extends any[] | object>(
   for (const [i, key] of splitKeys.entries()) {
     if (i !== lastIndex) {
       // Copy everything along the path.
+      // eslint-disable-next-line no-multi-assign
       last = last[key] = copy(last[key]);
     } else {
       // Merge or set.
-      last[key] = merge ?
-        Object.assign(copy(last[key]), toSetOrMerge) :
-        toSetOrMerge;
+      last[key] = merge
+        ? Object.assign(copy(last[key]), toSetOrMerge)
+        : toSetOrMerge;
     }
   }
 

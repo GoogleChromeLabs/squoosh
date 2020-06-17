@@ -1,17 +1,17 @@
 import { h, Component } from 'preact';
 import PinchZoom, { ScaleToOpts } from './custom-els/PinchZoom';
-import './custom-els/PinchZoom';
+
 import './custom-els/TwoUp';
 import * as style from './style.scss';
 import { bind, linkRef } from '../../lib/initial-util';
 import { shallowEqual, drawDataToCanvas } from '../../lib/util';
 import {
-    ToggleBackgroundIcon,
-    AddIcon,
-    RemoveIcon,
-    BackIcon,
-    ToggleBackgroundActiveIcon,
-    RotateIcon,
+  ToggleBackgroundIcon,
+  AddIcon,
+  RemoveIcon,
+  BackIcon,
+  ToggleBackgroundActiveIcon,
+  RotateIcon,
 } from '../../lib/icons';
 import { twoUpHandle } from './custom-els/TwoUp/styles.css';
 import { InputProcessorState } from '../../codecs/input-processors';
@@ -49,11 +49,17 @@ export default class Output extends Component<Props, State> {
     editingScale: false,
     altBackground: false,
   };
+
   canvasLeft?: HTMLCanvasElement;
+
   canvasRight?: HTMLCanvasElement;
+
   pinchZoomLeft?: PinchZoom;
+
   pinchZoomRight?: PinchZoom;
+
   scaleInput?: HTMLInputElement;
+
   retargetedEvents = new WeakSet<Event>();
 
   componentDidMount() {
@@ -84,9 +90,9 @@ export default class Output extends Component<Props, State> {
     const rightDraw = this.rightDrawable();
     const sourceFileChanged =
       // Has the value become (un)defined?
-      (!!this.props.source !== !!prevProps.source) ||
+      (!!this.props.source !== !!prevProps.source)
       // Or has the file changed?
-      (this.props.source && prevProps.source && this.props.source.file !== prevProps.source.file);
+      || (this.props.source && prevProps.source && this.props.source.file !== prevProps.source.file);
 
     const oldSourceData = prevProps.source && prevProps.source.processed;
     const newSourceData = this.props.source && this.props.source.processed;
@@ -240,16 +246,18 @@ export default class Output extends Component<Props, State> {
     // where the software keyboard is hidden, but the input remains focused, then after interaction
     // with this element the keyboard reappears for NO GOOD REASON. Thanks Android.
     if (
-      event.type === 'touchend' &&
-      document.activeElement &&
-      document.activeElement instanceof HTMLElement
+      event.type === 'touchend'
+      && document.activeElement
+      && document.activeElement instanceof HTMLElement
     ) {
       document.activeElement.blur();
     }
   }
 
   render(
-    { mobileView, leftImgContain, rightImgContain, source, onBack }: Props,
+    {
+      mobileView, leftImgContain, rightImgContain, source, onBack,
+    }: Props,
     { scale, editingScale, altBackground }: State,
   ) {
     const leftDraw = this.leftDrawable();
@@ -258,7 +266,7 @@ export default class Output extends Component<Props, State> {
     const originalImage = source && source.processed;
 
     return (
-      <div class={`${style.output} ${altBackground ? style.altBackground : ''}`}>
+      <div className={`${style.output} ${altBackground ? style.altBackground : ''}`}>
         <two-up
           legacy-clip-compat
           class={style.twoUp}
@@ -277,7 +285,7 @@ export default class Output extends Component<Props, State> {
             ref={linkRef(this, 'pinchZoomLeft')}
           >
             <canvas
-              class={style.pinchTarget}
+              className={style.pinchTarget}
               ref={linkRef(this, 'canvasLeft')}
               width={leftDraw && leftDraw.width}
               height={leftDraw && leftDraw.height}
@@ -290,7 +298,7 @@ export default class Output extends Component<Props, State> {
           </pinch-zoom>
           <pinch-zoom class={style.pinchZoom} ref={linkRef(this, 'pinchZoomRight')}>
             <canvas
-              class={style.pinchTarget}
+              className={style.pinchTarget}
               ref={linkRef(this, 'canvasRight')}
               width={rightDraw && rightDraw.width}
               height={rightDraw && rightDraw.height}
@@ -303,15 +311,15 @@ export default class Output extends Component<Props, State> {
           </pinch-zoom>
         </two-up>
 
-        <div class={style.back}>
-          <button class={style.button} onClick={onBack}>
+        <div className={style.back}>
+          <button className={style.button} onClick={onBack}>
             <BackIcon />
           </button>
         </div>
 
-        <div class={style.controls}>
-          <div class={style.zoomControls}>
-            <button class={style.button} onClick={this.zoomOut}>
+        <div className={style.controls}>
+          <div className={style.zoomControls}>
+            <button className={style.button} onClick={this.zoomOut}>
               <RemoveIcon />
             </button>
             {editingScale ? (
@@ -321,34 +329,33 @@ export default class Output extends Component<Props, State> {
                 min="1"
                 max="1000000"
                 ref={linkRef(this, 'scaleInput')}
-                class={style.zoom}
+                className={style.zoom}
                 value={Math.round(scale * 100)}
                 onInput={this.onScaleInputChanged}
                 onBlur={this.onScaleInputBlur}
               />
             ) : (
-              <span class={style.zoom} tabIndex={0} onFocus={this.onScaleValueFocus}>
-                <span class={style.zoomValue}>{Math.round(scale * 100)}</span>
+              <span className={style.zoom} tabIndex={0} onFocus={this.onScaleValueFocus}>
+                <span className={style.zoomValue}>{Math.round(scale * 100)}</span>
                 %
               </span>
             )}
-            <button class={style.button} onClick={this.zoomIn}>
+            <button className={style.button} onClick={this.zoomIn}>
               <AddIcon />
             </button>
           </div>
-          <div class={style.buttonsNoWrap}>
-            <button class={style.button} onClick={this.onRotateClick} title="Rotate image">
+          <div className={style.buttonsNoWrap}>
+            <button className={style.button} onClick={this.onRotateClick} title="Rotate image">
               <RotateIcon />
             </button>
             <button
-              class={`${style.button} ${altBackground ? style.active : ''}`}
+              className={`${style.button} ${altBackground ? style.active : ''}`}
               onClick={this.toggleBackground}
               title="Change canvas color"
             >
               {altBackground
                 ? <ToggleBackgroundActiveIcon />
-                : <ToggleBackgroundIcon />
-              }
+                : <ToggleBackgroundIcon />}
             </button>
           </div>
         </div>

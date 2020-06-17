@@ -1,8 +1,10 @@
 import { h, Component } from 'preact';
 import * as style from './style.scss';
 import RangeInputElement from '../../custom-els/RangeInput';
-import '../../custom-els/RangeInput';
+
 import { linkRef, bind } from '../../lib/initial-util';
+
+import '../../custom-els/RangeInput'; // eslint-disable import/no-duplicates
 
 interface Props extends JSX.HTMLAttributes {}
 interface State {}
@@ -31,11 +33,11 @@ export default class Range extends Component<Props, State> {
     } = props;
 
     return (
-      <label class={style.range}>
-        <span class={style.labelText}>{children}</span>
+      <label className={style.range}>
+        <span className={style.labelText}>{children}</span>
         {/* On interaction, Safari gives focus to the first element in the label, so the
         <range-input> is deliberately first. */}
-        <div class={style.rangeWcContainer}>
+        <div className={style.rangeWcContainer}>
           <range-input
             ref={linkRef(this, 'rangeWc')}
             class={style.rangeWc}
@@ -44,7 +46,7 @@ export default class Range extends Component<Props, State> {
         </div>
         <input
           type="number"
-          class={style.textInput}
+          className={style.textInput}
           value={value}
           min={min}
           max={max}

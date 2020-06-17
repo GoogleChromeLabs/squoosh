@@ -14,24 +14,28 @@ export default class TwoUp extends HTMLElement {
   static get observedAttributes() { return [orientationAttr]; }
 
   private readonly _handle = document.createElement('div');
+
   /**
    * The position of the split in pixels.
    */
   private _position = 0;
+
   /**
    * The position of the split in %.
    */
   private _relativePosition = 0.5;
+
   /**
    * The value of _position when the pointer went down.
    */
   private _positionOnPointerStart = 0;
+
   /**
    * Has connectedCallback been called yet?
    */
   private _everConnected = false;
 
-  constructor () {
+  constructor() {
     super();
     this._handle.className = styles.twoUpHandle;
 
@@ -149,8 +153,8 @@ export default class TwoUp extends HTMLElement {
     const dimensionAxis = this.orientation === 'vertical' ? 'height' : 'width';
     const bounds = this.getBoundingClientRect();
 
-    this._position = this._positionOnPointerStart +
-      (currentPoint[pointAxis] - startPoint[pointAxis]);
+    this._position = this._positionOnPointerStart
+      + (currentPoint[pointAxis] - startPoint[pointAxis]);
 
     // Clamp position to element bounds.
     this._position = Math.max(0, Math.min(this._position, bounds[dimensionAxis]));

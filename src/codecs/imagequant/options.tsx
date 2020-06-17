@@ -42,38 +42,41 @@ export default class QuantizerOptions extends Component<Props, State> {
 
   render({ options }: Props, { extendedSettings }: State) {
     return (
-      <form class={style.optionsSection} onSubmit={preventDefault}>
+      <form className={style.optionsSection} onSubmit={preventDefault}>
         <Expander>
-          {extendedSettings ?
-            <label class={style.optionTextFirst}>
+          {extendedSettings
+            ? (
+              <label className={style.optionTextFirst}>
               Type:
-              <Select
-                name="zx"
-                value={'' + options.zx}
-                onChange={this.onChange}
-              >
-                <option value="0">Standard</option>
-                <option value="1">ZX</option>
-              </Select>
-            </label>
-          : null}
+                <Select
+                  name="zx"
+                  value={`${options.zx}`}
+                  onChange={this.onChange}
+                >
+                  <option value="0">Standard</option>
+                  <option value="1">ZX</option>
+                </Select>
+              </label>
+            )
+            : null}
         </Expander>
         <Expander>
-          {options.zx ? null :
-            <div class={style.optionOneCell}>
-              <Range
-                name="maxNumColors"
-                min="2"
-                max="256"
-                value={options.maxNumColors}
-                onInput={this.onChange}
-              >
+          {options.zx ? null
+            : (
+              <div className={style.optionOneCell}>
+                <Range
+                  name="maxNumColors"
+                  min="2"
+                  max="256"
+                  value={options.maxNumColors}
+                  onInput={this.onChange}
+                >
                 Colors:
-              </Range>
-            </div>
-          }
+                </Range>
+              </div>
+            )}
         </Expander>
-        <div class={style.optionOneCell}>
+        <div className={style.optionOneCell}>
           <Range
             name="dither"
             min="0"

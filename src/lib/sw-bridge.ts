@@ -30,8 +30,8 @@ async function installingWorker(reg: ServiceWorkerRegistration): Promise<Service
 }
 
 /** Wait a service worker to become waiting */
-async function updateReady(reg: ServiceWorkerRegistration): Promise<void> {
-  if (reg.waiting) return;
+function updateReady(reg: ServiceWorkerRegistration): Promise<void> {
+  if (reg.waiting) return Promise.resolve();
   const installing = await installingWorker(reg);
   return new Promise<void>((resolve) => {
     installing.addEventListener('statechange', () => {
@@ -77,7 +77,7 @@ export async function offliner(showSnack: SnackBarElement['showSnackbar']) {
     }
 
     // Otherwise reload (the user will have agreed to this).
-    location.reload();
+    window.location.reload();
   });
 
   // If we don't have a controller, we don't need to check for updates – we've just loaded from the

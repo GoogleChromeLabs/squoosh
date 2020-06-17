@@ -84,6 +84,7 @@ export default class PinchZoom extends HTMLElement {
   // Ideally this would be shadow DOM, but we don't have the browser
   // support yet.
   private _positioningEl?: Element;
+
   // Current transform.
   private _transform: SVGMatrix = createMatrix();
 
@@ -109,7 +110,7 @@ export default class PinchZoom extends HTMLElement {
       },
     });
 
-    this.addEventListener('wheel', event => this._onWheel(event));
+    this.addEventListener('wheel', (event) => this._onWheel(event));
   }
 
   connectedCallback() {
@@ -248,18 +249,18 @@ export default class PinchZoom extends HTMLElement {
 
     // Return if there's no change
     if (
-      scale === this.scale &&
-      x === this.x &&
-      y === this.y
+      scale === this.scale
+      && x === this.x
+      && y === this.y
     ) return;
 
     this._transform.e = x;
     this._transform.f = y;
     this._transform.d = this._transform.a = scale;
 
-    this.style.setProperty('--x', this.x + 'px');
-    this.style.setProperty('--y', this.y + 'px');
-    this.style.setProperty('--scale', this.scale + '');
+    this.style.setProperty('--x', `${this.x}px`);
+    this.style.setProperty('--y', `${this.y}px`);
+    this.style.setProperty('--scale', `${this.scale}`);
 
     if (allowChangeEvent) {
       const event = new Event('change', { bubbles: true });
@@ -333,7 +334,9 @@ export default class PinchZoom extends HTMLElement {
     const scaleDiff = prevDistance ? newDistance / prevDistance : 1;
 
     this._applyChange({
-      originX, originY, scaleDiff,
+      originX,
+      originY,
+      scaleDiff,
       panX: newMidpoint.clientX - prevMidpoint.clientX,
       panY: newMidpoint.clientY - prevMidpoint.clientY,
       allowChangeEvent: true,

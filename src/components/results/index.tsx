@@ -1,4 +1,6 @@
-import { h, Component, ComponentChildren, ComponentChild } from 'preact';
+import {
+  h, Component, ComponentChildren, ComponentChild,
+} from 'preact';
 
 import * as style from './style.scss';
 import FileSize from './FileSize';
@@ -74,37 +76,38 @@ export default class Results extends Component<Props, State> {
   }
 
   render(
-    { source, imageFile, downloadUrl, children, copyDirection, buttonPosition }: Props,
+    {
+      source, imageFile, downloadUrl, children, copyDirection, buttonPosition,
+    }: Props,
     { showLoadingState }: State,
   ) {
-
     return (
-      <div class={`${style.results} ${buttonPositionClass[buttonPosition]}`}>
-        <div class={style.resultData}>
+      <div className={`${style.results} ${buttonPositionClass[buttonPosition]}`}>
+        <div className={style.resultData}>
           {(children as ComponentChild[])[0]
-            ? <div class={style.resultTitle}>{children}</div>
-            : null
-          }
-          {!imageFile || showLoadingState ? 'Working…' :
-            <FileSize
-              blob={imageFile}
-              compareTo={(source && imageFile !== source.file) ? source.file : undefined}
-            />
-          }
+            ? <div className={style.resultTitle}>{children}</div>
+            : null}
+          {!imageFile || showLoadingState ? 'Working…'
+            : (
+              <FileSize
+                blob={imageFile}
+                compareTo={(source && imageFile !== source.file) ? source.file : undefined}
+              />
+            )}
         </div>
 
         <button
-          class={style.copyToOther}
+          className={style.copyToOther}
           title="Copy settings to other side"
           onClick={this.onCopyToOtherClick}
         >
           <CopyAcrossIcon class={style.copyIcon} copyDirection={copyDirection} />
         </button>
 
-        <div class={style.download}>
+        <div className={style.download}>
           {(downloadUrl && imageFile) && (
             <a
-              class={`${style.downloadLink} ${showLoadingState ? style.downloadLinkDisable : ''}`}
+              className={`${style.downloadLink} ${showLoadingState ? style.downloadLinkDisable : ''}`}
               href={downloadUrl}
               download={imageFile.name}
               title="Download"

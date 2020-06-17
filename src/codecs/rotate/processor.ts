@@ -6,8 +6,8 @@ import { RotateOptions, RotateModuleInstance } from './processor-meta';
 // using `instantiateStreaming` in the first place. So let’s just use
 // `ArrayBuffer`s here.
 const instancePromise = fetch(wasmUrl)
-  .then(r => r.arrayBuffer())
-  .then(buf => WebAssembly.instantiate(buf));
+  .then((r) => r.arrayBuffer())
+  .then((buf) => WebAssembly.instantiate(buf));
 
 export async function rotate(
   data: ImageData,

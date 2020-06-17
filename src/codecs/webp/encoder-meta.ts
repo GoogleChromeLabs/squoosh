@@ -1,8 +1,8 @@
 export enum WebPImageHint {
   WEBP_HINT_DEFAULT, // default preset.
   WEBP_HINT_PICTURE, // digital picture, like portrait, inner shot
-  WEBP_HINT_PHOTO,   // outdoor photograph, with natural lighting
-  WEBP_HINT_GRAPH,   // Discrete tone image (graph, map-tile etc).
+  WEBP_HINT_PHOTO, // outdoor photograph, with natural lighting
+  WEBP_HINT_GRAPH, // Discrete tone image (graph, map-tile etc).
 }
 
 export interface EncodeOptions {
@@ -34,7 +34,7 @@ export interface EncodeOptions {
   use_delta_palette: number;
   use_sharp_yuv: number;
 }
-export interface EncoderState { type: typeof type; options: EncodeOptions; }
+export interface EncoderState { type: typeof type; options: EncodeOptions }
 
 export const type = 'webp';
 export const label = 'WebP';

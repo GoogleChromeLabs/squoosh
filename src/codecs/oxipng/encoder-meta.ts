@@ -1,7 +1,7 @@
 export interface EncodeOptions {
   level: number;
 }
-export interface EncoderState { type: typeof type; options: EncodeOptions; }
+export interface EncoderState { type: typeof type; options: EncodeOptions }
 
 export const type = 'png';
 export const label = 'OxiPNG';

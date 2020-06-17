@@ -16,26 +16,36 @@ export default class FileSize extends Component<Props, State> {
     if (compareTo) {
       const delta = blob.size / compareTo.size;
       if (delta > 1) {
-        const percent = Math.round((delta - 1) * 100) + '%';
+        const percent = `${Math.round((delta - 1) * 100)}%`;
         comparison = (
-          <span class={`${style.sizeDelta} ${style.sizeIncrease}`}>
-            {percent === '0%' ? 'slightly' : percent} bigger
+          <span className={`${style.sizeDelta} ${style.sizeIncrease}`}>
+            {percent === '0%' ? 'slightly' : percent}
+            {' '}
+bigger
           </span>
         );
       } else if (delta < 1) {
-        const percent = Math.round((1 - delta) * 100) + '%';
+        const percent = `${Math.round((1 - delta) * 100)}%`;
         comparison = (
-          <span class={`${style.sizeDelta} ${style.sizeDecrease}`}>
-            {percent === '0%' ? 'slightly' : percent} smaller
+          <span className={`${style.sizeDelta} ${style.sizeDecrease}`}>
+            {percent === '0%' ? 'slightly' : percent}
+            {' '}
+smaller
           </span>
         );
       } else {
         comparison = (
-          <span class={style.sizeDelta}>no change</span>
+          <span className={style.sizeDelta}>no change</span>
         );
       }
     }
 
-    return <span>{prettyBytes(blob.size)} {comparison}</span>;
+    return (
+      <span>
+        {prettyBytes(blob.size)}
+        {' '}
+        {comparison}
+      </span>
+    );
   }
 }

@@ -1,5 +1,5 @@
 export interface EncodeOptions {}
-export interface EncoderState { type: typeof type; options: EncodeOptions; }
+export interface EncoderState { type: typeof type; options: EncodeOptions }
 
 export const type = 'browser-png';
 export const label = 'Browser PNG';

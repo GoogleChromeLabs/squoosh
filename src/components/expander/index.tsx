@@ -1,4 +1,6 @@
-import { h, Component, ComponentChild, ComponentChildren } from 'preact';
+import {
+  h, Component, ComponentChild, ComponentChildren,
+} from 'preact';
 import * as style from './style.scss';
 import { transitionHeight } from '../../lib/util';
 
@@ -13,6 +15,7 @@ export default class Expander extends Component<Props, State> {
   state: State = {
     outgoingChildren: [],
   };
+
   private lastElHeight: number = 0;
 
   componentWillReceiveProps(nextProps: Props) {
@@ -63,7 +66,7 @@ export default class Expander extends Component<Props, State> {
     const childrenExiting = !children[0] && outgoingChildren[0];
 
     return (
-      <div class={childrenExiting ? style.childrenExiting : ''}>
+      <div className={childrenExiting ? style.childrenExiting : ''}>
         {children[0] ? children : outgoingChildren}
       </div>
     );

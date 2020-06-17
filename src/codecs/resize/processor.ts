@@ -26,7 +26,9 @@ export async function resize(data: ImageData, opts: WorkerResizeOptions): Promis
   let input = data;
 
   if (opts.fitMethod === 'contain') {
-    const { sx, sy, sw, sh } = getContainOffsets(data.width, data.height, opts.width, opts.height);
+    const {
+      sx, sy, sw, sh,
+    } = getContainOffsets(data.width, data.height, opts.width, opts.height);
     input = crop(input, Math.round(sx), Math.round(sy), Math.round(sw), Math.round(sh));
   }
 

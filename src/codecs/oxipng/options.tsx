@@ -23,8 +23,8 @@ export default class OxiPNGEncoderOptions extends Component<Props, {}> {
 
   render({ options }: Props) {
     return (
-      <form class={style.optionsSection} onSubmit={preventDefault}>
-        <div class={style.optionOneCell}>
+      <form className={style.optionsSection} onSubmit={preventDefault}>
+        <div className={style.optionOneCell}>
           <Range
             name="level"
             min="0"

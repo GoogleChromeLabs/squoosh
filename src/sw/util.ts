@@ -1,7 +1,7 @@
 import webpDataUrl from 'url-loader!../codecs/tiny.webp';
 
 // Give TypeScript the correct global.
-declare var self: ServiceWorkerGlobalScope;
+declare const self: ServiceWorkerGlobalScope;
 
 export function cacheOrNetwork(event: FetchEvent): void {
   event.respondWith(async function () {
@@ -36,7 +36,6 @@ export function serveShareTarget(event: FetchEvent): void {
   const dataPromise = event.request.formData();
 
   // Redirect so the user can refresh the page without resending data.
-  // @ts-ignore It doesn't like me giving a response to respondWith, although it's allowed.
   event.respondWith(Response.redirect('/?share-target'));
 
   event.waitUntil(async function () {
@@ -59,7 +58,10 @@ export function cleanupCache(event: FetchEvent, cacheName: string, keepAssets: s
       // Get pathname without leading /
       const assetPath = new URL(cachedRequest.url).pathname.slice(1);
       // If it isn't one of our keepAssets, we don't need it anymore.
-      if (!keepAssets.includes(assetPath)) return cache.delete(cachedRequest);
+      if (!keepAssets.includes(assetPath)) {
+        return cache.delete(cachedRequest);
+      }
+      return Promise.resolve();
     });
 
     await Promise.all<any>(promises);
@@ -68,7 +70,7 @@ export function cleanupCache(event: FetchEvent, cacheName: string, keepAssets: s
 
 function getAssetsWithPrefix(assets: string[], prefixes: string[]) {
   return assets.filter(
-    asset => prefixes.some(prefix => asset.startsWith(prefix)),
+    (asset) => prefixes.some((prefix) => asset.startsWith(prefix)),
   );
 }
 
@@ -105,7 +107,7 @@ export async function cacheAdditionalProcessors(cacheName: string, buildAssets: 
   ];
 
   const prefixMatches = getAssetsWithPrefix(buildAssets, prefixesToCache);
-  const wasm = buildAssets.filter(asset => asset.endsWith('.wasm'));
+  const wasm = buildAssets.filter((asset) => asset.endsWith('.wasm'));
 
   toCache.push(...prefixMatches, ...wasm);
 
@@ -118,14 +120,14 @@ export async function cacheAdditionalProcessors(cacheName: string, buildAssets: 
 
   // No point caching the WebP decoder if it's supported natively:
   if (supportsWebP) {
-    toCache = toCache.filter(asset => !/webp[\-_]dec/.test(asset));
+    toCache = toCache.filter((asset) => !/webp[\-_]dec/.test(asset));
   }
 
   const cache = await caches.open(cacheName);
   await cache.addAll(toCache);
 }
 
-const nextMessageResolveMap = new Map<string, (() => void)[]>();
+const nextMessageResolveMap = new Map<string, Array<(() => void)>>();
 
 /**
  * Wait on a message with a particular event.data value.

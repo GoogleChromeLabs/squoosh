@@ -30,7 +30,8 @@ async function rotate(
 ): Promise<ImageData> {
   const { rotate } = await import(
     /* webpackChunkName: "process-rotate" */
-    '../rotate/processor');
+    '../rotate/processor',
+  );
 
   return timed('rotate', () => rotate(data, opts));
 }
@@ -41,7 +42,8 @@ async function resize(
   if (isHqx(opts)) {
     const { hqx } = await import(
       /* webpackChunkName: "process-hqx" */
-      '../hqx/processor');
+      '../hqx/processor',
+    );
 
     const widthRatio = opts.width / data.width;
     const heightRatio = opts.height / data.height;
@@ -52,7 +54,8 @@ async function resize(
   }
   const { resize } = await import(
     /* webpackChunkName: "process-resize" */
-    '../resize/processor');
+    '../resize/processor',
+  );
 
   return timed('resize', () => resize(data, opts));
 }

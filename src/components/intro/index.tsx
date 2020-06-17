@@ -51,6 +51,7 @@ interface State {
 
 export default class Intro extends Component<Props, State> {
   state: State = {};
+
   private fileInput?: HTMLInputElement;
 
   @bind
@@ -77,7 +78,7 @@ export default class Intro extends Component<Props, State> {
     try {
       this.setState({ fetchingDemoIndex: index });
       const demo = demos[index];
-      const blob = await fetch(demo.url).then(r => r.blob());
+      const blob = await fetch(demo.url).then((r) => r.blob());
 
       // Firefox doesn't like content types like 'image/png; charset=UTF-8', which Webpack's dev
       // server returns. https://bugzilla.mozilla.org/show_bug.cgi?id=1497925.
@@ -92,47 +93,49 @@ export default class Intro extends Component<Props, State> {
 
   render({ }: Props, { fetchingDemoIndex }: State) {
     return (
-      <div class={style.intro}>
+      <div className={style.intro}>
         <div>
-          <div class={style.logoSizer}>
-            <div class={style.logoContainer}>
-              <img src={logo} class={style.logo} alt="Squoosh" decoding="async" />
+          <div className={style.logoSizer}>
+            <div className={style.logoContainer}>
+              <img src={logo} className={style.logo} alt="Squoosh" decoding="async" />
             </div>
           </div>
-          <p class={style.openImageGuide}>
-            Drag &amp; drop or{' '}
-            <button class={style.selectButton} onClick={this.onButtonClick}>select an image</button>
+          <p className={style.openImageGuide}>
+            Drag &amp; drop or
+            {' '}
+            <button className={style.selectButton} onClick={this.onButtonClick}>select an image</button>
             <input
-              class={style.hide}
+              className={style.hide}
               ref={linkRef(this, 'fileInput')}
               type="file"
               onChange={this.onFileChange}
             />
           </p>
           <p>Or try one of these:</p>
-          <ul class={style.demos}>
-            {demos.map((demo, i) =>
-              <li key={demo.url} class={style.demoItem}>
-                <button class={style.demoButton} onClick={this.onDemoClick.bind(this, i)}>
-                  <div class={style.demo}>
-                    <div class={style.demoImgContainer}>
-                      <div class={style.demoImgAspect}>
-                        <img class={style.demoIcon} src={demo.iconUrl} alt="" decoding="async" />
-                        {fetchingDemoIndex === i &&
-                          <div class={style.demoLoading}>
-                            <loading-spinner class={style.demoLoadingSpinner}/>
+          <ul className={style.demos}>
+            {demos.map((demo, i) => (
+              <li key={demo.url} className={style.demoItem}>
+                <button className={style.demoButton} onClick={this.onDemoClick.bind(this, i)}>
+                  <div className={style.demo}>
+                    <div className={style.demoImgContainer}>
+                      <div className={style.demoImgAspect}>
+                        <img className={style.demoIcon} src={demo.iconUrl} alt="" decoding="async" />
+                        {fetchingDemoIndex === i
+                          && (
+                          <div className={style.demoLoading}>
+                            <loading-spinner class={style.demoLoadingSpinner} />
                           </div>
-                        }
+                          )}
                       </div>
                     </div>
-                    <div class={style.demoDescription}>{demo.description}</div>
+                    <div className={style.demoDescription}>{demo.description}</div>
                   </div>
                 </button>
-              </li>,
-            )}
+              </li>
+            ))}
           </ul>
         </div>
-        <ul class={style.relatedLinks}>
+        <ul className={style.relatedLinks}>
           <li><a href="https://github.com/GoogleChromeLabs/squoosh/">View the code</a></li>
           <li><a href="https://github.com/GoogleChromeLabs/squoosh/issues">Report a bug</a></li>
           <li>

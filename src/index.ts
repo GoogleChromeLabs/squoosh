@@ -7,7 +7,8 @@ function init() {
 if (!('customElements' in self)) {
   import(
     /* webpackChunkName: "wc-polyfill" */
-    '@webcomponents/custom-elements').then(init);
+    '@webcomponents/custom-elements',
+  ).then(init);
 } else {
   init();
 }
@@ -17,7 +18,7 @@ if (typeof PRERENDER === 'undefined') {
   ga('create', 'UA-128752250-1', 'auto');
   ga('set', 'transport', 'beacon');
   ga('send', 'pageview');
-    // Load the GA script
+  // Load the GA script
   const s = document.createElement('script');
   s.src = 'https://www.google-analytics.com/analytics.js';
   document.head!.appendChild(s);

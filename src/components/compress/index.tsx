@@ -18,7 +18,9 @@ import * as browserTIFF from '../../codecs/browser-tiff/encoder-meta';
 import * as browserJP2 from '../../codecs/browser-jp2/encoder-meta';
 import * as browserBMP from '../../codecs/browser-bmp/encoder-meta';
 import * as browserPDF from '../../codecs/browser-pdf/encoder-meta';
-import { EncoderState, EncoderType, EncoderOptions, encoderMap } from '../../codecs/encoders';
+import {
+  EncoderState, EncoderType, EncoderOptions, encoderMap,
+} from '../../codecs/encoders';
 import { PreprocessorState, defaultPreprocessorState } from '../../codecs/preprocessors';
 import { decodeImage } from '../../codecs/decoders';
 import { cleanMerge, cleanSet } from '../../lib/clean-modify';
@@ -162,7 +164,7 @@ function stateForNewSourceData(state: State, newSource: SourceImage): State {
 
   for (const i of [0, 1]) {
     // Ditch previous encodings
-    const downloadUrl = state.sides[i].downloadUrl;
+    const { downloadUrl } = state.sides[i];
     if (downloadUrl) URL.revokeObjectURL(downloadUrl);
 
     newState = cleanMerge(state, `sides.${i}`, {
@@ -205,8 +207,7 @@ async function processSvg(blob: Blob): Promise<HTMLImageElement> {
 // These are only used in the mobile view
 const resultTitles = ['Top', 'Bottom'];
 // These are only used in the desktop view
-const buttonPositions =
-  ['download-left', 'download-right'] as ('download-left' | 'download-right')[];
+const buttonPositions = ['download-left', 'download-right'] as ('download-left' | 'download-right')[];
 
 const originalDocumentTitle = document.title;
 
@@ -241,8 +242,11 @@ export default class Compress extends Component<Props, State> {
   };
 
   private readonly encodeCache = new ResultCache();
+
   private readonly leftProcessor = new Processor();
+
   private readonly rightProcessor = new Processor();
+
   // For debouncing calls to updateImage for each side.
   private readonly updateImageTimeoutIds: [number?, number?] = [undefined, undefined];
 
@@ -280,7 +284,7 @@ export default class Compress extends Component<Props, State> {
     });
   }
 
-  private updateDocumentTitle(filename: string = ''): void {
+  private updateDocumentTitle(filename = ''): void {
     document.title = filename ? `${filename} - ${originalDocumentTitle}` : originalDocumentTitle;
   }
 
@@ -299,15 +303,14 @@ export default class Compress extends Component<Props, State> {
 
     const sourceDataChanged =
       // Has the source object become set/unset?
-      !!source !== !!prevState.source ||
+      !!source !== !!prevState.source
       // Or has the processed data changed?
-      (source && prevState.source && source.processed !== prevState.source.processed);
+      || (source && prevState.source && source.processed !== prevState.source.processed);
 
     for (const [i, side] of sides.entries()) {
       const prevSettings = prevState.sides[i].latestSettings;
       const encoderChanged = side.latestSettings.encoderState !== prevSettings.encoderState;
-      const preprocessorChanged =
-        side.latestSettings.preprocessorState !== prevSettings.preprocessorState;
+      const preprocessorChanged = side.latestSettings.preprocessorState !== prevSettings.preprocessorState;
 
       // The image only needs updated if the encoder/preprocessor settings have changed, or the
       // source has changed.
@@ -346,7 +349,7 @@ export default class Compress extends Component<Props, State> {
 
   @bind
   private async onInputProcessorChange(options: InputProcessorState): Promise<void> {
-    const source = this.state.source;
+    const { source } = this.state;
     if (!source) return;
 
     const oldRotate = source.inputProcessorState.rotate.rotate;
@@ -357,7 +360,8 @@ export default class Compress extends Component<Props, State> {
     const processor = this.leftProcessor;
 
     this.setState({
-      loadingCounter, loading: true,
+      loadingCounter,
+      loading: true,
       source: cleanSet(source, 'inputProcessorState', options),
     });
 
@@ -431,7 +435,10 @@ export default class Compress extends Component<Props, State> {
       let newState: State = {
         ...this.state,
         source: {
-          decoded, file, vectorImage, processed,
+          decoded,
+          file,
+          vectorImage,
+          processed,
           inputProcessorState: defaultInputProcessorState,
         },
         loading: false,
@@ -569,9 +576,11 @@ export default class Compress extends Component<Props, State> {
     this.setState({ sides });
   }
 
-  render({ onBack }: Props, { loading, sides, source, mobileView }: State) {
+  render({ onBack }: Props, {
+    loading, sides, source, mobileView,
+  }: State) {
     const [leftSide, rightSide] = sides;
-    const [leftImageData, rightImageData] = sides.map(i => i.data);
+    const [leftImageData, rightImageData] = sides.map((i) => i.data);
 
     const options = sides.map((side, index) => (
       // tslint:disable-next-line:jsx-key
@@ -586,8 +595,7 @@ export default class Compress extends Component<Props, State> {
       />
     ));
 
-    const copyDirections =
-      (mobileView ? ['down', 'up'] : ['right', 'left']) as CopyAcrossIconProps['copyDirection'][];
+    const copyDirections = (mobileView ? ['down', 'up'] : ['right', 'left']) as CopyAcrossIconProps['copyDirection'][];
 
     const results = sides.map((side, index) => (
       // tslint:disable-next-line:jsx-key
@@ -601,7 +609,7 @@ export default class Compress extends Component<Props, State> {
         buttonPosition={mobileView ? 'stack-right' : buttonPositions[index]}
       >
         {!mobileView ? null : [
-          <ExpandIcon class={style.expandIcon} key="expand-icon"/>,
+          <ExpandIcon class={style.expandIcon} key="expand-icon" />,
           `${resultTitles[index]} (${encoderMap[side.latestSettings.encoderState.type].label})`,
         ]}
       </Results>
@@ -611,13 +619,13 @@ export default class Compress extends Component<Props, State> {
     // settings.
     const leftDisplaySettings = leftSide.encodedSettings || leftSide.latestSettings;
     const rightDisplaySettings = rightSide.encodedSettings || rightSide.latestSettings;
-    const leftImgContain = leftDisplaySettings.preprocessorState.resize.enabled &&
-      leftDisplaySettings.preprocessorState.resize.fitMethod === 'contain';
-    const rightImgContain = rightDisplaySettings.preprocessorState.resize.enabled &&
-      rightDisplaySettings.preprocessorState.resize.fitMethod === 'contain';
+    const leftImgContain = leftDisplaySettings.preprocessorState.resize.enabled
+      && leftDisplaySettings.preprocessorState.resize.fitMethod === 'contain';
+    const rightImgContain = rightDisplaySettings.preprocessorState.resize.enabled
+      && rightDisplaySettings.preprocessorState.resize.fitMethod === 'contain';
 
     return (
-      <div class={style.compress}>
+      <div className={style.compress}>
         <Output
           source={source}
           mobileView={mobileView}
@@ -631,7 +639,7 @@ export default class Compress extends Component<Props, State> {
         />
         {mobileView
           ? (
-            <div class={style.options}>
+            <div className={style.options}>
               <multi-panel class={style.multiPanel} open-one-only>
                 {results[0]}
                 {options[0]}
@@ -640,16 +648,15 @@ export default class Compress extends Component<Props, State> {
               </multi-panel>
             </div>
           ) : ([
-            <div class={style.options} key="options0">
+            <div className={style.options} key="options0">
               {options[0]}
               {results[0]}
             </div>,
-            <div class={style.options} key="options1">
+            <div className={style.options} key="options1">
               {options[1]}
               {results[1]}
             </div>,
-          ])
-        }
+          ])}
       </div>
     );
   }

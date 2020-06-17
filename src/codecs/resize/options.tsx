@@ -11,7 +11,7 @@ import Expander from '../../components/expander';
 import Select from '../../components/select';
 
 interface Props {
-  isVector: Boolean;
+  isVector: boolean;
   inputWidth: number;
   inputHeight: number;
   options: ResizeOptions;
@@ -30,7 +30,9 @@ export default class ResizerOptions extends Component<Props, State> {
   };
 
   private form?: HTMLFormElement;
+
   private presetWidths: { [idx: number]: number } = {};
+
   private presetHeights: { [idx: number]: number } = {};
 
   constructor(props: Props) {
@@ -76,8 +78,8 @@ export default class ResizerOptions extends Component<Props, State> {
 
   componentWillReceiveProps(nextProps: Props) {
     if (
-      this.props.inputWidth !== nextProps.inputWidth ||
-      this.props.inputHeight !== nextProps.inputHeight
+      this.props.inputWidth !== nextProps.inputWidth
+      || this.props.inputHeight !== nextProps.inputHeight
     ) {
       this.generatePresetValues(nextProps.inputWidth, nextProps.inputHeight);
     }
@@ -115,8 +117,8 @@ export default class ResizerOptions extends Component<Props, State> {
 
     for (const preset of sizePresets) {
       if (
-        width === this.presetWidths[preset] &&
-        height === this.presetHeights[preset]
+        width === this.presetWidths[preset]
+        && height === this.presetHeights[preset]
       ) return preset;
     }
 
@@ -128,17 +130,15 @@ export default class ResizerOptions extends Component<Props, State> {
     const select = event.target as HTMLSelectElement;
     if (select.value === 'custom') return;
     const multiplier = Number(select.value);
-    (this.form!.width as HTMLInputElement).value =
-      Math.round(this.props.inputWidth * multiplier) + '';
-    (this.form!.height as HTMLInputElement).value =
-      Math.round(this.props.inputHeight * multiplier) + '';
+    (this.form!.width as HTMLInputElement).value = `${Math.round(this.props.inputWidth * multiplier)}`;
+    (this.form!.height as HTMLInputElement).value = `${Math.round(this.props.inputHeight * multiplier)}`;
     this.reportOptions();
   }
 
   render({ options, isVector }: Props, { maintainAspect }: State) {
     return (
-      <form ref={linkRef(this, 'form')} class={style.optionsSection} onSubmit={preventDefault}>
-        <label class={style.optionTextFirst}>
+      <form ref={linkRef(this, 'form')} className={style.optionsSection} onSubmit={preventDefault}>
+        <label className={style.optionTextFirst}>
           Method:
           <Select
             name="resizeMethod"
@@ -157,64 +157,69 @@ export default class ResizerOptions extends Component<Props, State> {
             <option value="browser-high">Browser high quality</option>
           </Select>
         </label>
-        <label class={style.optionTextFirst}>
+        <label className={style.optionTextFirst}>
           Preset:
           <Select value={this.getPreset()} onChange={this.onPresetChange}>
-            {sizePresets.map(preset =>
-              <option value={preset}>{preset * 100}%</option>,
-            )}
+            {sizePresets.map((preset) => (
+              <option value={preset}>
+                {preset * 100}
+%
+              </option>
+            ))}
             <option value="custom">Custom</option>
           </Select>
         </label>
-        <label class={style.optionTextFirst}>
+        <label className={style.optionTextFirst}>
           Width:
           <input
             required
-            class={style.textField}
+            className={style.textField}
             name="width"
             type="number"
             min="1"
-            value={'' + options.width}
+            value={`${options.width}`}
             onInput={this.onWidthInput}
           />
         </label>
-        <label class={style.optionTextFirst}>
+        <label className={style.optionTextFirst}>
           Height:
           <input
             required
-            class={style.textField}
+            className={style.textField}
             name="height"
             type="number"
             min="1"
-            value={'' + options.height}
+            value={`${options.height}`}
             onInput={this.onHeightInput}
           />
         </label>
         <Expander>
-          {isWorkerOptions(options) ?
-            <label class={style.optionInputFirst}>
-              <Checkbox
-                name="premultiply"
-                checked={options.premultiply}
-                onChange={this.onChange}
-              />
+          {isWorkerOptions(options)
+            ? (
+              <label className={style.optionInputFirst}>
+                <Checkbox
+                  name="premultiply"
+                  checked={options.premultiply}
+                  onChange={this.onChange}
+                />
               Premultiply alpha channel
-            </label>
-            : null
-          }
-          {isWorkerOptions(options) ?
-            <label class={style.optionInputFirst}>
-              <Checkbox
-                name="linearRGB"
-                checked={options.linearRGB}
-                onChange={this.onChange}
-              />
+              </label>
+            )
+            : null}
+          {isWorkerOptions(options)
+            ? (
+              <label className={style.optionInputFirst}>
+                <Checkbox
+                  name="linearRGB"
+                  checked={options.linearRGB}
+                  onChange={this.onChange}
+                />
               Linear RGB
-            </label>
-            : null
-          }
+              </label>
+            )
+            : null}
         </Expander>
-        <label class={style.optionInputFirst}>
+        <label className={style.optionInputFirst}>
           <Checkbox
             name="maintainAspect"
             checked={maintainAspect}
@@ -223,19 +228,20 @@ export default class ResizerOptions extends Component<Props, State> {
           Maintain aspect ratio
         </label>
         <Expander>
-          {maintainAspect ? null :
-            <label class={style.optionTextFirst}>
+          {maintainAspect ? null
+            : (
+              <label className={style.optionTextFirst}>
               Fit method:
-              <Select
-                name="fitMethod"
-                value={options.fitMethod}
-                onChange={this.onChange}
-              >
-                <option value="stretch">Stretch</option>
-                <option value="contain">Contain</option>
-              </Select>
-            </label>
-          }
+                <Select
+                  name="fitMethod"
+                  value={options.fitMethod}
+                  onChange={this.onChange}
+                >
+                  <option value="stretch">Stretch</option>
+                  <option value="contain">Contain</option>
+                </Select>
+              </label>
+            )}
         </Expander>
       </form>
     );
