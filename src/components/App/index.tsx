@@ -30,6 +30,7 @@ interface State {
   file?: File | Fileish;
   isEditorOpen: Boolean;
   Compress?: typeof import('../compress').default;
+  installSource?: string;
 }
 
 export default class App extends Component<Props, State> {
@@ -38,6 +39,7 @@ export default class App extends Component<Props, State> {
     isEditorOpen: false,
     file: undefined,
     Compress: undefined,
+    installSource: undefined,
   };
 
   snackbar?: SnackBarElement;
@@ -80,6 +82,9 @@ export default class App extends Component<Props, State> {
     });
 
     window.addEventListener('popstate', this.onPopState);
+
+    // Listen for appinstalled event to log when Squoosh is installed.
+    window.addEventListener('appinstalled', this.onAppInstalled);
   }
 
   @bind
@@ -100,6 +105,13 @@ export default class App extends Component<Props, State> {
   private showSnack(message: string, options: SnackOptions = {}): Promise<string> {
     if (!this.snackbar) throw Error('Snackbar missing');
     return this.snackbar.showSnackbar(message, options);
+  }
+
+  @bind
+  private onAppInstalled() {
+    // Try to get the install, if it's not set, use 'browser'
+    const source = this.state.installSource || 'browser';
+    ga('send', 'event', 'pwa-install', 'installed', source);
   }
 
   @bind
