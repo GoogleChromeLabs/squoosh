@@ -47,11 +47,27 @@ interface Props {
 }
 interface State {
   fetchingDemoIndex?: number;
+  deferredPrompt?: BeforeInstallPromptEvent;
+  installSource?: String;
 }
 
 export default class Intro extends Component<Props, State> {
-  state: State = {};
+  state: State = {
+    deferredPrompt: undefined,
+    installSource: undefined,
+  };
   private fileInput?: HTMLInputElement;
+  private installButton?: HTMLButtonElement;
+
+  constructor() {
+    super();
+
+    // Listen for beforeinstallprompt events, indicating Squoosh is installable.
+    window.addEventListener('beforeinstallprompt', this.onBeforeInstallPromptEvent);
+
+    // Listen for the appinstalled event, indicating Squoosh has been installed.
+    window.addEventListener('appinstalled', this.onAppInstalled);
+  }
 
   @bind
   private resetFileInput() {
@@ -88,6 +104,62 @@ export default class Intro extends Component<Props, State> {
       this.setState({ fetchingDemoIndex: undefined });
       this.props.showSnack("Couldn't fetch demo image");
     }
+  }
+
+  @bind
+  private onBeforeInstallPromptEvent(event: BeforeInstallPromptEvent) {
+    // Don't show the mini-infobar on mobile
+    event.preventDefault();
+
+    // Save the beforeinstallprompt event so it can be called later.
+    this.setState({ deferredPrompt: event });
+
+    // Log the event.
+    ga('send', 'event', 'pwa-install', 'available');
+
+    // Make the install button visible
+    this.installButton!.style.display = 'inline-block';
+  }
+
+  @bind
+  private async onInstallClick(event: Event) {
+    // Get the deferred beforeinstallprompt event
+    const deferredPrompt = this.state.deferredPrompt;
+
+    // If there's no deferred prompt, bail.
+    if (!deferredPrompt) return;
+
+    // Set the install source as the intro install button.
+    const installSource = 'introInstallButton';
+    this.setState({ installSource });
+
+    // Show the browser install prompt
+    deferredPrompt.prompt();
+
+    // Wait for the user to accept or dismiss the install prompt
+    const response = await deferredPrompt.userChoice;
+
+    // Get the outcome and log it
+    const outcome = response.outcome;
+    ga('send', 'event', 'pwa-install', installSource, outcome);
+
+    // If the prompt was dismissed, clear the installSource.
+    if (outcome === 'dismissed') {
+      this.setState({ installSource: undefined });
+    }
+  }
+
+  @bind
+  private onAppInstalled() {
+    // If install button is visible, hide it.
+    const installButton = this.installButton;
+    if (installButton) {
+      installButton.style.display = 'none';
+    }
+
+    // Try to get the install, if it's not set, use 'browser'
+    const source = this.state.installSource || 'browser';
+    ga('send', 'event', 'pwa-install', 'installed', source);
   }
 
   render({ }: Props, { fetchingDemoIndex }: State) {
@@ -131,6 +203,16 @@ export default class Intro extends Component<Props, State> {
               </li>,
             )}
           </ul>
+        </div>
+        <div>
+          <button
+            ref={linkRef(this, 'installButton')}
+            type="button"
+            class={style.installButton}
+            onClick={this.onInstallClick}
+          >
+            Install Squoosh
+          </button>
         </div>
         <ul class={style.relatedLinks}>
           <li><a href="https://github.com/GoogleChromeLabs/squoosh/">View the code</a></li>

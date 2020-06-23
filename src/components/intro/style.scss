@@ -170,6 +170,26 @@
   --color: #fff;
 }
 
+.install-button {
+  composes: unbutton from '../../lib/util.scss';
+
+  &:hover,
+  &:focus {
+    background: #f5f5f5;
+  }
+
+  background: #fff;
+  border: 1px solid #e8e8e8;
+
+  margin-top: 1em;
+
+  align-items: center;
+  padding: 14px;
+  font-size: 1.3rem;
+
+  display: none;
+}
+
 .related-links {
   display: flex;
   padding: 0;
