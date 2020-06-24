@@ -181,13 +181,21 @@
   background: #fff;
   border: 1px solid #e8e8e8;
 
-  margin-top: 1em;
-
   align-items: center;
   padding: 14px;
   font-size: 1.3rem;
 
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
   display: none;
+  opacity: 0;
+
+  animation: fade-in .3s linear 1s forwards;
+}
+
+@keyframes fade-in {
+	to {opacity: 1;}
 }
 
 .related-links {

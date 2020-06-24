@@ -52,10 +52,7 @@ interface State {
 }
 
 export default class Intro extends Component<Props, State> {
-  state: State = {
-    deferredPrompt: undefined,
-    installSource: undefined,
-  };
+  state: State = {};
   private fileInput?: HTMLInputElement;
   private installButton?: HTMLButtonElement;
 
@@ -137,10 +134,7 @@ export default class Intro extends Component<Props, State> {
     deferredPrompt.prompt();
 
     // Wait for the user to accept or dismiss the install prompt
-    const response = await deferredPrompt.userChoice;
-
-    // Get the outcome and log it
-    const outcome = response.outcome;
+    const {outcome} = await deferredPrompt.userChoice;
     ga('send', 'event', 'pwa-install', installSource, outcome);
 
     // If the prompt was dismissed, clear the installSource.
