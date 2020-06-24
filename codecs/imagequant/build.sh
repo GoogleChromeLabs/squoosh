@@ -2,7 +2,8 @@
 
 set -e
 
-export OPTIMIZE="-Os"
+export EM_CACHE="${PWD}/node_modules/.em_cache"
+export OPTIMIZE="-Os -flto --llvm-lto 1"
 export LDFLAGS="${OPTIMIZE}"
 export CFLAGS="${OPTIMIZE}"
 export CPPFLAGS="${OPTIMIZE}"
@@ -11,12 +12,9 @@ echo "============================================="
 echo "Compiling libimagequant"
 echo "============================================="
 (
-  emcc \
-    ${OPTIMIZE} \
-    -I node_modules/libimagequant \
-    --std=c99 \
-    -c \
-    node_modules/libimagequant/{libimagequant,pam,mediancut,blur,mempool,kmeans,nearest}.c
+  cd node_modules/libimagequant
+  emconfigure ./configure --disable-sse
+  emmake make static -j`nproc`
 )
 echo "============================================="
 echo "Compiling wasm module"
@@ -31,9 +29,9 @@ echo "============================================="
     -s 'EXPORT_NAME="imagequant"' \
     -I node_modules/libimagequant \
     -o ./imagequant.js \
-    --std=c++11 *.o \
-    -x c++ \
-    imagequant.cpp
+    --std=c++11 \
+    imagequant.cpp \
+    node_modules/libimagequant/libimagequant.a
 )
 echo "============================================="
 echo "Compiling wasm module done"
@@ -41,5 +39,5 @@ echo "============================================="
 
 echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 echo "Did you update your docker image?"
-echo "Run \`docker pull trzeci/emscripten\`"
+echo "Run \`docker pull trzeci/emscripten-upstream\`"
 echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"

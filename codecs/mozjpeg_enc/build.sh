@@ -2,7 +2,8 @@
 
 set -e
 
-export OPTIMIZE="-Os"
+export EM_CACHE="${PWD}/node_modules/.em_cache"
+export OPTIMIZE="-Os -flto --llvm-lto 1"
 export LDFLAGS="${OPTIMIZE}"
 export CFLAGS="${OPTIMIZE}"
 export CPPFLAGS="${OPTIMIZE}"
@@ -15,9 +16,9 @@ echo "Compiling mozjpeg"
 echo "============================================="
 (
   cd node_modules/mozjpeg
-  autoreconf -fiv
-  emconfigure ./configure --without-simd
-  emmake make libjpeg.la
+  autoreconf -iv
+  emconfigure ./configure -C --without-simd
+  emmake make libjpeg.la rdswitch.o -j`nproc`
 )
 echo "============================================="
 echo "Compiling mozjpeg done"
@@ -31,18 +32,15 @@ echo "============================================="
     --bind \
     ${OPTIMIZE} \
     --closure 1 \
-    -s WASM=1 \
     -s ALLOW_MEMORY_GROWTH=1 \
     -s MODULARIZE=1 \
     -s 'EXPORT_NAME="mozjpeg_enc"' \
     -I node_modules/mozjpeg \
     -o ./mozjpeg_enc.js \
-    -Wno-deprecated-register \
-    -Wno-writable-strings \
-    node_modules/mozjpeg/rdswitch.c \
-    -x c++ -std=c++11 \
+    -std=c++11 \
     mozjpeg_enc.cpp \
-    node_modules/mozjpeg/.libs/libjpeg.a
+    node_modules/mozjpeg/.libs/libjpeg.a \
+    node_modules/mozjpeg/rdswitch.o
 )
 echo "============================================="
 echo "Compiling wasm bindings done"
@@ -50,5 +48,5 @@ echo "============================================="
 
 echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 echo "Did you update your docker image?"
-echo "Run \`docker pull trzeci/emscripten\`"
+echo "Run \`docker pull trzeci/emscripten-upstream\`"
 echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"

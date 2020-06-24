@@ -1,8 +1,8 @@
 {
-  "name": "webp_dec",
+  "name": "webp",
   "scripts": {
     "install": "napa",
-    "build": "docker run --rm -v $(pwd):/src trzeci/emscripten ./build.sh"
+    "build": "docker run --rm -v $(pwd):/src trzeci/emscripten-upstream ./build.sh"
   },
   "napa": {
     "libwebp": "webmproject/libwebp#v1.0.2"
