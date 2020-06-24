@@ -49,7 +49,7 @@ interface Props {
 }
 interface State {
   fetchingDemoIndex?: number;
-  installEvent?: BeforeInstallPromptEvent;
+  beforeInstallEvent?: BeforeInstallPromptEvent;
 }
 
 export default class Intro extends Component<Props, State> {
@@ -110,7 +110,7 @@ export default class Intro extends Component<Props, State> {
     event.preventDefault();
 
     // Save the beforeinstallprompt event so it can be called later.
-    this.setState({ installEvent: event });
+    this.setState({ beforeInstallEvent: event });
 
     // Log the event.
     ga('send', 'event', 'pwa-install', 'available');
@@ -119,17 +119,17 @@ export default class Intro extends Component<Props, State> {
   @bind
   private async onInstallClick(event: Event) {
     // Get the deferred beforeinstallprompt event
-    const deferredPrompt = this.state.installEvent;
+    const beforeInstallEvent = this.state.beforeInstallEvent;
     // If there's no deferred prompt, bail.
-    if (!deferredPrompt) return;
+    if (!beforeInstallEvent) return;
 
     this.installingViaButton = true;
 
     // Show the browser install prompt
-    deferredPrompt.prompt();
+    beforeInstallEvent.prompt();
 
     // Wait for the user to accept or dismiss the install prompt
-    const { outcome } = await deferredPrompt.userChoice;
+    const { outcome } = await beforeInstallEvent.userChoice;
     ga('send', 'event', 'pwa-install', installButtonSource, outcome);
 
     // If the prompt was dismissed, we aren't going to install via the button.
@@ -146,10 +146,10 @@ export default class Intro extends Component<Props, State> {
 
     this.installingViaButton = false;
     // We don't need the install button, if it's shown
-    this.setState({ installEvent: undefined });
+    this.setState({ beforeInstallEvent: undefined });
   }
 
-  render({ }: Props, { fetchingDemoIndex, installEvent }: State) {
+  render({ }: Props, { fetchingDemoIndex, beforeInstallEvent }: State) {
     return (
       <div class={style.intro}>
         <div>
@@ -191,7 +191,7 @@ export default class Intro extends Component<Props, State> {
             )}
           </ul>
         </div>
-        {installEvent &&
+        {beforeInstallEvent &&
           <button
             type="button"
             class={style.installButton}
