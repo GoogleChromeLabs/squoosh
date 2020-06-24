@@ -41,20 +41,21 @@ const demos = [
   },
 ];
 
+const installButtonSource = 'introInstallButton';
+
 interface Props {
   onFile: (file: File | Fileish) => void;
   showSnack: SnackBarElement['showSnackbar'];
 }
 interface State {
   fetchingDemoIndex?: number;
-  deferredPrompt?: BeforeInstallPromptEvent;
-  installSource?: String;
+  installEvent?: BeforeInstallPromptEvent;
 }
 
 export default class Intro extends Component<Props, State> {
   state: State = {};
   private fileInput?: HTMLInputElement;
-  private installButton?: HTMLButtonElement;
+  private installingViaButton = false;
 
   constructor() {
     super();
@@ -109,54 +110,46 @@ export default class Intro extends Component<Props, State> {
     event.preventDefault();
 
     // Save the beforeinstallprompt event so it can be called later.
-    this.setState({ deferredPrompt: event });
+    this.setState({ installEvent: event });
 
     // Log the event.
     ga('send', 'event', 'pwa-install', 'available');
-
-    // Make the install button visible
-    this.installButton!.style.display = 'inline-block';
   }
 
   @bind
   private async onInstallClick(event: Event) {
     // Get the deferred beforeinstallprompt event
-    const deferredPrompt = this.state.deferredPrompt;
-
+    const deferredPrompt = this.state.installEvent;
     // If there's no deferred prompt, bail.
     if (!deferredPrompt) return;
 
-    // Set the install source as the intro install button.
-    const installSource = 'introInstallButton';
-    this.setState({ installSource });
+    this.installingViaButton = true;
 
     // Show the browser install prompt
     deferredPrompt.prompt();
 
     // Wait for the user to accept or dismiss the install prompt
-    const {outcome} = await deferredPrompt.userChoice;
-    ga('send', 'event', 'pwa-install', installSource, outcome);
+    const { outcome } = await deferredPrompt.userChoice;
+    ga('send', 'event', 'pwa-install', installButtonSource, outcome);
 
-    // If the prompt was dismissed, clear the installSource.
+    // If the prompt was dismissed, we aren't going to install via the button.
     if (outcome === 'dismissed') {
-      this.setState({ installSource: undefined });
+      this.installingViaButton = false;
     }
   }
 
   @bind
   private onAppInstalled() {
-    // If install button is visible, hide it.
-    const installButton = this.installButton;
-    if (installButton) {
-      installButton.style.display = 'none';
-    }
-
     // Try to get the install, if it's not set, use 'browser'
-    const source = this.state.installSource || 'browser';
+    const source = this.installingViaButton ? installButtonSource : 'browser';
     ga('send', 'event', 'pwa-install', 'installed', source);
+
+    this.installingViaButton = false;
+    // We don't need the install button, if it's shown
+    this.setState({ installEvent: undefined });
   }
 
-  render({ }: Props, { fetchingDemoIndex }: State) {
+  render({ }: Props, { fetchingDemoIndex, installEvent }: State) {
     return (
       <div class={style.intro}>
         <div>
@@ -186,7 +179,7 @@ export default class Intro extends Component<Props, State> {
                         <img class={style.demoIcon} src={demo.iconUrl} alt="" decoding="async" />
                         {fetchingDemoIndex === i &&
                           <div class={style.demoLoading}>
-                            <loading-spinner class={style.demoLoadingSpinner}/>
+                            <loading-spinner class={style.demoLoadingSpinner} />
                           </div>
                         }
                       </div>
@@ -198,16 +191,15 @@ export default class Intro extends Component<Props, State> {
             )}
           </ul>
         </div>
-        <div>
+        {installEvent &&
           <button
-            ref={linkRef(this, 'installButton')}
             type="button"
             class={style.installButton}
             onClick={this.onInstallClick}
           >
-            Install Squoosh
+            Install
           </button>
-        </div>
+        }
         <ul class={style.relatedLinks}>
           <li><a href="https://github.com/GoogleChromeLabs/squoosh/">View the code</a></li>
           <li><a href="https://github.com/GoogleChromeLabs/squoosh/issues">Report a bug</a></li>
