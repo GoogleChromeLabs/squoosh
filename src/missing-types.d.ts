@@ -39,3 +39,7 @@ declare var ga: {
   (...args: any[]): void;
   q: any[];
 };
+
+interface Navigator {
+	readonly standalone: boolean;
+}
