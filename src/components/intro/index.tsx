@@ -204,7 +204,7 @@ export default class Intro extends Component<Props, State> {
           <li><a href="https://github.com/GoogleChromeLabs/squoosh/">View the code</a></li>
           <li><a href="https://github.com/GoogleChromeLabs/squoosh/issues">Report a bug</a></li>
           <li>
-            <a href="https://github.com/GoogleChromeLabs/squoosh/blob/master/README.md#privacy">
+            <a href="https://github.com/GoogleChromeLabs/squoosh/blob/dev/README.md#privacy">
               Privacy
             </a>
           </li>
