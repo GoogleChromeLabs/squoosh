@@ -20,7 +20,7 @@
     }
   ],
   "share_target": {
-    "action": "/?utm_medium=PWA&utm_source=launcher&share-target",
+    "action": "/?utm_medium=PWA&utm_source=share-target&share-target",
     "method": "POST",
     "enctype": "multipart/form-data",
     "params": {
