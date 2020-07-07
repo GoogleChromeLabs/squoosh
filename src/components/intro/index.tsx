@@ -115,7 +115,7 @@ export default class Intro extends Component<Props, State> {
     // Log the event.
     const gaEventInfo = {
       eventCategory: 'pwa-install',
-      eventAction: 'shown',
+      eventAction: 'promo-shown',
       nonInteraction: true,
     };
     ga('send', 'event', gaEventInfo);
@@ -138,7 +138,7 @@ export default class Intro extends Component<Props, State> {
     // Send the analytics data
     const gaEventInfo = {
       eventCategory: 'pwa-install',
-      eventAction: 'custom-install',
+      eventAction: 'promo-clicked',
       eventLabel: installButtonSource,
       eventValue: outcome === 'accepted' ? 1 : 0,
     };
