@@ -41,7 +41,7 @@ const demos = [
   },
 ];
 
-const installButtonSource = 'introInstallButton';
+const installButtonSource = 'introInstallButton-Purple';
 
 interface Props {
   onFile: (file: File | Fileish) => void;
@@ -113,7 +113,12 @@ export default class Intro extends Component<Props, State> {
     this.setState({ beforeInstallEvent: event });
 
     // Log the event.
-    ga('send', 'event', 'pwa-install', 'available');
+    const gaEventInfo = {
+      eventCategory: 'pwa-install',
+      eventAction: 'promo-shown',
+      nonInteraction: true,
+    };
+    ga('send', 'event', gaEventInfo);
   }
 
   @bind
@@ -130,7 +135,14 @@ export default class Intro extends Component<Props, State> {
 
     // Wait for the user to accept or dismiss the install prompt
     const { outcome } = await beforeInstallEvent.userChoice;
-    ga('send', 'event', 'pwa-install', installButtonSource, outcome);
+    // Send the analytics data
+    const gaEventInfo = {
+      eventCategory: 'pwa-install',
+      eventAction: 'promo-clicked',
+      eventLabel: installButtonSource,
+      eventValue: outcome === 'accepted' ? 1 : 0,
+    };
+    ga('send', 'event', gaEventInfo);
 
     // If the prompt was dismissed, we aren't going to install via the button.
     if (outcome === 'dismissed') {
