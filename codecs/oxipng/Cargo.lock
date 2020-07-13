@@ -333,15 +333,6 @@ dependencies = [
 
 [[package]]
 name = "oxipng"
-version = "0.1.0"
-dependencies = [
- "log",
- "oxipng 3.0.0",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "oxipng"
 version = "3.0.0"
 source = "git+https://github.com/shssoichiro/oxipng.git#3b337ac9086d64ef8df7ad0c6b7ff9e4c178b3ef"
 dependencies = [
@@ -453,6 +444,15 @@ name = "semver-parser"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "388a1df253eca08550bef6c72392cfe7c30914bf41df5269b68cbd6ff8f570a3"
+
+[[package]]
+name = "squoosh-oxipng"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "oxipng",
+ "wasm-bindgen",
+]
 
 [[package]]
 name = "syn"

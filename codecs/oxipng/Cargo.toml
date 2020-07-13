@@ -1,5 +1,5 @@
 [package]
-name = "oxipng"
+name = "squoosh-oxipng"
 version = "0.1.0"
 authors = ["Ingvar Stepanyan <me@rreverser.com>"]
 edition = "2018"

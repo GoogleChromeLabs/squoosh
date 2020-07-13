@@ -1,4 +1,4 @@
-import * as wasm from './oxipng_bg.wasm';
+import * as wasm from './squoosh_oxipng_bg.wasm';
 
 const lTextDecoder = typeof TextDecoder === 'undefined' ? (0, module.require)('util').TextDecoder : TextDecoder;
 
