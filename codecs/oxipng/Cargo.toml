@@ -16,6 +16,3 @@ log = { version = "0.4", features = ["release_max_level_off"] }
 [profile.release]
 lto = true
 opt-level = "s"
-
-[patch.crates-io]
-oxipng = { git = "https://github.com/shssoichiro/oxipng.git", branch = "master" }
