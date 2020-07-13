@@ -9,8 +9,8 @@ publish = false
 crate-type = ["cdylib"]
 
 [dependencies]
-oxipng = { version = "2.3.0", default-features = false }
-wasm-bindgen = "0.2.48"
+oxipng = { version = "3.0.0", default-features = false }
+wasm-bindgen = "0.2.64"
 log = { version = "0.4", features = ["release_max_level_off"] }
 
 [profile.release]
