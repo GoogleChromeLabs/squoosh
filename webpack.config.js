@@ -18,7 +18,8 @@ const addCssTypes = require('./config/add-css-types');
 
 const VERSION = require('./package.json').version;
 
-module.exports = async function (_, env) {
+/** @returns {Promise<import('webpack').Configuration>} */
+module.exports = async function(_, env) {
   const isProd = env.mode === 'production';
   const nodeModules = path.join(__dirname, 'node_modules');
   const componentStyleDirs = [
@@ -57,14 +58,13 @@ module.exports = async function (_, env) {
       }
     },
     module: {
-      // Disable the default JavaScript handling:
-      defaultRules: [],
       rules: [
         {
           oneOf: [
             {
               test: /(\.mjs|\.esm\.js)$/i,
-              type: 'javascript/esm',
+              // don't use strict esm resolution for mjs:
+              type: 'javascript/auto',
               resolve: {},
               parser: {
                 harmony: true,
@@ -183,6 +183,7 @@ module.exports = async function (_, env) {
         format: '\u001b[90m\u001b[44mBuild\u001b[49m\u001b[39m [:bar] \u001b[32m\u001b[1m:percent\u001b[22m\u001b[39m (:elapseds) \u001b[2m:msg\u001b[22m\r',
         renderThrottle: 100,
         summary: false,
+        total: 10,
         clear: true
       }),
 
@@ -191,16 +192,12 @@ module.exports = async function (_, env) {
         'assets',
         '**/*.{css,js,json,html,map}'
       ], {
-        root: path.join(__dirname, 'build'),
-        verbose: false,
-        beforeEmit: true
-      }),
+          root: path.join(__dirname, 'build'),
+          verbose: false,
+          beforeEmit: true
+        }),
 
       new WorkerPlugin(),
-
-      // Automatically split code into async chunks.
-      // See: https://medium.com/webpack/webpack-4-code-splitting-chunk-graph-and-the-splitchunks-optimization-be739a861366
-      isProd && new webpack.optimize.SplitChunksPlugin({}),
 
       // In production, extract all CSS to produce files on disk, even for
       // lazy-loaded CSS chunks. CSS for async chunks is loaded on-demand.
@@ -302,6 +299,10 @@ module.exports = async function (_, env) {
     ].filter(Boolean), // Filter out any falsey plugin array entries.
 
     optimization: {
+      splitChunks: {
+        // Automatically split code into async chunks.
+        // See: https://medium.com/webpack/webpack-4-code-splitting-chunk-graph-and-the-splitchunks-optimization-be739a861366
+      },
       minimizer: [
         new TerserPlugin({
           sourceMap: isProd,
