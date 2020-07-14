@@ -2,6 +2,7 @@
 
 set -e
 
+export EM_CACHE="${PWD}/node_modules/.em_cache"
 export OPTIMIZE="-Os -flto --llvm-lto 1"
 export LDFLAGS="${OPTIMIZE}"
 export CFLAGS="${OPTIMIZE}"
@@ -29,7 +30,6 @@ echo "============================================="
     -I node_modules/libimagequant \
     -o ./imagequant.js \
     --std=c++11 \
-    -x c++ \
     imagequant.cpp \
     node_modules/libimagequant/libimagequant.a
 )

@@ -2,11 +2,11 @@
 
 set -e
 
+export EM_CACHE="${PWD}/node_modules/.em_cache"
 export OPTIMIZE="-Os -flto --llvm-lto 1"
 export LDFLAGS="${OPTIMIZE}"
 export CFLAGS="${OPTIMIZE}"
 export CPPFLAGS="${OPTIMIZE}"
-
 apt-get update
 apt-get install -qqy autoconf libtool pkg-config
 
@@ -15,10 +15,8 @@ echo "Compiling libwebp"
 echo "============================================="
 test -n "$SKIP_LIBWEBP" || (
   cd node_modules/libwebp
-  autoreconf -fiv
-  rm -rf build || true
-  mkdir -p build && cd build
-  emconfigure ../configure \
+  autoreconf -iv
+  emconfigure ./configure -C \
     --disable-libwebpdemux \
     --disable-wic \
     --disable-gif \
@@ -44,13 +42,24 @@ echo "============================================="
     --bind \
     -s ALLOW_MEMORY_GROWTH=1 \
     -s MODULARIZE=1 \
-    -s 'EXPORT_NAME="webp_enc"' \
-    --std=c++11 \
+    -s 'EXPORT_NAME="webp_dec"' \
     -I node_modules/libwebp \
-    -o ./webp_enc.js \
-    -x c++ \
-    webp_enc.cpp \
-    node_modules/libwebp/build/src/.libs/libwebp.a
+    -o dec/webp_dec.js \
+    dec/webp_dec.cpp \
+    node_modules/libwebp/src/.libs/libwebp.a
+)
+(
+  emcc \
+    ${OPTIMIZE} \
+    --closure 1 \
+    --bind \
+    -s ALLOW_MEMORY_GROWTH=1 \
+    -s MODULARIZE=1 \
+    -s 'EXPORT_NAME="webp_enc"' \
+    -I node_modules/libwebp \
+    -o enc/webp_enc.js \
+    enc/webp_enc.cpp \
+    node_modules/libwebp/src/.libs/libwebp.a
 )
 echo "============================================="
 echo "Compiling wasm bindings done"
