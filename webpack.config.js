@@ -22,10 +22,10 @@ module.exports = async function (_, env) {
   const isProd = env.mode === 'production';
   const nodeModules = path.join(__dirname, 'node_modules');
   const componentStyleDirs = [
-    path.join(__dirname, 'src/components'),
-    path.join(__dirname, 'src/codecs'),
-    path.join(__dirname, 'src/custom-els'),
-    path.join(__dirname, 'src/lib'),
+    path.join(__dirname, 'src', 'components'),
+    path.join(__dirname, 'src', 'codecs'),
+    path.join(__dirname, 'src', 'custom-els'),
+    path.join(__dirname, 'src', 'lib')
   ];
 
   await addCssTypes(componentStyleDirs, { watch: !isProd });
@@ -53,7 +53,7 @@ module.exports = async function (_, env) {
     resolveLoader: {
       alias: {
         // async-component-loader returns a wrapper component that waits for the import to load before rendering:
-        async: path.join(__dirname, 'config/async-component-loader')
+        async: path.join(__dirname, 'config', 'async-component-loader')
       }
     },
     module: {
@@ -143,7 +143,7 @@ module.exports = async function (_, env) {
         {
           // All the codec files define a global with the same name as their file name. `exports-loader` attaches those to `module.exports`.
           test: /\.js$/,
-          include: path.join(__dirname, 'src/codecs'),
+          include: path.join(__dirname, 'src', 'codecs'),
           loader: 'exports-loader'
         },
         {
