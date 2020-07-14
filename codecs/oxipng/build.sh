@@ -7,7 +7,7 @@ echo "Compiling wasm"
 echo "============================================="
 (
   wasm-pack build
-  wasm-strip pkg/oxipng_bg.wasm
+  wasm-strip pkg/squoosh_oxipng_bg.wasm
   rm pkg/.gitignore
 )
 echo "============================================="
