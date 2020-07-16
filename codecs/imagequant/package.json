@@ -2,7 +2,7 @@
   "name": "imagequant",
   "scripts": {
     "install": "napa",
-    "build": "docker run --rm -v $(pwd):/src trzeci/emscripten-upstream ./build.sh"
+    "build": "../build-cpp.sh"
   },
   "napa": {
     "libimagequant": "ImageOptim/libimagequant#2.12.1"
