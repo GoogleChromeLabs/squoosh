@@ -2,7 +2,7 @@
   "name": "mozjpeg_enc",
   "scripts": {
     "install": "napa",
-    "build": "docker run --rm -v $(pwd):/src trzeci/emscripten-upstream ./build.sh"
+    "build": "../build-cpp.sh"
   },
   "napa": {
     "mozjpeg": "mozilla/mozjpeg#v3.3.1"
