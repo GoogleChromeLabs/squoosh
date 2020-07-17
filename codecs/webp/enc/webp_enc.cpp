@@ -11,7 +11,7 @@ int version() {
   return WebPGetEncoderVersion();
 }
 
-const val Uint8Array = val::global("Uint8Array");
+thread_local const val Uint8Array = val::global("Uint8Array");
 
 val encode(std::string img, int width, int height, WebPConfig config) {
   uint8_t* img_in = (uint8_t*)img.c_str();

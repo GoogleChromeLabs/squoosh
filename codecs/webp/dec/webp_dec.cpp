@@ -10,8 +10,8 @@ int version() {
   return WebPGetDecoderVersion();
 }
 
-const val Uint8ClampedArray = val::global("Uint8ClampedArray");
-const val ImageData = val::global("ImageData");
+thread_local const val Uint8ClampedArray = val::global("Uint8ClampedArray");
+thread_local const val ImageData = val::global("ImageData");
 
 val decode(std::string buffer) {
   int width, height;
