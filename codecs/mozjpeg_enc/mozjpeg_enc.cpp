@@ -55,7 +55,7 @@ int version() {
   return version;
 }
 
-const val Uint8Array = val::global("Uint8Array");
+thread_local const val Uint8Array = val::global("Uint8Array");
 
 val encode(std::string image_in, int image_width, int image_height, MozJpegOptions opts) {
   uint8_t* image_buffer = (uint8_t*)image_in.c_str();

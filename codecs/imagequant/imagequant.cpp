@@ -14,7 +14,7 @@ int version() {
          (((LIQ_VERSION / 1) % 100) << 0);
 }
 
-const val Uint8ClampedArray = val::global("Uint8ClampedArray");
+thread_local const val Uint8ClampedArray = val::global("Uint8ClampedArray");
 
 #define liq_ptr(T) std::unique_ptr<T, std::integral_constant<decltype(&T##_destroy), T##_destroy>>
 
