@@ -103,8 +103,8 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
   //   fprintf(stderr, "can't open %s\n", filename);
   //   exit(1);
   // }
-  uint8_t* output;
-  unsigned long size;
+  uint8_t* output = nullptr;
+  unsigned long size = 0;
   jpeg_mem_dest(&cinfo, &output, &size);
 
   /* Step 3: set parameters for compression */
@@ -203,6 +203,7 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
 
   /* This is an important step since it will release a good deal of memory. */
   jpeg_destroy_compress(&cinfo);
+  free(output);
 
   /* And we're done! */
   return js_result;
