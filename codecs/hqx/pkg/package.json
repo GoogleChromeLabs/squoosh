@@ -1,15 +1,15 @@
 {
-  "name": "squoosh-hqx",
+  "name": "squooshhqx",
   "collaborators": [
     "Surma <surma@surma.link>"
   ],
   "version": "0.1.0",
   "files": [
-    "squoosh_hqx_bg.wasm",
-    "squoosh_hqx.js",
-    "squoosh_hqx.d.ts"
+    "squooshhqx_bg.wasm",
+    "squooshhqx.js",
+    "squooshhqx.d.ts"
   ],
-  "module": "squoosh_hqx.js",
-  "types": "squoosh_hqx.d.ts",
+  "module": "squooshhqx.js",
+  "types": "squooshhqx.d.ts",
   "sideEffects": false
 }

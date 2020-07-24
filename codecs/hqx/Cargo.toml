@@ -1,8 +1,7 @@
 [package]
-name = "squoosh-hqx"
+name = "squooshhqx"
 version = "0.1.0"
 authors = ["Surma <surma@surma.link>"]
-publish = false
 
 [lib]
 crate-type = ["cdylib"]
