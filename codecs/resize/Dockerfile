@@ -3,7 +3,7 @@ RUN rustup target add wasm32-unknown-unknown
 RUN curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
 RUN mkdir /opt/wabt && \
- curl -L https://github.com/WebAssembly/wabt/releases/download/1.0.11/wabt-1.0.11-linux.tar.gz  | tar -xzf - -C /opt/wabt --strip 1
+  curl -L https://github.com/WebAssembly/wabt/releases/download/1.0.15/wabt-1.0.15-linux.tar.gz  | tar -xzf - -C /opt/wabt --strip 1
 
 ENV PATH="/opt/wabt:${PATH}"
 WORKDIR /src

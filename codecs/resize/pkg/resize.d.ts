@@ -1,4 +1,5 @@
 /* tslint:disable */
+/* eslint-disable */
 /**
 * @param {Uint8Array} input_image 
 * @param {number} input_width 
