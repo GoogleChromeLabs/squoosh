@@ -1,7 +1,6 @@
 {
   "name": "resize",
   "scripts": {
-    "build:image": "docker build -t squoosh-resize .",
-    "build": "docker run --rm -v $(pwd):/src squoosh-resize ./build.sh"
+    "build": "../build-rust.sh"
   }
 }
