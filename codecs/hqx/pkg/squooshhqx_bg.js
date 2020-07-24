@@ -1,4 +1,4 @@
-import * as wasm from './squoosh_hqx_bg.wasm';
+import * as wasm from './squooshhqx_bg.wasm';
 
 let cachegetUint32Memory0 = null;
 function getUint32Memory0() {
