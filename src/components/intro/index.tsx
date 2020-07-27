@@ -152,13 +152,20 @@ export default class Intro extends Component<Props, State> {
 
   @bind
   private onAppInstalled() {
+    // We don't need the install button, if it's shown
+    this.setState({ beforeInstallEvent: undefined });
+
+    // Don't log analytics if page is not visible
+    if (document.hidden) {
+      return;
+    }
+
     // Try to get the install, if it's not set, use 'browser'
     const source = this.installingViaButton ? installButtonSource : 'browser';
     ga('send', 'event', 'pwa-install', 'installed', source);
 
+    // Clear the install method property
     this.installingViaButton = false;
-    // We don't need the install button, if it's shown
-    this.setState({ beforeInstallEvent: undefined });
   }
 
   render({ }: Props, { fetchingDemoIndex, beforeInstallEvent }: State) {
