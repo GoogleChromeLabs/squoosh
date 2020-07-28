@@ -55,8 +55,7 @@ int version() {
   return version;
 }
 
-uint8_t* last_result;
-struct jpeg_compress_struct cinfo;
+thread_local const val Uint8Array = val::global("Uint8Array");
 
 val encode(std::string image_in, int image_width, int image_height, MozJpegOptions opts) {
   uint8_t* image_buffer = (uint8_t*)image_in.c_str();
@@ -65,12 +64,15 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
   // https://github.com/mozilla/mozjpeg/blob/master/example.c
   // I just write to memory instead of a file.
 
+  /* Step 1: allocate and initialize JPEG compression object */
+
   /* This struct contains the JPEG compression parameters and pointers to
    * working space (which is allocated as needed by the JPEG library).
    * It is possible to have several such structures, representing multiple
    * compression/decompression processes, in existence at once.  We refer
    * to any one struct (and its associated working data) as a "JPEG object".
    */
+  jpeg_compress_struct cinfo;
   /* This struct represents a JPEG error handler.  It is declared separately
    * because applications often want to supply a specialized error handler
    * (see the second half of this file for an example).  But here we just
@@ -79,15 +81,7 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
    * Note that this struct must live as long as the main JPEG parameter
    * struct, to avoid dangling-pointer problems.
    */
-  struct jpeg_error_mgr jerr;
-  /* More stuff */
-  JSAMPROW row_pointer[1]; /* pointer to JSAMPLE row[s] */
-  int row_stride;          /* physical row width in image buffer */
-  uint8_t* output;
-  unsigned long size;
-
-  /* Step 1: allocate and initialize JPEG compression object */
-
+  jpeg_error_mgr jerr;
   /* We have to set up the error handler first, in case the initialization
    * step fails.  (Unlikely, but it could happen if you are out of memory.)
    * This routine fills in the contents of struct jerr, and returns jerr's
@@ -109,6 +103,8 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
   //   fprintf(stderr, "can't open %s\n", filename);
   //   exit(1);
   // }
+  uint8_t* output = nullptr;
+  unsigned long size = 0;
   jpeg_mem_dest(&cinfo, &output, &size);
 
   /* Step 3: set parameters for compression */
@@ -184,31 +180,33 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
    * To keep things simple, we pass one scanline per call; you can pass
    * more if you wish, though.
    */
-  row_stride = image_width * 4; /* JSAMPLEs per row in image_buffer */
+  int row_stride = image_width * 4; /* JSAMPLEs per row in image_buffer */
 
   while (cinfo.next_scanline < cinfo.image_height) {
     /* jpeg_write_scanlines expects an array of pointers to scanlines.
      * Here the array is only one element long, but you could pass
      * more than one scanline at a time if that's more convenient.
      */
-    row_pointer[0] = &image_buffer[cinfo.next_scanline * row_stride];
-    (void)jpeg_write_scanlines(&cinfo, row_pointer, 1);
+
+    JSAMPROW row_pointer =
+        &image_buffer[cinfo.next_scanline * row_stride]; /* pointer to JSAMPLE row[s] */
+    (void)jpeg_write_scanlines(&cinfo, &row_pointer, 1);
   }
 
   /* Step 6: Finish compression */
 
   jpeg_finish_compress(&cinfo);
+
   /* Step 7: release JPEG compression object */
 
-  last_result = output;
+  auto js_result = Uint8Array.new_(typed_memory_view(size, output));
 
-  /* And we're done! */
-  return val(typed_memory_view(size, output));
-}
-
-void free_result() {
   /* This is an important step since it will release a good deal of memory. */
   jpeg_destroy_compress(&cinfo);
+  free(output);
+
+  /* And we're done! */
+  return js_result;
 }
 
 EMSCRIPTEN_BINDINGS(my_module) {
@@ -232,5 +230,4 @@ EMSCRIPTEN_BINDINGS(my_module) {
 
   function("version", &version);
   function("encode", &encode);
-  function("free_result", &free_result);
 }

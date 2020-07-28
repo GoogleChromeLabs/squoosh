@@ -11,7 +11,7 @@ int version() {
   return WebPGetEncoderVersion();
 }
 
-uint8_t* last_result;
+thread_local const val Uint8Array = val::global("Uint8Array");
 
 val encode(std::string img, int width, int height, WebPConfig config) {
   uint8_t* img_in = (uint8_t*)img.c_str();
@@ -42,13 +42,9 @@ val encode(std::string img, int width, int height, WebPConfig config) {
     throw std::runtime_error("Encode failed");
   }
 
-  last_result = wrt.mem;
-
-  return val(typed_memory_view(wrt.size, wrt.mem));
-}
-
-void free_result() {
-  WebPFree(last_result);
+  val js_result = Uint8Array.new_(typed_memory_view(wrt.size, wrt.mem));
+  WebPFree(wrt.mem);
+  return js_result;
 }
 
 EMSCRIPTEN_BINDINGS(my_module) {
@@ -89,5 +85,4 @@ EMSCRIPTEN_BINDINGS(my_module) {
 
   function("version", &version);
   function("encode", &encode);
-  function("free_result", &free_result);
 }
