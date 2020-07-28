@@ -6,12 +6,8 @@ echo "============================================="
 echo "Compiling wasm"
 echo "============================================="
 (
-  wasm-pack build
-  wasm-strip pkg/squooshhqx_bg.wasm
-  echo "Optimising Wasm so it doesn't break Chrome (this takes like 10-15mins. get a cup of tea)"
-  echo "Once https://crbug.com/974804 is fixed, we can remove this step"
+  wasm-pack build -- --verbose --locked
   rm pkg/.gitignore
-  wasm-opt -Os --no-validation -o pkg/squooshhqx_bg.wasm pkg/squooshhqx_bg.wasm
 )
 echo "============================================="
 echo "Compiling wasm  done"
