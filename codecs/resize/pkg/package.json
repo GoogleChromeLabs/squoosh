@@ -1,15 +1,15 @@
 {
-  "name": "resize",
+  "name": "squoosh-resize",
   "collaborators": [
     "Surma <surma@surma.link>"
   ],
   "version": "0.1.0",
   "files": [
-    "resize_bg.wasm",
-    "resize.js",
-    "resize.d.ts"
+    "squoosh_resize_bg.wasm",
+    "squoosh_resize.js",
+    "squoosh_resize.d.ts"
   ],
-  "module": "resize.js",
-  "types": "resize.d.ts",
-  "sideEffects": "false"
+  "module": "squoosh_resize.js",
+  "types": "squoosh_resize.d.ts",
+  "sideEffects": false
 }
