@@ -2,6 +2,7 @@ const DtsCreator = require('typed-css-modules');
 const chokidar = require('chokidar');
 const util = require('util');
 const sass = require('node-sass');
+const normalizePath = require('normalize-path');
 
 const sassRender = util.promisify(sass.render);
 
@@ -29,9 +30,10 @@ function addCssTypes(rootPaths, opts = {}) {
     let ready = false;
 
     for (const rootPath of rootPaths) {
+      const rootPathUnix = normalizePath(rootPath);
       // Look for scss & css in each path.
-      paths.push(rootPath + '/**/*.scss');
-      paths.push(rootPath + '/**/*.css');
+      paths.push(rootPathUnix + '/**/*.scss');
+      paths.push(rootPathUnix + '/**/*.css');
     }
 
     // For simplicity, the watcher is used even if we're not watching.
@@ -68,7 +70,7 @@ function addCssTypes(rootPaths, opts = {}) {
       // And if we're not watching, close the watcher.
       if (!watch) watcher.close();
     });
-  })
+  });
 }
 
 module.exports = addCssTypes;

@@ -41,17 +41,31 @@ const demos = [
   },
 ];
 
+const installButtonSource = 'introInstallButton-Purple';
+
 interface Props {
   onFile: (file: File | Fileish) => void;
   showSnack: SnackBarElement['showSnackbar'];
 }
 interface State {
   fetchingDemoIndex?: number;
+  beforeInstallEvent?: BeforeInstallPromptEvent;
 }
 
 export default class Intro extends Component<Props, State> {
   state: State = {};
   private fileInput?: HTMLInputElement;
+  private installingViaButton = false;
+
+  constructor() {
+    super();
+
+    // Listen for beforeinstallprompt events, indicating Squoosh is installable.
+    window.addEventListener('beforeinstallprompt', this.onBeforeInstallPromptEvent);
+
+    // Listen for the appinstalled event, indicating Squoosh has been installed.
+    window.addEventListener('appinstalled', this.onAppInstalled);
+  }
 
   @bind
   private resetFileInput() {
@@ -90,7 +104,64 @@ export default class Intro extends Component<Props, State> {
     }
   }
 
-  render({ }: Props, { fetchingDemoIndex }: State) {
+  @bind
+  private onBeforeInstallPromptEvent(event: BeforeInstallPromptEvent) {
+    // Don't show the mini-infobar on mobile
+    event.preventDefault();
+
+    // Save the beforeinstallprompt event so it can be called later.
+    this.setState({ beforeInstallEvent: event });
+
+    // Log the event.
+    const gaEventInfo = {
+      eventCategory: 'pwa-install',
+      eventAction: 'promo-shown',
+      nonInteraction: true,
+    };
+    ga('send', 'event', gaEventInfo);
+  }
+
+  @bind
+  private async onInstallClick(event: Event) {
+    // Get the deferred beforeinstallprompt event
+    const beforeInstallEvent = this.state.beforeInstallEvent;
+    // If there's no deferred prompt, bail.
+    if (!beforeInstallEvent) return;
+
+    this.installingViaButton = true;
+
+    // Show the browser install prompt
+    beforeInstallEvent.prompt();
+
+    // Wait for the user to accept or dismiss the install prompt
+    const { outcome } = await beforeInstallEvent.userChoice;
+    // Send the analytics data
+    const gaEventInfo = {
+      eventCategory: 'pwa-install',
+      eventAction: 'promo-clicked',
+      eventLabel: installButtonSource,
+      eventValue: outcome === 'accepted' ? 1 : 0,
+    };
+    ga('send', 'event', gaEventInfo);
+
+    // If the prompt was dismissed, we aren't going to install via the button.
+    if (outcome === 'dismissed') {
+      this.installingViaButton = false;
+    }
+  }
+
+  @bind
+  private onAppInstalled() {
+    // Try to get the install, if it's not set, use 'browser'
+    const source = this.installingViaButton ? installButtonSource : 'browser';
+    ga('send', 'event', 'pwa-install', 'installed', source);
+
+    this.installingViaButton = false;
+    // We don't need the install button, if it's shown
+    this.setState({ beforeInstallEvent: undefined });
+  }
+
+  render({ }: Props, { fetchingDemoIndex, beforeInstallEvent }: State) {
     return (
       <div class={style.intro}>
         <div>
@@ -120,7 +191,7 @@ export default class Intro extends Component<Props, State> {
                         <img class={style.demoIcon} src={demo.iconUrl} alt="" decoding="async" />
                         {fetchingDemoIndex === i &&
                           <div class={style.demoLoading}>
-                            <loading-spinner class={style.demoLoadingSpinner}/>
+                            <loading-spinner class={style.demoLoadingSpinner} />
                           </div>
                         }
                       </div>
@@ -132,11 +203,20 @@ export default class Intro extends Component<Props, State> {
             )}
           </ul>
         </div>
+        {beforeInstallEvent &&
+          <button
+            type="button"
+            class={style.installButton}
+            onClick={this.onInstallClick}
+          >
+            Install
+          </button>
+        }
         <ul class={style.relatedLinks}>
           <li><a href="https://github.com/GoogleChromeLabs/squoosh/">View the code</a></li>
           <li><a href="https://github.com/GoogleChromeLabs/squoosh/issues">Report a bug</a></li>
           <li>
-            <a href="https://github.com/GoogleChromeLabs/squoosh/blob/master/README.md#privacy">
+            <a href="https://github.com/GoogleChromeLabs/squoosh/blob/dev/README.md#privacy">
               Privacy
             </a>
           </li>
