@@ -1,13 +1,6 @@
 {
   "name": "imagequant",
   "scripts": {
-    "install": "napa",
     "build": "../build-cpp.sh"
-  },
-  "napa": {
-    "libimagequant": "ImageOptim/libimagequant#2.12.1"
-  },
-  "devDependencies": {
-    "napa": "3.0.0"
   }
 }

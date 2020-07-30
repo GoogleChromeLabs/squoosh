@@ -1,3 +1,4 @@
+CODEC_URL := https://github.com/ImageOptim/libimagequant/archive/2.12.1.tar.gz
 CODEC_DIR := node_modules/libimagequant
 CODEC_OUT_RELATIVE := libimagequant.a
 CODEC_OUT := $(addprefix $(CODEC_DIR)/, $(CODEC_OUT_RELATIVE))
@@ -27,6 +28,12 @@ $(CODEC_OUT): $(CODEC_DIR)/config.mk
 $(CODEC_DIR)/config.mk: $(CODEC_DIR)/configure
 	cd $(CODEC_DIR) && ./configure \
 		--disable-sse
+
+$(CODEC_DIR)/configure: $(CODEC_DIR)
+
+$(CODEC_DIR):
+	mkdir -p $@
+	curl -sL $(CODEC_URL) | tar xz --strip 1 -C $@
 
 clean:
 	$(RM) $(OUT_JS) $(OUT_WASM)

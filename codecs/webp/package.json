@@ -1,13 +1,6 @@
 {
   "name": "webp",
   "scripts": {
-    "install": "napa",
     "build": "../build-cpp.sh"
-  },
-  "napa": {
-    "libwebp": "webmproject/libwebp#v1.0.2"
-  },
-  "devDependencies": {
-    "napa": "3.0.0"
   }
 }
