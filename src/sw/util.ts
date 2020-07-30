@@ -116,7 +116,7 @@ export async function cacheAdditionalProcessors(cacheName: string, buildAssets: 
     return createImageBitmap(blob).then(() => true, () => false);
   })();
 
-  // No point caching the WebP decoder if it's supported natively:
+  // No point caching the WebP decoder if the browser supports it:
   if (supportsWebP) {
     toCache = toCache.filter(asset => !/webp[\-_]dec/.test(asset));
   }
