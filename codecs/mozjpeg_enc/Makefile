@@ -1,3 +1,4 @@
+CODEC_URL := https://github.com/mozilla/mozjpeg/archive/v3.3.1.tar.gz
 CODEC_DIR := node_modules/mozjpeg
 CODEC_OUT_RELATIVE := .libs/libjpeg.a rdswitch.o
 CODEC_OUT := $(addprefix $(CODEC_DIR)/, $(CODEC_OUT_RELATIVE))
@@ -37,8 +38,14 @@ $(CODEC_DIR)/Makefile: $(CODEC_DIR)/configure
 		--without-arith-enc \
 		--without-arith-dec
 
-$(CODEC_DIR)/configure:
+$(CODEC_DIR)/configure: $(CODEC_DIR)/configure.ac
 	cd $(CODEC_DIR) && autoreconf -iv
+
+$(CODEC_DIR)/configure.ac: $(CODEC_DIR)
+
+$(CODEC_DIR):
+	mkdir -p $@
+	curl -sL $(CODEC_URL) | tar xz --strip 1 -C $@
 
 clean:
 	$(RM) $(OUT_JS) $(OUT_WASM)
