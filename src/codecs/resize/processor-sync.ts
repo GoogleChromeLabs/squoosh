@@ -1,4 +1,4 @@
-import { nativeResize, NativeResizeMethod, drawableToImageData } from '../../lib/util';
+import { builtinResize, BuiltinResizeMethod, drawableToImageData } from '../../lib/util';
 import { BrowserResizeOptions, VectorResizeOptions } from './processor-meta';
 import { getContainOffsets } from './util';
 
@@ -12,9 +12,9 @@ export function browserResize(data: ImageData, opts: BrowserResizeOptions): Imag
     ({ sx, sy, sw, sh } = getContainOffsets(sw, sh, opts.width, opts.height));
   }
 
-  return nativeResize(
+  return builtinResize(
     data, sx, sy, sw, sh, opts.width, opts.height,
-    opts.method.slice('browser-'.length) as NativeResizeMethod,
+    opts.method.slice('browser-'.length) as BuiltinResizeMethod,
   );
 }
 
