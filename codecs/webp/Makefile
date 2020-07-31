@@ -1,3 +1,4 @@
+CODEC_URL := https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-1.0.2.tar.gz
 CODEC_DIR = node_modules/libwebp
 CODEC_OUT_RELATIVE = src/.libs/libwebp.a
 CODEC_OUT := $(addprefix $(CODEC_DIR)/, $(CODEC_OUT_RELATIVE))
@@ -41,8 +42,14 @@ $(CODEC_DIR)/src/Makefile: $(CODEC_DIR)/configure
 		--disable-sse2 \
 		--disable-sse4.1
 
-$(CODEC_DIR)/configure:
+$(CODEC_DIR)/configure: $(CODEC_DIR)/configure.ac
 	cd $(CODEC_DIR) && autoreconf -iv
+
+$(CODEC_DIR)/configure.ac: $(CODEC_DIR)
+
+$(CODEC_DIR):
+	mkdir -p $@
+	curl -sL $(CODEC_URL) | tar xz --strip 1 -C $@
 
 clean:
 	$(RM) $(OUT_JS) $(OUT_WASM)

@@ -163,7 +163,7 @@ export function drawableToImageData(
   return ctx.getImageData(0, 0, width, height);
 }
 
-export async function nativeDecode(blob: Blob): Promise<ImageData> {
+export async function builtinDecode(blob: Blob): Promise<ImageData> {
   // Prefer createImageBitmap as it's the off-thread option for Firefox.
   const drawable = 'createImageBitmap' in self ?
     await createImageBitmap(blob) : await blobToImg(blob);
@@ -171,13 +171,13 @@ export async function nativeDecode(blob: Blob): Promise<ImageData> {
   return drawableToImageData(drawable);
 }
 
-export type NativeResizeMethod = 'pixelated' | 'low' | 'medium' | 'high';
+export type BuiltinResizeMethod = 'pixelated' | 'low' | 'medium' | 'high';
 
-export function nativeResize(
+export function builtinResize(
   data: ImageData,
   sx: number, sy: number, sw: number, sh: number,
   dw: number, dh: number,
-  method: NativeResizeMethod,
+  method: BuiltinResizeMethod,
 ): ImageData {
   const canvasSource = document.createElement('canvas');
   canvasSource.width = data.width;
