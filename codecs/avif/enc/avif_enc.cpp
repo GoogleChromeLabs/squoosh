@@ -65,6 +65,7 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
   }
 
   auto js_result = Uint8Array.new_(typed_memory_view(output.size, output.data));
+  avifRGBImageFreePixels(&srcRGB);
   avifImageDestroy(image);
   avifEncoderDestroy(encoder);
   return js_result;
