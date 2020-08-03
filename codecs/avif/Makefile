@@ -33,7 +33,7 @@ all: $(OUT_JS)
 		-o $@ \
 		$+
 
-$(LIBAOM_OUT): $(LIBAOM_DIR)/README.md
+$(LIBAOM_OUT): $(LIBAOM_DIR)/CMakeLists.txt
 	mkdir -p $(LIBAOM_DIR)/$(LIBAOM_BUILD_DIR) && \
 	cd $(LIBAOM_DIR)/$(LIBAOM_BUILD_DIR) && \
 	emcmake cmake \
@@ -50,10 +50,9 @@ $(LIBAOM_OUT): $(LIBAOM_DIR)/README.md
 		../ && \
 	$(MAKE) 
 
-$(LIBAOM_DIR)/README.md: $(CODEC_DIR)/README.md
-	mkdir -p $(LIBAOM_DIR) && \
-	cd $(LIBAOM_DIR) && \
-	curl -L $(LIBAOM_URL)/+archive/$(LIBAOM_VERSION).tar.gz | tar -xzf -
+$(LIBAOM_DIR)/CMakeLists.txt: $(CODEC_DIR)/CMakeLists.txt
+	mkdir -p $(LIBAOM_DIR)
+	curl -L $(LIBAOM_URL)/+archive/$(LIBAOM_VERSION).tar.gz | tar -xzf - -C $(LIBAOM_DIR)
 
 $(CODEC_OUT): $(LIBAOM_OUT)
 	mkdir -p $(CODEC_DIR)/$(CODEC_BUILD_DIR) && \
@@ -65,12 +64,11 @@ $(CODEC_OUT): $(LIBAOM_OUT)
 		../ && \
 	$(MAKE)
 
-$(CODEC_DIR)/README.md:
-	mkdir -p $(CODEC_DIR) && \
-	cd $(CODEC_DIR) && \
-	curl -L $(CODEC_URL)/archive/$(CODEC_VERSION).tar.gz | tar -xzf - --strip 1 
+$(CODEC_DIR)/CMakeLists.txt:
+	mkdir -p $(CODEC_DIR)
+	curl -L $(CODEC_URL)/archive/$(CODEC_VERSION).tar.gz | tar -xzf - --strip 1 -C $(CODEC_DIR)
 
 clean:
 	$(RM) $(OUT_JS) $(OUT_WASM)
-	cd $(CODEC_DIR)/$(CODEC_BUILD_DIR) && $(MAKE) clean
-	cd $(LIBAOM_DIR)/$(LIBAOM_BUILD_DIR) && $(MAKE) clean
+	$(MAKE) -C $(CODEC_DIR)/$(CODEC_BUILD_DIR) clean
+	$(MAKE) -C $(LIBAOM_DIR)/$(LIBAOM_BUILD_DIR) clean
