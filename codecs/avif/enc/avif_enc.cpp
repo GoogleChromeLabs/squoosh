@@ -60,13 +60,14 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
   encoder->tileColsLog2 = options.tileColsLog2;
   encoder->speed = options.speed;
   avifResult encodeResult = avifEncoderWrite(encoder, image, &output);
-  if (encodeResult != AVIF_RESULT_OK) {
-    return val::null();
+  auto js_result = val::null();
+  if (encodeResult == AVIF_RESULT_OK) {
+	  js_result = Uint8Array.new_(typed_memory_view(output.size, output.data));
   }
 
-  auto js_result = Uint8Array.new_(typed_memory_view(output.size, output.data));
   avifImageDestroy(image);
   avifEncoderDestroy(encoder);
+  avifRWDataFree(&output);
   return js_result;
 }
 
