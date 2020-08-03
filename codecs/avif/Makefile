@@ -1,4 +1,4 @@
-ROOT_DIR = node_modules
+ROOT_DIR = ./node_modules
 CODEC_DIR_RELATIVE = libavif
 CODEC_DIR = $(addprefix $(ROOT_DIR)/, $(CODEC_DIR_RELATIVE))
 CODEC_OUT_RELATIVE = build/libavif.a
@@ -33,10 +33,9 @@ all: $(OUT_JS)
 		-o $@ \
 		$+
 
-$(LIBAOM_OUT): $(LIBAOM_DIR)
-	export CFLAGS="-w $(CFLAGS)" && \
-	mkdir -p $(LIBAOM_DIR)/build.avif && \
-	cd $(LIBAOM_DIR)/build.avif && \
+$(LIBAOM_OUT): $(LIBAOM_DIR)/.git/index
+	mkdir -p $(LIBAOM_DIR)/build.libavif && \
+	cd $(LIBAOM_DIR)/build.libavif && \
 	emcmake cmake \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DENABLE_CCACHE=0 \
@@ -51,12 +50,11 @@ $(LIBAOM_OUT): $(LIBAOM_DIR)
 		../ && \
 	$(MAKE) 
 
-$(LIBAOM_DIR): $(CODEC_DIR)
+$(LIBAOM_DIR)/.git/index: $(CODEC_DIR)/.git/index
 	cd $(CODEC_DIR)/ext && \
 	git clone -b $(LIBAOM_VERSION) --depth 1 https://aomedia.googlesource.com/aom aom
 
-$(CODEC_OUT): $(CODEC_DIR) $(LIBAOM_OUT)
-	export CFLAGS="-w $(CFLAGS)" && \
+$(CODEC_OUT): $(CODEC_DIR)/.git/index $(LIBAOM_OUT)
 	mkdir -p $(CODEC_DIR)/build && \
 	cd $(CODEC_DIR)/build && \
 	emcmake cmake \
@@ -64,9 +62,9 @@ $(CODEC_OUT): $(CODEC_DIR) $(LIBAOM_OUT)
 		-DAVIF_CODEC_AOM=1 \
 		-DAVIF_LOCAL_AOM=1 \
 		../ && \
-	$(MAKE) 
+	$(MAKE)
 
-$(CODEC_DIR):
+$(CODEC_DIR)/.git/index:
 	mkdir -p $(ROOT_DIR) && \
 	cd $(ROOT_DIR) && \
 	git clone -b $(CODEC_VERSION) --depth 1 https://github.com/AOMediaCodec/libavif $(CODEC_DIR_RELATIVE)
