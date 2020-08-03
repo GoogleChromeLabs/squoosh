@@ -55,7 +55,7 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
       pixel[0] = rgba[pixelOffset * 4 + 0];
       pixel[1] = rgba[pixelOffset * 4 + 1];
       pixel[2] = rgba[pixelOffset * 4 + 2];
-      pixel[3] = rgba[pixelOffset * 4 + 0];
+      pixel[3] = rgba[pixelOffset * 4 + 3];
     }
   }
   avifImageRGBToYUV(image, &srcRGB);

@@ -1,5 +1,5 @@
-import avif_enc, { AVIFModule } from '../../../codecs/avif_enc/avif_enc';
-import wasmUrl from '../../../codecs/avif_enc/avif_enc.wasm';
+import avif_enc, { AVIFModule } from '../../../codecs/avif/enc/avif_enc';
+import wasmUrl from '../../../codecs/avif/enc/avif_enc.wasm';
 import { EncodeOptions } from './encoder-meta';
 import { initEmscriptenModule } from '../util';
 

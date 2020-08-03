@@ -6,9 +6,9 @@ CODEC_OUT := $(addprefix $(CODEC_DIR)/, $(CODEC_OUT_RELATIVE))
 
 CODEC_VERSION = "v0.8.0"
 
-LIBAOM_RELATIVE = ./ext/aom/build.libavif/
+LIBAOM_RELATIVE = ext/aom/
 LIBAOM_DIR := $(addprefix $(CODEC_DIR)/, $(LIBAOM_RELATIVE))
-LIBAOM_OUT_RELATIVE = ./libaom.a
+LIBAOM_OUT_RELATIVE = build.libavif/libaom.a
 LIBAOM_OUT := $(addprefix $(LIBAOM_DIR)/, $(LIBAOM_OUT_RELATIVE))
 
 LIBAOM_VERSION = "v2.0.0"
@@ -35,8 +35,8 @@ all: $(OUT_JS)
 
 $(LIBAOM_OUT): $(LIBAOM_DIR)
 	export CFLAGS="-w $(CFLAGS)" && \
-	mkdir -p $(LIBAOM_DIR) && \
-	cd $(LIBAOM_DIR) && \
+	mkdir -p $(LIBAOM_DIR)/build.avif && \
+	cd $(LIBAOM_DIR)/build.avif && \
 	emcmake cmake \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DENABLE_CCACHE=0 \
