@@ -1,11 +1,14 @@
 {
-  "name": "avif_enc",
+  "name": "avif",
   "scripts": {
     "install": "napa",
-    "build": "docker run --rm -v $(pwd):/src trzeci/emscripten-upstream ./build.sh"
+    "build": "../build-cpp.sh"
   },
   "napa": {
     "libavif": "AOMediaCodec/libavif#v0.5.4"
+  },
+  "napa-config": {
+    "cache": false
   },
   "devDependencies": {
     "napa": "3.0.0"
