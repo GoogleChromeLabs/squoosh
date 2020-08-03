@@ -1,6 +1,10 @@
-CODEC_DIR = node_modules/libavif
+ROOT_DIR = node_modules
+CODEC_DIR_RELATIVE = libavif
+CODEC_DIR = $(addprefix $(ROOT_DIR)/, $(CODEC_DIR_RELATIVE))
 CODEC_OUT_RELATIVE = build/libavif.a
 CODEC_OUT := $(addprefix $(CODEC_DIR)/, $(CODEC_OUT_RELATIVE))
+
+CODEC_VERSION = "v0.8.0"
 
 LIBAOM_RELATIVE = ./ext/aom/build.libavif/
 LIBAOM_DIR := $(addprefix $(CODEC_DIR)/, $(LIBAOM_RELATIVE))
@@ -47,11 +51,11 @@ $(LIBAOM_OUT): $(LIBAOM_DIR)
 		../ && \
 	$(MAKE) 
 
-$(LIBAOM_DIR):
+$(LIBAOM_DIR): $(CODEC_DIR)
 	cd $(CODEC_DIR)/ext && \
 	git clone -b $(LIBAOM_VERSION) --depth 1 https://aomedia.googlesource.com/aom aom
 
-$(CODEC_OUT): $(LIBAOM_OUT)
+$(CODEC_OUT): $(CODEC_DIR) $(LIBAOM_OUT)
 	export CFLAGS="-w $(CFLAGS)" && \
 	mkdir -p $(CODEC_DIR)/build && \
 	cd $(CODEC_DIR)/build && \
@@ -62,6 +66,10 @@ $(CODEC_OUT): $(LIBAOM_OUT)
 		../ && \
 	$(MAKE) 
 
+$(CODEC_DIR):
+	mkdir -p $(ROOT_DIR) && \
+	cd $(ROOT_DIR) && \
+	git clone -b $(CODEC_VERSION) --depth 1 https://github.com/AOMediaCodec/libavif $(CODEC_DIR_RELATIVE)
 
 clean:
 	$(RM) $(OUT_JS) $(OUT_WASM)
