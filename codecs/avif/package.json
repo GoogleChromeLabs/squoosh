@@ -5,7 +5,7 @@
     "build": "../build-cpp.sh"
   },
   "napa": {
-    "libavif": "AOMediaCodec/libavif#v0.5.4"
+    "libavif": "AOMediaCodec/libavif#v0.8.0"
   },
   "napa-config": {
     "cache": false
