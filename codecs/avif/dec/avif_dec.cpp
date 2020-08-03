@@ -1,11 +1,11 @@
-#include "avif/avif.h"
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
+#include "avif/avif.h"
 
 using namespace emscripten;
 
 class RawImage {
-public:
+ public:
   val buffer;
   uint32_t width;
   uint32_t height;
@@ -16,11 +16,11 @@ public:
 RawImage decode(std::string avifimage) {
   // point raw.data and raw.size to the contents of an .avif(s)
   avifROData raw;
-  raw.data = (uint8_t *)avifimage.c_str();
+  raw.data = (uint8_t*)avifimage.c_str();
   raw.size = avifimage.length();
 
-  avifImage *image = avifImageCreateEmpty();
-  avifDecoder *decoder = avifDecoderCreate();
+  avifImage* image = avifImageCreateEmpty();
+  avifDecoder* decoder = avifDecoderCreate();
   avifResult decodeResult = avifDecoderRead(decoder, image, &raw);
   // image is an independent copy of decoded data, decoder may be destroyed here
   avifDecoderDestroy(decoder);
@@ -30,8 +30,8 @@ RawImage decode(std::string avifimage) {
 
   // Convert to interleaved RGB(A)/BGR(A) using a libavif-allocated buffer.
   avifRGBImage rgb;
-  avifRGBImageSetDefaults(&rgb, image); // Defaults to AVIF_RGB_FORMAT_RGBA which is what we want.
-  rgb.depth = 8; // Does not need to match image->depth. We always want 8-bit pixels.
+  avifRGBImageSetDefaults(&rgb, image);  // Defaults to AVIF_RGB_FORMAT_RGBA which is what we want.
+  rgb.depth = 8;  // Does not need to match image->depth. We always want 8-bit pixels.
 
   avifRGBImageAllocatePixels(&rgb);
   avifImageYUVToRGB(image, &rgb);

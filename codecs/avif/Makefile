@@ -7,6 +7,8 @@ LIBAOM_DIR := $(addprefix $(CODEC_DIR)/, $(LIBAOM_RELATIVE))
 LIBAOM_OUT_RELATIVE = ./libaom.a
 LIBAOM_OUT := $(addprefix $(LIBAOM_DIR)/, $(LIBAOM_OUT_RELATIVE))
 
+LIBAOM_VERSION = "v2.0.0"
+
 OUT_JS = enc/avif_enc.js dec/avif_dec.js
 OUT_WASM = $(OUT_JS:.js=.wasm)
 
@@ -47,7 +49,7 @@ $(LIBAOM_OUT): $(LIBAOM_DIR)
 
 $(LIBAOM_DIR):
 	cd $(CODEC_DIR)/ext && \
-	git clone -b v1.0.0-errata1-avif --depth 1 https://aomedia.googlesource.com/aom aom
+	git clone -b $(LIBAOM_VERSION) --depth 1 https://aomedia.googlesource.com/aom aom
 
 $(CODEC_OUT): $(LIBAOM_OUT)
 	export CFLAGS="-w $(CFLAGS)" && \

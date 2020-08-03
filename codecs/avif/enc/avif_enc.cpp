@@ -1,6 +1,6 @@
-#include "avif/avif.h"
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
+#include "avif/avif.h"
 
 using namespace emscripten;
 
@@ -29,34 +29,38 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
   int depth = 8;
   avifPixelFormat format;
   switch (options.subsample) {
-  case 0:
-    format = AVIF_PIXEL_FORMAT_YUV420;
-    break;
-  case 1:
-    format = AVIF_PIXEL_FORMAT_YUV422;
-    break;
-  case 2:
-    format = AVIF_PIXEL_FORMAT_YUV444;
-    break;
+    case 0:
+      format = AVIF_PIXEL_FORMAT_YUV420;
+      break;
+    case 1:
+      format = AVIF_PIXEL_FORMAT_YUV422;
+      break;
+    case 2:
+      format = AVIF_PIXEL_FORMAT_YUV444;
+      break;
   }
-  avifImage *image = avifImageCreate(width, height, depth, format);
 
-  uint8_t *rgba = (uint8_t *)buffer.c_str();
+  avifImage* image = avifImageCreate(width, height, depth, format);
 
-  avifImageAllocatePlanes(image, AVIF_PLANES_RGB);
-  avifImageAllocatePlanes(image, AVIF_PLANES_A);
+  uint8_t* rgba = (uint8_t*)buffer.c_str();
+
+  avifRGBImage srcRGB;
+  avifRGBImageSetDefaults(&srcRGB, image);
+  avifRGBImageAllocatePixels(&srcRGB);
 
   for (int y = 0; y < height; y++) {
     for (int x = 0; x < width; x++) {
       int pixelOffset = y * width + x;
-      image->rgbPlanes[0][pixelOffset] = rgba[pixelOffset * 4 + 0];
-      image->rgbPlanes[1][pixelOffset] = rgba[pixelOffset * 4 + 1];
-      image->rgbPlanes[2][pixelOffset] = rgba[pixelOffset * 4 + 2];
-      image->alphaPlane[pixelOffset] = rgba[pixelOffset * 4 + 3];
+      uint8_t* pixel = &srcRGB.pixels[(4 * x) + (srcRGB.rowBytes * y)];
+      pixel[0] = rgba[pixelOffset * 4 + 0];
+      pixel[1] = rgba[pixelOffset * 4 + 1];
+      pixel[2] = rgba[pixelOffset * 4 + 2];
+      pixel[3] = rgba[pixelOffset * 4 + 0];
     }
   }
+  avifImageRGBToYUV(image, &srcRGB);
 
-  avifEncoder *encoder = avifEncoderCreate();
+  avifEncoder* encoder = avifEncoderCreate();
   encoder->maxThreads = 1;
   encoder->minQuantizer = options.minQuantizer;
   encoder->maxQuantizer = options.maxQuantizer;
@@ -72,7 +76,9 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
   return val(typed_memory_view(output.size, output.data));
 }
 
-void free_result() { avifRWDataFree(&output); }
+void free_result() {
+  avifRWDataFree(&output);
+}
 
 EMSCRIPTEN_BINDINGS(my_module) {
   value_object<AvifOptions>("AvifOptions")
