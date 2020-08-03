@@ -48,8 +48,8 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
 
   avifRGBImage srcRGB;
   avifRGBImageSetDefaults(&srcRGB, image);
-  avifRGBImageAllocatePixels(&srcRGB);
-  memcpy(srcRGB.pixels, rgba, width * height * 4);
+  srcRGB.pixels = rgba;
+  srcRGB.rowBytes = width * 4;
   avifImageRGBToYUV(image, &srcRGB);
 
   avifEncoder* encoder = avifEncoderCreate();
@@ -65,7 +65,6 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
   }
 
   auto js_result = Uint8Array.new_(typed_memory_view(output.size, output.data));
-  avifRGBImageFreePixels(&srcRGB);
   avifImageDestroy(image);
   avifEncoderDestroy(encoder);
   return js_result;
