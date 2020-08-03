@@ -49,17 +49,7 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
   avifRGBImage srcRGB;
   avifRGBImageSetDefaults(&srcRGB, image);
   avifRGBImageAllocatePixels(&srcRGB);
-
-  for (int y = 0; y < height; y++) {
-    for (int x = 0; x < width; x++) {
-      int pixelOffset = y * width + x;
-      uint8_t* pixel = &srcRGB.pixels[(4 * x) + (srcRGB.rowBytes * y)];
-      pixel[0] = rgba[pixelOffset * 4 + 0];
-      pixel[1] = rgba[pixelOffset * 4 + 1];
-      pixel[2] = rgba[pixelOffset * 4 + 2];
-      pixel[3] = rgba[pixelOffset * 4 + 3];
-    }
-  }
+  memcpy(srcRGB.pixels, rgba, width * height * 4);
   avifImageRGBToYUV(image, &srcRGB);
 
   avifEncoder* encoder = avifEncoderCreate();
