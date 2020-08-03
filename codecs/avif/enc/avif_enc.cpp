@@ -24,8 +24,10 @@ struct AvifOptions {
   int subsample;
 };
 
-avifRWData output = AVIF_DATA_EMPTY;
+thread_local const val Uint8Array = val::global("Uint8Array");
+
 val encode(std::string buffer, int width, int height, AvifOptions options) {
+  avifRWData output = AVIF_DATA_EMPTY;
   int depth = 8;
   avifPixelFormat format;
   switch (options.subsample) {
@@ -71,13 +73,11 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
   if (encodeResult != AVIF_RESULT_OK) {
     return val::null();
   }
+
+  auto js_result = Uint8Array.new_(typed_memory_view(output.size, output.data));
   avifImageDestroy(image);
   avifEncoderDestroy(encoder);
-  return val(typed_memory_view(output.size, output.data));
-}
-
-void free_result() {
-  avifRWDataFree(&output);
+  return js_result;
 }
 
 EMSCRIPTEN_BINDINGS(my_module) {
@@ -90,5 +90,4 @@ EMSCRIPTEN_BINDINGS(my_module) {
       .field("subsample", &AvifOptions::subsample);
 
   function("encode", &encode);
-  function("free_result", &free_result);
 }
