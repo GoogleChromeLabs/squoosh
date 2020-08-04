@@ -76,7 +76,11 @@ export default class Intro extends Component<Props, State> {
   private onFileChange(event: Event): void {
     const fileInput = event.target as HTMLInputElement;
     const file = fileInput.files && fileInput.files[0];
-    if (!file) return;
+    var filePath = fileInput.value;
+    var allowedExtensions = /(\.jpg|\.jpeg|\.png|\.gif)$/i;
+    if(!allowedExtensions.exec(filePath)){
+    this.props.showSnack('Invalid image');}
+    else if (!file) return;
     this.resetFileInput();
     this.props.onFile(file);
   }
