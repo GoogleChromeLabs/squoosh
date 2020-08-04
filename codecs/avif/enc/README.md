@@ -35,7 +35,3 @@ struct AvifOptions {
   int subsample;
 };
 ```
-
-### `void free_result()`
-
-Frees the result created by `encode()`.
