@@ -1,18 +1,12 @@
-ROOT_DIR = node_modules
+CODEC_URL = https://github.com/AOMediaCodec/libavif/archive/v0.8.0.tar.gz
+CODEC_DIR = node_modules/libavif
+CODEC_BUILD_DIR := $(CODEC_DIR)/build
+CODEC_OUT := $(CODEC_BUILD_DIR)/libavif.a
 
-CODEC_DIR = $(ROOT_DIR)/libavif
-CODEC_BUILD_DIR = build
-CODEC_OUT := $(CODEC_DIR)/$(CODEC_BUILD_DIR)/libavif.a 
-
-CODEC_URL = "https://github.com/AOMediaCodec/libavif"
-CODEC_VERSION = "v0.8.0"
-
+LIBAOM_URL = https://aomedia.googlesource.com/aom/+archive/v2.0.0.tar.gz
 LIBAOM_DIR := $(CODEC_DIR)/ext/aom
-LIBAOM_BUILD_DIR = build.libavif
-LIBAOM_OUT := $(LIBAOM_DIR)/$(LIBAOM_BUILD_DIR)/libaom.a
-
-LIBAOM_URL = "https://aomedia.googlesource.com/aom/"
-LIBAOM_VERSION = "v2.0.0"
+LIBAOM_BUILD_DIR := $(LIBAOM_DIR)/build.libavif
+LIBAOM_OUT := $(LIBAOM_BUILD_DIR)/libaom.a
 
 OUT_JS = enc/avif_enc.js dec/avif_dec.js
 OUT_WASM = $(OUT_JS:.js=.wasm)
@@ -29,13 +23,25 @@ all: $(OUT_JS)
 		--bind \
 		--closure 1 \
 		-s ALLOW_MEMORY_GROWTH=1 \
-		-s MODULARIZE=1 \ -s 'EXPORT_NAME="$(basename $(@F))"' \
+		-s MODULARIZE=1 \
+    -s 'EXPORT_NAME="$(basename $(@F))"' \
 		-o $@ \
 		$+
 
+$(CODEC_OUT): $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_OUT)
+	mkdir -p $(CODEC_BUILD_DIR)
+	cd $(CODEC_BUILD_DIR) && \
+	emcmake cmake \
+		-DCMAKE_BUILD_TYPE=Release \
+    -DBUILD_SHARED_LIBS=0 \
+		-DAVIF_CODEC_AOM=1 \
+		-DAVIF_LOCAL_AOM=1 \
+		../ && \
+	$(MAKE)
+
 $(LIBAOM_OUT): $(LIBAOM_DIR)/CMakeLists.txt
-	mkdir -p $(LIBAOM_DIR)/$(LIBAOM_BUILD_DIR) && \
-	cd $(LIBAOM_DIR)/$(LIBAOM_BUILD_DIR) && \
+	mkdir -p $(LIBAOM_BUILD_DIR)
+	cd $(LIBAOM_BUILD_DIR) && \
 	emcmake cmake \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DENABLE_CCACHE=0 \
@@ -43,33 +49,28 @@ $(LIBAOM_OUT): $(LIBAOM_DIR)/CMakeLists.txt
 		-DENABLE_DOCS=0 \
 		-DENABLE_TESTS=0 \
 		-DENABLE_EXAMPLES=0 \
+    -DENABLE_TOOLS=0 \
 		-DCONFIG_ACCOUNTING=1 \
 		-DCONFIG_INSPECTION=0 \
 		-DCONFIG_MULTITHREAD=0 \
 		-DCONFIG_RUNTIME_CPU_DETECT=0 \
 		-DCONFIG_WEBM_IO=0 \
 		../ && \
-	$(MAKE) 
-
-$(LIBAOM_DIR)/CMakeLists.txt: $(CODEC_DIR)/CMakeLists.txt
-	mkdir -p $(LIBAOM_DIR)
-	curl -L $(LIBAOM_URL)/+archive/$(LIBAOM_VERSION).tar.gz | tar -xzf - -C $(LIBAOM_DIR)
-
-$(CODEC_OUT): $(LIBAOM_OUT)
-	mkdir -p $(CODEC_DIR)/$(CODEC_BUILD_DIR) && \
-	cd $(CODEC_DIR)/$(CODEC_BUILD_DIR) && \
-	emcmake cmake \
-		DCMAKE_BUILD_TYPE=Release \
-		-DAVIF_CODEC_AOM=1 \
-		-DAVIF_LOCAL_AOM=1 \
-		../ && \
 	$(MAKE)
 
-$(CODEC_DIR)/CMakeLists.txt:
-	mkdir -p $(CODEC_DIR)
-	curl -L $(CODEC_URL)/archive/$(CODEC_VERSION).tar.gz | tar -xzf - --strip 1 -C $(CODEC_DIR)
+$(CODEC_DIR)/CMakeLists.txt: $(CODEC_DIR)
+
+$(LIBAOM_DIR)/CMakeLists.txt: $(LIBAOM_DIR)
+
+$(CODEC_DIR):
+	mkdir -p $@
+	curl -sL $(CODEC_URL) | tar xz --strip 1 -C $@
+
+$(LIBAOM_DIR):
+	mkdir -p $@
+	curl -sL $(LIBAOM_URL) | tar xz -C $@
 
 clean:
 	$(RM) $(OUT_JS) $(OUT_WASM)
-	$(MAKE) -C $(CODEC_DIR)/$(CODEC_BUILD_DIR) clean
-	$(MAKE) -C $(LIBAOM_DIR)/$(LIBAOM_BUILD_DIR) clean
+	$(MAKE) -C $(CODEC_BUILD_DIR) clean
+	$(MAKE) -C $(LIBAOM_BUILD_DIR) clean
