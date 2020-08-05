@@ -1,5 +1,7 @@
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
+#include <wasm_simd128.h>
+#include <xmmintrin.h>
 #include <inttypes.h>
 #include <setjmp.h>
 #include <stdio.h>

@@ -1,0 +1,13 @@
+import os
+emsdk_path = "/emsdk/"
+#NODE_JS = emsdk_path + '/node/12.18.1_64bit/bin/node'
+# We need a newer version of Node that supports the most recent iteration of Wasm SIMD
+# and need to enable that experimental support via flag so that autoconf can successfully
+# detect SIMD support.
+NODE_JS=["/root/.nvm/versions/node/v14.7.0/bin/node", "--experimental-wasm-simd"]
+LLVM_ROOT = emsdk_path + '/upstream/bin'
+BINARYEN_ROOT = emsdk_path + '/upstream'
+EMSCRIPTEN_ROOT = emsdk_path + '/upstream/emscripten'
+TEMP_DIR = emsdk_path + '/tmp'
+COMPILER_ENGINE = NODE_JS
+JS_ENGINES = [NODE_JS]

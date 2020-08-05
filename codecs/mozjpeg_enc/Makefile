@@ -5,11 +5,21 @@ CODEC_OUT := $(addprefix $(CODEC_DIR)/, $(CODEC_OUT_RELATIVE))
 OUT_JS := mozjpeg_enc.js
 OUT_WASM := $(OUT_JS:.js=.wasm)
 
+CFLAGS += -msimd128 -msse --em-config /src/.emscripten
+CXXFLAGS += -msimd128 -msse --em-config /src/.emscripten
+
+#override CFLAGS += "-msimd128 -msse"
+#override CXXFLAGS += "-msimd128 -msse"
+
 .PHONY: all clean
 
 all: $(OUT_JS)
 
 %.js: %.cpp $(CODEC_OUT)
+	# We just to disable the overridden NODE_JS binary because 
+	# `--closure 1` can’t handle arrays in `.emscripten` it seems.
+	# https://github.com/emscripten-core/emsdk/issues/583
+	export EM_NODE_JS='/root/.nvm/versions/node/v14.7.0/bin/node' && \
 	$(CXX) \
 		-I $(CODEC_DIR) \
 		${CXXFLAGS} \
