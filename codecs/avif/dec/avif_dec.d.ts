@@ -1,11 +1,5 @@
-interface RawImage {
-  buffer: Uint8Array;
-  width: number;
-  height: number;
-}
-
 interface AVIFModule extends EmscriptenWasm.Module {
-  decode(data: BufferSource): RawImage;
+  decode(data: BufferSource): ImageData | null;
 }
 
 export default function(opts: EmscriptenWasm.ModuleOpts): AVIFModule;

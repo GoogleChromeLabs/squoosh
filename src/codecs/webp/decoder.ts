@@ -8,5 +8,9 @@ export async function decode(data: ArrayBuffer): Promise<ImageData> {
   if (!emscriptenModule) emscriptenModule = initEmscriptenModule(webp_dec, wasmUrl);
 
   const module = await emscriptenModule;
-  return module.decode(data);
+  const result = module.decode(data);
+  if (!result) {
+    throw new Error('Decoding error');
+  }
+  return result;
 }

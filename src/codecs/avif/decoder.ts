@@ -8,12 +8,9 @@ export async function decode(data: ArrayBuffer): Promise<ImageData> {
   if (!emscriptenModule) emscriptenModule = initEmscriptenModule(avif_dec, wasmUrl);
 
   const module = await emscriptenModule;
-  const rawImage = module.decode(data);
-  const result = new ImageData(
-    new Uint8ClampedArray(rawImage.buffer),
-    rawImage.width,
-    rawImage.height,
-  );
-
+  const result = module.decode(data);
+  if (!result) {
+    throw new Error('Decoding error');
+  }
   return result;
 }

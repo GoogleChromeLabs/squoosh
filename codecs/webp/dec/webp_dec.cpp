@@ -17,7 +17,7 @@ val decode(std::string buffer) {
   int width, height;
   std::unique_ptr<uint8_t[]> rgba(
       WebPDecodeRGBA((const uint8_t*)buffer.c_str(), buffer.size(), &width, &height));
-  return ImageData.new_(Uint8ClampedArray.new_(typed_memory_view(width * height * 4, rgba.get())), width, height);
+  return rgba ? ImageData.new_(Uint8ClampedArray.new_(typed_memory_view(width * height * 4, rgba.get())), width, height) : val::null();
 }
 
 EMSCRIPTEN_BINDINGS(my_module) {
