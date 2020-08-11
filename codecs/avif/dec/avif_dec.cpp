@@ -1,5 +1,3 @@
-#include <sanitizer/lsan_interface.h>
-
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
 #include "avif/avif.h"
@@ -49,5 +47,4 @@ val decode(std::string avifimage) {
 
 EMSCRIPTEN_BINDINGS(my_module) {
   function("decode", &decode);
-  function("doLeakCheck", &__lsan_do_recoverable_leak_check);
 }

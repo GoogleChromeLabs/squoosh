@@ -12,6 +12,5 @@ export async function decode(data: ArrayBuffer): Promise<ImageData> {
   if (!result) {
     throw new Error('Decoding error');
   }
-  module.doLeakCheck();
   return result;
 }

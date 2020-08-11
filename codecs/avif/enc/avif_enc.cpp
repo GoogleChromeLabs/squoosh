@@ -1,5 +1,3 @@
-#include <sanitizer/lsan_interface.h>
-
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
 #include "avif/avif.h"
@@ -83,5 +81,4 @@ EMSCRIPTEN_BINDINGS(my_module) {
       .field("subsample", &AvifOptions::subsample);
 
   function("encode", &encode);
-  function("doLeakCheck", &__lsan_do_recoverable_leak_check);
 }
