@@ -14,6 +14,7 @@ export async function encode(data: ImageData, options: EncodeOptions): Promise<A
   if (!result) {
     throw new Error('Encoding error');
   }
+  module.doLeakCheck();
 
   // wasm can’t run on SharedArrayBuffers, so we hard-cast to ArrayBuffer.
   return result.buffer as ArrayBuffer;
