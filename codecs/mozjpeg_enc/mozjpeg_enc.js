@@ -1,7 +1,7 @@
 
 var mozjpeg_enc = (function() {
-  var _scriptDir = typeof document !== 'undefined' && document.currentScript ? document.currentScript.src : undefined;
-  if (typeof __filename !== 'undefined') _scriptDir = _scriptDir || __filename;
+  var _scriptDir = import.meta.url;
+  
   return (
 function(mozjpeg_enc) {
   mozjpeg_enc = mozjpeg_enc || {};
@@ -63,10 +63,4 @@ d.run=Cb;if(d.preInit)for("function"==typeof d.preInit&&(d.preInit=[d.preInit]);
 }
 );
 })();
-if (typeof exports === 'object' && typeof module === 'object')
-      module.exports = mozjpeg_enc;
-    else if (typeof define === 'function' && define['amd'])
-      define([], function() { return mozjpeg_enc; });
-    else if (typeof exports === 'object')
-      exports["mozjpeg_enc"] = mozjpeg_enc;
-    
+export default mozjpeg_enc;

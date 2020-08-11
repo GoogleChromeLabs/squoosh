@@ -2,14 +2,14 @@ CODEC_URL := https://github.com/mozilla/mozjpeg/archive/v3.3.1.tar.gz
 CODEC_DIR := node_modules/mozjpeg
 CODEC_OUT_RELATIVE := .libs/libjpeg.a rdswitch.o
 CODEC_OUT := $(addprefix $(CODEC_DIR)/, $(CODEC_OUT_RELATIVE))
-OUT_JS := mozjpeg_enc.js
+OUT_JS := mozjpeg_enc_simd.js
 OUT_WASM := $(OUT_JS:.js=.wasm)
 
 CFLAGS += -msimd128 -msse --em-config /src/.emscripten
 CXXFLAGS += -msimd128 -msse --em-config /src/.emscripten
 
-#override CFLAGS += "-msimd128 -msse"
-#override CXXFLAGS += "-msimd128 -msse"
+#CFLAGS += --em-config /src/.emscripten
+#CXXFLAGS += --em-config /src/.emscripten
 
 .PHONY: all clean
 
@@ -28,6 +28,7 @@ all: $(OUT_JS)
 		--closure 1 \
 		-s ALLOW_MEMORY_GROWTH=1 \
 		-s MODULARIZE=1 \
+		-s EXPORT_ES6=1 \
 		-s 'EXPORT_NAME="$(basename $(@F))"' \
 		-o $@ \
 		$+
