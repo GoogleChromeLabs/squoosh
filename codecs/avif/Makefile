@@ -24,7 +24,7 @@ all: $(OUT_JS)
 		--closure 1 \
 		-s ALLOW_MEMORY_GROWTH=1 \
 		-s MODULARIZE=1 \
-    -s 'EXPORT_NAME="$(basename $(@F))"' \
+		-s 'EXPORT_NAME="$(basename $(@F))"' \
 		-o $@ \
 		$+
 
@@ -33,7 +33,7 @@ $(CODEC_OUT): $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_OUT)
 	cd $(CODEC_BUILD_DIR) && \
 	emcmake cmake \
 		-DCMAKE_BUILD_TYPE=Release \
-    -DBUILD_SHARED_LIBS=0 \
+		-DBUILD_SHARED_LIBS=0 \
 		-DAVIF_CODEC_AOM=1 \
 		-DAVIF_LOCAL_AOM=1 \
 		../ && \
@@ -49,7 +49,7 @@ $(LIBAOM_OUT): $(LIBAOM_DIR)/CMakeLists.txt
 		-DENABLE_DOCS=0 \
 		-DENABLE_TESTS=0 \
 		-DENABLE_EXAMPLES=0 \
-    -DENABLE_TOOLS=0 \
+		-DENABLE_TOOLS=0 \
 		-DCONFIG_ACCOUNTING=1 \
 		-DCONFIG_INSPECTION=0 \
 		-DCONFIG_MULTITHREAD=0 \
