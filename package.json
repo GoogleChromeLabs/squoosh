@@ -15,6 +15,7 @@
       "pre-commit": "npm run lint"
     }
   },
+  "browserslist": ">0.25%, not IE 11, not op_mini all",
   "postcss": {
     "modules": true,
     "plugins": {
