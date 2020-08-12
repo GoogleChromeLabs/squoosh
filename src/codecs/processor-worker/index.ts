@@ -82,6 +82,22 @@ async function webpDecode(data: ArrayBuffer): Promise<ImageData> {
   return timed('webpDecode', () => decode(data));
 }
 
+async function avifEncode(
+  data: ImageData, options: import('../avif/encoder-meta').EncodeOptions,
+): Promise<ArrayBuffer> {
+  const { encode } = await import(
+    /* webpackChunkName: "process-avif-enc" */
+    '../avif/encoder');
+  return encode(data, options);
+}
+
+async function avifDecode(data: ArrayBuffer): Promise<ImageData> {
+  const { decode } = await import(
+    /* webpackChunkName: "process-avif-dec" */
+    '../avif/decoder');
+  return decode(data);
+}
+
 const exports = {
   mozjpegEncode,
   quantize,
@@ -90,6 +106,8 @@ const exports = {
   oxiPngEncode,
   webpEncode,
   webpDecode,
+  avifEncode,
+  avifDecode,
 };
 export type ProcessorWorkerApi = typeof exports;
 
