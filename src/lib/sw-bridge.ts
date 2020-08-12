@@ -60,11 +60,13 @@ export function getSharedImage(): Promise<File> {
 /** Set up the service worker and monitor changes */
 export async function offliner(showSnack: SnackBarElement['showSnackbar']) {
   // This needs to be a typeof because Webpack.
-  if (typeof PRERENDER === 'boolean') return;
+  if (process.env.PRERENDER) return;
 
   if (process.env.NODE_ENV === 'production') {
     navigator.serviceWorker.register('../sw');
   }
+
+  if (!navigator.serviceWorker) return;
 
   const hasController = !!navigator.serviceWorker.controller;
 
