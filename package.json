@@ -4,8 +4,8 @@
   "version": "1.11.4",
   "license": "apache-2.0",
   "scripts": {
-    "start": "webpack-dev-server --host 0.0.0.0 --hot",
-    "build": "webpack -p",
+    "start": "parcel serve src/index.html --host 0.0.0.0 --dist-dir build",
+    "build": "parcel build src/index.html --dist-dir build",
     "lint": "tslint -c tslint.json  -p tsconfig.json -t verbose",
     "lintfix": "tslint -c tslint.json -p tsconfig.json -t verbose --fix 'src/**/*.{ts,tsx,js,jsx}'",
     "sizereport": "sizereport --config"
@@ -26,6 +26,11 @@
     }
   },
   "devDependencies": {
+    "@babel/plugin-proposal-class-properties": "^7.10.4",
+    "@babel/plugin-proposal-decorators": "^7.10.5",
+    "@babel/plugin-transform-react-jsx": "^7.10.4",
+    "@babel/preset-typescript": "^7.10.4",
+    "@parcel/types": "^2.0.0-alpha.3",
     "@types/node": "10.14.15",
     "@types/pretty-bytes": "5.1.0",
     "@types/webassembly-js-api": "0.0.3",
@@ -57,6 +62,7 @@
     "node-sass": "4.13.0",
     "normalize-path": "^3.0.0",
     "optimize-css-assets-webpack-plugin": "5.0.1",
+    "parcel": "^2.0.0-beta.1",
     "pointer-tracker": "2.0.3",
     "postcss-modules": "^3.2.0",
     "preact": "8.4.2",
