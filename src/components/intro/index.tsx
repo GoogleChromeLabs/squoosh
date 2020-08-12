@@ -3,15 +3,15 @@ import { h, Component } from 'preact';
 import { bind, linkRef, Fileish } from '../../lib/initial-util';
 import '../custom-els/LoadingSpinner';
 
-import logo from './imgs/logo.svg';
-import largePhoto from './imgs/demos/demo-large-photo.jpg';
-import artwork from './imgs/demos/demo-artwork.jpg';
-import deviceScreen from './imgs/demos/demo-device-screen.png';
-import largePhotoIcon from './imgs/demos/icon-demo-large-photo.jpg';
-import artworkIcon from './imgs/demos/icon-demo-artwork.jpg';
-import deviceScreenIcon from './imgs/demos/icon-demo-device-screen.jpg';
-import logoIcon from './imgs/demos/icon-demo-logo.png';
-import * as style from './style.scss';
+import logo from 'url:./imgs/logo.svg';
+import largePhoto from 'url:./imgs/demos/demo-large-photo.jpg';
+import artwork from 'url:./imgs/demos/demo-artwork.jpg';
+import deviceScreen from 'url:./imgs/demos/demo-device-screen.png';
+import largePhotoIcon from 'url:./imgs/demos/icon-demo-large-photo.jpg';
+import artworkIcon from 'url:./imgs/demos/icon-demo-artwork.jpg';
+import deviceScreenIcon from 'url:./imgs/demos/icon-demo-device-screen.jpg';
+import logoIcon from 'url:./imgs/demos/icon-demo-logo.png';
+import * as style from './style.module.scss';
 import SnackBarElement from '../../lib/SnackBar';
 
 const demos = [

@@ -2,7 +2,7 @@ import { h, Component } from 'preact';
 
 import { bind, Fileish } from '../../lib/initial-util';
 import { blobToImg, drawableToImageData, blobToText } from '../../lib/util';
-import * as style from './style.scss';
+import * as style from './style.module.scss';
 import Output from '../Output';
 import Options from '../Options';
 import ResultCache from './result-cache';

@@ -1,6 +1,6 @@
 import { h, Component } from 'preact';
-import * as prettyBytes from 'pretty-bytes';
-import * as style from './style.scss';
+import prettyBytes from 'pretty-bytes';
+import * as style from './style.module.scss';
 
 interface Props {
   blob: Blob;
