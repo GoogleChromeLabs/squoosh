@@ -1,6 +1,6 @@
 import { builtinDecode, sniffMimeType, canDecodeImage } from '../lib/util';
 import Processor from './processor';
-import webpDataUrl from 'url-loader!./tiny.webp';
+import webpDataUrl from 'url:./tiny.webp';
 
 const webPSupported = canDecodeImage(webpDataUrl);
 

@@ -1,4 +1,4 @@
-import webpDataUrl from 'url-loader!../codecs/tiny.webp';
+import webpDataUrl from 'url:../codecs/tiny.webp';
 
 // Give TypeScript the correct global.
 declare var self: ServiceWorkerGlobalScope;
