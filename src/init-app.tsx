@@ -1,6 +1,6 @@
 import { h, render } from 'preact';
-import './lib/fix-pmc';
-import './style';
+import './lib/fix-pmc.mjs';
+import './style/index.scss';
 import App from './components/App';
 
 // Find the outermost Element in our server-rendered HTML structure.
