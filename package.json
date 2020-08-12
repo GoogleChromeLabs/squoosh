@@ -25,6 +25,10 @@
       }
     }
   },
+  "//": "See https://github.com/GoogleChromeLabs/pointer-tracker/pull/10",
+  "alias": {
+    "pointer-tracker": "./node_modules/pointer-tracker/dist/PointerTracker.mjs"
+  },
   "devDependencies": {
     "@babel/plugin-proposal-class-properties": "^7.10.4",
     "@babel/plugin-proposal-decorators": "^7.10.5",
