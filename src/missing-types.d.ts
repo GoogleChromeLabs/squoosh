@@ -2,6 +2,13 @@ interface CanvasRenderingContext2D {
   filter: string;
 }
 
+declare module '*.module.scss' {
+  const classNameMapping: Record<string, string> & {
+    default: Record<string, string>
+  };
+  export = classNameMapping;
+}
+
 // Handling file-loader imports:
 declare module '*.png' {
   const content: string;
@@ -28,7 +35,12 @@ declare module '*.wasm' {
   export default content;
 }
 
-declare module 'url-loader!*' {
+declare module 'url:*' {
+  const value: string;
+  export default value;
+}
+
+declare module 'data-url:*' {
   const value: string;
   export default value;
 }
@@ -41,5 +53,5 @@ declare var ga: {
 };
 
 interface Navigator {
-	readonly standalone: boolean;
+  readonly standalone: boolean;
 }

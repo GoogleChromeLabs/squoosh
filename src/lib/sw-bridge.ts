@@ -62,11 +62,11 @@ export async function offliner(showSnack: SnackBarElement['showSnackbar']) {
   // This needs to be a typeof because Webpack.
   if (process.env.PRERENDER) return;
 
+  if (!navigator.serviceWorker) return;
+
   if (process.env.NODE_ENV === 'production') {
     navigator.serviceWorker.register('../sw');
   }
-
-  if (!navigator.serviceWorker) return;
 
   const hasController = !!navigator.serviceWorker.controller;
 

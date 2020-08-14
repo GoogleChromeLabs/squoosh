@@ -5,6 +5,13 @@
       {
         "jsxPragma": "h"
       }
+    ],
+    [
+      "@parcel/babel-preset-env",
+      {
+        "loose": true,
+        "bugfixes": true
+      }
     ]
   ],
   "plugins": [

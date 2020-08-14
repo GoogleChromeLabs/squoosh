@@ -4,8 +4,8 @@
   "version": "1.11.4",
   "license": "apache-2.0",
   "scripts": {
-    "start": "parcel serve src/index.html --host 0.0.0.0 --dist-dir build",
-    "build": "parcel build src/index.html --dist-dir build",
+    "start": "parcel serve src/index.html --no-autoinstall --host 0.0.0.0 --dist-dir build",
+    "build": "parcel build src/index.html --no-autoinstall --dist-dir build",
     "lint": "tslint -c tslint.json  -p tsconfig.json -t verbose",
     "lintfix": "tslint -c tslint.json -p tsconfig.json -t verbose --fix 'src/**/*.{ts,tsx,js,jsx}'",
     "sizereport": "sizereport --config"
@@ -15,7 +15,7 @@
       "pre-commit": "npm run lint"
     }
   },
-  "browserslist": ">0.25%, not IE 11, not op_mini all",
+  "browserslist": ">0.5%, not IE 11, not op_mini all",
   "postcss": {
     "modules": true,
     "plugins": {
@@ -34,6 +34,7 @@
     "@babel/plugin-proposal-decorators": "^7.10.5",
     "@babel/plugin-transform-react-jsx": "^7.10.4",
     "@babel/preset-typescript": "^7.10.4",
+    "@parcel/babel-preset-env": "^2.0.0-alpha.3",
     "@parcel/types": "^2.0.0-alpha.3",
     "@types/node": "10.14.15",
     "@types/pretty-bytes": "5.1.0",
