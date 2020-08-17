@@ -270,7 +270,7 @@ export default class WebPEncoderOptions extends Component<Props, State> {
                   value={options.sns_strength}
                   onInput={this.onChange}
                 >
-                  Spacial noise shaping:
+                  Spatial noise shaping:
                 </Range>
               </div>
               <label class={style.optionTextFirst}>

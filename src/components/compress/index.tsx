@@ -7,10 +7,11 @@ import Output from '../Output';
 import Options from '../Options';
 import ResultCache from './result-cache';
 import * as identity from '../../codecs/identity/encoder-meta';
-import * as optiPNG from '../../codecs/optipng/encoder-meta';
+import * as oxiPNG from '../../codecs/oxipng/encoder-meta';
 import * as mozJPEG from '../../codecs/mozjpeg/encoder-meta';
 import * as webP from '../../codecs/webp/encoder-meta';
 import * as jxl from '../../codecs/jxl/encoder-meta';
+import * as avif from '../../codecs/avif/encoder-meta';
 import * as browserPNG from '../../codecs/browser-png/encoder-meta';
 import * as browserJPEG from '../../codecs/browser-jpeg/encoder-meta';
 import * as browserWebP from '../../codecs/browser-webp/encoder-meta';
@@ -110,11 +111,6 @@ async function preprocessImage(
     } else if (isHqx(preprocessData.resize)) {
       // Hqx can only do x2, x3 or x4.
       result = await processor.workerResize(result, preprocessData.resize);
-      // Seems like the globals from Rust from hqx and resize are conflicting.
-      // For now we can fix that by terminating the worker.
-      // TODO: Use wasm-bindgen’s new --web target to create a proper ES6 module
-      // and remove this.
-      processor.terminateWorker();
       // If the target size is not a clean x2, x3 or x4, use Catmull-Rom
       // for the remaining scaling.
       const pixelOpts = { ...preprocessData.resize, method: 'catrom' };
@@ -139,10 +135,11 @@ async function compressImage(
 ): Promise<Fileish> {
   const compressedData = await (() => {
     switch (encodeData.type) {
-      case optiPNG.type: return processor.optiPngEncode(image, encodeData.options);
+      case oxiPNG.type: return processor.oxiPngEncode(image, encodeData.options);
       case mozJPEG.type: return processor.mozjpegEncode(image, encodeData.options);
       case webP.type: return processor.webpEncode(image, encodeData.options);
       case jxl.type: return processor.jxlEncode(image, encodeData.options);
+      case avif.type: return processor.avifEncode(image, encodeData.options);
       case browserPNG.type: return processor.browserPngEncode(image);
       case browserJPEG.type: return processor.browserJpegEncode(image, encodeData.options);
       case browserWebP.type: return processor.browserWebpEncode(image, encodeData.options);

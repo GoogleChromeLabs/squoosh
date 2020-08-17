@@ -3,7 +3,7 @@ const escapeRE = require("escape-string-regexp");
 module.exports = {
   repo: "GoogleChromeLabs/squoosh",
   path: "build/**/!(*.map)",
-  branch: "master",
+  branch: "dev",
   findRenamed(path, newPaths) {
     const nameParts = /^(.+\.)[a-f0-9]+(\..+)$/.exec(path);
     if (!nameParts) return;

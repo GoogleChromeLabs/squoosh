@@ -1,8 +1,9 @@
 import * as identity from './identity/encoder-meta';
-import * as optiPNG from './optipng/encoder-meta';
+import * as oxiPNG from './oxipng/encoder-meta';
 import * as mozJPEG from './mozjpeg/encoder-meta';
 import * as webP from './webp/encoder-meta';
 import * as jxl from './jxl/encoder-meta';
+import * as avif from './avif/encoder-meta';
 import * as browserPNG from './browser-png/encoder-meta';
 import * as browserJPEG from './browser-jpeg/encoder-meta';
 import * as browserWebP from './browser-webp/encoder-meta';
@@ -18,10 +19,11 @@ export interface EncoderSupportMap {
 
 export type EncoderState =
   identity.EncoderState |
-  optiPNG.EncoderState |
+  oxiPNG.EncoderState |
   mozJPEG.EncoderState |
   webP.EncoderState |
   jxl.EncoderState |
+  avif.EncoderState |
   browserPNG.EncoderState |
   browserJPEG.EncoderState |
   browserWebP.EncoderState |
@@ -33,10 +35,11 @@ export type EncoderState =
 
 export type EncoderOptions =
   identity.EncodeOptions |
-  optiPNG.EncodeOptions |
+  oxiPNG.EncodeOptions |
   mozJPEG.EncodeOptions |
   webP.EncodeOptions |
   jxl.EncodeOptions |
+  avif.EncodeOptions |
   browserPNG.EncodeOptions |
   browserJPEG.EncodeOptions |
   browserWebP.EncodeOptions |
@@ -50,10 +53,11 @@ export type EncoderType = keyof typeof encoderMap;
 
 export const encoderMap = {
   [identity.type]: identity,
-  [optiPNG.type]: optiPNG,
+  [oxiPNG.type]: oxiPNG,
   [mozJPEG.type]: mozJPEG,
   [webP.type]: webP,
   [jxl.type]: jxl,
+  [avif.type]: avif,
   [browserPNG.type]: browserPNG,
   [browserJPEG.type]: browserJPEG,
   [browserWebP.type]: browserWebP,

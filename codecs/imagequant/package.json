@@ -1,13 +1,6 @@
 {
   "name": "imagequant",
   "scripts": {
-    "install": "napa",
-    "build": "docker run --rm -v $(pwd):/src trzeci/emscripten ./build.sh"
-  },
-  "napa": {
-    "libimagequant": "ImageOptim/libimagequant#2.12.1"
-  },
-  "devDependencies": {
-    "napa": "3.0.0"
+    "build": "../build-cpp.sh"
   }
 }

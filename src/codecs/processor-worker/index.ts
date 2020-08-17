@@ -2,13 +2,18 @@ import { expose } from 'comlink';
 import { isHqx } from '../resize/processor-meta';
 import { clamp } from '../util';
 
+function timed<T>(name: string, func: () => Promise<T>) {
+  console.time(name);
+  return func().finally(() => console.timeEnd(name));
+}
+
 async function mozjpegEncode(
   data: ImageData, options: import('../mozjpeg/encoder-meta').EncodeOptions,
 ): Promise<ArrayBuffer> {
   const { encode } = await import(
     /* webpackChunkName: "process-mozjpeg-enc" */
     '../mozjpeg/encoder');
-  return encode(data, options);
+  return timed('mozjpegEncode', () => encode(data, options));
 }
 
 async function quantize(
@@ -17,7 +22,7 @@ async function quantize(
   const { process } = await import(
     /* webpackChunkName: "process-imagequant" */
     '../imagequant/processor');
-  return process(data, opts);
+  return timed('quantize', () => process(data, opts));
 }
 
 async function rotate(
@@ -27,7 +32,7 @@ async function rotate(
     /* webpackChunkName: "process-rotate" */
     '../rotate/processor');
 
-  return rotate(data, opts);
+  return timed('rotate', () => rotate(data, opts));
 }
 
 async function resize(
@@ -43,22 +48,22 @@ async function resize(
     const ratio = Math.max(widthRatio, heightRatio);
     if (ratio <= 1) return data;
     const factor = clamp(Math.ceil(ratio), { min: 2, max: 4 }) as 2|3|4;
-    return hqx(data, { factor });
+    return timed('hqx', () => hqx(data, { factor }));
   }
   const { resize } = await import(
     /* webpackChunkName: "process-resize" */
     '../resize/processor');
 
-  return resize(data, opts);
+  return timed('resize', () => resize(data, opts));
 }
 
-async function optiPngEncode(
-  data: BufferSource, options: import('../optipng/encoder-meta').EncodeOptions,
+async function oxiPngEncode(
+  data: ArrayBuffer, options: import('../oxipng/encoder-meta').EncodeOptions,
 ): Promise<ArrayBuffer> {
   const { compress } = await import(
-    /* webpackChunkName: "process-optipng" */
-    '../optipng/encoder');
-  return compress(data, options);
+    /* webpackChunkName: "process-oxipng" */
+    '../oxipng/encoder');
+  return timed('oxiPngEncode', () => compress(data, options));
 }
 
 async function webpEncode(
@@ -67,13 +72,29 @@ async function webpEncode(
   const { encode } = await import(
     /* webpackChunkName: "process-webp-enc" */
     '../webp/encoder');
-  return encode(data, options);
+  return timed('webpEncode', () => encode(data, options));
 }
 
 async function webpDecode(data: ArrayBuffer): Promise<ImageData> {
   const { decode } = await import(
     /* webpackChunkName: "process-webp-dec" */
     '../webp/decoder');
+  return timed('webpDecode', () => decode(data));
+}
+
+async function avifEncode(
+  data: ImageData, options: import('../avif/encoder-meta').EncodeOptions,
+): Promise<ArrayBuffer> {
+  const { encode } = await import(
+    /* webpackChunkName: "process-avif-enc" */
+    '../avif/encoder');
+  return encode(data, options);
+}
+
+async function avifDecode(data: ArrayBuffer): Promise<ImageData> {
+  const { decode } = await import(
+    /* webpackChunkName: "process-avif-dec" */
+    '../avif/decoder');
   return decode(data);
 }
 
@@ -98,11 +119,13 @@ const exports = {
   quantize,
   rotate,
   resize,
-  optiPngEncode,
+  oxiPngEncode,
   webpEncode,
   webpDecode,
   jxlEncode,
   jxlDecode,
+  avifEncode,
+  avifDecode,
 };
 export type ProcessorWorkerApi = typeof exports;
 
