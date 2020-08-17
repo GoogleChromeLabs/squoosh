@@ -1,5 +1,5 @@
-import jxl_dec, { JXLModule } from '../../../codecs/jxl_dec/jxl_dec';
-import wasmUrl from '../../../codecs/jxl_dec/jxl_dec.wasm';
+import jxl_dec, { JXLModule } from '../../../codecs/jxl/dec/jxl_dec';
+import wasmUrl from '../../../codecs/jxl/dec/jxl_dec.wasm';
 import { initEmscriptenModule } from '../util';
 
 let emscriptenModule: Promise<JXLModule>;
