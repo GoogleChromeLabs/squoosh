@@ -1,5 +1,5 @@
-import jxl_enc, { JXLModule } from '../../../codecs/jxl_enc/jxl_enc';
-import wasmUrl from '../../../codecs/jxl_enc/jxl_enc.wasm';
+import jxl_enc, { JXLModule } from '../../../codecs/jxl/enc/jxl_enc';
+import wasmUrl from '../../../codecs/jxl/enc/jxl_enc.wasm';
 import { EncodeOptions } from './encoder-meta';
 import { initEmscriptenModule } from '../util';
 
