@@ -1,6 +1,6 @@
 import { h, Component } from 'preact';
 
-import { bind, linkRef, Fileish } from '../../lib/initial-util';
+import { linkRef, Fileish } from '../../lib/initial-util';
 import '../custom-els/LoadingSpinner';
 
 import logo from 'url:./imgs/logo.svg';
@@ -67,13 +67,11 @@ export default class Intro extends Component<Props, State> {
     window.addEventListener('appinstalled', this.onAppInstalled);
   }
 
-  @bind
-  private resetFileInput() {
+  private resetFileInput = () => {
     this.fileInput!.value = '';
   }
 
-  @bind
-  private onFileChange(event: Event): void {
+  private onFileChange = (event: Event) => {
     const fileInput = event.target as HTMLInputElement;
     const file = fileInput.files && fileInput.files[0];
     if (!file) return;
@@ -81,13 +79,11 @@ export default class Intro extends Component<Props, State> {
     this.props.onFile(file);
   }
 
-  @bind
-  private onButtonClick() {
+  private onButtonClick = () => {
     this.fileInput!.click();
   }
 
-  @bind
-  private async onDemoClick(index: number, event: Event) {
+  private onDemoClick = async (index: number, event: Event) => {
     try {
       this.setState({ fetchingDemoIndex: index });
       const demo = demos[index];
@@ -104,8 +100,7 @@ export default class Intro extends Component<Props, State> {
     }
   }
 
-  @bind
-  private onBeforeInstallPromptEvent(event: BeforeInstallPromptEvent) {
+  private onBeforeInstallPromptEvent = (event: BeforeInstallPromptEvent) => {
     // Don't show the mini-infobar on mobile
     event.preventDefault();
 
@@ -121,8 +116,7 @@ export default class Intro extends Component<Props, State> {
     ga('send', 'event', gaEventInfo);
   }
 
-  @bind
-  private async onInstallClick(event: Event) {
+  private onInstallClick = async (event: Event) => {
     // Get the deferred beforeinstallprompt event
     const beforeInstallEvent = this.state.beforeInstallEvent;
     // If there's no deferred prompt, bail.
@@ -150,8 +144,7 @@ export default class Intro extends Component<Props, State> {
     }
   }
 
-  @bind
-  private onAppInstalled() {
+  private onAppInstalled = () => {
     // We don't need the install button, if it's shown
     this.setState({ beforeInstallEvent: undefined });
 

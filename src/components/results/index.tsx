@@ -5,7 +5,7 @@ import FileSize from './FileSize';
 import { DownloadIcon, CopyAcrossIcon, CopyAcrossIconProps } from '../../lib/icons';
 import '../custom-els/LoadingSpinner';
 import { SourceImage } from '../compress';
-import { Fileish, bind } from '../../lib/initial-util';
+import { Fileish } from '../../lib/initial-util';
 
 interface Props {
   loading: boolean;
@@ -52,14 +52,12 @@ export default class Results extends Component<Props, State> {
     }
   }
 
-  @bind
-  private onCopyToOtherClick(event: Event) {
+  private onCopyToOtherClick = (event: Event) => {
     event.preventDefault();
     this.props.onCopyToOtherClick();
   }
 
-  @bind
-  onDownload() {
+  onDownload = () => {
     // GA can’t do floats. So we round to ints. We're deliberately rounding to nearest kilobyte to
     // avoid cases where exact image sizes leak something interesting about the user.
     const before = Math.round(this.props.source!.file.size / 1024);

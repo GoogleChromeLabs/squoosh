@@ -1,6 +1,6 @@
 import { h, Component } from 'preact';
 
-import { bind, linkRef, Fileish } from '../../lib/initial-util';
+import { linkRef, Fileish } from '../../lib/initial-util';
 import * as style from './style.module.scss';
 import { FileDropEvent } from 'file-drop-element';
 import 'file-drop-element';
@@ -43,6 +43,12 @@ export default class App extends Component<Props, State> {
   constructor() {
     super();
 
+    this.onFileDrop = this.onFileDrop.bind(this);
+    this.onIntroPickFile = this.onIntroPickFile.bind(this);
+    this.showSnack = this.showSnack.bind(this);
+    this.onPopState = this.onPopState.bind(this);
+    this.openEditor = this.openEditor.bind(this);
+
     compressPromise.then((module) => {
       this.setState({ Compress: module.default });
     }).catch((e) => {
@@ -61,7 +67,8 @@ export default class App extends Component<Props, State> {
     });
 
     // In development, persist application state across hot reloads:
-    if (process.env.NODE_ENV === 'development') {
+    // if (process.env.NODE_ENV === 'development') {
+    if (module.hot) {
       this.setState(window.STATE);
       const oldCDU = this.componentDidUpdate;
       this.componentDidUpdate = (props, state, prev) => {
@@ -81,7 +88,6 @@ export default class App extends Component<Props, State> {
     window.addEventListener('popstate', this.onPopState);
   }
 
-  @bind
   private onFileDrop({ files }: FileDropEvent) {
     if (!files || files.length === 0) return;
     const file = files[0];
@@ -89,24 +95,20 @@ export default class App extends Component<Props, State> {
     this.setState({ file });
   }
 
-  @bind
   private onIntroPickFile(file: File | Fileish) {
     this.openEditor();
     this.setState({ file });
   }
 
-  @bind
   private showSnack(message: string, options: SnackOptions = {}): Promise<string> {
     if (!this.snackbar) throw Error('Snackbar missing');
     return this.snackbar.showSnackbar(message, options);
   }
 
-  @bind
   private onPopState() {
     this.setState({ isEditorOpen: location.pathname === ROUTE_EDITOR });
   }
 
-  @bind
   private openEditor() {
     if (this.state.isEditorOpen) return;
     // Change path, but preserve query string.

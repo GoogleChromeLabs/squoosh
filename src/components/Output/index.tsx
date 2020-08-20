@@ -3,7 +3,7 @@ import PinchZoom, { ScaleToOpts } from './custom-els/PinchZoom';
 import './custom-els/PinchZoom';
 import './custom-els/TwoUp';
 import * as style from './style.module.scss';
-import { bind, linkRef } from '../../lib/initial-util';
+import { linkRef } from '../../lib/initial-util';
 import { shallowEqual, drawDataToCanvas } from '../../lib/util';
 import {
     ToggleBackgroundIcon,
@@ -135,29 +135,25 @@ export default class Output extends Component<Props, State> {
     return props.rightCompressed || (props.source && props.source.processed);
   }
 
-  @bind
-  private toggleBackground() {
+  private toggleBackground = () => {
     this.setState({
       altBackground: !this.state.altBackground,
     });
   }
 
-  @bind
-  private zoomIn() {
+  private zoomIn = () => {
     if (!this.pinchZoomLeft) throw Error('Missing pinch-zoom element');
 
     this.pinchZoomLeft.scaleTo(this.state.scale * 1.25, scaleToOpts);
   }
 
-  @bind
-  private zoomOut() {
+  private zoomOut = () => {
     if (!this.pinchZoomLeft) throw Error('Missing pinch-zoom element');
 
     this.pinchZoomLeft.scaleTo(this.state.scale / 1.25, scaleToOpts);
   }
 
-  @bind
-  private onRotateClick() {
+  private onRotateClick = () => {
     const { inputProcessorState } = this.props;
     if (!inputProcessorState) return;
 
@@ -170,8 +166,7 @@ export default class Output extends Component<Props, State> {
     this.props.onInputProcessorChange(newState);
   }
 
-  @bind
-  private onScaleValueFocus() {
+  private onScaleValueFocus = () => {
     this.setState({ editingScale: true }, () => {
       if (this.scaleInput) {
         // Firefox unfocuses the input straight away unless I force a style calculation here. I have
@@ -182,13 +177,11 @@ export default class Output extends Component<Props, State> {
     });
   }
 
-  @bind
-  private onScaleInputBlur() {
+  private onScaleInputBlur = () => {
     this.setState({ editingScale: false });
   }
 
-  @bind
-  private onScaleInputChanged(event: Event) {
+  private onScaleInputChanged = (event: Event) => {
     const target = event.target as HTMLInputElement;
     const percent = parseFloat(target.value);
     if (isNaN(percent)) return;
@@ -197,8 +190,7 @@ export default class Output extends Component<Props, State> {
     this.pinchZoomLeft.scaleTo(percent / 100, scaleToOpts);
   }
 
-  @bind
-  private onPinchZoomLeftChange(event: Event) {
+  private onPinchZoomLeftChange = (event: Event) => {
     if (!this.pinchZoomRight || !this.pinchZoomLeft) throw Error('Missing pinch-zoom element');
     this.setState({
       scale: this.pinchZoomLeft.scale,
@@ -218,8 +210,7 @@ export default class Output extends Component<Props, State> {
    *
    * @param event Event to redirect
    */
-  @bind
-  private onRetargetableEvent(event: Event) {
+  private onRetargetableEvent = (event: Event) => {
     const targetEl = event.target as HTMLElement;
     if (!this.pinchZoomLeft) throw Error('Missing pinch-zoom element');
     // If the event is on the handle of the two-up, let it through,

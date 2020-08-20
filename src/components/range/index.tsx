@@ -2,7 +2,7 @@ import { h, Component } from 'preact';
 import * as style from './style.module.scss';
 import RangeInputElement from '../../custom-els/RangeInput';
 import '../../custom-els/RangeInput';
-import { linkRef, bind } from '../../lib/initial-util';
+import { linkRef } from '../../lib/initial-util';
 
 interface Props extends JSX.HTMLAttributes {}
 interface State {}
@@ -10,8 +10,7 @@ interface State {}
 export default class Range extends Component<Props, State> {
   rangeWc?: RangeInputElement;
 
-  @bind
-  private onTextInput(event: Event) {
+  private onTextInput = (event: Event) => {
     const input = event.target as HTMLInputElement;
     const value = input.value.trim();
     if (!value) return;

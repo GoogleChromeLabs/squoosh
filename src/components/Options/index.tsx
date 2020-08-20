@@ -1,7 +1,6 @@
 import { h, Component } from 'preact';
 
 import * as style from './style.module.scss';
-import { bind } from '../../lib/initial-util';
 import { cleanSet, cleanMerge } from '../../lib/clean-modify';
 import OxiPNGEncoderOptions from '../../codecs/oxipng/options';
 import MozJpegEncoderOptions from '../../codecs/mozjpeg/options';
@@ -82,8 +81,7 @@ export default class Options extends Component<Props, State> {
     encodersSupported.then(encoderSupportMap => this.setState({ encoderSupportMap }));
   }
 
-  @bind
-  private onEncoderTypeChange(event: Event) {
+  private onEncoderTypeChange = (event: Event) => {
     const el = event.currentTarget as HTMLSelectElement;
 
     // The select element only has values matching encoder types,
@@ -92,8 +90,7 @@ export default class Options extends Component<Props, State> {
     this.props.onEncoderTypeChange(type);
   }
 
-  @bind
-  private onPreprocessorEnabledChange(event: Event) {
+  private onPreprocessorEnabledChange = (event: Event) => {
     const el = event.currentTarget as HTMLInputElement;
     const preprocessor = el.name.split('.')[0] as keyof PreprocessorState;
 
@@ -102,15 +99,13 @@ export default class Options extends Component<Props, State> {
     );
   }
 
-  @bind
-  private onQuantizerOptionsChange(opts: QuantizeOptions) {
+  private onQuantizerOptionsChange = (opts: QuantizeOptions) => {
     this.props.onPreprocessorOptionsChange(
       cleanMerge(this.props.preprocessorState, 'quantizer', opts),
     );
   }
 
-  @bind
-  private onResizeOptionsChange(opts: ResizeOptions) {
+  private onResizeOptionsChange = (opts: ResizeOptions) => {
     this.props.onPreprocessorOptionsChange(
       cleanMerge(this.props.preprocessorState, 'resize', opts),
     );

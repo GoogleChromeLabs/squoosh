@@ -25,10 +25,6 @@
       }
     }
   },
-  "//": "See https://github.com/GoogleChromeLabs/pointer-tracker/pull/10",
-  "alias": {
-    "pointer-tracker": "./node_modules/pointer-tracker/dist/PointerTracker.mjs"
-  },
   "devDependencies": {
     "@babel/plugin-proposal-class-properties": "^7.10.4",
     "@babel/plugin-proposal-decorators": "^7.10.5",
@@ -68,7 +64,7 @@
     "normalize-path": "^3.0.0",
     "optimize-css-assets-webpack-plugin": "5.0.1",
     "parcel": "^2.0.0-beta.1",
-    "pointer-tracker": "2.0.3",
+    "pointer-tracker": "^2.4.0",
     "postcss-modules": "^3.2.0",
     "preact": "8.4.2",
     "prerender-loader": "1.3.0",

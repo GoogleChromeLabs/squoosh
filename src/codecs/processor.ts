@@ -16,7 +16,6 @@ import * as browserGIF from './browser-gif/encoder';
 import * as browserTIFF from './browser-tiff/encoder';
 import * as browserJP2 from './browser-jp2/encoder';
 import * as browserPDF from './browser-pdf/encoder';
-import { bind } from '../lib/initial-util';
 
 type ProcessorWorkerApi = import('./processor-worker').ProcessorWorkerApi;
 
@@ -55,7 +54,7 @@ export default class Processor {
   private _workerTimeoutId: number = 0;
 
   /** @private */
-  async runProcessingJob(options: ProcessingJobOptions, processingFunc: any, ...args: any[]) {
+  async _runProcessingJob(options: ProcessingJobOptions, job: Function) {
     const { needsWorker = false } = options;
 
     this._latestJobId += 1;
@@ -69,10 +68,12 @@ export default class Processor {
       // @ts-ignore - Typescript doesn't know about the 2nd param to new Worker, and the
       // definition can't be overwritten.
       this._worker = new Worker(
-        './processor-worker',
-        { name: 'processor-worker' },
+        // './processor-worker',
+        new URL('./processor-worker/index.ts', import.meta.url),
+        { name: 'processor-worker', type: 'module' },
         // { name: 'processor-worker', type: 'module' },
       ) as Worker;
+      console.log(this._worker);
       // Need to do some TypeScript trickery to make the type match.
       this._workerApi = proxy(this._worker) as any as ProcessorWorkerApi;
     }
@@ -80,7 +81,7 @@ export default class Processor {
     this._busy = true;
 
     const returnVal = Promise.race([
-      processingFunc.call(this, ...args),
+      job(),
       new Promise((_, reject) => { this._abortRejector = reject; }),
     ]);
 
@@ -99,7 +100,7 @@ export default class Processor {
     if (!this._worker) return;
 
     // If the worker is unused for 10 seconds, remove it to save memory.
-    this._workerTimeoutId = self.setTimeout(this.terminateWorker, workerTimeout);
+    this._workerTimeoutId = self.setTimeout(this.terminateWorker.bind(this), workerTimeout);
   }
 
   /** Abort the current job, if any */
@@ -112,7 +113,6 @@ export default class Processor {
     this.terminateWorker();
   }
 
-  @bind
   terminateWorker() {
     if (!this._worker) return;
     this._worker.terminate();
@@ -120,93 +120,108 @@ export default class Processor {
   }
 
   // Off main thread jobs:
-  @processingJob({ needsWorker: true })
   imageQuant(data: ImageData, opts: QuantizeOptions): Promise<ImageData> {
-    return this._workerApi!.quantize(data, opts);
+    return this._runProcessingJob({ needsWorker: true }, () => {
+      return this._workerApi!.quantize(data, opts);
+    });
   }
 
-  @processingJob({ needsWorker: true })
   rotate(
     data: ImageData, opts: import('./rotate/processor-meta').RotateOptions,
-  ): Promise<ImageData> {
-    return this._workerApi!.rotate(data, opts);
+    ): Promise<ImageData> {
+    return this._runProcessingJob({ needsWorker: true }, () => {
+      return this._workerApi!.rotate(data, opts);
+    });
   }
 
-  @processingJob({ needsWorker: true })
   workerResize(
     data: ImageData, opts: import('./resize/processor-meta').WorkerResizeOptions,
   ): Promise<ImageData> {
-    return this._workerApi!.resize(data, opts);
+    return this._runProcessingJob({ needsWorker: true }, () => {
+      return this._workerApi!.resize(data, opts);
+    });
   }
 
-  @processingJob({ needsWorker: true })
   mozjpegEncode(
     data: ImageData, opts: MozJPEGEncoderOptions,
   ): Promise<ArrayBuffer> {
-    return this._workerApi!.mozjpegEncode(data, opts);
+    return this._runProcessingJob({ needsWorker: true }, () => {
+      return this._workerApi!.mozjpegEncode(data, opts);
+    });
   }
 
-  @processingJob({ needsWorker: true })
   async oxiPngEncode(
     data: ImageData, opts: OxiPNGEncoderOptions,
   ): Promise<ArrayBuffer> {
-    // OxiPNG expects PNG input.
-    const pngBlob = await canvasEncode(data, 'image/png');
-    const pngBuffer = await blobToArrayBuffer(pngBlob);
-    return this._workerApi!.oxiPngEncode(pngBuffer, opts);
+    return this._runProcessingJob({ needsWorker: true }, async () => {
+      // OxiPNG expects PNG input.
+      const pngBlob = await canvasEncode(data, 'image/png');
+      const pngBuffer = await blobToArrayBuffer(pngBlob);
+      return this._workerApi!.oxiPngEncode(pngBuffer, opts);
+    });
   }
 
-  @processingJob({ needsWorker: true })
   webpEncode(data: ImageData, opts: WebPEncoderOptions): Promise<ArrayBuffer> {
-    return this._workerApi!.webpEncode(data, opts);
+    return this._runProcessingJob({ needsWorker: true }, () => {
+      return this._workerApi!.webpEncode(data, opts);
+    });
   }
 
-  @processingJob({ needsWorker: true })
   async webpDecode(blob: Blob): Promise<ImageData> {
-    const data = await blobToArrayBuffer(blob);
-    return this._workerApi!.webpDecode(data);
+    return this._runProcessingJob({ needsWorker: true }, async () => {
+      const data = await blobToArrayBuffer(blob);
+      return this._workerApi!.webpDecode(data);
+    });
   }
 
   // Not-worker jobs:
 
-  @processingJob()
   browserBmpEncode(data: ImageData): Promise<Blob> {
-    return browserBMP.encode(data);
+    return this._runProcessingJob({}, () => {
+      return browserBMP.encode(data);
+    });
   }
 
-  @processingJob()
   browserPngEncode(data: ImageData): Promise<Blob> {
-    return browserPNG.encode(data);
+    return this._runProcessingJob({}, () => {
+      return browserPNG.encode(data);
+    });
   }
 
-  @processingJob()
   browserJpegEncode(data: ImageData, opts: BrowserJPEGOptions): Promise<Blob> {
-    return browserJPEG.encode(data, opts);
+    return this._runProcessingJob({}, () => {
+      return browserJPEG.encode(data, opts);
+    });
   }
 
-  @processingJob()
   browserWebpEncode(data: ImageData, opts: BrowserWebpEncodeOptions): Promise<Blob> {
-    return browserWebP.encode(data, opts);
+    return this._runProcessingJob({}, () => {
+      return browserWebP.encode(data, opts);
+    });
   }
 
-  @processingJob()
   browserGifEncode(data: ImageData): Promise<Blob> {
-    return browserGIF.encode(data);
+    return this._runProcessingJob({}, () => {
+      return browserGIF.encode(data);
+    });
   }
 
-  @processingJob()
   browserTiffEncode(data: ImageData): Promise<Blob> {
-    return browserTIFF.encode(data);
+    return this._runProcessingJob({}, () => {
+      return browserTIFF.encode(data);
+    });
   }
 
-  @processingJob()
   browserJp2Encode(data: ImageData): Promise<Blob> {
-    return browserJP2.encode(data);
+    return this._runProcessingJob({}, () => {
+      return browserJP2.encode(data);
+    });
   }
 
-  @processingJob()
   browserPdfEncode(data: ImageData): Promise<Blob> {
-    return browserPDF.encode(data);
+    return this._runProcessingJob({}, () => {
+      return browserPDF.encode(data);
+    });
   }
 
   // Synchronous jobs
