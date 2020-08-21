@@ -2,6 +2,7 @@
 
 - Source: <https://github.com/mozilla/mozjpeg>
 - Version: v3.3.1
+- License: BSD
 
 ## Dependencies
 
