@@ -1,10 +1,5 @@
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
-#include <inttypes.h>
-#include <setjmp.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "config.h"
 #include "jpeglib.h"
 
