@@ -1,6 +1,6 @@
 import { h, render } from 'preact';
-import './lib/fix-pmc';
-import './style';
+import './lib/fix-pmc.mjs';
+import './style/index.scss';
 import App from './components/App';
 
 // Find the outermost Element in our server-rendered HTML structure.
@@ -14,12 +14,8 @@ if (process.env.NODE_ENV !== 'production') {
   // Enable support for React DevTools and some helpful console warnings:
   require('preact/debug');
 
-  // When an update to any module is received, re-import the app and trigger a full re-render:
-  module.hot.accept('./components/App', () => {
-    // The linter doesn't like the capital A in App. It is wrong.
-    // tslint:disable-next-line variable-name
-    import('./components/App').then(({ default: App }) => {
-      root = render(<App />, document.body, root);
-    });
-  });
+  // Full HMR may not be working due to https://github.com/parcel-bundler/parcel/issues/5016
+  if (module.hot) {
+    module.hot.accept();
+  }
 }

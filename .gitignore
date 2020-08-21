@@ -4,3 +4,4 @@ node_modules
 *.scss.d.ts
 *.css.d.ts
 *.o
+.parcel-cache

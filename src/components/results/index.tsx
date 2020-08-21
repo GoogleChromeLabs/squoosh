@@ -1,6 +1,6 @@
 import { h, Component, ComponentChildren, ComponentChild } from 'preact';
 
-import * as style from './style.scss';
+import * as style from './style.module.scss';
 import FileSize from './FileSize';
 import { DownloadIcon, CopyAcrossIcon, CopyAcrossIconProps } from '../../lib/icons';
 import '../custom-els/LoadingSpinner';

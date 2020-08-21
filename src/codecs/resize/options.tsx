@@ -5,7 +5,7 @@ import {
   inputFieldValueAsNumber, inputFieldValue, preventDefault, inputFieldChecked,
 } from '../../lib/util';
 import { ResizeOptions, isWorkerOptions } from './processor-meta';
-import * as style from '../../components/Options/style.scss';
+import * as style from '../../components/Options/style.module.scss';
 import Checkbox from '../../components/checkbox';
 import Expander from '../../components/expander';
 import Select from '../../components/select';

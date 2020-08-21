@@ -1,6 +1,6 @@
 import { h, Component } from 'preact';
 
-import * as style from './style.scss';
+import * as style from './style.module.scss';
 import { bind } from '../../lib/initial-util';
 import { cleanSet, cleanMerge } from '../../lib/clean-modify';
 import OxiPNGEncoderOptions from '../../codecs/oxipng/options';

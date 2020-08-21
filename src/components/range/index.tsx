@@ -1,5 +1,5 @@
 import { h, Component } from 'preact';
-import * as style from './style.scss';
+import * as style from './style.module.scss';
 import RangeInputElement from '../../custom-els/RangeInput';
 import '../../custom-els/RangeInput';
 import { linkRef, bind } from '../../lib/initial-util';

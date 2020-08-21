@@ -1,5 +1,5 @@
 import { h, Component } from 'preact';
-import * as style from './style.scss';
+import * as style from './style.module.scss';
 
 interface Props extends JSX.HTMLAttributes {
   large?: boolean;

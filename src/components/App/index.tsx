@@ -1,7 +1,7 @@
 import { h, Component } from 'preact';
 
 import { bind, linkRef, Fileish } from '../../lib/initial-util';
-import * as style from './style.scss';
+import * as style from './style.module.scss';
 import { FileDropEvent } from 'file-drop-element';
 import 'file-drop-element';
 import SnackBarElement, { SnackOptions } from '../../lib/SnackBar';
@@ -12,11 +12,9 @@ import '../custom-els/LoadingSpinner';
 const ROUTE_EDITOR = '/editor';
 
 const compressPromise = import(
-  /* webpackChunkName: "main-app" */
   '../compress');
 
 const swBridgePromise = import(
-  /* webpackChunkName: "sw-bridge" */
   '../../lib/sw-bridge');
 
 function back() {
@@ -47,8 +45,9 @@ export default class App extends Component<Props, State> {
 
     compressPromise.then((module) => {
       this.setState({ Compress: module.default });
-    }).catch(() => {
+    }).catch((e) => {
       this.showSnack('Failed to load app');
+      throw e;
     });
 
     swBridgePromise.then(async ({ offliner, getSharedImage }) => {

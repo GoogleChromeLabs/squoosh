@@ -6,6 +6,7 @@
     "module": "esnext",
     "moduleResolution": "node",
     "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
     "noUnusedLocals": true,
     "sourceMap": true,
     "jsx": "react",

@@ -2,7 +2,7 @@ import { h, Component } from 'preact';
 import PinchZoom, { ScaleToOpts } from './custom-els/PinchZoom';
 import './custom-els/PinchZoom';
 import './custom-els/TwoUp';
-import * as style from './style.scss';
+import * as style from './style.module.scss';
 import { bind, linkRef } from '../../lib/initial-util';
 import { shallowEqual, drawDataToCanvas } from '../../lib/util';
 import {
@@ -13,7 +13,7 @@ import {
     ToggleBackgroundActiveIcon,
     RotateIcon,
 } from '../../lib/icons';
-import { twoUpHandle } from './custom-els/TwoUp/styles.css';
+import { twoUpHandle } from './custom-els/TwoUp/styles.module.css';
 import { InputProcessorState } from '../../codecs/input-processors';
 import { cleanSet } from '../../lib/clean-modify';
 import { SourceImage } from '../compress';
