@@ -9,8 +9,7 @@ export async function encode(data: ImageData, options: EncodeOptions): Promise<A
   if (!emscriptenModule) emscriptenModule = initEmscriptenModule(jxl_enc, wasmUrl);
 
   const module = await emscriptenModule;
-  console.log(options);
-  const resultView = module.encode(data.data, data.width, data.height, options);
+  const result = module.encode(data.data, data.width, data.height, options);
 
   // wasm can’t run on SharedArrayBuffers, so we hard-cast to ArrayBuffer.
   return result.buffer as ArrayBuffer;
