@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<script src="mozjpeg_dec.js"></script>
+<script>
+  const module = mozjpeg_dec({
+    async onRuntimeInitialized() {
+      const image = await fetch("./original.jpg").then(r => r.arrayBuffer());
+      const result = this.decode(image);
+
+      const canvas = document.createElement("canvas");
+      canvas.width = result.width;
+      canvas.height = result.height;
+      // Draw image onto canvas
+      const ctx = canvas.getContext("2d");
+      ctx.putImageData(result, 0, 0);
+      document.body.append(canvas);
+    }
+  });
+</script>
