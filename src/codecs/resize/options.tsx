@@ -1,11 +1,11 @@
 import { h, Component } from 'preact';
 import linkState from 'linkstate';
-import { bind, linkRef } from '../../lib/initial-util';
+import { linkRef } from '../../lib/initial-util';
 import {
   inputFieldValueAsNumber, inputFieldValue, preventDefault, inputFieldChecked,
 } from '../../lib/util';
 import { ResizeOptions, isWorkerOptions } from './processor-meta';
-import * as style from '../../components/Options/style.scss';
+import * as style from '../../components/Options/style.module.scss';
 import Checkbox from '../../components/checkbox';
 import Expander from '../../components/expander';
 import Select from '../../components/select';
@@ -58,8 +58,7 @@ export default class ResizerOptions extends Component<Props, State> {
     this.props.onChange(newOptions);
   }
 
-  @bind
-  private onChange() {
+  private onChange = () => {
     this.reportOptions();
   }
 
@@ -83,8 +82,7 @@ export default class ResizerOptions extends Component<Props, State> {
     }
   }
 
-  @bind
-  private onWidthInput() {
+  private onWidthInput = () => {
     if (this.state.maintainAspect) {
       const width = inputFieldValueAsNumber(this.form!.width);
       this.form!.height.value = Math.round(width / this.getAspect());
@@ -93,8 +91,7 @@ export default class ResizerOptions extends Component<Props, State> {
     this.reportOptions();
   }
 
-  @bind
-  private onHeightInput() {
+  private onHeightInput = () => {
     if (this.state.maintainAspect) {
       const height = inputFieldValueAsNumber(this.form!.height);
       this.form!.width.value = Math.round(height * this.getAspect());
@@ -123,8 +120,7 @@ export default class ResizerOptions extends Component<Props, State> {
     return 'custom';
   }
 
-  @bind
-  private onPresetChange(event: Event) {
+  private onPresetChange = (event: Event) => {
     const select = event.target as HTMLSelectElement;
     if (select.value === 'custom') return;
     const multiplier = Number(select.value);

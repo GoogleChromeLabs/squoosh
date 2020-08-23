@@ -1,8 +1,8 @@
 import { h, Component } from 'preact';
 
-import { bind, Fileish } from '../../lib/initial-util';
+import { Fileish } from '../../lib/initial-util';
 import { blobToImg, drawableToImageData, blobToText } from '../../lib/util';
-import * as style from './style.scss';
+import * as style from './style.module.scss';
 import Output from '../Output';
 import Options from '../Options';
 import ResultCache from './result-cache';
@@ -254,8 +254,7 @@ export default class Compress extends Component<Props, State> {
     import('../../lib/sw-bridge').then(({ mainAppLoaded }) => mainAppLoaded());
   }
 
-  @bind
-  private onMobileWidthChange() {
+  private onMobileWidthChange = () => {
     this.setState({ mobileView: this.widthQuery.matches });
   }
 
@@ -344,8 +343,7 @@ export default class Compress extends Component<Props, State> {
     });
   }
 
-  @bind
-  private async onInputProcessorChange(options: InputProcessorState): Promise<void> {
+  private onInputProcessorChange = async (options: InputProcessorState): Promise<void> => {
     const source = this.state.source;
     if (!source) return;
 
@@ -396,8 +394,7 @@ export default class Compress extends Component<Props, State> {
     }
   }
 
-  @bind
-  private async updateFile(file: File | Fileish) {
+  private updateFile = async (file: File | Fileish) => {
     const loadingCounter = this.state.loadingCounter + 1;
     // Either processor is good enough here.
     const processor = this.leftProcessor;

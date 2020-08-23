@@ -1,4 +1,4 @@
-import * as style from './styles.css';
+import * as style from './styles.module.css';
 
 export interface SnackOptions {
   timeout?: number;

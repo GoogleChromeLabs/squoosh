@@ -1,7 +1,7 @@
 import { h, render } from 'preact';
-import './lib/fix-pmc';
-import './style';
-import App from './components/App';
+import './lib/fix-pmc.mjs';
+import './style/index.scss';
+import App from './components/App/index.tsx';
 
 // Find the outermost Element in our server-rendered HTML structure.
 let root = document.getElementById('app_root') as Element;
@@ -10,16 +10,7 @@ let root = document.getElementById('app_root') as Element;
 root = render(<App />, document.body, root);
 root.setAttribute('id', 'app_root');
 
-if (process.env.NODE_ENV !== 'production') {
+if (module.hot) {
   // Enable support for React DevTools and some helpful console warnings:
-  require('preact/debug');
-
-  // When an update to any module is received, re-import the app and trigger a full re-render:
-  module.hot.accept('./components/App', () => {
-    // The linter doesn't like the capital A in App. It is wrong.
-    // tslint:disable-next-line variable-name
-    import('./components/App').then(({ default: App }) => {
-      root = render(<App />, document.body, root);
-    });
-  });
+  import('preact/debug');
 }

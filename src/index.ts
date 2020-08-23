@@ -1,18 +1,16 @@
 declare module '@webcomponents/custom-elements';
 
 function init() {
-  require('./init-app.tsx');
+  import('./init-app.tsx');
 }
 
 if (!('customElements' in self)) {
-  import(
-    /* webpackChunkName: "wc-polyfill" */
-    '@webcomponents/custom-elements').then(init);
+  import('@webcomponents/custom-elements').then(init);
 } else {
   init();
 }
 
-if (typeof PRERENDER === 'undefined') {
+if (typeof process.env.PRERENDER === 'undefined') {
   // Determine the current display mode.
   let displayMode = 'browser';
   const mqStandAlone = '(display-mode: standalone)';

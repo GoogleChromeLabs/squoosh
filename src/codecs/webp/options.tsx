@@ -1,8 +1,7 @@
 import { h, Component } from 'preact';
-import { bind } from '../../lib/initial-util';
 import { inputFieldCheckedAsNumber, inputFieldValueAsNumber, preventDefault } from '../../lib/util';
 import { EncodeOptions, WebPImageHint } from './encoder-meta';
-import * as style from '../../components/Options/style.scss';
+import * as style from '../../components/Options/style.module.scss';
 import Checkbox from '../../components/checkbox';
 import Expander from '../../components/expander';
 import Select from '../../components/select';
@@ -41,8 +40,7 @@ export default class WebPEncoderOptions extends Component<Props, State> {
     showAdvanced: false,
   };
 
-  @bind
-  onChange(event: Event) {
+  onChange = (event: Event) => {
     const form = (event.currentTarget as HTMLInputElement).closest('form') as HTMLFormElement;
     const lossless = inputFieldCheckedAsNumber(form.lossless);
     const { options } = this.props;

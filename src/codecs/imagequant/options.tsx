@@ -1,8 +1,7 @@
 import { h, Component } from 'preact';
-import { bind } from '../../lib/initial-util';
 import { inputFieldValueAsNumber, konami, preventDefault } from '../../lib/util';
 import { QuantizeOptions } from './processor-meta';
-import * as style from '../../components/Options/style.scss';
+import * as style from '../../components/Options/style.module.scss';
 import Expander from '../../components/expander';
 import Select from '../../components/select';
 import Range from '../../components/range';
@@ -27,8 +26,7 @@ export default class QuantizerOptions extends Component<Props, State> {
     });
   }
 
-  @bind
-  onChange(event: Event) {
+  onChange = (event: Event) => {
     const form = (event.currentTarget as HTMLInputElement).closest('form') as HTMLFormElement;
     const { options } = this.props;
 

@@ -3,7 +3,7 @@ import { bind } from '../../lib/initial-util';
 import { inputFieldValueAsNumber, preventDefault } from '../../lib/util';
 import { EncodeOptions } from './encoder-meta';
 import Range from '../../components/range';
-import * as style from '../../components/Options/style.scss';
+import * as style from '../../components/Options/style.module.scss';
 
 type Props = {
   options: EncodeOptions;
@@ -11,8 +11,7 @@ type Props = {
 };
 
 export default class OxiPNGEncoderOptions extends Component<Props, {}> {
-  @bind
-  onChange(event: Event) {
+  onChange = (event: Event) => {
     const form = (event.currentTarget as HTMLInputElement).closest('form') as HTMLFormElement;
 
     const options: EncodeOptions = {

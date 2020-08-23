@@ -1,6 +1,5 @@
 import { h, Component } from 'preact';
-import { bind } from '../../lib/initial-util';
-import * as style from '../../components/Options/style.scss';
+import * as style from '../../components/Options/style.module.scss';
 import Range from '../../components/range';
 
 interface EncodeOptions {
@@ -26,8 +25,7 @@ export default function qualityOption(opts: QualityOptionArg = {}) {
   } = opts;
 
   class QualityOptions extends Component<Props, {}> {
-    @bind
-    onChange(event: Event) {
+    onChange = (event: Event) => {
       const el = event.currentTarget as HTMLInputElement;
       this.props.onChange({ quality: Number(el.value) });
     }
