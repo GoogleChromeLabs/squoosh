@@ -1,5 +1,5 @@
-import mozjpeg_enc, { MozJPEGModule } from '../../../codecs/mozjpeg_enc/mozjpeg_enc';
-import wasmUrl from '../../../codecs/mozjpeg_enc/mozjpeg_enc.wasm';
+import mozjpeg_enc, { MozJPEGModule } from '../../../codecs/mozjpeg/enc/mozjpeg_enc';
+import wasmUrl from '../../../codecs/mozjpeg/enc/mozjpeg_enc.wasm';
 import { EncodeOptions } from './encoder-meta';
 import { initEmscriptenModule } from '../util';
 

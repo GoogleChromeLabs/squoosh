@@ -2,7 +2,7 @@ CODEC_URL := https://github.com/mozilla/mozjpeg/archive/v3.3.1.tar.gz
 CODEC_DIR := node_modules/mozjpeg
 CODEC_OUT_RELATIVE := .libs/libjpeg.a rdswitch.o
 CODEC_OUT := $(addprefix $(CODEC_DIR)/, $(CODEC_OUT_RELATIVE))
-OUT_JS := mozjpeg_enc.js
+OUT_JS := enc/mozjpeg_enc.js dec/mozjpeg_dec.js
 OUT_WASM := $(OUT_JS:.js=.wasm)
 
 .PHONY: all clean

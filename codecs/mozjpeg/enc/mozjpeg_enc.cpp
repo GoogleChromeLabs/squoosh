@@ -1,10 +1,5 @@
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
-#include <inttypes.h>
-#include <setjmp.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "config.h"
 #include "jpeglib.h"
 
@@ -13,12 +8,6 @@ extern "C" {
 }
 
 using namespace emscripten;
-
-// MozJPEG doesn’t expose a numeric version, so I have to do some fun C macro
-// hackery to turn it into a string. More details here:
-// https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html
-#define xstr(s) str(s)
-#define str(s) #s
 
 struct MozJpegOptions {
   int quality;
@@ -38,22 +27,6 @@ struct MozJpegOptions {
   bool separate_chroma_quality;
   int chroma_quality;
 };
-
-int version() {
-  char buffer[] = xstr(MOZJPEG_VERSION);
-  int version = 0;
-  int last_index = 0;
-  for (int i = 0; i < strlen(buffer); i++) {
-    if (buffer[i] == '.') {
-      buffer[i] = '\0';
-      version = version << 8 | atoi(&buffer[last_index]);
-      buffer[i] = '.';
-      last_index = i + 1;
-    }
-  }
-  version = version << 8 | atoi(&buffer[last_index]);
-  return version;
-}
 
 thread_local const val Uint8Array = val::global("Uint8Array");
 
@@ -228,6 +201,5 @@ EMSCRIPTEN_BINDINGS(my_module) {
       .field("separate_chroma_quality", &MozJpegOptions::separate_chroma_quality)
       .field("chroma_quality", &MozJpegOptions::chroma_quality);
 
-  function("version", &version);
   function("encode", &encode);
 }
