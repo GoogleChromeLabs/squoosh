@@ -1,0 +1,6 @@
+{
+  "name": "resize",
+  "scripts": {
+    "build": "../build-rust.sh"
+  }
+}
