@@ -42,7 +42,7 @@ val decode(std::string image_in) {
 
   // Step 7: release JPEG compression object
 
-  auto data = Uint8ClampedArray.new_(typed_memory_view(output_size, &output_buffer[0]));
+  auto data = Uint8ClampedArray.new_(typed_memory_view(output_buffer.size(), output_buffer.data()));
   auto js_result = ImageData.new_(data, cinfo.output_width, cinfo.output_height);
 
   // This is an important step since it will release a good deal of memory.
