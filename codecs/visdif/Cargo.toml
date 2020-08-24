@@ -2,6 +2,7 @@
 name = "squoosh-visdiff"
 version = "0.1.0"
 authors = ["Surma <surma@surma.link>"]
+edition = "2018"
 publish = false
 
 [lib]
@@ -14,6 +15,9 @@ default = ["console_error_panic_hook", "wee_alloc"]
 [dependencies]
 cfg-if = "0.1.2"
 wasm-bindgen = "0.2.38"
+dssim-core = "2.11.3"
+imgref = "1.7.0"
+rgb = "0.8.24"
 # The `console_error_panic_hook` crate provides better debugging of panics by
 # logging them with `console.error`. This is great for development, but requires
 # all the `std::fmt` and `std::panicking` infrastructure, so isn't great for
@@ -27,8 +31,8 @@ console_error_panic_hook = { version = "0.1.1", optional = true }
 # Unfortunately, `wee_alloc` requires nightly Rust when targeting wasm for now.
 wee_alloc = { version = "0.4.2", optional = true }
 
-[dependencies.dssim]
-path = "/Users/surma/src/github.com/kornelski/dssim"
+#[dependencies.dssim]
+#path = "/Users/surma/src/github.com/kornelski/dssim"
 
 #dssim = "2.11.2"
 
