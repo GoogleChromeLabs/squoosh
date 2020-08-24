@@ -34,9 +34,11 @@ val decode(std::string image_in) {
   auto stride = cinfo.output_width * 4;
 
   // Process data
+  auto buffer_lines_available = cinfo.output_height;
   while (cinfo.output_scanline < cinfo.output_height) {
     uint8_t* ptr = &output_buffer[stride * cinfo.output_scanline];
-    jpeg_read_scanlines(&cinfo, &ptr, cinfo.output_height);
+    auto lines_read = jpeg_read_scanlines(&cinfo, &ptr, buffer_lines_available);
+    buffer_lines_available -= lines_read;
   }
   jpeg_finish_decompress(&cinfo);
 
