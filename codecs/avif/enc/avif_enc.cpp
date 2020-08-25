@@ -58,6 +58,8 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
     format == AVIF_PIXEL_FORMAT_YUV444
   ) {
     image->matrixCoefficients = AVIF_MATRIX_COEFFICIENTS_IDENTITY;
+  } else {
+    image->matrixCoefficients = AVIF_MATRIX_COEFFICIENTS_BT709;
   }
 
   uint8_t* rgba = (uint8_t*)buffer.c_str();
