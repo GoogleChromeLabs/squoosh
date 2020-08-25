@@ -14,10 +14,10 @@ export const label = 'AVIF';
 export const mimeType = 'image/avif';
 export const extension = 'avif';
 export const defaultOptions: EncodeOptions = {
-  minQuantizer: 0,
-  maxQuantizer: 10,
-  minQuantizerAlpha: 0,
-  maxQuantizerAlpha: 0,
+  minQuantizer: 33,
+  maxQuantizer: 63,
+  minQuantizerAlpha: 33,
+  maxQuantizerAlpha: 63,
   tileColsLog2: 0,
   tileRowsLog2: 0,
   speed: 8,
