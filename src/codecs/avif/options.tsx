@@ -134,6 +134,9 @@ export default class AVIFEncoderOptions extends Component<Props, State> {
           speed: maxSpeed - optionState.effort,
         };
 
+        // Updating options, so we don't recalculate in getDerivedStateFromProps.
+        newState.options = newOptions;
+
         this.setState(
           // It isn't clear to me why I have to cast this :)
           newState as State,
