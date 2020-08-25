@@ -82,9 +82,37 @@ export default class AVIFEncoderOptions extends Component<Props, State> {
           'checked' in formEl ? formEl.checked : !!formEl.value :
           Number(formEl.value);
 
+        const newState: Partial<State> = {
+          [prop]: newVal,
+        };
+
+        // Ensure that min cannot be greater than max
+        switch (prop) {
+          case 'maxQuality':
+            if (newVal < this.state.minQuality) {
+              newState.minQuality = newVal as number;
+            }
+            break;
+          case 'minQuality':
+            if (newVal > this.state.maxQuality) {
+              newState.maxQuality = newVal as number;
+            }
+            break;
+          case 'maxAlphaQuality':
+            if (newVal < this.state.minAlphaQuality) {
+              newState.minAlphaQuality = newVal as number;
+            }
+            break;
+          case 'minAlphaQuality':
+            if (newVal > this.state.maxAlphaQuality) {
+              newState.maxAlphaQuality = newVal as number;
+            }
+            break;
+        }
+
         const optionState = {
           ...this.state,
-          [prop]: newVal,
+          ...newState,
         };
 
         const maxQuantizer = optionState.lossless ? 0 : (maxQuant - optionState.minQuality);
@@ -107,8 +135,8 @@ export default class AVIFEncoderOptions extends Component<Props, State> {
         };
 
         this.setState(
-          // Type cheating: I'm assuming that prop is present and is the correct type.
-          { [prop]: newVal, options: newOptions } as unknown as State,
+          // It isn't clear to me why I have to cast this :)
+          newState as State,
         );
 
         this.props.onChange(newOptions);
