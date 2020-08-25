@@ -88,14 +88,14 @@ async function avifEncode(
   const { encode } = await import(
     /* webpackChunkName: "process-avif-enc" */
     '../avif/encoder');
-  return encode(data, options);
+  return timed('avifEncode', () => encode(data, options));
 }
 
 async function avifDecode(data: ArrayBuffer): Promise<ImageData> {
   const { decode } = await import(
     /* webpackChunkName: "process-avif-dec" */
     '../avif/decoder');
-  return decode(data);
+  return timed('avifDencode', () => decode(data));
 }
 
 const exports = {

@@ -1,6 +1,8 @@
 export interface EncodeOptions {
   minQuantizer: number;
   maxQuantizer: number;
+  minQuantizerAlpha: number;
+  maxQuantizerAlpha: number;
   tileRowsLog2: number;
   tileColsLog2: number;
   speed: number;
@@ -12,12 +14,14 @@ export const label = 'AVIF';
 export const mimeType = 'image/avif';
 export const extension = 'avif';
 export const defaultOptions: EncodeOptions = {
-  minQuantizer: 16,
-  maxQuantizer: 16,
+  minQuantizer: 0,
+  maxQuantizer: 10,
+  minQuantizerAlpha: 0,
+  maxQuantizerAlpha: 0,
   tileColsLog2: 0,
   tileRowsLog2: 0,
-  speed: 10,
-  subsample: 0,
+  speed: 8,
+  subsample: 1,
 };
 
 export interface EncoderState { type: typeof type; options: EncodeOptions; }

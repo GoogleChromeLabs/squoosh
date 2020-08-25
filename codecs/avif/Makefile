@@ -1,4 +1,4 @@
-CODEC_URL = https://github.com/AOMediaCodec/libavif/archive/v0.8.0.tar.gz
+CODEC_URL = https://github.com/AOMediaCodec/libavif/archive/v0.8.1.tar.gz
 CODEC_DIR = node_modules/libavif
 CODEC_BUILD_DIR := $(CODEC_DIR)/build
 CODEC_OUT := $(CODEC_BUILD_DIR)/libavif.a
