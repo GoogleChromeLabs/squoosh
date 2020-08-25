@@ -50,6 +50,16 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
 
   avifImage* image = avifImageCreate(width, height, depth, format);
 
+  if (
+    options.maxQuantizer == AVIF_QUANTIZER_LOSSLESS &&
+    options.minQuantizer == AVIF_QUANTIZER_LOSSLESS &&
+    options.minQuantizerAlpha == AVIF_QUANTIZER_LOSSLESS &&
+    options.maxQuantizerAlpha == AVIF_QUANTIZER_LOSSLESS &&
+    format == AVIF_PIXEL_FORMAT_YUV444
+  ) {
+    image->matrixCoefficients = AVIF_MATRIX_COEFFICIENTS_IDENTITY;
+  }
+
   uint8_t* rgba = (uint8_t*)buffer.c_str();
 
   avifRGBImage srcRGB;
