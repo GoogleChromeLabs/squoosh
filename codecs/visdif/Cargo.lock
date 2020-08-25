@@ -281,6 +281,7 @@ dependencies = [
  "console_error_panic_hook",
  "dssim-core",
  "imgref",
+ "rayon-core",
  "rgb",
  "wasm-bindgen",
  "wasm-bindgen-test",

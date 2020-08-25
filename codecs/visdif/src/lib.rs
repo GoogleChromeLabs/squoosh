@@ -4,6 +4,7 @@ use wasm_bindgen::prelude::*;
 use dssim_core::{Dssim, ToRGBAPLU};
 use imgref;
 use rgb::FromSlice;
+use rayon_core;
 
 mod utils;
 
@@ -16,6 +17,7 @@ cfg_if! {
         static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
     }
 }
+
 
 #[wasm_bindgen]
 #[no_mangle]

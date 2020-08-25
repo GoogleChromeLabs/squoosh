@@ -18,6 +18,7 @@ wasm-bindgen = "0.2.38"
 dssim-core = "2.11.3"
 imgref = "1.7.0"
 rgb = "0.8.24"
+rayon-core = "1.7.1"
 # The `console_error_panic_hook` crate provides better debugging of panics by
 # logging them with `console.error`. This is great for development, but requires
 # all the `std::fmt` and `std::panicking` infrastructure, so isn't great for
