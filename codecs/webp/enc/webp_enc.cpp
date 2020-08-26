@@ -14,7 +14,7 @@ int version() {
 thread_local const val Uint8Array = val::global("Uint8Array");
 
 val encode(std::string img, int width, int height, WebPConfig config) {
-  uint8_t* img_in = (uint8_t*)img.c_str();
+  auto img_in = (uint8_t*)img.c_str();
 
   // A lot of this is duplicated from Encode in picture_enc.c
   WebPPicture pic;
@@ -23,7 +23,7 @@ val encode(std::string img, int width, int height, WebPConfig config) {
 
   if (!WebPPictureInit(&pic)) {
     // shouldn't happen, except if system installation is broken
-    throw std::runtime_error("Unexpected error");
+    return val::null();
   }
 
   // Only use use_argb if we really need it, as it's slower.
@@ -35,15 +35,10 @@ val encode(std::string img, int width, int height, WebPConfig config) {
 
   WebPMemoryWriterInit(&wrt);
 
-  ok = WebPPictureImportRGBA(&pic, (uint8_t*)img_in, width * 4) && WebPEncode(&config, &pic);
+  ok = WebPPictureImportRGBA(&pic, img_in, width * 4) && WebPEncode(&config, &pic);
   WebPPictureFree(&pic);
-  if (!ok) {
-    WebPMemoryWriterClear(&wrt);
-    throw std::runtime_error("Encode failed");
-  }
-
-  val js_result = Uint8Array.new_(typed_memory_view(wrt.size, wrt.mem));
-  WebPFree(wrt.mem);
+  val js_result = ok ? Uint8Array.new_(typed_memory_view(wrt.size, wrt.mem)) : val::null();
+  WebPMemoryWriterClear(&wrt);
   return js_result;
 }
 

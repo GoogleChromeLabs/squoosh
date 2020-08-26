@@ -1,4 +1,5 @@
-import webpDataUrl from 'url-loader!../codecs/tiny.webp';
+import webpDataUrl from 'url-loader!./tiny.webp';
+import avifDataUrl from 'url-loader!./tiny.avif';
 
 // Give TypeScript the correct global.
 declare var self: ServiceWorkerGlobalScope;
@@ -109,17 +110,20 @@ export async function cacheAdditionalProcessors(cacheName: string, buildAssets: 
 
   toCache.push(...prefixMatches, ...wasm);
 
-  const supportsWebP = await (async () => {
-    if (!self.createImageBitmap) return false;
-    const response = await fetch(webpDataUrl);
-    const blob = await response.blob();
-    return createImageBitmap(blob).then(() => true, () => false);
-  })();
+  const [supportsWebP, supportsAvif] = await Promise.all(
+    [webpDataUrl, avifDataUrl].map(async (dataUrl) => {
+      if (!self.createImageBitmap) return false;
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
+      return createImageBitmap(blob).then(() => true, () => false);
+    }),
+  )
 
-  // No point caching the WebP decoder if the browser supports it:
-  if (supportsWebP) {
-    toCache = toCache.filter(asset => !/webp[\-_]dec/.test(asset));
-  }
+  // No point caching decoders the browser already supports:
+  toCache = toCache.filter(asset =>
+    (supportsWebP ? !/webp[\-_]dec/.test(asset) : true) &&
+    (supportsAvif ? !/avif[\-_]dec/.test(asset) : true),
+  );
 
   const cache = await caches.open(cacheName);
   await cache.addAll(toCache);
