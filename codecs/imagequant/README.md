@@ -2,6 +2,7 @@
 
 - Source: <https://github.com/ImageOptim/libimagequant>
 - Version: v2.12.1
+- License: GPL3
 
 ## Dependencies
 
