@@ -1,5 +1,5 @@
-import webpDataUrl from 'url-loader!../codecs/tiny.webp';
-import avifDataUrl from 'url-loader!../codecs/tiny.avif';
+import webpDataUrl from 'url-loader!./tiny.webp';
+import avifDataUrl from 'url-loader!./tiny.avif';
 
 // Give TypeScript the correct global.
 declare var self: ServiceWorkerGlobalScope;

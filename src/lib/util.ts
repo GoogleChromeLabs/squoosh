@@ -78,11 +78,36 @@ async function decodeImage(url: string): Promise<HTMLImageElement> {
   return img;
 }
 
+/** Caches results from canDecodeImageType */
+const canDecodeCache = new Map<string, Promise<boolean>>();
+
 /**
- * Attempts to load the given URL as an image.
+ * Tests whether the browser supports a particular image mime type.
+ *
+ * @param type Mimetype
+ * @example await canDecodeImageType('image/avif')
  */
-export function canDecodeImage(url: string): Promise<boolean> {
-  return decodeImage(url).then(() => true, () => false);
+export function canDecodeImageType(type: string): Promise<boolean> {
+  if (!canDecodeCache.has(type)) {
+    const resultPromise = (async () => {
+      const picture = document.createElement('picture');
+      const img = document.createElement('img');
+      const source = document.createElement('source');
+      source.srcset = 'data:,x';
+      source.type = type;
+      picture.append(source, img);
+
+      // Wait a single microtick just for the `img.currentSrc` to get populated.
+      await 0;
+      // At this point `img.currentSrc` will contain "data:,x" if format is supported and ""
+      // otherwise.
+      return !!img.currentSrc;
+    })();
+
+    canDecodeCache.set(type, resultPromise);
+  }
+
+  return canDecodeCache.get(type)!;
 }
 
 export function blobToArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
