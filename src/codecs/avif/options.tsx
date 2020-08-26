@@ -247,14 +247,14 @@ export default class AVIFEncoderOptions extends Component<Props, State> {
         <Expander>
           {showAdvanced &&
             <div>
-              <label class={style.optionInputFirst}>
+              {/*<label class={style.optionInputFirst}>
                 <Checkbox
                   data-set-state="grayscale"
                   checked={grayscale}
                   onChange={this._inputChange('grayscale', 'boolean')}
                 />
                 Grayscale
-              </label>
+              </label>*/}
               <Expander>
                 {!grayscale && !lossless &&
                   <label class={style.optionTextFirst}>
@@ -265,7 +265,7 @@ export default class AVIFEncoderOptions extends Component<Props, State> {
                       onChange={this._inputChange('subsample', 'number')}
                     >
                       <option value="1">4:2:0</option>
-                      <option value="2">4:2:2</option>
+                      {/*<option value="2">4:2:2</option>*/}
                       <option value="3">4:4:4</option>
                     </Select>
                   </label>
