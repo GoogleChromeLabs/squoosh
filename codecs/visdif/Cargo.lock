@@ -85,8 +85,6 @@ dependencies = [
 [[package]]
 name = "dssim-core"
 version = "2.11.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "462c6cf1cb98d8f7dc5f7a5878e9f05e6be51086370f7f162e446a62ebfab0cb"
 dependencies = [
  "imgref",
  "itertools",
@@ -281,7 +279,6 @@ dependencies = [
  "console_error_panic_hook",
  "dssim-core",
  "imgref",
- "rayon-core",
  "rgb",
  "wasm-bindgen",
  "wasm-bindgen-test",

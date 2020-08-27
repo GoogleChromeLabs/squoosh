@@ -4,7 +4,7 @@ use wasm_bindgen::prelude::*;
 use dssim_core::{Dssim, ToRGBAPLU};
 use imgref;
 use rgb::FromSlice;
-use rayon_core;
+//use rayon_core;
 
 mod utils;
 
