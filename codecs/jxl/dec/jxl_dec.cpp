@@ -6,7 +6,7 @@
 using namespace emscripten;
 
 class RawImage {
-public:
+ public:
   val buffer;
   int width;
   int height;
@@ -24,9 +24,9 @@ uint8_t clamp(float v, float min, float max) {
   return v;
 }
 
-uint8_t *result;
+uint8_t* result;
 RawImage decode(std::string data) {
-  jxl::Span<const uint8_t> compressed((uint8_t *)data.c_str(), data.length());
+  jxl::Span<const uint8_t> compressed((uint8_t*)data.c_str(), data.length());
   jxl::DecompressParams dparams;
   // jxl::ThreadPool pool;
   jxl::CodecInOut io;
@@ -35,18 +35,18 @@ RawImage decode(std::string data) {
   if (!DecodeFile(dparams, compressed, &io, &aux_out, NULL)) {
     return RawImage(val::null(), -1, -1);
   }
-  jxl::ImageBundle *main = &io.Main();
+  jxl::ImageBundle* main = &io.Main();
   if (!main->HasColor()) {
     return RawImage(val::null(), -1, -1);
   }
-  const jxl::Image3F *buffer = &main->color();
+  const jxl::Image3F* buffer = &main->color();
   int width = buffer->xsize();
   int height = buffer->ysize();
   result = new uint8_t[width * height * 4];
   for (int y = 0; y < height; y++) {
-    const float *red = buffer->PlaneRow(0, y);
-    const float *green = buffer->PlaneRow(1, y);
-    const float *blue = buffer->PlaneRow(2, y);
+    const float* red = buffer->PlaneRow(0, y);
+    const float* green = buffer->PlaneRow(1, y);
+    const float* blue = buffer->PlaneRow(2, y);
     for (int x = 0; x < width; x++) {
       int pixelOffset = width * y + x;
       result[pixelOffset * 4 + 0] = clamp(red[x], 0, 255);
@@ -56,11 +56,12 @@ RawImage decode(std::string data) {
     }
   }
 
-  return RawImage(val(typed_memory_view(width * height * 4, result)), width,
-                  height);
+  return RawImage(val(typed_memory_view(width * height * 4, result)), width, height);
 }
 
-void free_result() { delete result; }
+void free_result() {
+  delete result;
+}
 
 EMSCRIPTEN_BINDINGS(my_module) {
   class_<RawImage>("RawImage")
