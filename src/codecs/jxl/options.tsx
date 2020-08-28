@@ -30,6 +30,7 @@ export default class JXLEncoderOptions extends Component<Props, State> {
       // Copy over options the form doesn't care about, eg emulate_jpeg_size
       ...options,
       speed: inputFieldValueAsNumber(form.speed, options.speed),
+      quality: inputFieldValueAsNumber(form.quality, options.quality),
     };
     this.props.onChange(newOptions);
   }
@@ -46,6 +47,16 @@ export default class JXLEncoderOptions extends Component<Props, State> {
             onInput={this.onChange}
           >
             Speed:
+          </Range>
+          <Range
+            name="quality"
+            min="0.5"
+            max="8"
+            step="0.1"
+            value={options.quality}
+            onInput={this.onChange}
+          >
+            Quality:
           </Range>
         </div>
       </form>

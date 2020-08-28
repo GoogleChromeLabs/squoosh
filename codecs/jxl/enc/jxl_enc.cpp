@@ -11,6 +11,7 @@ struct JXLOptions {
   // 1 = slowest
   // 7 = fastest
   int speed;
+  float quality;
 };
 
 val encode(std::string image, int width, int height, JXLOptions options) {
@@ -21,7 +22,8 @@ val encode(std::string image, int width, int height, JXLOptions options) {
   jxl::ImageBundle* main = &io.Main();
 
   cparams.speed_tier = static_cast<jxl::SpeedTier>(options.speed);
-  cparams.color_transform = jxl::ColorTransform::kNone;
+  cparams.butteraugli_distance = options.quality;
+  // cparams.color_transform = jxl::ColorTransform::kNone;
 
   io.metadata.SetUintSamples(8);
   io.metadata.SetAlphaBits(8);
@@ -39,7 +41,7 @@ val encode(std::string image, int width, int height, JXLOptions options) {
 
   auto js_result = val::null();
   if (EncodeFile(cparams, &io, &passes_enc_state, &bytes)) {
-	  js_result = Uint8Array.new_(typed_memory_view(bytes.size(), bytes.data()));
+    js_result = Uint8Array.new_(typed_memory_view(bytes.size(), bytes.data()));
   }
 
   // TODO: Any freeing that needs to be done?
@@ -47,11 +49,12 @@ val encode(std::string image, int width, int height, JXLOptions options) {
   return js_result;
 }
 
-void free_result() {
-}
+void free_result() {}
 
 EMSCRIPTEN_BINDINGS(my_module) {
-  value_object<JXLOptions>("JXLOptions").field("speed", &JXLOptions::speed);
+  value_object<JXLOptions>("JXLOptions")
+      .field("speed", &JXLOptions::speed)
+      .field("quality", &JXLOptions::quality);
 
   function("encode", &encode);
 }
