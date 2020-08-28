@@ -12,5 +12,5 @@ export const extension = 'jxl';
 // These come from struct WebPConfig in encode.h.
 export const defaultOptions: EncodeOptions = {
   speed: 1,
-  quality: 0.5,
+  quality: 1,
 };
