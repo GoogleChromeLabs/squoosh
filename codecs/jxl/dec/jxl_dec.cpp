@@ -43,6 +43,7 @@ RawImage decode(std::string data) {
   int width = buffer->xsize();
   int height = buffer->ysize();
   result = new uint8_t[width * height * 4];
+  bool has_alpha = main->HasAlpha();
   for (int y = 0; y < height; y++) {
     const float* red = buffer->PlaneRow(0, y);
     const float* green = buffer->PlaneRow(1, y);
@@ -52,7 +53,11 @@ RawImage decode(std::string data) {
       result[pixelOffset * 4 + 0] = clamp(red[x], 0, 255);
       result[pixelOffset * 4 + 1] = clamp(green[x], 0, 255);
       result[pixelOffset * 4 + 2] = clamp(blue[x], 0, 255);
-      result[pixelOffset * 4 + 3] = 255;
+      if (has_alpha) {
+        result[pixelOffset * 4 + 3] = (uint8_t)(main->alpha().ConstRow(y)[x] & 0xFF);
+      } else {
+        result[pixelOffset * 4 + 3] = 255;
+      }
     }
   }
 
