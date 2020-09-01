@@ -4,4 +4,4 @@ interface MozJPEGModule extends EmscriptenWasm.Module {
   encode(data: BufferSource, width: number, height: number, options: EncodeOptions): Uint8Array;
 }
 
-export default function(opts: EmscriptenWasm.ModuleOpts): MozJPEGModule;
+export default function(opts: EmscriptenWasm.ModuleOpts): Promise<MozJPEGModule>;
