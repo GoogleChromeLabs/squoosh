@@ -6,16 +6,15 @@
     return await resp.arrayBuffer();
   }
 
-  (async _ => {
-    const Module = await webp_dec();
-    console.log('Version:', Module.version().toString(16));
+  webp_dec().then(async module => {
+    console.log('Version:', module.version().toString(16));
     const image = await loadFile('../../example.webp');
-    const imageData = Module.decode(image);
+    const imageData = module.decode(image);
     const canvas = document.createElement('canvas');
     canvas.width = imageData.width;
     canvas.height = imageData.height;
     document.body.appendChild(canvas);
     const ctx = canvas.getContext('2d');
     ctx.putImageData(imageData, 0, 0);
-  })();
+  });
 </script>

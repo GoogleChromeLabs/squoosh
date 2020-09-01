@@ -15,9 +15,7 @@
     return ctx.getImageData(0, 0, img.width, img.height);
   }
 
-
-  (async _ => {
-    const module = await webp_enc();
+  webp_enc().then(async module => {
     console.log('Version:', module.version().toString(16));
     const image = await loadImage('../../example.png');
     const result = module.encode(image.data, image.width, image.height, {
@@ -56,5 +54,5 @@
     const img = document.createElement('img');
     img.src = blobURL;
     document.body.appendChild(img);
-  })();
+  });
 </script>
