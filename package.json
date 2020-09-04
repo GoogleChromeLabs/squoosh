@@ -44,7 +44,7 @@
     "mini-css-extract-plugin": "0.8.0",
     "minimatch": "3.0.4",
     "node-fetch": "2.6.0",
-    "node-sass": "4.13.0",
+    "node-sass": "4.13.1",
     "normalize-path": "^3.0.0",
     "optimize-css-assets-webpack-plugin": "5.0.1",
     "pointer-tracker": "2.0.3",
