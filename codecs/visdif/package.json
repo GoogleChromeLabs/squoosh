@@ -1,6 +1,6 @@
 {
-  "name": "resize",
+  "name": "avif",
   "scripts": {
-    "build": "../build-rust.sh"
+    "build": "../build-cpp.sh"
   }
 }
