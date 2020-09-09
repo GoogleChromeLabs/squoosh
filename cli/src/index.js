@@ -109,7 +109,7 @@ async function processFiles(files) {
   await fsp.mkdir(program.outputDir, { recursive: true });
   const pool = Array.from(
     { length: cpus().length },
-    () => new Worker(process.argv[1])
+    () => new Worker(__filename)
   );
   let i = 0;
   const jobs = [];
