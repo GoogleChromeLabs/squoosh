@@ -4,4 +4,4 @@ export default class ImageData {
     this.width = width;
     this.height = height;
   }
-};
+}

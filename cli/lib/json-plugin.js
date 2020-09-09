@@ -1,4 +1,4 @@
-import {promises as fsp} from "fs";
+import { promises as fsp } from "fs";
 
 const prefix = "json:";
 
@@ -21,13 +21,13 @@ export default function ejsAssetPlugin() {
       const realId = id.slice(prefix.length);
       const source = await fsp.readFile(realId, "utf8");
 
-	  let code = "";
-		for(const [key, value] of Object.entries(JSON.parse(source))) {
-			code += `
+      let code = "";
+      for (const [key, value] of Object.entries(JSON.parse(source))) {
+        code += `
 				export const ${key} = ${JSON.stringify(value)};
-			`
-		}
-		return code;
-    },
+			`;
+      }
+      return code;
+    }
   };
 }

@@ -1,4 +1,4 @@
-import {promises as fsp} from "fs";
+import { promises as fsp } from "fs";
 
 // MozJPEG
 import mozEnc from "../../codecs/mozjpeg/enc/mozjpeg_enc.js";
@@ -19,14 +19,14 @@ import avifDec from "../../codecs/avif/dec/avif_dec.js";
 import avifDecWasm from "asset-url:../../codecs/avif/dec/avif_dec.wasm";
 
 function instantiateEmscriptenWasm(factory, path) {
-	if(path.startsWith("file://")) {
-		path = path.slice("file://".length);
-	}
-	return factory({
-		locateFile() {
-			return path;
-		}
-	})
+  if (path.startsWith("file://")) {
+    path = path.slice("file://".length);
+  }
+  return factory({
+    locateFile() {
+      return path;
+    }
+  });
 }
 
 export default {
@@ -34,8 +34,8 @@ export default {
     name: "MozJPEG",
     extension: "jpg",
     detectors: [/^\xFF\xD8\xFF/],
-	  dec: () => instantiateEmscriptenWasm( mozDec, mozDecWasm),
-	  enc: () => instantiateEmscriptenWasm( mozEnc, mozEncWasm),
+    dec: () => instantiateEmscriptenWasm(mozDec, mozDecWasm),
+    enc: () => instantiateEmscriptenWasm(mozEnc, mozEncWasm),
     defaultEncoderOptions: {
       quality: 75,
       baseline: false,
@@ -59,8 +59,8 @@ export default {
     name: "WebP",
     extension: "webp",
     detectors: [/^RIFF....WEBPVP8[LX ]/],
-	  dec: () => instantiateEmscriptenWasm( webpDec, webpDecWasm),
-	  enc: () => instantiateEmscriptenWasm( webpEnc, webpEncWasm),
+    dec: () => instantiateEmscriptenWasm(webpDec, webpDecWasm),
+    enc: () => instantiateEmscriptenWasm(webpEnc, webpEncWasm),
     defaultEncoderOptions: {
       quality: 75,
       target_size: 0,
@@ -95,8 +95,8 @@ export default {
     name: "AVIF",
     extension: "avif",
     detectors: [/^\x00\x00\x00 ftypavif\x00\x00\x00\x00/],
-	  dec: () => instantiateEmscriptenWasm( avifDec, avifDecWasm),
-	  enc: () => instantiateEmscriptenWasm( avifEnc, avifEncWasm),
+    dec: () => instantiateEmscriptenWasm(avifDec, avifDecWasm),
+    enc: () => instantiateEmscriptenWasm(avifEnc, avifEncWasm),
     defaultEncoderOptions: {
       minQuantizer: 16,
       maxQuantizer: 16,

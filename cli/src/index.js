@@ -1,14 +1,10 @@
-import {program} from "commander";
+import { program } from "commander";
 import JSON5 from "json5";
-import {
-  Worker,
-  isMainThread,
-  parentPort
-} from "worker_threads";
+import { Worker, isMainThread, parentPort } from "worker_threads";
 import { cpus } from "os";
-import {extname,join,basename} from "path";
-import {promises as fsp} from "fs";
-import {version} from "json:../package.json";
+import { extname, join, basename } from "path";
+import { promises as fsp } from "fs";
+import { version } from "json:../package.json";
 
 import supportedFormats from "./codecs.js";
 
@@ -131,10 +127,7 @@ async function processFiles(files) {
         value.defaultEncoderOptions,
         JSON5.parse(program[encName])
       );
-      const outputFile = join(
-        program.outputDir,
-        `${base}.${value.extension}`
-      );
+      const outputFile = join(program.outputDir, `${base}.${value.extension}`);
       jobs.push(
         jobPromise(pool[i], {
           bitmap,

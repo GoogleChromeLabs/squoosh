@@ -10,11 +10,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { promises as fs } from 'fs';
-import { basename } from 'path';
+import { promises as fs } from "fs";
+import { basename } from "path";
 
 const defaultOpts = {
-  prefix: 'asset-url',
+  prefix: "asset-url"
 };
 
 export default function assetPlugin(opts) {
@@ -23,9 +23,9 @@ export default function assetPlugin(opts) {
   /** @type {Map<string, Buffer>} */
   let assetIdToSourceBuffer;
 
-  const prefix = opts.prefix + ':';
+  const prefix = opts.prefix + ":";
   return {
-    name: 'asset-plugin',
+    name: "asset-plugin",
     buildStart() {
       assetIdToSourceBuffer = new Map();
     },
@@ -56,20 +56,20 @@ export default function assetPlugin(opts) {
         throw Error(`Cannot find ${realId}`);
       }
       // Add an additional .js to the end so it ends up with .js at the end in the _virtual folder.
-      return prefix + resolveResult.id + '.js';
+      return prefix + resolveResult.id + ".js";
     },
     async load(id) {
       if (!id.startsWith(prefix)) return;
-      const realId = id.slice(prefix.length, -'.js'.length);
+      const realId = id.slice(prefix.length, -".js".length);
       const source = await fs.readFile(realId);
       assetIdToSourceBuffer.set(id, source);
       this.addWatchFile(realId);
 
       return `export default import.meta.ROLLUP_FILE_URL_${this.emitFile({
-        type: 'asset',
+        type: "asset",
         source,
-        name: basename(realId),
+        name: basename(realId)
       })}`;
-    },
+    }
   };
 }
