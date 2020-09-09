@@ -4,7 +4,8 @@
   "description": "A CLI for Squoosh",
   "public": true,
   "bin": {
-    "squoosh-cli": "build/index.js"
+    "squoosh-cli": "build/index.js",
+    "@squoosh/cli": "build/index.js"
   },
   "scripts": {
     "build": "rollup -c"
