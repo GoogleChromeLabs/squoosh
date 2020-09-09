@@ -10,6 +10,7 @@
   "author": "Surma <surma@surma.dev>",
   "license": "Apache-2.0",
   "dependencies": {
-    "commander": "^6.0.0"
+    "commander": "^6.0.0",
+    "json5": "^2.1.3"
   }
 }
