@@ -146,6 +146,7 @@ async function processFiles(files) {
 
 if (isMainThread) {
   program
+    .name("squoosh-cli")
     .version(version)
     .arguments("<files...>")
     .option("-d, --output-dir <dir>", "Output directory", ".")

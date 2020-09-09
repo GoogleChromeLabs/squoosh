@@ -9,7 +9,10 @@ export default {
   output: {
     dir: "build",
     format: "cjs",
-    assetFileNames: "[name]-[hash][extname]"
+    assetFileNames: "[name]-[hash][extname]",
+    // This is needed so the resulting `index.js` can be
+    // executed by `npx`.
+    banner: "#!/usr/bin/env node"
   },
   plugins: [
     resolve(),
