@@ -24,10 +24,16 @@ async function optimize(bitmapIn, encode, decode) {
   let bitmapOut;
   let binaryOut;
 
-  const { visdif } = await visdifModule();
+  const { VisDiff } = await visdifModule();
+  const comparator = new VisDiff(
+    bitmapIn.data,
+    bitmapIn.width,
+    bitmapIn.height
+  );
   do {
     binaryOut = await encode(bitmapIn, quality);
     bitmapOut = await decode(binaryOut);
+    butteraugliDistance = comparator.distance(bitmapOut.data);
     console.log({
       butteraugliDistance,
       quality,
@@ -35,12 +41,6 @@ async function optimize(bitmapIn, encode, decode) {
       binaryOut,
       bitmapOut
     });
-    butteraugliDistance = visdif(
-      bitmapIn.data,
-      bitmapOut.data,
-      bitmapIn.width,
-      bitmapIn.height
-    );
     if (butteraugliDistance > butteraugliGoal) {
       quality += inc;
     } else {
@@ -52,6 +52,8 @@ async function optimize(bitmapIn, encode, decode) {
     Math.abs(butteraugliDistance - butteraugliGoal) > 0.1 &&
     attempts < maxRounds
   );
+
+  comparator.delete();
 
   return {
     bitmap: bitmapOut,
