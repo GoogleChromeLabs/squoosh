@@ -2,6 +2,7 @@
   "name": "@squoosh/cli",
   "version": "0.0.1",
   "description": "A CLI for Squoosh",
+  "public": true,
   "bin": {
     "squoosh-cli": "build/index.js"
   },

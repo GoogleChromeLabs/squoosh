@@ -2,6 +2,8 @@ import { promises as fsp } from "fs";
 
 const prefix = "json:";
 
+const reservedKeys = ["public"];
+
 export default function ejsAssetPlugin() {
   return {
     name: "json-plugin",
@@ -23,6 +25,9 @@ export default function ejsAssetPlugin() {
 
       let code = "";
       for (const [key, value] of Object.entries(JSON.parse(source))) {
+        if (reservedKeys.includes(key)) {
+          continue;
+        }
         code += `
 				export const ${key} = ${JSON.stringify(value)};
 			`;
