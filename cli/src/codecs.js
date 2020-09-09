@@ -1,11 +1,41 @@
+import {promises as fsp} from "fs";
 
-module.exports = {
+// MozJPEG
+import mozEnc from "../../codecs/mozjpeg/enc/mozjpeg_enc.js";
+import mozEncWasm from "asset-url:../../codecs/mozjpeg/enc/mozjpeg_enc.wasm";
+import mozDec from "../../codecs/mozjpeg/dec/mozjpeg_dec.js";
+import mozDecWasm from "asset-url:../../codecs/mozjpeg/dec/mozjpeg_dec.wasm";
+
+// WebP
+import webpEnc from "../../codecs/webp/enc/webp_enc.js";
+import webpEncWasm from "asset-url:../../codecs/webp/enc/webp_enc.wasm";
+import webpDec from "../../codecs/webp/dec/webp_dec.js";
+import webpDecWasm from "asset-url:../../codecs/webp/dec/webp_dec.wasm";
+
+// AVIF
+import avifEnc from "../../codecs/avif/enc/avif_enc.js";
+import avifEncWasm from "asset-url:../../codecs/avif/enc/avif_enc.wasm";
+import avifDec from "../../codecs/avif/dec/avif_dec.js";
+import avifDecWasm from "asset-url:../../codecs/avif/dec/avif_dec.wasm";
+
+function instantiateEmscriptenWasm(factory, path) {
+	if(path.startsWith("file://")) {
+		path = path.slice("file://".length);
+	}
+	return factory({
+		locateFile() {
+			return path;
+		}
+	})
+}
+
+export default {
   mozjpeg: {
     name: "MozJPEG",
     extension: "jpg",
     detectors: [/^\xFF\xD8\xFF/],
-    dec: require("../codecs/mozjpeg/dec/mozjpeg_dec.js"),
-    enc: require("../codecs/mozjpeg/enc/mozjpeg_enc.js"),
+	  dec: () => instantiateEmscriptenWasm( mozDec, mozDecWasm),
+	  enc: () => instantiateEmscriptenWasm( mozEnc, mozEncWasm),
     defaultEncoderOptions: {
       quality: 75,
       baseline: false,
@@ -29,8 +59,8 @@ module.exports = {
     name: "WebP",
     extension: "webp",
     detectors: [/^RIFF....WEBPVP8[LX ]/],
-    dec: require("../codecs/webp/dec/webp_dec.js"),
-    enc: require("../codecs/webp/enc/webp_enc.js"),
+	  dec: () => instantiateEmscriptenWasm( webpDec, webpDecWasm),
+	  enc: () => instantiateEmscriptenWasm( webpEnc, webpEncWasm),
     defaultEncoderOptions: {
       quality: 75,
       target_size: 0,
@@ -65,8 +95,8 @@ module.exports = {
     name: "AVIF",
     extension: "avif",
     detectors: [/^\x00\x00\x00 ftypavif\x00\x00\x00\x00/],
-    dec: require("../codecs/avif/dec/avif_dec.js"),
-    enc: require("../codecs/avif/enc/avif_enc.js"),
+	  dec: () => instantiateEmscriptenWasm( avifDec, avifDecWasm),
+	  enc: () => instantiateEmscriptenWasm( avifEnc, avifEncWasm),
     defaultEncoderOptions: {
       minQuantizer: 16,
       maxQuantizer: 16,

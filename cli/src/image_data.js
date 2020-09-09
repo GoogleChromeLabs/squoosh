@@ -1,4 +1,4 @@
-module.exports = class ImageData {
+export default class ImageData {
   constructor(data, width, height) {
     this.data = data;
     this.width = width;

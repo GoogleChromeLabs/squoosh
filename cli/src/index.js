@@ -1,20 +1,20 @@
-const { program } = require("commander");
-const JSON5 = require("json5");
-const {
-  threadId,
+import {program} from "commander";
+import JSON5 from "json5";
+import {
   Worker,
   isMainThread,
   parentPort
-} = require("worker_threads");
-const { cpus } = require("os");
-const path = require("path");
-const fsp = require("fs").promises;
+} from "worker_threads";
+import { cpus } from "os";
+import {extname,join,basename} from "path";
+import {promises as fsp} from "fs";
+import {version} from "json:../package.json";
 
-const visdifModule = require("../codecs/visdif/visdif.js");
-const supportedFormats = require("./codecs.js");
+import supportedFormats from "./codecs.js";
 
 // Our decoders currently rely on a `ImageData` global.
-globalThis.ImageData = require("./image_data.js");
+import ImageData from "./image_data.js";
+globalThis.ImageData = ImageData;
 
 async function decodeFile(file) {
   const buffer = await fsp.readFile(file);
@@ -61,6 +61,7 @@ function jobPromise(worker, msg) {
 const butteraugliGoal = 1.4;
 const maxRounds = 8;
 async function optimize(bitmapIn, encode, decode) {
+const visdifModule = require("../codecs/visdif/visdif.js");
   let quality = 50;
   let inc = 25;
   let butteraugliDistance = 2;
@@ -117,8 +118,8 @@ async function processFiles(files) {
   let i = 0;
   const jobs = [];
   for (const file of files) {
-    const ext = path.extname(file);
-    const base = path.basename(file, ext);
+    const ext = extname(file);
+    const base = basename(file, ext);
     const bitmap = await decodeFile(file);
 
     for (const [encName, value] of Object.entries(supportedFormats)) {
@@ -130,7 +131,7 @@ async function processFiles(files) {
         value.defaultEncoderOptions,
         JSON5.parse(program[encName])
       );
-      const outputFile = path.join(
+      const outputFile = join(
         program.outputDir,
         `${base}.${value.extension}`
       );
@@ -152,7 +153,7 @@ async function processFiles(files) {
 
 if (isMainThread) {
   program
-    .version(require("./package.json").version)
+    .version(version)
     .arguments("<files...>")
     .option("-d, --output-dir <dir>", "Output directory", ".")
     .action(processFiles);
