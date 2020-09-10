@@ -2,11 +2,11 @@ CODEC_URL = https://github.com/AOMediaCodec/libavif/archive/v0.8.1.tar.gz
 CODEC_PACKAGE = node_modules/libavif.tar.gz
 
 CODEC_ENC_DIR = node_modules/libavif-enc
-CODEC_ENC_BUILD_DIR := $(CODEC_ENC_DIR)/build-enc
+CODEC_ENC_BUILD_DIR := $(CODEC_ENC_DIR)/build
 CODEC_ENC_OUT := $(CODEC_ENC_BUILD_DIR)/libavif.a
 
 CODEC_DEC_DIR = node_modules/libavif-dec
-CODEC_DEC_BUILD_DIR := $(CODEC_DEC_DIR)/build-dec
+CODEC_DEC_BUILD_DIR := $(CODEC_DEC_DIR)/build
 CODEC_DEC_OUT := $(CODEC_DEC_BUILD_DIR)/libavif.a
 
 LIBAOM_URL = https://aomedia.googlesource.com/aom/+archive/v2.0.0.tar.gz
@@ -96,7 +96,7 @@ $(LIBAOM_ENC_OUT): $(LIBAOM_ENC_DIR)/CMakeLists.txt
 	mkdir -p $(LIBAOM_ENC_BUILD_DIR)
 	cd $(LIBAOM_ENC_BUILD_DIR) && \
 	emcmake cmake \
-		$(LIBAOM_FLAGS)
+		$(LIBAOM_FLAGS) \
 		-DCONFIG_AV1_DECODER=0 \
 		-DCONFIG_AV1_HIGHBITDEPTH=0 \
 		../ && \
@@ -106,7 +106,7 @@ $(LIBAOM_DEC_OUT): $(LIBAOM_DEC_DIR)/CMakeLists.txt
 	mkdir -p $(LIBAOM_DEC_BUILD_DIR)
 	cd $(LIBAOM_DEC_BUILD_DIR) && \
 	emcmake cmake \
-		$(LIBAOM_FLAGS)
+		$(LIBAOM_FLAGS) \
 		-DCONFIG_AV1_ENCODER=0 \
 		../ && \
 	$(MAKE)
