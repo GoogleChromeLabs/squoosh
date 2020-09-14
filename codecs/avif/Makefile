@@ -28,7 +28,10 @@ OUT_DEC_JS = dec/avif_dec.js
 OUT_DEC_CPP = $(OUT_DEC_JS:.js=.cpp)
 OUT_DEC_WASM = $(OUT_DEC_JS:.js=.wasm)
 
-EMSCRIPTEN_FLAGS = --bind \
+# ERROR_ON_UNDEFINED_SYMBOLS=0 is needed to seperate the encoder and decoder
+EMSCRIPTEN_FLAGS = ${CXXFLAGS} \
+	${LDFLAGS} \
+	--bind \
 	--closure 1 \
 	-s ALLOW_MEMORY_GROWTH=1 \
 	-s MODULARIZE=1 \
@@ -58,23 +61,17 @@ LIBAOM_FLAGS = -DCMAKE_BUILD_TYPE=Release \
 
 all: $(OUT_ENC_JS) $(OUT_DEC_JS)
 
-# ERROR_ON_UNDEFINED_SYMBOLS=0 is needed to seperate the encoder and decoder
 $(OUT_ENC_JS): $(OUT_ENC_CPP) $(LIBAOM_ENC_OUT) $(CODEC_ENC_OUT)
 	$(CXX) \
 		-I $(CODEC_ENC_DIR)/include \
-		${CXXFLAGS} \
-		${LDFLAGS} \
 		${EMSCRIPTEN_FLAGS} \
 		-s 'EXPORT_NAME="$(basename $(@F))"' \
 		-o $@ \
 		$+
 
-# ERROR_ON_UNDEFINED_SYMBOLS=0 is needed to seperate the encoder and decoder
 $(OUT_DEC_JS): $(OUT_DEC_CPP) $(LIBAOM_DEC_OUT) $(CODEC_DEC_OUT)
 	$(CXX) \
 		-I $(CODEC_DEC_DIR)/include \
-		${CXXFLAGS} \
-		${LDFLAGS} \
 		${EMSCRIPTEN_FLAGS} \
 		-s 'EXPORT_NAME="$(basename $(@F))"' \
 		-o $@ \
