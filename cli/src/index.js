@@ -1,12 +1,13 @@
 import { program } from "commander";
 import JSON5 from "json5";
-import { Worker, isMainThread, parentPort } from "worker_threads";
+import { isMainThread } from "worker_threads";
 import { cpus } from "os";
 import { extname, join, basename } from "path";
 import { promises as fsp } from "fs";
 import { version } from "json:../package.json";
 
 import supportedFormats from "./codecs.js";
+import WorkerPool from "./worker_pool.js";
 
 // Our decoders currently rely on a `ImageData` global.
 import ImageData from "./image_data.js";
@@ -28,29 +29,6 @@ async function decodeFile(file) {
     new Uint8Array(buffer)
   );
   return rgba;
-}
-
-function uuid() {
-  return Array.from({ length: 16 }, () =>
-    Math.floor(Math.random() * 256).toString(16)
-  ).join("");
-}
-
-// Adds a unique ID to the message payload and waits
-// for the worker to respond with that id as a signal
-// that the job is done.
-function jobPromise(worker, msg) {
-  return new Promise(resolve => {
-    const id = uuid();
-    worker.postMessage(Object.assign(msg, { id }));
-    worker.on("message", function f(msg) {
-      if (msg.id !== id) {
-        return;
-      }
-      worker.off("message", f);
-      resolve(msg);
-    });
-  });
 }
 
 /*
@@ -107,12 +85,8 @@ const visdifModule = require("../codecs/visdif/visdif.js");
 async function processFiles(files) {
   // Create output directory
   await fsp.mkdir(program.outputDir, { recursive: true });
-  const pool = Array.from(
-    { length: cpus().length },
-    () => new Worker(__filename)
-  );
-  let i = 0;
-  const jobs = [];
+  const workerPool = new WorkerPool(cpus().length, __filename);
+
   for (const file of files) {
     const ext = extname(file);
     const base = basename(file, ext);
@@ -128,20 +102,20 @@ async function processFiles(files) {
         JSON5.parse(program[encName])
       );
       const outputFile = join(program.outputDir, `${base}.${value.extension}`);
-      jobs.push(
-        jobPromise(pool[i], {
+      workerPool
+        .dispatchJob({
           bitmap,
           outputFile,
           encName,
           encConfig
         })
-      );
-      i = (i + 1) % pool.length;
+        .then(({ outputSize }) => {
+          console.log(`Written ${file}. Size: ${outputSize}`);
+        });
     }
   }
   // Wait for all jobs to finish
-  await Promise.allSettled(jobs);
-  pool.forEach(worker => worker.terminate());
+  await workerPool.join();
 }
 
 if (isMainThread) {
@@ -162,9 +136,9 @@ if (isMainThread) {
 
   program.parse(process.argv);
 } else {
-  parentPort.on(
-    "message",
-    async ({ id, bitmap, outputFile, encName, encConfig, done }) => {
+  WorkerPool.useThisThreadAsWorker(
+    async ({ id, bitmap, outputFile, encName, encConfig }) => {
+      console.log("received", { outputFile, encName });
       const encoder = await supportedFormats[encName].enc();
       const out = encoder.encode(
         bitmap.data.buffer,
@@ -173,8 +147,7 @@ if (isMainThread) {
         encConfig
       );
       await fsp.writeFile(outputFile, out);
-      // Signal we are done with this job
-      parentPort.postMessage({ id });
+      return { outputSize: out.length };
     }
   );
 }

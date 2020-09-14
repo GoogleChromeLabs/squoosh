@@ -13,7 +13,9 @@
   "keywords": [],
   "author": "Surma <surma@surma.dev>",
   "license": "Apache-2.0",
-  "dependencies": {},
+  "dependencies": {
+    "web-streams-polyfill": "^3.0.0"
+  },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^15.0.0",
     "@rollup/plugin-node-resolve": "^9.0.0",

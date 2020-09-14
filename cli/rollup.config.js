@@ -19,9 +19,10 @@ export default {
     cjs(),
     asset(),
     json(),
-    terser({
-      mangle: true
-    })
+    null &&
+      terser({
+        mangle: true
+      })
   ],
   external: [
     "os",
