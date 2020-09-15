@@ -8,10 +8,7 @@ import { version } from "json:../package.json";
 
 import supportedFormats from "./codecs.js";
 import WorkerPool from "./worker_pool.js";
-
-// Our decoders currently rely on a `ImageData` global.
-import ImageData from "./image_data.js";
-globalThis.ImageData = ImageData;
+import { autoOptimize } from "./auto-optimizer.js";
 
 function clamp(v, min, max) {
   if (v < min) return min;
@@ -51,18 +48,49 @@ async function decodeFile(file) {
 async function encodeFile({
   file,
   size,
-  bitmap,
+  bitmap: bitmapIn,
   outputFile,
   encName,
   encConfig
 }) {
+  let out;
   const encoder = await supportedFormats[encName].enc();
-  const out = encoder.encode(
-    bitmap.data.buffer,
-    bitmap.width,
-    bitmap.height,
-    encConfig
-  );
+  if (encConfig === "auto") {
+    const optionToOptimize = supportedFormats[encName].autoOptimize.option;
+    const decoder = await supportedFormats[encName].dec();
+    const encode = (bitmapIn, quality) =>
+      encoder.encode(
+        bitmapIn.data,
+        bitmapIn.width,
+        bitmapIn.height,
+        Object.assign({}, supportedFormats[encName].defaultEncoderOptions, {
+          [optionToOptimize]: quality
+        })
+      );
+    const decode = binary => decoder.decode(binary);
+    const { bitmap, binary, quality } = await autoOptimize(
+      bitmapIn,
+      encode,
+      decode,
+      {
+        min: supportedFormats[encName].autoOptimize.min,
+        max: supportedFormats[encName].autoOptimize.max
+      }
+    );
+    out = binary;
+    console.log(
+      `Used ${JSON.stringify({
+        [optionToOptimize]: quality
+      })} for ${outputFile}`
+    );
+  } else {
+    out = encoder.encode(
+      bitmapIn.data.buffer,
+      bitmapIn.width,
+      bitmapIn.height,
+      encConfig
+    );
+  }
   await fsp.writeFile(outputFile, out);
   return {
     inputSize: size,
@@ -89,11 +117,14 @@ async function processFiles(files) {
       if (!program[encName]) {
         continue;
       }
-      const encConfig = Object.assign(
-        {},
-        value.defaultEncoderOptions,
-        JSON5.parse(program[encName])
-      );
+      const encConfig =
+        program[encName].toLowerCase() === "auto"
+          ? "auto"
+          : Object.assign(
+              {},
+              value.defaultEncoderOptions,
+              JSON5.parse(program[encName])
+            );
       const outputFile = join(program.outputDir, `${base}.${value.extension}`);
       jobsStarted++;
       workerPool
@@ -147,54 +178,3 @@ if (isMainThread) {
 } else {
   WorkerPool.useThisThreadAsWorker(encodeFile);
 }
-
-/*
-const butteraugliGoal = 1.4;
-const maxRounds = 8;
-async function optimize(bitmapIn, encode, decode) {
-const visdifModule = require("../codecs/visdif/visdif.js");
-  let quality = 50;
-  let inc = 25;
-  let butteraugliDistance = 2;
-  let attempts = 0;
-  let bitmapOut;
-  let binaryOut;
-
-  const { VisDiff } = await visdifModule();
-  const comparator = new VisDiff(
-    bitmapIn.data,
-    bitmapIn.width,
-    bitmapIn.height
-  );
-  do {
-    binaryOut = await encode(bitmapIn, quality);
-    bitmapOut = await decode(binaryOut);
-    butteraugliDistance = comparator.distance(bitmapOut.data);
-    console.log({
-      butteraugliDistance,
-      quality,
-      attempts,
-      binaryOut,
-      bitmapOut
-    });
-    if (butteraugliDistance > butteraugliGoal) {
-      quality += inc;
-    } else {
-      quality -= inc;
-    }
-    inc /= 2;
-    attempts++;
-  } while (
-    Math.abs(butteraugliDistance - butteraugliGoal) > 0.1 &&
-    attempts < maxRounds
-  );
-
-  comparator.delete();
-
-  return {
-    bitmap: bitmapOut,
-    binary: binaryOut,
-    quality,
-    attempts
-  };
-}*/

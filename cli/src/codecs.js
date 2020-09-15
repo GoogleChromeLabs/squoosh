@@ -1,4 +1,5 @@
 import { promises as fsp } from "fs";
+import { instantiateEmscriptenWasm } from "./emscripten-utils.js";
 
 // MozJPEG
 import mozEnc from "../../codecs/mozjpeg/enc/mozjpeg_enc.js";
@@ -18,16 +19,9 @@ import avifEncWasm from "asset-url:../../codecs/avif/enc/avif_enc.wasm";
 import avifDec from "../../codecs/avif/dec/avif_dec.js";
 import avifDecWasm from "asset-url:../../codecs/avif/dec/avif_dec.wasm";
 
-function instantiateEmscriptenWasm(factory, path) {
-  if (path.startsWith("file://")) {
-    path = path.slice("file://".length);
-  }
-  return factory({
-    locateFile() {
-      return path;
-    }
-  });
-}
+// Our decoders currently rely on a `ImageData` global.
+import ImageData from "./image_data.js";
+globalThis.ImageData = ImageData;
 
 export default {
   mozjpeg: {
@@ -53,6 +47,11 @@ export default {
       chroma_subsample: 2,
       separate_chroma_quality: false,
       chroma_quality: 75
+    },
+    autoOptimize: {
+      option: "quality",
+      min: 0,
+      max: 100
     }
   },
   webp: {
@@ -89,6 +88,11 @@ export default {
       near_lossless: 100,
       use_delta_palette: 0,
       use_sharp_yuv: 0
+    },
+    autoOptimize: {
+      option: "quality",
+      min: 0,
+      max: 100
     }
   },
   avif: {
@@ -104,6 +108,11 @@ export default {
       tileRowsLog2: 0,
       speed: 10,
       subsample: 0
+    },
+    autoOptimize: {
+      option: "maxQuantizer",
+      min: 0,
+      max: 62
     }
   }
 };
