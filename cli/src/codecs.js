@@ -1,5 +1,5 @@
 import { promises as fsp } from "fs";
-import { instantiateEmscriptenWasm } from "./emscripten-utils.js";
+import { instantiateEmscriptenWasm, pathify } from "./emscripten-utils.js";
 
 // MozJPEG
 import mozEnc from "../../codecs/mozjpeg/enc/mozjpeg_enc.js";
@@ -18,6 +18,14 @@ import avifEnc from "../../codecs/avif/enc/avif_enc.js";
 import avifEncWasm from "asset-url:../../codecs/avif/enc/avif_enc.wasm";
 import avifDec from "../../codecs/avif/dec/avif_dec.js";
 import avifDecWasm from "asset-url:../../codecs/avif/dec/avif_dec.wasm";
+
+// PNG
+import pngEncDecInit, {
+  encode as pngEncode,
+  decode as pngDecode
+} from "../../codecs/png/pkg/squoosh_png.js";
+import pngEncDecWasm from "asset-url:../../codecs/png/pkg/squoosh_png_bg.wasm";
+const pngEncDecPromise = pngEncDecInit(fsp.readFile(pathify(pngEncDecWasm)));
 
 // Our decoders currently rely on a `ImageData` global.
 import ImageData from "./image_data.js";
@@ -114,5 +122,19 @@ export default {
       min: 0,
       max: 62
     }
+  },
+  png: {
+    name: "PNG",
+    extension: "png",
+    detectors: [/^\x89PNG\x0D\x0A\x1A\x0A/],
+    dec: async () => {
+      await pngEncDecPromise;
+      return { decode: (...args) => pngDecode(...args) };
+    },
+    enc: async () => {
+      await pngEncDecPromise;
+      return { encode: (...args) => new Uint8Array(pngEncode(...args)) };
+    },
+    defaultEncoderOptions: {}
   }
 };
