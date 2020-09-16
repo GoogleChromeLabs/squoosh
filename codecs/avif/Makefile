@@ -35,6 +35,9 @@ EMSCRIPTEN_FLAGS = ${CXXFLAGS} \
 	--closure 1 \
 	-s ALLOW_MEMORY_GROWTH=1 \
 	-s MODULARIZE=1 \
+	-s TEXTDECODER=2 \
+	-s ENVIRONMENT='worker' \
+	-s EXPORT_ES6=1 \
 	-s ERROR_ON_UNDEFINED_SYMBOLS=0
 
 CODEC_EMCMAKE = emcmake cmake \
@@ -65,7 +68,6 @@ $(OUT_ENC_JS): $(OUT_ENC_CPP) $(LIBAOM_ENC_OUT) $(CODEC_ENC_OUT)
 	$(CXX) \
 		-I $(CODEC_ENC_DIR)/include \
 		${EMSCRIPTEN_FLAGS} \
-		-s 'EXPORT_NAME="$(basename $(@F))"' \
 		-o $@ \
 		$+
 
@@ -73,7 +75,6 @@ $(OUT_DEC_JS): $(OUT_DEC_CPP) $(LIBAOM_DEC_OUT) $(CODEC_DEC_OUT)
 	$(CXX) \
 		-I $(CODEC_DEC_DIR)/include \
 		${EMSCRIPTEN_FLAGS} \
-		-s 'EXPORT_NAME="$(basename $(@F))"' \
 		-o $@ \
 		$+
 
@@ -115,9 +116,11 @@ $(LIBAOM_ENC_DIR)/CMakeLists.txt: $(LIBAOM_ENC_DIR)
 $(LIBAOM_DEC_DIR)/CMakeLists.txt: $(LIBAOM_DEC_DIR)
 
 $(CODEC_PACKAGE):
+	mkdir -p $(dir $@)
 	curl -sL $(CODEC_URL) -o $@
 
 $(LIBAOM_PACKAGE):
+	mkdir -p $(dir $@)
 	curl -sL $(LIBAOM_URL) -o $@
 
 $(CODEC_ENC_DIR) $(CODEC_DEC_DIR): $(CODEC_PACKAGE)
