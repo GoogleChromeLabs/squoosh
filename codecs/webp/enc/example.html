@@ -1,13 +1,12 @@
-<!doctype html>
-<script src='webp_enc.js'></script>
-<script>
-  const module = webp_enc();
+<!DOCTYPE html>
+<script type="module">
+  import webp_enc from './webp_enc.js';
 
   async function loadImage(src) {
     // Load image
     const img = document.createElement('img');
     img.src = src;
-    await new Promise(resolve => img.onload = resolve);
+    await new Promise((resolve) => (img.onload = resolve));
     // Make canvas same size as image
     const canvas = document.createElement('canvas');
     [canvas.width, canvas.height] = [img.width, img.height];
@@ -17,7 +16,9 @@
     return ctx.getImageData(0, 0, img.width, img.height);
   }
 
-  module.onRuntimeInitialized = async _ => {
+  async function main() {
+    const module = await webp_enc();
+
     console.log('Version:', module.version().toString(16));
     const image = await loadImage('../../example.png');
     const result = module.encode(image.data, image.width, image.height, {
@@ -50,11 +51,13 @@
       use_sharp_yuv: 0,
     });
     console.log('size', result.length);
-    const blob = new Blob([result], {type: 'image/webp'});
+    const blob = new Blob([result], { type: 'image/webp' });
 
     const blobURL = URL.createObjectURL(blob);
     const img = document.createElement('img');
     img.src = blobURL;
     document.body.appendChild(img);
-  };
+  }
+
+  main();
 </script>

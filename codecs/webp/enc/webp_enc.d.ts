@@ -1,7 +1,14 @@
-import { EncodeOptions } from '../../../src/codecs/webp/encoder-meta';
+import { EncodeOptions } from 'image-worker/webpEncode';
 
-interface WebPModule extends EmscriptenWasm.Module {
-  encode(data: BufferSource, width: number, height: number, options: EncodeOptions): Uint8Array | null;
+export interface WebPModule extends EmscriptenWasm.Module {
+  encode(
+    data: BufferSource,
+    width: number,
+    height: number,
+    options: EncodeOptions,
+  ): Uint8Array | null;
 }
 
-export default function(opts: EmscriptenWasm.ModuleOpts): WebPModule;
+declare var moduleFactory: EmscriptenWasm.ModuleFactory<WebPModule>;
+
+export default moduleFactory;

@@ -1,5 +1,7 @@
-interface WebPModule extends EmscriptenWasm.Module {
+export interface WebPModule extends EmscriptenWasm.Module {
   decode(data: BufferSource): ImageData | null;
 }
 
-export default function(opts: EmscriptenWasm.ModuleOpts): WebPModule;
+declare var moduleFactory: EmscriptenWasm.ModuleFactory<WebPModule>;
+
+export default moduleFactory;

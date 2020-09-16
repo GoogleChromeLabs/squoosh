@@ -1,20 +1,9 @@
 {
-  "compileOnSave": false,
-  "compilerOptions": {
-    "strict": true,
-    "target": "es2017",
-    "module": "esnext",
-    "moduleResolution": "node",
-    "experimentalDecorators": true,
-    "noUnusedLocals": true,
-    "sourceMap": true,
-    "jsx": "react",
-    "jsxFactory": "h",
-    "allowJs": false,
-    "baseUrl": "."
-  },
-  "exclude": [
-    "src/sw/**/*",
-    "src/codecs/processor-worker/**/*"
+  "extends": "./generic-tsconfig.json",
+  "files": [],
+  "references": [
+    { "path": "./src/client" },
+    { "path": "./src/static-build" },
+    { "path": "./src/image-worker" }
   ]
 }

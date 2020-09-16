@@ -1,22 +1,24 @@
-<!doctype html>
-<script src='webp_dec.js'></script>
-<script>
-  const Module = webp_dec();
+<!DOCTYPE html>
+<script type="module">
+  import webp_dec from './webp_dec.js';
 
   async function loadFile(src) {
     const resp = await fetch(src);
     return await resp.arrayBuffer();
   }
 
-  Module.onRuntimeInitialized = async _ => {
-    console.log('Version:', Module.version().toString(16));
+  async function main() {
+    const module = await webp_dec();
+    console.log('Version:', module.version().toString(16));
     const image = await loadFile('../../example.webp');
-    const imageData = Module.decode(image);
+    const imageData = module.decode(image);
     const canvas = document.createElement('canvas');
-    canvas.width = result.width;
-    canvas.height = result.height;
+    canvas.width = imageData.width;
+    canvas.height = imageData.height;
     document.body.appendChild(canvas);
     const ctx = canvas.getContext('2d');
     ctx.putImageData(imageData, 0, 0);
-  };
+  }
+
+  main();
 </script>

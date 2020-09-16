@@ -1,4 +1,4 @@
-FROM emscripten/emsdk:1.40.0
+FROM emscripten/emsdk:2.0.3
 RUN apt-get update && apt-get install -qqy autoconf libtool pkg-config
 ENV CFLAGS "-Os -flto"
 ENV CXXFLAGS "${CFLAGS} -std=c++17"
