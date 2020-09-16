@@ -55,7 +55,8 @@ export default async function encode(
   }
 
   const module = await emscriptenModule;
-  const resultView = module.encode(data.data, data.width, data.height, options);
+  const result = module.encode(data.data, data.width, data.height, options);
+  if (!result) throw new Error('Encoding error.');
   // wasm can’t run on SharedArrayBuffers, so we hard-cast to ArrayBuffer.
-  return resultView.buffer as ArrayBuffer;
+  return result.buffer as ArrayBuffer;
 }

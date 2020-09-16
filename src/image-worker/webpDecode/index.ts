@@ -22,5 +22,7 @@ export default async function decode(data: ArrayBuffer): Promise<ImageData> {
   }
 
   const module = await emscriptenModule;
-  return module.decode(data);
+  const result = module.decode(data);
+  if (!result) throw new Error('Decoding error');
+  return result;
 }
