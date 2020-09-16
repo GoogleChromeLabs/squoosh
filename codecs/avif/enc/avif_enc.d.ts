@@ -1,7 +1,14 @@
-import { EncodeOptions } from '../../../src/codecs/avif/encoder-meta';
+import { EncodeOptions } from 'image-worker/avifEncode';
 
-interface AVIFModule extends EmscriptenWasm.Module {
-  encode(data: BufferSource, width: number, height: number, options: EncodeOptions): Uint8Array | null;
+export interface AVIFModule extends EmscriptenWasm.Module {
+  encode(
+    data: BufferSource,
+    width: number,
+    height: number,
+    options: EncodeOptions,
+  ): Uint8Array | null;
 }
 
-export default function(opts: EmscriptenWasm.ModuleOpts): AVIFModule;
+declare var moduleFactory: EmscriptenWasm.ModuleFactory<AVIFModule>;
+
+export default moduleFactory;

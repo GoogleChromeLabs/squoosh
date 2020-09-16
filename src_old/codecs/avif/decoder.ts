@@ -5,7 +5,8 @@ import { initEmscriptenModule } from '../util';
 let emscriptenModule: Promise<AVIFModule>;
 
 export async function decode(data: ArrayBuffer): Promise<ImageData> {
-  if (!emscriptenModule) emscriptenModule = initEmscriptenModule(avif_dec, wasmUrl);
+  if (!emscriptenModule)
+    emscriptenModule = initEmscriptenModule(avif_dec, wasmUrl);
 
   const module = await emscriptenModule;
   const result = module.decode(data);

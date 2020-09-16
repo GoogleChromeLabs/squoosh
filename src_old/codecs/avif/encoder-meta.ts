@@ -24,4 +24,7 @@ export const defaultOptions: EncodeOptions = {
   subsample: 1,
 };
 
-export interface EncoderState { type: typeof type; options: EncodeOptions; }
+export interface EncoderState {
+  type: typeof type;
+  options: EncodeOptions;
+}

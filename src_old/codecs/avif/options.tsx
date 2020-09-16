@@ -34,18 +34,28 @@ const maxQuant = 63;
 const maxSpeed = 10;
 
 export default class AVIFEncoderOptions extends Component<Props, State> {
-  static getDerivedStateFromProps(props: Props, state: State): Partial<State> | undefined {
+  static getDerivedStateFromProps(
+    props: Props,
+    state: State,
+  ): Partial<State> | undefined {
     if (state.options && shallowEqual(state.options, props.options)) return;
     const { options } = props;
 
     const lossless = options.maxQuantizer === 0 && options.minQuantizer === 0;
-    const minQuantizerValue = lossless ? defaultOptions.minQuantizer : options.minQuantizer;
-    const maxQuantizerValue = lossless ? defaultOptions.maxQuantizer : options.maxQuantizer;
-    const losslessAlpha = options.maxQuantizerAlpha === 0 && options.minQuantizerAlpha === 0;
-    const minQuantizerAlphaValue = losslessAlpha ?
-      defaultOptions.minQuantizerAlpha : options.minQuantizerAlpha;
-    const maxQuantizerAlphaValue = losslessAlpha ?
-      defaultOptions.maxQuantizerAlpha : options.maxQuantizerAlpha;
+    const minQuantizerValue = lossless
+      ? defaultOptions.minQuantizer
+      : options.minQuantizer;
+    const maxQuantizerValue = lossless
+      ? defaultOptions.maxQuantizer
+      : options.maxQuantizer;
+    const losslessAlpha =
+      options.maxQuantizerAlpha === 0 && options.minQuantizerAlpha === 0;
+    const minQuantizerAlphaValue = losslessAlpha
+      ? defaultOptions.minQuantizerAlpha
+      : options.minQuantizerAlpha;
+    const maxQuantizerAlphaValue = losslessAlpha
+      ? defaultOptions.maxQuantizerAlpha
+      : options.maxQuantizerAlpha;
 
     // Create default form state from options
     return {
@@ -54,12 +64,16 @@ export default class AVIFEncoderOptions extends Component<Props, State> {
       losslessAlpha,
       maxQuality: maxQuant - minQuantizerValue,
       minQuality: maxQuant - maxQuantizerValue,
-      separateAlpha: options.maxQuantizer !== options.maxQuantizerAlpha ||
+      separateAlpha:
+        options.maxQuantizer !== options.maxQuantizerAlpha ||
         options.minQuantizer !== options.minQuantizerAlpha,
       maxAlphaQuality: maxQuant - minQuantizerAlphaValue,
       minAlphaQuality: maxQuant - maxQuantizerAlphaValue,
       grayscale: options.subsample === 0,
-      subsample: options.subsample === 0 || lossless ? defaultOptions.subsample : options.subsample,
+      subsample:
+        options.subsample === 0 || lossless
+          ? defaultOptions.subsample
+          : options.subsample,
       tileRows: options.tileRowsLog2,
       tileCols: options.tileColsLog2,
       effort: maxSpeed - options.speed,
@@ -78,9 +92,12 @@ export default class AVIFEncoderOptions extends Component<Props, State> {
     if (!this._inputChangeCallbacks.has(prop)) {
       this._inputChangeCallbacks.set(prop, (event: Event) => {
         const formEl = event.target as HTMLInputElement | HTMLSelectElement;
-        const newVal = type === 'boolean' ?
-          'checked' in formEl ? formEl.checked : !!formEl.value :
-          Number(formEl.value);
+        const newVal =
+          type === 'boolean'
+            ? 'checked' in formEl
+              ? formEl.checked
+              : !!formEl.value
+            : Number(formEl.value);
 
         const newState: Partial<State> = {
           [prop]: newVal,
@@ -115,20 +132,32 @@ export default class AVIFEncoderOptions extends Component<Props, State> {
           ...newState,
         };
 
-        const maxQuantizer = optionState.lossless ? 0 : (maxQuant - optionState.minQuality);
-        const minQuantizer = optionState.lossless ? 0 : (maxQuant - optionState.maxQuality);
+        const maxQuantizer = optionState.lossless
+          ? 0
+          : maxQuant - optionState.minQuality;
+        const minQuantizer = optionState.lossless
+          ? 0
+          : maxQuant - optionState.maxQuality;
 
         const newOptions: EncodeOptions = {
           maxQuantizer,
           minQuantizer,
-          maxQuantizerAlpha: optionState.separateAlpha ?
-            (optionState.losslessAlpha ? 0 : (maxQuant - optionState.minAlphaQuality)) :
-            maxQuantizer,
-          minQuantizerAlpha: optionState.separateAlpha ?
-            (optionState.losslessAlpha ? 0 : (maxQuant - optionState.maxAlphaQuality)) :
-            minQuantizer,
+          maxQuantizerAlpha: optionState.separateAlpha
+            ? optionState.losslessAlpha
+              ? 0
+              : maxQuant - optionState.minAlphaQuality
+            : maxQuantizer,
+          minQuantizerAlpha: optionState.separateAlpha
+            ? optionState.losslessAlpha
+              ? 0
+              : maxQuant - optionState.maxAlphaQuality
+            : minQuantizer,
           // Always set to 4:4:4 if lossless
-          subsample: optionState.grayscale ? 0 : optionState.lossless ? 3 : optionState.subsample,
+          subsample: optionState.grayscale
+            ? 0
+            : optionState.lossless
+            ? 3
+            : optionState.subsample,
           tileColsLog2: optionState.tileCols,
           tileRowsLog2: optionState.tileRows,
           speed: maxSpeed - optionState.effort,
@@ -147,13 +176,24 @@ export default class AVIFEncoderOptions extends Component<Props, State> {
     }
 
     return this._inputChangeCallbacks.get(prop)!;
-  }
+  };
 
   render(
     _: Props,
     {
-      effort, grayscale, lossless, losslessAlpha, maxAlphaQuality, maxQuality, minAlphaQuality,
-      minQuality, separateAlpha, showAdvanced, subsample, tileCols, tileRows,
+      effort,
+      grayscale,
+      lossless,
+      losslessAlpha,
+      maxAlphaQuality,
+      maxQuality,
+      minAlphaQuality,
+      minQuality,
+      separateAlpha,
+      showAdvanced,
+      subsample,
+      tileCols,
+      tileRows,
     }: State,
   ) {
     return (
@@ -199,7 +239,7 @@ export default class AVIFEncoderOptions extends Component<Props, State> {
           Separate alpha quality
         </label>
         <Expander>
-        {separateAlpha && (
+          {separateAlpha && (
             <div>
               <label class={style.optionInputFirst}>
                 <Checkbox
@@ -209,7 +249,7 @@ export default class AVIFEncoderOptions extends Component<Props, State> {
                 Lossless alpha
               </label>
               <Expander>
-                {!losslessAlpha &&
+                {!losslessAlpha && (
                   <div>
                     <div class={style.optionOneCell}>
                       <Range
@@ -232,7 +272,7 @@ export default class AVIFEncoderOptions extends Component<Props, State> {
                       </Range>
                     </div>
                   </div>
-                }
+                )}
               </Expander>
             </div>
           )}
@@ -245,7 +285,7 @@ export default class AVIFEncoderOptions extends Component<Props, State> {
           Show advanced settings
         </label>
         <Expander>
-          {showAdvanced &&
+          {showAdvanced && (
             <div>
               {/*<label class={style.optionInputFirst}>
                 <Checkbox
@@ -256,7 +296,7 @@ export default class AVIFEncoderOptions extends Component<Props, State> {
                 Grayscale
               </label>*/}
               <Expander>
-                {!grayscale && !lossless &&
+                {!grayscale && !lossless && (
                   <label class={style.optionTextFirst}>
                     Subsample chroma:
                     <Select
@@ -269,7 +309,7 @@ export default class AVIFEncoderOptions extends Component<Props, State> {
                       <option value="3">4:4:4</option>
                     </Select>
                   </label>
-                }
+                )}
               </Expander>
               <div class={style.optionOneCell}>
                 <Range
@@ -292,7 +332,7 @@ export default class AVIFEncoderOptions extends Component<Props, State> {
                 </Range>
               </div>
             </div>
-          }
+          )}
         </Expander>
         <div class={style.optionOneCell}>
           <Range
