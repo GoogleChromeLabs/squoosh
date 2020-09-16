@@ -10,39 +10,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import webpEncoder, { WebPModule } from 'codecs/webp/enc/webp_enc';
+import webpEncoder, {
+  WebPModule,
+  EncodeOptions,
+} from 'codecs/webp/enc/webp_enc';
 import wasmUrl from 'url:codecs/webp/enc/webp_enc.wasm';
 import { initEmscriptenModule } from '../util';
-
-export interface EncodeOptions {
-  quality: number;
-  target_size: number;
-  target_PSNR: number;
-  method: number;
-  sns_strength: number;
-  filter_strength: number;
-  filter_sharpness: number;
-  filter_type: number;
-  partitions: number;
-  segments: number;
-  pass: number;
-  show_compressed: number;
-  preprocessing: number;
-  autofilter: number;
-  partition_limit: number;
-  alpha_compression: number;
-  alpha_filtering: number;
-  alpha_quality: number;
-  lossless: number;
-  exact: number;
-  image_hint: number;
-  emulate_jpeg_size: number;
-  thread_level: number;
-  low_memory: number;
-  near_lossless: number;
-  use_delta_palette: number;
-  use_sharp_yuv: number;
-}
 
 let emscriptenModule: Promise<WebPModule>;
 

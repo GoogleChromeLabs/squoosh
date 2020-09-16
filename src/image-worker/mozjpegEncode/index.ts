@@ -10,34 +10,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import mozjpeg_enc, { MozJPEGModule } from 'codecs/mozjpeg_enc/mozjpeg_enc';
+import mozjpeg_enc, {
+  MozJPEGModule,
+  EncodeOptions,
+} from 'codecs/mozjpeg_enc/mozjpeg_enc';
 import wasmUrl from 'url:codecs/mozjpeg_enc/mozjpeg_enc.wasm';
 import { initEmscriptenModule } from '../util';
-
-export const enum MozJpegColorSpace {
-  GRAYSCALE = 1,
-  RGB,
-  YCbCr,
-}
-
-export interface EncodeOptions {
-  quality: number;
-  baseline: boolean;
-  arithmetic: boolean;
-  progressive: boolean;
-  optimize_coding: boolean;
-  smoothing: number;
-  color_space: MozJpegColorSpace;
-  quant_table: number;
-  trellis_multipass: boolean;
-  trellis_opt_zero: boolean;
-  trellis_opt_table: boolean;
-  trellis_loops: number;
-  auto_subsample: boolean;
-  chroma_subsample: number;
-  separate_chroma_quality: boolean;
-  chroma_quality: number;
-}
 
 let emscriptenModule: Promise<MozJPEGModule>;
 

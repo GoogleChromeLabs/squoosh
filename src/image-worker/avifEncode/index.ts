@@ -10,20 +10,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import avifEncoder, { AVIFModule } from 'codecs/avif/enc/avif_enc';
+import avifEncoder, {
+  AVIFModule,
+  EncodeOptions,
+} from 'codecs/avif/enc/avif_enc';
 import wasmUrl from 'url:codecs/avif/enc/avif_enc.wasm';
 import { initEmscriptenModule } from '../util';
-
-export interface EncodeOptions {
-  minQuantizer: number;
-  maxQuantizer: number;
-  minQuantizerAlpha: number;
-  maxQuantizerAlpha: number;
-  tileRowsLog2: number;
-  tileColsLog2: number;
-  speed: number;
-  subsample: number;
-}
 
 let emscriptenModule: Promise<AVIFModule>;
 

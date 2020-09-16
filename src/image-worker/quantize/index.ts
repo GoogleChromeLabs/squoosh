@@ -20,12 +20,6 @@ export interface QuantizeOptions {
   dither: number;
 }
 
-export const defaultOptions: QuantizeOptions = {
-  zx: 0,
-  maxNumColors: 256,
-  dither: 1.0,
-};
-
 let emscriptenModule: Promise<QuantizerModule>;
 
 export default async function process(
