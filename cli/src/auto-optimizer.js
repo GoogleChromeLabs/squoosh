@@ -16,9 +16,12 @@ export async function binarySearch(
   let parameter = (max - min) / 2 + min;
   let delta = (max - min) / 4;
   let value;
-  let round = 0;
-  do {
+  let round = 1;
+  while (true) {
     value = await measure(parameter);
+    if (Math.abs(value - measureGoal) < epsilon || round >= maxRounds) {
+      return { parameter, round, value };
+    }
     if (value > measureGoal) {
       parameter -= delta;
     } else if (value < measureGoal) {
@@ -26,8 +29,7 @@ export async function binarySearch(
     }
     delta /= 2;
     round++;
-  } while (Math.abs(value - measureGoal) > epsilon && round < maxRounds);
-  return { parameter, round, value };
+  }
 }
 export async function autoOptimize(
   bitmapIn,

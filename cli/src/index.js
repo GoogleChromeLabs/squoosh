@@ -51,7 +51,9 @@ async function encodeFile({
   bitmap: bitmapIn,
   outputFile,
   encName,
-  encConfig
+  encConfig,
+  optimizerButteraugliTarget,
+  maxOptimizerRounds
 }) {
   let out;
   const encoder = await supportedFormats[encName].enc();
@@ -74,14 +76,16 @@ async function encodeFile({
       decode,
       {
         min: supportedFormats[encName].autoOptimize.min,
-        max: supportedFormats[encName].autoOptimize.max
+        max: supportedFormats[encName].autoOptimize.max,
+        butteraugliDistanceTarget: optimizerButteraugliTarget,
+        maxRounds: maxOptimizerRounds
       }
     );
     out = binary;
     console.log(
-      `Used ${JSON.stringify({
+      `Used \`--${encName} '${JSON.stringify({
         [optionToOptimize]: quality
-      })} for ${outputFile}`
+      })}'\` for ${outputFile}`
     );
   } else {
     out = encoder.encode(
@@ -101,9 +105,9 @@ async function encodeFile({
 }
 
 async function processFiles(files) {
+  const workerPool = new WorkerPool(cpus().length, __filename);
   // Create output directory
   await fsp.mkdir(program.outputDir, { recursive: true });
-  const workerPool = new WorkerPool(cpus().length, __filename);
 
   const decodedFiles = await Promise.all(files.map(file => decodeFile(file)));
 
@@ -134,7 +138,9 @@ async function processFiles(files) {
           bitmap,
           outputFile,
           encName,
-          encConfig
+          encConfig,
+          optimizerButteraugliTarget: program.optimizerButteraugliTarget,
+          maxOptimizerRounds: program.maxOptimizerRounds
         })
         .then(({ outputFile, inputSize, outputSize }) => {
           jobsFinished++;
@@ -164,6 +170,16 @@ if (isMainThread) {
     .version(version)
     .arguments("<files...>")
     .option("-d, --output-dir <dir>", "Output directory", ".")
+    .option(
+      "--max-optimizer-rounds <rounds>",
+      "Maximum number of compressions to use for auto optimizations",
+      6
+    )
+    .option(
+      "--optimizer-butteraugli-target <butteraugli distance>",
+      "Target Butteraugli distance for auto optimizer",
+      1.4
+    )
     .action(processFiles);
 
   // Create a CLI option for each supported encoder
