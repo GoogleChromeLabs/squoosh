@@ -115,9 +115,11 @@ $(LIBAOM_ENC_DIR)/CMakeLists.txt: $(LIBAOM_ENC_DIR)
 $(LIBAOM_DEC_DIR)/CMakeLists.txt: $(LIBAOM_DEC_DIR)
 
 $(CODEC_PACKAGE):
+	mkdir -p $(dir $@)
 	curl -sL $(CODEC_URL) -o $@
 
 $(LIBAOM_PACKAGE):
+	mkdir -p $(dir $@)
 	curl -sL $(LIBAOM_URL) -o $@
 
 $(CODEC_ENC_DIR) $(CODEC_DEC_DIR): $(CODEC_PACKAGE)
