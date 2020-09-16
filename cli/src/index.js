@@ -115,7 +115,7 @@ async function processFiles(files) {
   let jobsFinished = 0;
   for (const { file, bitmap, size } of decodedFiles) {
     const ext = extname(file);
-    const base = basename(file, ext);
+    const base = basename(file, ext) + program.suffix;
 
     for (const [encName, value] of Object.entries(supportedFormats)) {
       if (!program[encName]) {
@@ -170,6 +170,7 @@ if (isMainThread) {
     .version(version)
     .arguments("<files...>")
     .option("-d, --output-dir <dir>", "Output directory", ".")
+    .option("-s, --suffix <suffix>", "Append suffix to output files", "")
     .option(
       "--max-optimizer-rounds <rounds>",
       "Maximum number of compressions to use for auto optimizations",

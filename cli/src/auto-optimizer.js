@@ -31,6 +31,7 @@ export async function binarySearch(
     round++;
   }
 }
+
 export async function autoOptimize(
   bitmapIn,
   encode,
