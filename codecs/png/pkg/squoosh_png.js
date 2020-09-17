@@ -188,16 +188,22 @@ function getArrayU8FromWasm0(ptr, len) {
 * @returns {Uint8Array}
 */
 export function encode(data, width, height) {
-    var ptr0 = passArray8ToWasm0(data, wasm.__wbindgen_malloc);
-    var len0 = WASM_VECTOR_LEN;
-    _assertNum(width);
-    _assertNum(height);
-    wasm.encode(8, ptr0, len0, width, height);
-    var r0 = getInt32Memory0()[8 / 4 + 0];
-    var r1 = getInt32Memory0()[8 / 4 + 1];
-    var v1 = getArrayU8FromWasm0(r0, r1).slice();
-    wasm.__wbindgen_free(r0, r1 * 1);
-    return v1;
+    try {
+        const retptr = wasm.__wbindgen_export_2.value - 16;
+        wasm.__wbindgen_export_2.value = retptr;
+        var ptr0 = passArray8ToWasm0(data, wasm.__wbindgen_malloc);
+        var len0 = WASM_VECTOR_LEN;
+        _assertNum(width);
+        _assertNum(height);
+        wasm.encode(retptr, ptr0, len0, width, height);
+        var r0 = getInt32Memory0()[retptr / 4 + 0];
+        var r1 = getInt32Memory0()[retptr / 4 + 1];
+        var v1 = getArrayU8FromWasm0(r0, r1).slice();
+        wasm.__wbindgen_free(r0, r1 * 1);
+        return v1;
+    } finally {
+        wasm.__wbindgen_export_2.value += 16;
+    }
 }
 
 /**
@@ -303,7 +309,7 @@ async function init(input) {
     }
     const imports = {};
     imports.wbg = {};
-    imports.wbg.__wbg_newwithu8clampedarrayandsh_d46fa191b076edfe = handleError(function(arg0, arg1, arg2, arg3) {
+    imports.wbg.__wbg_newwithu8clampedarrayandsh_104cc36644cfc313 = handleError(function(arg0, arg1, arg2, arg3) {
         var ret = new ImageData(getClampedArrayU8FromWasm0(arg0, arg1), arg2 >>> 0, arg3 >>> 0);
         return addHeapObject(ret);
     });
