@@ -4,6 +4,6 @@
   "references": [
     { "path": "./src/client" },
     { "path": "./src/static-build" },
-    { "path": "./src/image-worker" }
+    { "path": "./src/features/worker" }
   ]
 }

@@ -15,8 +15,7 @@
     "allowSyntheticDefaultImports": true,
     "paths": {
       "static-build/*": ["src/static-build/*"],
-      "image-worker/*": ["src/image-worker/*"],
-      "worker-main-shared/*": ["src/worker-main-shared/*"]
+      "features/*": ["src/features/*"]
     }
   }
 }

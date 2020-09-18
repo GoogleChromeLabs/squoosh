@@ -54,8 +54,7 @@ export default async function ({ watch }) {
     resolveDirsPlugin([
       'src/static-build',
       'src/client',
-      'src/image-worker',
-      'src/worker-main-shared',
+      'src/features',
       'codecs',
     ]),
     assetPlugin(),

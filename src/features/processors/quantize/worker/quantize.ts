@@ -12,7 +12,7 @@
  */
 import imagequant, { QuantizerModule } from 'codecs/imagequant/imagequant';
 import wasmUrl from 'url:codecs/imagequant/imagequant.wasm';
-import { initEmscriptenModule } from '../util';
+import { initEmscriptenModule } from 'features/util';
 
 export interface QuantizeOptions {
   zx: number;

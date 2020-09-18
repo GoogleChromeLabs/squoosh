@@ -15,7 +15,7 @@ import avifEncoder, {
   EncodeOptions,
 } from 'codecs/avif/enc/avif_enc';
 import wasmUrl from 'url:codecs/avif/enc/avif_enc.wasm';
-import { initEmscriptenModule } from '../util';
+import { initEmscriptenModule } from 'features/util';
 
 let emscriptenModule: Promise<AVIFModule>;
 

@@ -10,26 +10,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import webpEncoder, {
-  WebPModule,
-  EncodeOptions,
-} from 'codecs/webp/enc/webp_enc';
-import wasmUrl from 'url:codecs/webp/enc/webp_enc.wasm';
-import { initEmscriptenModule } from '../util';
+import avifDecoder, { AVIFModule } from 'codecs/avif/dec/avif_dec';
+import wasmUrl from 'url:codecs/avif/dec/avif_dec.wasm';
+import { initEmscriptenModule } from 'features/util';
 
-let emscriptenModule: Promise<WebPModule>;
+let emscriptenModule: Promise<AVIFModule>;
 
-export default async function encode(
-  data: ImageData,
-  options: EncodeOptions,
-): Promise<ArrayBuffer> {
+export default async function decode(data: ArrayBuffer): Promise<ImageData> {
   if (!emscriptenModule) {
-    emscriptenModule = initEmscriptenModule(webpEncoder, wasmUrl);
+    emscriptenModule = initEmscriptenModule(avifDecoder, wasmUrl);
   }
 
   const module = await emscriptenModule;
-  const result = module.encode(data.data, data.width, data.height, options);
-  if (!result) throw new Error('Encoding error.');
-  // wasm can’t run on SharedArrayBuffers, so we hard-cast to ArrayBuffer.
-  return result.buffer as ArrayBuffer;
+  const result = module.decode(data);
+  if (!result) throw new Error('Decoding error');
+  return result;
 }

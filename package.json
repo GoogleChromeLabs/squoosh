@@ -5,6 +5,7 @@
   "license": "apache-2.0",
   "scripts": {
     "build": "rollup -c && node lib/move-output.js",
+    "debug": "node --inspect-brk node_modules/.bin/rollup -c",
     "dev": "rollup -cw & npm run serve",
     "serve": "serve --config server.json .tmp/build/static"
   },

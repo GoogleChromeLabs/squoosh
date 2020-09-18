@@ -11,10 +11,10 @@
  * limitations under the License.
  */
 import { wrap } from 'comlink';
-import workerURL from 'omt:image-worker';
+import workerURL from 'omt:features/worker';
 import imgURL from 'url:./tmp.png';
 
-import type { ProcessorWorkerApi } from 'image-worker/index';
+import type { ProcessorWorkerApi } from 'features/worker';
 const worker = new Worker(workerURL);
 const api = wrap<ProcessorWorkerApi>(worker);
 

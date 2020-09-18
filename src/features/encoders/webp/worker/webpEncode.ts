@@ -10,25 +10,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import mozjpeg_enc, {
-  MozJPEGModule,
+import webpEncoder, {
+  WebPModule,
   EncodeOptions,
-} from 'codecs/mozjpeg_enc/mozjpeg_enc';
-import wasmUrl from 'url:codecs/mozjpeg_enc/mozjpeg_enc.wasm';
-import { initEmscriptenModule } from '../util';
+} from 'codecs/webp/enc/webp_enc';
+import wasmUrl from 'url:codecs/webp/enc/webp_enc.wasm';
+import { initEmscriptenModule } from 'features/util';
 
-let emscriptenModule: Promise<MozJPEGModule>;
+let emscriptenModule: Promise<WebPModule>;
 
 export default async function encode(
   data: ImageData,
   options: EncodeOptions,
 ): Promise<ArrayBuffer> {
   if (!emscriptenModule) {
-    emscriptenModule = initEmscriptenModule(mozjpeg_enc, wasmUrl);
+    emscriptenModule = initEmscriptenModule(webpEncoder, wasmUrl);
   }
 
   const module = await emscriptenModule;
-  const resultView = module.encode(data.data, data.width, data.height, options);
+  const result = module.encode(data.data, data.width, data.height, options);
+  if (!result) throw new Error('Encoding error.');
   // wasm can’t run on SharedArrayBuffers, so we hard-cast to ArrayBuffer.
-  return resultView.buffer as ArrayBuffer;
+  return result.buffer as ArrayBuffer;
 }

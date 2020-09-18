@@ -10,29 +10,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export function initEmscriptenModule<T extends EmscriptenWasm.Module>(
-  moduleFactory: EmscriptenWasm.ModuleFactory<T>,
-  wasmUrl: string,
-): Promise<T> {
-  return moduleFactory({
-    // Just to be safe, don't automatically invoke any wasm functions
-    noInitialRun: true,
-    locateFile: () => wasmUrl,
-  });
-}
-
-interface ClampOpts {
-  min?: number;
-  max?: number;
-}
-
-export function clamp(
-  num: number,
-  { min = Number.MIN_VALUE, max = Number.MAX_VALUE }: ClampOpts,
-): number {
-  return Math.min(Math.max(num, min), max);
-}
-
 export function timed<T>(name: string, func: () => Promise<T>) {
   console.time(name);
   return func().finally(() => console.timeEnd(name));

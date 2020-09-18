@@ -4,5 +4,5 @@
     "lib": ["esnext", "dom", "dom.iterable"],
     "types": []
   },
-  "references": [{ "path": "../image-worker" }]
+  "references": [{ "path": "../features/worker" }]
 }
