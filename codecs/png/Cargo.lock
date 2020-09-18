@@ -116,7 +116,6 @@ dependencies = [
 name = "squoosh-png"
 version = "0.1.0"
 dependencies = [
- "log",
  "png",
  "wasm-bindgen",
  "web-sys",

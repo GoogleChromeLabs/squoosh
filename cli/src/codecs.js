@@ -133,7 +133,10 @@ export default {
     },
     enc: async () => {
       await pngEncDecPromise;
-      return { encode: (...args) => new Uint8Array(pngEncode(...args)) };
+      return {
+        encode: (buffer, ...args) =>
+          new Uint8Array(pngEncode(new Uint8Array(buffer), ...args))
+      };
     },
     defaultEncoderOptions: {}
   }
