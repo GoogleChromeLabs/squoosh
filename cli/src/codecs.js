@@ -20,12 +20,15 @@ import avifDec from "../../codecs/avif/dec/avif_dec.js";
 import avifDecWasm from "asset-url:../../codecs/avif/dec/avif_dec.wasm";
 
 // PNG
-import pngEncDecInit, {
-  encode as pngEncode,
-  decode as pngDecode
-} from "../../codecs/png/pkg/squoosh_png.js";
+import * as pngEncDec from "../../codecs/png/pkg/squoosh_png.js";
 import pngEncDecWasm from "asset-url:../../codecs/png/pkg/squoosh_png_bg.wasm";
-const pngEncDecPromise = pngEncDecInit(fsp.readFile(pathify(pngEncDecWasm)));
+const pngEncDecPromise = pngEncDec.default(
+  fsp.readFile(pathify(pngEncDecWasm))
+);
+
+import * as oxipng from "../../codecs/oxipng/pkg/squoosh_oxipng.js";
+import oxipngWasm from "asset-url:../../codecs/oxipng/pkg/squoosh_oxipng_bg.wasm";
+const oxipngPromise = oxipng.default(fsp.readFile(pathify(oxipngWasm)));
 
 // Our decoders currently rely on a `ImageData` global.
 import ImageData from "./image_data.js";
@@ -123,21 +126,28 @@ export default {
       max: 62
     }
   },
-  png: {
-    name: "PNG",
+  oxipng: {
+    name: "OxiPNG",
     extension: "png",
     detectors: [/^\x89PNG\x0D\x0A\x1A\x0A/],
     dec: async () => {
       await pngEncDecPromise;
-      return { decode: (...args) => pngDecode(...args) };
+      return { decode: pngEncDec.decode };
     },
     enc: async () => {
       await pngEncDecPromise;
+      await oxipngPromise;
       return {
-        encode: (buffer, ...args) =>
-          new Uint8Array(pngEncode(new Uint8Array(buffer), ...args))
+        encode: (buffer, width, height, opts) => {
+          const simplePng = new Uint8Array(
+            pngEncDec.encode(new Uint8Array(buffer), width, height)
+          );
+          return new Uint8Array(oxipng.optimise(simplePng, opts.level));
+        }
       };
     },
-    defaultEncoderOptions: {}
+    defaultEncoderOptions: {
+      level: 2
+    }
   }
 };
