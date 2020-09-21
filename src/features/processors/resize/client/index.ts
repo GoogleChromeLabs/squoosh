@@ -1,0 +1,55 @@
+import {
+  builtinResize,
+  BuiltinResizeMethod,
+  drawableToImageData,
+} from 'client/util';
+import { BrowserResizeOptions, VectorResizeOptions } from '../shared';
+import { getContainOffsets } from '../shared/util';
+
+export function browserResize(
+  data: ImageData,
+  opts: BrowserResizeOptions,
+): ImageData {
+  let sx = 0;
+  let sy = 0;
+  let sw = data.width;
+  let sh = data.height;
+
+  if (opts.fitMethod === 'contain') {
+    ({ sx, sy, sw, sh } = getContainOffsets(sw, sh, opts.width, opts.height));
+  }
+
+  return builtinResize(
+    data,
+    sx,
+    sy,
+    sw,
+    sh,
+    opts.width,
+    opts.height,
+    opts.method.slice('browser-'.length) as BuiltinResizeMethod,
+  );
+}
+
+export function vectorResize(
+  data: HTMLImageElement,
+  opts: VectorResizeOptions,
+): ImageData {
+  let sx = 0;
+  let sy = 0;
+  let sw = data.width;
+  let sh = data.height;
+
+  if (opts.fitMethod === 'contain') {
+    ({ sx, sy, sw, sh } = getContainOffsets(sw, sh, opts.width, opts.height));
+  }
+
+  return drawableToImageData(data, {
+    sx,
+    sy,
+    sw,
+    sh,
+    width: opts.width,
+    height: opts.height,
+  });
+}
