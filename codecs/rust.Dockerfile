@@ -2,7 +2,7 @@ FROM emscripten/emsdk:1.39.19 AS wasm-tools
 WORKDIR /opt/wasm-tools
 RUN wget -qO- https://github.com/rustwasm/wasm-pack/releases/download/v0.9.1/wasm-pack-v0.9.1-x86_64-unknown-linux-musl.tar.gz | tar -xzf - --strip 1
 
-FROM rust:1.44-stretch AS rust
+FROM rust:1.46.0-slim-buster AS rust
 RUN rustup target add wasm32-unknown-unknown
 COPY --from=wasm-tools /emsdk/upstream/bin/wasm-opt /emsdk/upstream/bin/clang /usr/local/bin/
 COPY --from=wasm-tools /emsdk/upstream/lib/ /usr/local/lib/

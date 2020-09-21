@@ -31,8 +31,8 @@ async function demo() {
   const data = ctx.getImageData(0, 0, img.width, img.height);
   const result = await api.resize(data, {
     fitMethod: 'stretch',
-    height: 20,
-    width: 20,
+    height: 200,
+    width: 200,
     linearRGB: false,
     premultiply: true,
     method: 'lanczos3',
@@ -49,6 +49,7 @@ async function demo() {
     canvas.height = result.height;
     const ctx = canvas.getContext('2d')!;
     ctx.putImageData(result, 0, 0);
+    document.body.append(canvas);
   }
 }
 
