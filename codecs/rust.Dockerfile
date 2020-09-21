@@ -12,4 +12,4 @@ COPY --from=wasm-tools /opt/wasm-tools/wasm-pack /usr/local/cargo/bin/
 
 ENV CPATH="/wasm32/include"
 WORKDIR /src
-CMD ["sh", "-c", "rm -rf pkg && wasm-pack build -- --verbose --locked && rm pkg/.gitignore"]
+CMD ["sh", "-c", "rm -rf pkg && wasm-pack build --target web -- --verbose --locked && rm pkg/.gitignore"]
