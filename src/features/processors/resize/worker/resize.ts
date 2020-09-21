@@ -1,6 +1,7 @@
 import { WorkerResizeOptions } from '../shared';
 import { getContainOffsets } from '../shared/util';
-import { resize as codecResize } from 'codecs/resize/pkg';
+import initWasm, { resize as wasmResize } from 'codecs/resize/pkg';
+import wasmUrl from 'url:codecs/resize/pkg/squoosh_resize_bg.wasm';
 
 function crop(
   data: ImageData,
@@ -32,10 +33,18 @@ const resizeMethods: WorkerResizeOptions['method'][] = [
   'lanczos3',
 ];
 
+let wasmReady: Promise<unknown>;
+
 export default async function resize(
   data: ImageData,
   opts: WorkerResizeOptions,
 ): Promise<ImageData> {
+  if (!wasmReady) {
+    wasmReady = initWasm(wasmUrl);
+  }
+
+  await wasmReady;
+
   let input = data;
 
   if (opts.fitMethod === 'contain') {
@@ -54,7 +63,7 @@ export default async function resize(
     );
   }
 
-  const result = codecResize(
+  const result = wasmResize(
     new Uint8Array(input.data.buffer),
     input.width,
     input.height,

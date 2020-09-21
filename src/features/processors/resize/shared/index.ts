@@ -22,13 +22,6 @@ type WorkerResizeMethods =
   | 'mitchell'
   | 'lanczos3'
   | 'hqx';
-const workerResizeMethods: WorkerResizeMethods[] = [
-  'triangle',
-  'catrom',
-  'mitchell',
-  'lanczos3',
-  'hqx',
-];
 
 export type ResizeOptions =
   | BrowserResizeOptions

@@ -29,30 +29,26 @@ async function demo() {
   const ctx = canvas.getContext('2d')!;
   ctx.drawImage(img, 0, 0);
   const data = ctx.getImageData(0, 0, img.width, img.height);
-  const result = await api.mozjpegEncode(data, {
-    quality: 75,
-    baseline: false,
-    arithmetic: false,
-    progressive: true,
-    optimize_coding: true,
-    smoothing: 0,
-    color_space: 3,
-    quant_table: 3,
-    trellis_multipass: false,
-    trellis_opt_zero: false,
-    trellis_opt_table: false,
-    trellis_loops: 1,
-    auto_subsample: true,
-    chroma_subsample: 2,
-    separate_chroma_quality: false,
-    chroma_quality: 75,
+  const result = await api.resize(data, {
+    fitMethod: 'stretch',
+    height: 20,
+    width: 20,
+    linearRGB: false,
+    premultiply: true,
+    method: 'lanczos3',
   });
 
   {
-    const resultUrl = URL.createObjectURL(new Blob([result]));
+    /*const resultUrl = URL.createObjectURL(new Blob([result]));
     const img = new Image();
     img.src = resultUrl;
-    document.body.append(img);
+    document.body.append(img);*/
+
+    const canvas = document.createElement('canvas');
+    canvas.width = result.width;
+    canvas.height = result.height;
+    const ctx = canvas.getContext('2d')!;
+    ctx.putImageData(result, 0, 0);
   }
 }
 
