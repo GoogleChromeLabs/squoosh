@@ -121,13 +121,15 @@ async function processFiles(files) {
       if (!program[encName]) {
         continue;
       }
+      const encParam =
+        typeof program[encName] === "string" ? program[encName] : "{}";
       const encConfig =
-        program[encName].toLowerCase() === "auto"
+        encParam.toLowerCase() === "auto"
           ? "auto"
           : Object.assign(
               {},
               value.defaultEncoderOptions,
-              JSON5.parse(program[encName])
+              JSON5.parse(encParam)
             );
       const outputFile = join(program.outputDir, `${base}.${value.extension}`);
       jobsStarted++;
