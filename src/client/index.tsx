@@ -29,13 +29,8 @@ async function demo() {
   const ctx = canvas.getContext('2d')!;
   ctx.drawImage(img, 0, 0);
   const data = ctx.getImageData(0, 0, img.width, img.height);
-  const result = await api.resize(data, {
-    fitMethod: 'stretch',
-    height: 200,
-    width: 200,
-    linearRGB: false,
-    premultiply: true,
-    method: 'lanczos3',
+  const result = await api.rotate(data, {
+    rotate: 180,
   });
 
   {
