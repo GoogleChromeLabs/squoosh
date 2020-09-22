@@ -20,15 +20,3 @@ export function initEmscriptenModule<T extends EmscriptenWasm.Module>(
     locateFile: () => wasmUrl,
   });
 }
-
-interface ClampOpts {
-  min?: number;
-  max?: number;
-}
-
-export function clamp(
-  num: number,
-  { min = Number.MIN_VALUE, max = Number.MAX_VALUE }: ClampOpts,
-): number {
-  return Math.min(Math.max(num, min), max);
-}

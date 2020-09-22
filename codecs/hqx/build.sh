@@ -6,7 +6,7 @@ echo "============================================="
 echo "Compiling wasm"
 echo "============================================="
 (
-  wasm-pack build -- --verbose --locked
+  wasm-pack build --target web -- --verbose --locked
   rm pkg/.gitignore
 )
 echo "============================================="
