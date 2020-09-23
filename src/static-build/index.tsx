@@ -14,12 +14,49 @@ import { h } from 'preact';
 
 import { renderPage, writeFiles } from './utils';
 import IndexPage from './pages/index';
+import iconLargeMaskable from 'url:static-build/assets/icon-large-maskable.png';
+import iconLarge from 'url:static-build/assets/icon-large.png';
 
 interface Output {
   [outputPath: string]: string;
 }
 const toOutput: Output = {
   'index.html': renderPage(<IndexPage />),
+  'manifest.json': JSON.stringify({
+    name: 'Squoosh',
+    short_name: 'Squoosh',
+    start_url: '/?utm_medium=PWA&utm_source=launcher',
+    display: 'standalone',
+    orientation: 'any',
+    background_color: '#fff',
+    theme_color: '#f78f21',
+    icons: [
+      {
+        src: iconLarge,
+        type: 'image/png',
+        sizes: '1024x1024',
+      },
+      {
+        src: iconLargeMaskable,
+        type: 'image/png',
+        sizes: '1024x1024',
+        purpose: 'maskable',
+      },
+    ],
+    share_target: {
+      action: '/?utm_medium=PWA&utm_source=share-target&share-target',
+      method: 'POST',
+      enctype: 'multipart/form-data',
+      params: {
+        files: [
+          {
+            name: 'file',
+            accept: ['image/*'],
+          },
+        ],
+      },
+    },
+  }),
 };
 
 writeFiles(toOutput);
