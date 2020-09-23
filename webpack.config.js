@@ -174,7 +174,7 @@ module.exports = async function(_, env) {
     },
     plugins: [
       new webpack.IgnorePlugin(
-        /(fs|crypto|path)/,
+        /(fs|crypto|path|perf_hooks)/,
         /[/\\]codecs[/\\]/
       ),
 
