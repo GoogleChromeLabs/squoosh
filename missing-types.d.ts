@@ -21,3 +21,5 @@ declare module 'omt:*' {
   const value: string;
   export default value;
 }
+
+declare const __PRODUCTION__: boolean;

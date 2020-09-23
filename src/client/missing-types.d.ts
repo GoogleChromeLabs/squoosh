@@ -11,3 +11,14 @@
  * limitations under the License.
  */
 /// <reference path="../../missing-types.d.ts" />
+
+declare var ga: {
+  (...args: any[]): void;
+  q: any[];
+};
+
+interface Navigator {
+  readonly standalone: boolean;
+}
+
+declare module 'preact/debug' {}

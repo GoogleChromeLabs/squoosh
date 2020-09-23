@@ -17,6 +17,7 @@ import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import { terser } from 'rollup-plugin-terser';
 import OMT from '@surma/rollup-plugin-off-main-thread';
+import replace from '@rollup/plugin-replace';
 
 import simpleTS from './lib/simple-ts';
 import clientBundlePlugin from './lib/client-bundle-plugin';
@@ -45,6 +46,8 @@ export default async function ({ watch }) {
     'utf-8',
   );
   await del('.tmp/build');
+
+  const isProduction = !watch;
 
   const tsPluginInstance = simpleTS('.', {
     watch,
@@ -84,7 +87,8 @@ export default async function ({ watch }) {
             ...commonPlugins(),
             commonjs(),
             resolve(),
-            terser({ module: true }),
+            replace({ __PRERENDER__: false, __PRODUCTION__: isProduction }),
+            //terser({ module: true }),
           ],
         },
         {
@@ -99,6 +103,7 @@ export default async function ({ watch }) {
       emitFiles({ include: '**/*', root: path.join(__dirname, 'src', 'copy') }),
       nodeExternalPlugin(),
       imageWorkerPlugin(),
+      replace({ __PRERENDER__: true, __PRODUCTION__: isProduction }),
       runScript(dir + '/index.js'),
     ],
   };

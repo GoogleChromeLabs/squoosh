@@ -11,11 +11,40 @@
  * limitations under the License.
  */
 import { h, FunctionalComponent } from 'preact';
-import BasePage from 'static-build/components/base';
 
-const IndexPage: FunctionalComponent<{}> = () => (
-  <BasePage>
-    <h1>Hi</h1>
-  </BasePage>
+import styles from 'css-bundle:./all.css';
+import clientBundleURL, { imports } from 'client-bundle:client/initial-app';
+import favicon from 'url:static-build/assets/favicon.ico';
+
+interface Props {}
+
+const Index: FunctionalComponent<Props> = () => (
+  <html lang="en">
+    <head>
+      <title>Squoosh</title>
+      <meta
+        name="description"
+        content="Compress and compare images with different codecs, right in your browser"
+      />
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+      />
+      <meta name="mobile-web-app-capable" content="yes" />
+      <meta name="apple-mobile-web-app-capable" content="yes" />
+      <link rel="shortcut icon" href={favicon} />
+      <meta name="theme-color" content="#f78f21" />
+      <link rel="manifest" href="/manifest.json" />
+      <link rel="stylesheet" href={styles} />
+      <script src={clientBundleURL} defer />
+      {imports.map((v) => (
+        <link rel="preload" as="script" href={v} />
+      ))}
+    </head>
+    <body>
+      <div id="app" />
+    </body>
+  </html>
 );
-export default IndexPage;
+
+export default Index;
