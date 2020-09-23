@@ -6,6 +6,7 @@ declare namespace EmscriptenWasm {
   // Options object for modularized Emscripten files. Shoe-horned by @surma.
   // FIXME: This an incomplete definition!
   interface ModuleOpts {
+    mainScriptUrlOrBlob?: string;
     noInitialRun?: boolean;
     locateFile?: (url: string) => string;
     onRuntimeInitialized?: () => void;

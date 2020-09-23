@@ -1,5 +1,6 @@
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
+#include <emscripten/threading.h>
 #include "avif/avif.h"
 
 using namespace emscripten;
@@ -71,7 +72,7 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
   avifImageRGBToYUV(image, &srcRGB);
 
   avifEncoder* encoder = avifEncoderCreate();
-  encoder->maxThreads = 1;
+  encoder->maxThreads = emscripten_num_logical_cores();
   encoder->minQuantizer = options.minQuantizer;
   encoder->maxQuantizer = options.maxQuantizer;
   encoder->minQuantizerAlpha = options.minQuantizerAlpha;
