@@ -4,7 +4,7 @@ import initOxiPNG, {
   optimise,
 } from './pkg-parallel';
 import wasmUrl from './pkg-parallel/oxipng_bg.wasm';
-import type { WorkerInit } from './worker';
+import { WorkerInit } from './worker';
 
 function initWorker(worker: Worker, workerInit: WorkerInit) {
   return new Promise((resolve) => {
