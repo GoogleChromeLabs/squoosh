@@ -1,4 +1,4 @@
-type ModuleFactory<M extends EmscriptenWasm.Module> = (
+export type ModuleFactory<M extends EmscriptenWasm.Module> = (
   opts: EmscriptenWasm.ModuleOpts,
 ) => M;
 

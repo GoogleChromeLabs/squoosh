@@ -1,21 +1,29 @@
-import mainUrl from 'file-loader!../../../codecs/avif/enc/avif_enc.js';
+import mainUrlWithMT from 'file-loader!../../../codecs/avif/enc/avif_enc_mt.js';
 import { AVIFModule } from '../../../codecs/avif/enc/avif_enc.js';
-import wasmUrl from '../../../codecs/avif/enc/avif_enc.wasm';
-import workerUrl from 'file-loader!../../../codecs/avif/enc/avif_enc.worker.js';
+import wasmUrlWithoutMT from '../../../codecs/avif/enc/avif_enc.wasm';
+import wasmUrlWithMT from '../../../codecs/avif/enc/avif_enc_mt.wasm';
+import workerUrl from '../../../codecs/avif/enc/avif_enc_mt.worker.js';
 import { EncodeOptions } from './encoder-meta';
-import { initEmscriptenModule } from '../util';
+import { initEmscriptenModule, ModuleFactory } from '../util';
+import { threads } from 'wasm-feature-detect';
 
-declare const avif_enc: typeof import('../../../codecs/avif/enc/avif_enc.js').default;
+declare const avif_enc_mt: ModuleFactory<AVIFModule>;
 
 let emscriptenModule: Promise<AVIFModule>;
 
 async function init() {
-  importScripts(mainUrl as unknown as string);
-  return initEmscriptenModule<AVIFModule>(
-    avif_enc,
-    wasmUrl,
-    workerUrl,
-    mainUrl as unknown as string,
+  if (await threads()) {
+    importScripts(mainUrlWithMT);
+    return initEmscriptenModule<AVIFModule>(
+      avif_enc_mt,
+      wasmUrlWithMT,
+      workerUrl,
+      mainUrlWithMT,
+    );
+  }
+  return initEmscriptenModule(
+    (await import('../../../codecs/avif/enc/avif_enc.js')).default,
+    wasmUrlWithoutMT,
   );
 }
 

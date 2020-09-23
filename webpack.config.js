@@ -164,7 +164,7 @@ module.exports = async function(_, env) {
           type: 'webassembly/experimental',
         },
         {
-          test: /\.(png|svg|jpg|gif)$/,
+          test: /\.(png|svg|jpg|gif|worker\.js)$/,
           loader: 'file-loader',
           options: {
             name: '[name].[hash:5].[ext]',
@@ -174,8 +174,7 @@ module.exports = async function(_, env) {
     },
     plugins: [
       new webpack.IgnorePlugin(
-        /(fs|crypto|path|perf_hooks)/,
-        /[/\\]codecs[/\\]/
+        /^(fs|crypto|path|perf_hooks|worker_threads)$/
       ),
 
       // Pretty progressbar showing build progress:

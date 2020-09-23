@@ -38,6 +38,15 @@ declare module 'file-loader!*' {
   export default value;
 }
 
+declare module '*.worker.js' {
+  const value: string;
+  export default value;
+}
+
+declare module 'wasm-feature-detect' {
+  export const threads: () => Promise<boolean>;
+}
+
 declare var VERSION: string;
 
 declare var ga: {
