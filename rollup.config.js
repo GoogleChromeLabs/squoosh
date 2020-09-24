@@ -90,7 +90,7 @@ export default async function ({ watch }) {
             commonjs(),
             resolve(),
             replace({ __PRERENDER__: false, __PRODUCTION__: isProduction }),
-            //terser({ module: true }),
+            terser({ module: true }),
           ],
         },
         {
