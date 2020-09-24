@@ -347,13 +347,13 @@ checksum = "260e51e7efe62b592207e9e13a68e43692a7a279171d6ba57abd208bf23645ad"
 [[package]]
 name = "oxipng"
 version = "3.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5687a277f33b5fe5ee2ff5ceab4417885a428a1a938e944aa7df9d7e58c35762"
+source = "git+https://github.com/RReverser/oxipng?branch=crossbeam#d0f86d2e84eb55b423b8ad194a176e71ba3aa2c3"
 dependencies = [
  "bit-vec",
  "byteorder",
  "cloudflare-zlib",
  "crc",
+ "crossbeam-channel",
  "image",
  "indexmap",
  "itertools",

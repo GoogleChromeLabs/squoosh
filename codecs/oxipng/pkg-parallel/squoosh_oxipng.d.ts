@@ -1,12 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
-* @param {Uint8Array} data
-* @param {number} level
-* @returns {Uint8Array}
-*/
-export function optimise(data: Uint8Array, level: number): Uint8Array;
-/**
 * @param {number} num
 * @returns {any}
 */
@@ -17,16 +11,22 @@ export function start_main_thread(): void;
 /**
 */
 export function start_worker_thread(): void;
+/**
+* @param {Uint8Array} data
+* @param {number} level
+* @returns {Uint8Array}
+*/
+export function optimise(data: Uint8Array, level: number): Uint8Array;
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
-  readonly optimise: (a: number, b: number, c: number, d: number) => void;
   readonly malloc: (a: number) => number;
   readonly free: (a: number) => void;
   readonly worker_initializer: (a: number) => number;
   readonly start_main_thread: () => void;
   readonly start_worker_thread: () => void;
+  readonly optimise: (a: number, b: number, c: number, d: number) => void;
   readonly __wbindgen_export_0: WebAssembly.Memory;
   readonly __wbindgen_malloc: (a: number) => number;
   readonly __wbindgen_free: (a: number, b: number) => void;
