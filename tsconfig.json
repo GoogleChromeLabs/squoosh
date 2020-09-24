@@ -4,6 +4,7 @@
   "references": [
     { "path": "./src/client" },
     { "path": "./src/static-build" },
-    { "path": "./src/shared" }
+    { "path": "./src/shared" },
+    { "path": "./src/sw" }
   ]
 }

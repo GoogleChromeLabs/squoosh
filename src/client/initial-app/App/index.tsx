@@ -15,7 +15,9 @@ import 'shared/initial-app/custom-els/loading-spinner';
 const ROUTE_EDITOR = '/editor';
 
 //const compressPromise = import('../compress');
-//const swBridgePromise = import('../../lib/sw-bridge');
+const swBridgePromise = import('client/lazy-app/sw-bridge');
+
+console.log(swBridgePromise);
 
 function back() {
   window.history.back();

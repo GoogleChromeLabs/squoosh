@@ -29,6 +29,8 @@ import runScript from './lib/run-script';
 import emitFiles from './lib/emit-files-plugin';
 import imageWorkerPlugin from './lib/image-worker-plugin';
 import initialCssPlugin from './lib/initial-css-plugin';
+import serviceWorkerPlugin from './lib/sw-plugin';
+import dataURLPlugin from './lib/data-url-plugin';
 
 function resolveFileUrl({ fileName }) {
   return JSON.stringify(fileName.replace(/^static\//, '/'));
@@ -39,6 +41,19 @@ function resolveFileUrl({ fileName }) {
 function resolveImportMeta(property, { chunkId }) {
   if (property !== 'url') return;
   return `new URL(${resolveFileUrl({ fileName: chunkId })}, location).href`;
+}
+
+const dir = '.tmp/build';
+const staticPath = 'static/c/[name]-[hash][extname]';
+const jsPath = staticPath.replace('[extname]', '.js');
+
+function jsFileName(chunkInfo) {
+  if (!chunkInfo.facadeModuleId) return jsPath;
+  const parsedPath = path.parse(chunkInfo.facadeModuleId);
+  if (parsedPath.name !== 'index') return jsPath;
+  // Come up with a better name than 'index'
+  const name = parsedPath.dir.split('/').slice(-1);
+  return jsPath.replace('[name]', name);
 }
 
 export default async function ({ watch }) {
@@ -60,13 +75,13 @@ export default async function ({ watch }) {
       'src/client',
       'src/shared',
       'src/features',
+      'src/sw',
       'codecs',
     ]),
     urlPlugin(),
+    dataURLPlugin(),
     cssPlugin(resolveFileUrl),
   ];
-  const dir = '.tmp/build';
-  const staticPath = 'static/c/[name]-[hash][extname]';
 
   return {
     input: 'src/static-build/index.tsx',
@@ -86,6 +101,7 @@ export default async function ({ watch }) {
           plugins: [
             { resolveFileUrl, resolveImportMeta },
             OMT({ loader: await omtLoaderPromise }),
+            serviceWorkerPlugin({ output: 'static/sw.js' }),
             ...commonPlugins(),
             commonjs(),
             resolve(),
@@ -96,8 +112,8 @@ export default async function ({ watch }) {
         {
           dir,
           format: 'amd',
-          chunkFileNames: staticPath.replace('[extname]', '.js'),
-          entryFileNames: staticPath.replace('[extname]', '.js'),
+          chunkFileNames: jsFileName,
+          entryFileNames: jsFileName,
         },
         resolveFileUrl,
       ),

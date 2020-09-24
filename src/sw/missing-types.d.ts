@@ -11,17 +11,6 @@
  * limitations under the License.
  */
 /// <reference path="../../missing-types.d.ts" />
-/// <reference path="../shared/initial-app/Intro/missing-types.d.ts" />
 
-interface Navigator {
-  readonly standalone: boolean;
-}
-
-declare module 'add-css:*' {}
-
-declare module 'service-worker:*' {
-  const url: string;
-  export default url;
-}
-
-declare module 'preact/debug' {}
+declare const VERSION: string;
+declare const ASSETS: string[];
