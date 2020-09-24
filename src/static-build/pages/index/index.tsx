@@ -12,9 +12,10 @@
  */
 import { h, FunctionalComponent } from 'preact';
 
-import styles from 'css-bundle:./all.css';
+import css from 'css:./all.css';
 import clientBundleURL, { imports } from 'client-bundle:client/initial-app';
 import favicon from 'url:static-build/assets/favicon.ico';
+import { escapeStyleScriptContent } from 'static-build/utils';
 
 interface Props {}
 
@@ -35,7 +36,9 @@ const Index: FunctionalComponent<Props> = () => (
       <link rel="shortcut icon" href={favicon} />
       <meta name="theme-color" content="#f78f21" />
       <link rel="manifest" href="/manifest.json" />
-      <link rel="stylesheet" href={styles} />
+      <style
+        dangerouslySetInnerHTML={{ __html: escapeStyleScriptContent(css) }}
+      />
       <script src={clientBundleURL} defer />
       {imports.map((v) => (
         <link rel="preload" as="script" href={v} />

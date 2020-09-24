@@ -6,6 +6,7 @@ import { h, Component } from 'preact';
 
 import { linkRef } from 'client/initial-app/util';
 import * as style from './style.css';
+import 'add-css:./style.css';
 import 'file-drop-element';
 import 'client/initial-app/custom-els/snack-bar';
 //import Intro from '../intro';

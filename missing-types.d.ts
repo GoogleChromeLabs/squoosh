@@ -22,4 +22,9 @@ declare module 'omt:*' {
   export default value;
 }
 
+declare module 'css:*' {
+  const source: string;
+  export default source;
+}
+
 declare const __PRODUCTION__: boolean;

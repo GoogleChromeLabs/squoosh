@@ -17,9 +17,3 @@ declare module 'client-bundle:*' {
   export default url;
   export const imports: string[];
 }
-
-declare module 'css-bundle:*' {
-  const url: string;
-  export default url;
-  export const inline: string;
-}

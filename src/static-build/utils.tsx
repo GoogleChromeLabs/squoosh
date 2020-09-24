@@ -44,3 +44,15 @@ export function writeFiles(toOutput: OutputMap) {
     process.exit(1);
   });
 }
+
+/**
+ * Escape a string for insertion in a style or script tag
+ */
+export function escapeStyleScriptContent(str: string): string {
+  return str
+    .replace(/<!--/g, '<\\!--')
+    .replace(/<script/g, '<\\script')
+    .replace(/<\/script/g, '<\\/script')
+    .replace(/<style/g, '<\\style')
+    .replace(/<\/style/g, '<\\/style');
+}

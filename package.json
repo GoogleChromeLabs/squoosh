@@ -23,7 +23,6 @@
     "lint-staged": "^10.4.0",
     "lodash.camelcase": "^4.3.0",
     "postcss": "^8.0.8",
-    "postcss-import": "^12.0.1",
     "postcss-modules": "^3.2.2",
     "postcss-nested": "^5.0.0",
     "postcss-simple-vars": "^6.0.0",
