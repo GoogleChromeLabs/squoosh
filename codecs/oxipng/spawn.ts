@@ -3,7 +3,8 @@ import initOxiPNG, {
   start_main_thread,
   optimise,
 } from './pkg-parallel';
-import wasmUrl from './pkg-parallel/oxipng_bg.wasm';
+// @ts-ignore
+import wasmUrl from './pkg-parallel/squoosh_oxipng_bg.wasm';
 import { WorkerInit } from './worker';
 
 function initWorker(worker: Worker, workerInit: WorkerInit) {
