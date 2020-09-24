@@ -1,16 +1,16 @@
 import type { FileDropEvent } from 'file-drop-element';
-import type SnackBarElement from 'client/initial-app/custom-els/snack-bar';
-import type { SnackOptions } from 'client/initial-app/custom-els/snack-bar';
+import type SnackBarElement from 'shared/initial-app/custom-els/snack-bar';
+import type { SnackOptions } from 'shared/initial-app/custom-els/snack-bar';
 
 import { h, Component } from 'preact';
 
-import { linkRef } from 'client/initial-app/util';
+import { linkRef } from 'shared/initial-app/util';
 import * as style from './style.css';
 import 'add-css:./style.css';
 import 'file-drop-element';
-import 'client/initial-app/custom-els/snack-bar';
-//import Intro from '../intro';
-import 'client/initial-app/custom-els/loading-spinner';
+import 'shared/initial-app/custom-els/snack-bar';
+import Intro from 'shared/initial-app/Intro';
+import 'shared/initial-app/custom-els/loading-spinner';
 
 const ROUTE_EDITOR = '/editor';
 
@@ -127,8 +127,7 @@ export default class App extends Component<Props, State> {
             //<Compress file={file!} showSnack={this.showSnack} onBack={back} />
             'TODO: uncomment above'
           ) : (
-            //<Intro onFile={this.onIntroPickFile} showSnack={this.showSnack} />
-            'TODO: show intro here'
+            <Intro onFile={this.onIntroPickFile} showSnack={this.showSnack} />
           )}
           <snack-bar ref={linkRef(this, 'snackbar')} />
         </file-drop>

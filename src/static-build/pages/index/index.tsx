@@ -12,10 +12,12 @@
  */
 import { h, FunctionalComponent } from 'preact';
 
-import css from 'css:./all.css';
+import baseCss from 'css:./base.css';
+import initialCss from 'initial-css:';
 import clientBundleURL, { imports } from 'client-bundle:client/initial-app';
 import favicon from 'url:static-build/assets/favicon.ico';
 import { escapeStyleScriptContent } from 'static-build/utils';
+import Intro from 'shared/initial-app/Intro';
 
 interface Props {}
 
@@ -37,7 +39,12 @@ const Index: FunctionalComponent<Props> = () => (
       <meta name="theme-color" content="#f78f21" />
       <link rel="manifest" href="/manifest.json" />
       <style
-        dangerouslySetInnerHTML={{ __html: escapeStyleScriptContent(css) }}
+        dangerouslySetInnerHTML={{ __html: escapeStyleScriptContent(baseCss) }}
+      />
+      <style
+        dangerouslySetInnerHTML={{
+          __html: escapeStyleScriptContent(initialCss),
+        }}
       />
       <script src={clientBundleURL} defer />
       {imports.map((v) => (
@@ -45,7 +52,9 @@ const Index: FunctionalComponent<Props> = () => (
       ))}
     </head>
     <body>
-      <div id="app" />
+      <div id="app">
+        <Intro />
+      </div>
     </body>
   </html>
 );

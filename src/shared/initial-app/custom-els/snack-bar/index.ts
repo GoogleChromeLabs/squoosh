@@ -1,5 +1,10 @@
 import * as style from './styles.css';
 
+// So it doesn't cause an error when running in node
+const HTMLEl = ((__PRERENDER__
+  ? Object
+  : HTMLElement) as unknown) as typeof HTMLElement;
+
 export interface SnackOptions {
   timeout?: number;
   actions?: string[];
@@ -46,7 +51,7 @@ function createSnack(
   return [el, result];
 }
 
-export default class SnackBarElement extends HTMLElement {
+export default class SnackBarElement extends HTMLEl {
   private _snackbars: [
     string,
     SnackOptions,
@@ -92,4 +97,4 @@ export default class SnackBarElement extends HTMLElement {
   }
 }
 
-customElements.define('snack-bar', SnackBarElement);
+if (!__PRERENDER__) customElements.define('snack-bar', SnackBarElement);

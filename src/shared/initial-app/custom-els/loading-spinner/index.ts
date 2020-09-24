@@ -1,5 +1,10 @@
 import * as styles from './styles.css';
 
+// So it doesn't cause an error when running in node
+const HTMLEl = ((__PRERENDER__
+  ? Object
+  : HTMLElement) as unknown) as typeof HTMLElement;
+
 /**
  * A simple spinner. This custom element has no JS API. Just put it in the document, and it'll
  * spin. You can configure the following using CSS custom properties:
@@ -10,11 +15,12 @@ import * as styles from './styles.css';
  * --delay: Once the spinner enters the DOM, how long until it shows. This prevents the spinner
  *          appearing on the screen for short operations. Default: 300ms.
  */
-export default class LoadingSpinner extends HTMLElement {
+export default class LoadingSpinner extends HTMLEl {
   private _delayTimeout: number = 0;
 
   constructor() {
     super();
+    if (!__PRERENDER__) return;
 
     // Ideally we'd use shadow DOM here, but we're targeting browsers without shadow DOM support.
     // You can't set attributes/content in a custom element constructor, so I'm waiting a microtask.
@@ -59,4 +65,4 @@ export default class LoadingSpinner extends HTMLElement {
   }
 }
 
-customElements.define('loading-spinner', LoadingSpinner);
+if (!__PRERENDER__) customElements.define('loading-spinner', LoadingSpinner);

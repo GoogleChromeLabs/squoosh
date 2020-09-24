@@ -23,11 +23,12 @@ import simpleTS from './lib/simple-ts';
 import clientBundlePlugin from './lib/client-bundle-plugin';
 import nodeExternalPlugin from './lib/node-external-plugin';
 import cssPlugin from './lib/css-plugin';
-import assetPlugin from './lib/asset-plugin';
+import urlPlugin from './lib/url-plugin';
 import resolveDirsPlugin from './lib/resolve-dirs-plugin';
 import runScript from './lib/run-script';
 import emitFiles from './lib/emit-files-plugin';
 import imageWorkerPlugin from './lib/image-worker-plugin';
+import initialCssPlugin from './lib/initial-css-plugin';
 
 function resolveFileUrl({ fileName }) {
   return JSON.stringify(fileName.replace(/^static\//, '/'));
@@ -57,10 +58,11 @@ export default async function ({ watch }) {
     resolveDirsPlugin([
       'src/static-build',
       'src/client',
+      'src/shared',
       'src/features',
       'codecs',
     ]),
-    assetPlugin(),
+    urlPlugin(),
     cssPlugin(resolveFileUrl),
   ];
   const dir = '.tmp/build';
@@ -104,7 +106,8 @@ export default async function ({ watch }) {
       nodeExternalPlugin(),
       imageWorkerPlugin(),
       replace({ __PRERENDER__: true, __PRODUCTION__: isProduction }),
-      runScript(dir + '/index.js'),
+      initialCssPlugin(),
+      runScript(dir + '/static-build/index.js'),
     ],
   };
 }

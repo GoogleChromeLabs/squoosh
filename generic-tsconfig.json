@@ -16,6 +16,7 @@
     "paths": {
       "static-build/*": ["src/static-build/*"],
       "client/*": ["src/client/*"],
+      "shared/*": ["src/shared/*"],
       "features/*": ["src/features/*"]
     }
   }

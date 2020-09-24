@@ -11,11 +11,7 @@
  * limitations under the License.
  */
 /// <reference path="../../missing-types.d.ts" />
-
-declare var ga: {
-  (...args: any[]): void;
-  q: any[];
-};
+/// <reference path="../shared/initial-app/Intro/missing-types.d.ts" />
 
 interface Navigator {
   readonly standalone: boolean;

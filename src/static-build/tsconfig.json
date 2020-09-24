@@ -4,5 +4,5 @@
     "lib": ["esnext", "dom"],
     "types": ["node"]
   },
-  "references": []
+  "references": [{ "path": "../shared" }]
 }
