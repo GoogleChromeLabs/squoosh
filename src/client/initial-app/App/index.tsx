@@ -14,10 +14,10 @@ import 'shared/initial-app/custom-els/loading-spinner';
 
 const ROUTE_EDITOR = '/editor';
 
-//const compressPromise = import('../compress');
+const compressPromise = import('client/lazy-app/Compress');
 const swBridgePromise = import('client/lazy-app/sw-bridge');
 
-console.log(swBridgePromise);
+console.log(compressPromise);
 
 function back() {
   window.history.back();
@@ -53,7 +53,7 @@ export default class App extends Component<Props, State> {
       })
       .catch(() => {
         this.showSnack('Failed to load app');
-      });
+      });*/
 
     swBridgePromise.then(async ({ offliner, getSharedImage }) => {
       offliner(this.showSnack);
@@ -63,7 +63,7 @@ export default class App extends Component<Props, State> {
       history.replaceState('', '', '/');
       this.openEditor();
       this.setState({ file, awaitingShareTarget: false });
-    });*/
+    });
 
     // Since iOS 10, Apple tries to prevent disabling pinch-zoom. This is great in theory, but
     // really breaks things on Squoosh, as you can easily end up zooming the UI when you mean to
