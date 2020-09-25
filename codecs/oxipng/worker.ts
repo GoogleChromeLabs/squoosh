@@ -4,6 +4,10 @@ import initOxiPNG, { start_worker_thread } from './pkg-parallel';
 
 export type WorkerInit = [WebAssembly.Module, WebAssembly.Memory];
 
+// TODO: remove this line.
+// It allows main thread to wait for a Worker to be created just to repro a possible V8 bug.
+postMessage(null);
+
 addEventListener(
   'message',
   async (event) => {

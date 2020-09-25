@@ -19,7 +19,10 @@ async function startMainThread() {
 
   // First, let browser fetch and spawn Workers for our pool in the background.
   // This is fairly expensive, so we want to start it as early as possible.
-  const workers = Array.from({ length: num }, () => new Worker('./worker', { type: 'module' }));
+  const workers = Array.from({ length: num }, () => new Promise<Worker>((resolve) => {
+    const w = new Worker('./worker', { type: 'module' });
+    w.addEventListener('message', () => resolve(w), { once: true });
+  }));
 
   // Meanwhile, asynchronously compile, instantiate and initialise Wasm on our main thread.
   await initOxiPNG(fetch(wasmUrl), undefined as any);
@@ -38,7 +41,12 @@ async function startMainThread() {
   // If we didn't do this ping-pong game, the `start_main_thread` below would block the current
   // thread on an atomic before even *sending* the `postMessage` containing memory,
   // so Workers would never be able to unblock us back.
-  await Promise.all(workers.map(worker => initWorker(worker, workerInit)));
+
+  // TODO: remove this line.
+  // It waits for all workers to be created just to repro a possible V8 bug.
+  const resolvedWorkers = await Promise.all(workers);
+
+  await Promise.all(resolvedWorkers.map(worker => initWorker(worker, workerInit)));
 
   // Finally, instantiate rayon pool - this will use shared Wasm memory to send tasks to the
   // Workers and then block until they're all ready.

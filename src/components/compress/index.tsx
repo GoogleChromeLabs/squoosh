@@ -232,7 +232,7 @@ export default class Compress extends Component<Props, State> {
       {
         latestSettings: {
           preprocessorState: defaultPreprocessorState,
-          encoderState: { type: mozJPEG.type, options: mozJPEG.defaultOptions },
+          encoderState: { type: oxiPNG.type, options: oxiPNG.defaultOptions },
         },
         loadingCounter: 0,
         loadedCounter: 0,
