@@ -1,8 +1,8 @@
 import { wrap } from 'comlink';
 import { BridgeMethods, methodNames } from './meta';
-import workerURL from 'omt:../index';
-import type { ProcessorWorkerApi } from '../';
-import { abortable } from '../../../client/lazy-app/util';
+import workerURL from 'omt:../features-worker';
+import type { ProcessorWorkerApi } from '../../../features-worker';
+import { abortable } from '../util';
 
 /** How long the worker should be idle before terminating. */
 const workerTimeout = 10000;

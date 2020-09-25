@@ -4,5 +4,5 @@
     "lib": ["esnext", "dom", "dom.iterable"],
     "types": []
   },
-  "references": [{ "path": "../features/worker" }, { "path": "../shared" }]
+  "references": [{ "path": "../features-worker" }, { "path": "../shared" }]
 }

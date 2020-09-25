@@ -10,4 +10,4 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/// <reference path="../../../missing-types.d.ts" />
+/// <reference path="../../missing-types.d.ts" />

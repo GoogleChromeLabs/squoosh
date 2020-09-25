@@ -75,6 +75,8 @@ export default async function ({ watch }) {
       'src/client',
       'src/shared',
       'src/features',
+      'src/features-worker',
+      'src/features-worker-worker-bridge',
       'src/sw',
       'codecs',
     ]),
