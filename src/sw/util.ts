@@ -48,7 +48,6 @@ export function serveShareTarget(event: FetchEvent): void {
   const dataPromise = event.request.formData();
 
   // Redirect so the user can refresh the page without resending data.
-  // @ts-ignore It doesn't like me giving a response to respondWith, although it's allowed.
   event.respondWith(Response.redirect('/?share-target'));
 
   event.waitUntil(
@@ -93,17 +92,18 @@ function getAssetsWithPrefix(assets: string[], prefixes: string[]) {
 }
 
 export async function cacheBasics(cacheName: string, buildAssets: string[]) {
-  const toCache = ['/', '/assets/favicon.ico'];
+  const toCache = ['/'];
 
   const prefixesToCache = [
+    // TODO: this is likely incomplete
     // Main app JS & CSS:
-    'main-app.',
+    'c/initial-app-',
     // Service worker handler:
-    'offliner.',
+    'c/sw-bridge-',
     // Little icons for the demo images on the homescreen:
-    'icon-demo-',
+    'c/icon-demo-',
     // Site logo:
-    'logo.',
+    'c/logo-',
   ];
 
   const prefixMatches = getAssetsWithPrefix(buildAssets, prefixesToCache);
@@ -121,6 +121,7 @@ export async function cacheAdditionalProcessors(
   let toCache = [];
 
   const prefixesToCache = [
+    // TODO: these will need to change
     // Worker which handles image processing:
     'processor-worker.',
     // processor-worker imports:
@@ -144,6 +145,7 @@ export async function cacheAdditionalProcessors(
     }),
   );
 
+  // TODO: this is likely wrong
   // No point caching decoders the browser already supports:
   toCache = toCache.filter(
     (asset) =>

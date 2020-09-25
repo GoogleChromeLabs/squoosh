@@ -10,8 +10,6 @@ import { get } from 'idb-keyval';
 
 // Give TypeScript the correct global.
 declare var self: ServiceWorkerGlobalScope;
-// This is populated by webpack.
-declare var BUILD_ASSETS: string[];
 
 const versionedCache = 'static-' + VERSION;
 const dynamicCache = 'dynamic';
@@ -21,11 +19,11 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     (async function () {
       const promises = [];
-      promises.push(cacheBasics(versionedCache, BUILD_ASSETS));
+      promises.push(cacheBasics(versionedCache, ASSETS));
 
       // If the user has already interacted with the app, update the codecs too.
       if (await get('user-interacted')) {
-        promises.push(cacheAdditionalProcessors(versionedCache, BUILD_ASSETS));
+        promises.push(cacheAdditionalProcessors(versionedCache, ASSETS));
       }
 
       await Promise.all(promises);
@@ -67,12 +65,9 @@ self.addEventListener('fetch', (event) => {
   // We only care about GET from here on in.
   if (event.request.method !== 'GET') return;
 
-  if (
-    url.pathname.startsWith('/demo-') ||
-    url.pathname.startsWith('/wc-polyfill')
-  ) {
+  if (url.pathname.startsWith('/c/demo-')) {
     cacheOrNetworkAndCache(event, dynamicCache);
-    cleanupCache(event, dynamicCache, BUILD_ASSETS);
+    cleanupCache(event, dynamicCache, ASSETS);
     return;
   }
 
@@ -82,7 +77,7 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('message', (event) => {
   switch (event.data) {
     case 'cache-all':
-      event.waitUntil(cacheAdditionalProcessors(versionedCache, BUILD_ASSETS));
+      event.waitUntil(cacheAdditionalProcessors(versionedCache, ASSETS));
       break;
     case 'skip-waiting':
       self.skipWaiting();
