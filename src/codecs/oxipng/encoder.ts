@@ -1,4 +1,3 @@
-// @ts-ignore
 import optimiser from '../../../codecs/oxipng';
 import { EncodeOptions } from './encoder-meta';
 
