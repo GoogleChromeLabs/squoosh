@@ -52,12 +52,13 @@ for (const methodName of methodNames) {
           this._terminateWorker();
         }, workerTimeout);
 
-        return abortable(signal, this._workerApi![methodName]() as any).finally(
-          () => {
-            done = true;
-            clearTimeout(timeoutId);
-          },
-        );
+        return abortable(
+          signal,
+          this._workerApi![methodName](...args) as any,
+        ).finally(() => {
+          done = true;
+          clearTimeout(timeoutId);
+        });
       });
   } as any;
 }
