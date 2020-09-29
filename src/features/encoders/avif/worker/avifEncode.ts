@@ -10,10 +10,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import avifEncoder, {
-  AVIFModule,
-  EncodeOptions,
-} from 'codecs/avif/enc/avif_enc';
+import avifEncoder, { AVIFModule } from 'codecs/avif/enc/avif_enc';
+import type { EncodeOptions } from '../shared/meta';
 import wasmUrl from 'url:codecs/avif/enc/avif_enc.wasm';
 import { initEmscriptenModule } from 'features/util';
 

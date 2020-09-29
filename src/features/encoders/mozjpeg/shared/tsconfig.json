@@ -3,5 +3,5 @@
   "compilerOptions": {
     "lib": ["webworker", "esnext"]
   },
-  "references": [{ "path": "../../../" }, { "path": "../shared" }]
+  "references": [{ "path": "../../../" }]
 }

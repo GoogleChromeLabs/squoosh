@@ -5,7 +5,7 @@ import type { ProcessorWorkerApi } from '../../../features-worker';
 import { abortable } from '../util';
 
 /** How long the worker should be idle before terminating. */
-const workerTimeout = 10000;
+const workerTimeout = 10_000;
 
 interface WorkerBridge extends BridgeMethods {}
 

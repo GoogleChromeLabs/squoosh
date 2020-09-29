@@ -27,7 +27,7 @@ import urlPlugin from './lib/url-plugin';
 import resolveDirsPlugin from './lib/resolve-dirs-plugin';
 import runScript from './lib/run-script';
 import emitFiles from './lib/emit-files-plugin';
-import imageWorkerPlugin from './lib/image-worker-plugin';
+import featurePlugin from './lib/feature-plugin';
 import initialCssPlugin from './lib/initial-css-plugin';
 import serviceWorkerPlugin from './lib/sw-plugin';
 import dataURLPlugin from './lib/data-url-plugin';
@@ -122,7 +122,7 @@ export default async function ({ watch }) {
       ...commonPlugins(),
       emitFiles({ include: '**/*', root: path.join(__dirname, 'src', 'copy') }),
       nodeExternalPlugin(),
-      imageWorkerPlugin(),
+      featurePlugin(),
       replace({ __PRERENDER__: true, __PRODUCTION__: isProduction }),
       initialCssPlugin(),
       runScript(dir + '/static-build/index.js'),
