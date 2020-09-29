@@ -3,4 +3,4 @@ interface QuantizerModule extends EmscriptenWasm.Module {
   zx_quantize(data: BufferSource, width: number, height: number, dither: number): Uint8ClampedArray;
 }
 
-export default function(opts: EmscriptenWasm.ModuleOpts): QuantizerModule;
+export default function(opts: EmscriptenWasm.ModuleOpts): Promise<QuantizerModule>;
