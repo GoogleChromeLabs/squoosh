@@ -15,6 +15,8 @@ class WorkerBridge {
   protected _worker?: Worker;
   /** Comlinked worker API. */
   protected _workerApi?: ProcessorWorkerApi;
+  /** ID from setTimeout */
+  protected _workerTimeout?: number;
 
   protected _terminateWorker() {
     if (!this._worker) return;
@@ -36,30 +38,32 @@ for (const methodName of methodNames) {
     ...args: any
   ) {
     this._queue = this._queue
+      // Ignore any errors in the queue
       .catch(() => {})
       .then(async () => {
         if (signal.aborted) throw new DOMException('AbortError', 'AbortError');
-        let done = false;
 
-        signal.addEventListener('abort', () => {
-          if (done) return;
-          this._terminateWorker();
-        });
-
+        clearTimeout(this._workerTimeout);
         if (!this._worker) this._startWorker();
 
-        const timeoutId = setTimeout(() => {
-          this._terminateWorker();
-        }, workerTimeout);
+        const onAbort = () => this._terminateWorker();
+        signal.addEventListener('abort', onAbort);
 
         return abortable(
           signal,
           this._workerApi![methodName](...args) as any,
         ).finally(() => {
-          done = true;
-          clearTimeout(timeoutId);
+          // No longer care about aborting - this task is complete.
+          signal.removeEventListener('abort', onAbort);
+
+          // Start a timer to clear up the worker.
+          this._workerTimeout = setTimeout(() => {
+            this._terminateWorker();
+          }, workerTimeout);
         });
       });
+
+    return this._queue;
   } as any;
 }
 
