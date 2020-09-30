@@ -54,7 +54,12 @@ async function startMainThread() {
 
   return {
     optimise,
+    freeWorkers: () => {
+      for (const worker of resolvedWorkers) {
+        worker.terminate();
+      }
+    },
   };
 }
 
-export default startMainThread();
+export default () => startMainThread();
