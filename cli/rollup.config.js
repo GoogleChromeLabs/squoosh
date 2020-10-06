@@ -1,10 +1,13 @@
 import resolve from "@rollup/plugin-node-resolve";
 import cjs from "@rollup/plugin-commonjs";
-import { terser } from "rollup-plugin-terser";
 import asset from "./lib/asset-plugin.js";
 import json from "./lib/json-plugin.js";
+import autojson from "./lib/autojson-plugin.js";
+import { getBabelOutputPlugin } from '@rollup/plugin-babel';
+import { builtinModules } from 'module';
 
-export default {
+/** @type {import('rollup').RollupOptions} */
+export default ({
   input: "src/index.js",
   output: {
     dir: "build",
@@ -18,19 +21,22 @@ export default {
     resolve(),
     cjs(),
     asset(),
+    autojson(),
     json(),
-    null &&
-      terser({
-        mangle: true
-      })
+    getBabelOutputPlugin({
+      babelrc: false,
+      configFile: false,
+      minified: true,
+      comments: false,
+      presets: [
+        ['@babel/preset-env', {
+          targets: {
+            node: 12
+          },
+          loose: true
+        }]
+      ]
+    })
   ],
-  external: [
-    "os",
-    "path",
-    "fs",
-    "worker_threads",
-    "events",
-    "child_process",
-    "crypto"
-  ]
-};
+  external: builtinModules
+});

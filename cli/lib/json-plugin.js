@@ -4,7 +4,7 @@ const prefix = "json:";
 
 const reservedKeys = ["public"];
 
-export default function ejsAssetPlugin() {
+export default function jsonPlugin() {
   return {
     name: "json-plugin",
     async resolveId(id, importer) {
