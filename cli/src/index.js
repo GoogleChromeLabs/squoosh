@@ -104,10 +104,32 @@ async function encodeFile({
   };
 }
 
+// both decoding and encoding go through the worker pool
+function handleJob(params) {
+  const { operation } = params;
+  if (operation === 'encode') {
+    return encodeFile(params);
+  }
+  if (operation === 'decode') {
+    return decodeFile(params.file);
+  }
+}
 async function processFiles(files) {
   const workerPool = new WorkerPool(cpus().length, __filename);
   // Create output directory
   await fsp.mkdir(program.outputDir, { recursive: true });
+
+  let decoded = 0;
+  const decodedFiles = await Promise.all(files.map(async file => {
+    const result = await workerPool.dispatchJob({ operation: 'decode', file });
+    results.set(file, {
+      file: result.file,
+      size: result.size,
+      outputs: []
+    });
+    progress.setProgress(++decoded, files.length);
+    return result;
+  }));
 
   const decodedFiles = await Promise.all(files.map(file => decodeFile(file)));
 
@@ -135,6 +157,7 @@ async function processFiles(files) {
       jobsStarted++;
       workerPool
         .dispatchJob({
+          operation: 'encode',
           file,
           size,
           bitmap,
@@ -195,5 +218,5 @@ if (isMainThread) {
 
   program.parse(process.argv);
 } else {
-  WorkerPool.useThisThreadAsWorker(encodeFile);
+  WorkerPool.useThisThreadAsWorker(handleJob);
 }
