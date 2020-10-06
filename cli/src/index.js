@@ -77,7 +77,7 @@ async function encodeFile({
       {
         min: supportedFormats[encName].autoOptimize.min,
         max: supportedFormats[encName].autoOptimize.max,
-        butteraugliDistanceTarget: optimizerButteraugliTarget,
+        butteraugliDistanceGoal: optimizerButteraugliTarget,
         maxRounds: maxOptimizerRounds
       }
     );
@@ -164,8 +164,8 @@ async function processFiles(files) {
           outputFile,
           encName,
           encConfig,
-          optimizerButteraugliTarget: program.optimizerButteraugliTarget,
-          maxOptimizerRounds: program.maxOptimizerRounds
+          optimizerButteraugliTarget: Number(program.optimizerButteraugliTarget),
+          maxOptimizerRounds: Number(program.maxOptimizerRounds)
         })
         .then(({ outputFile, inputSize, outputSize }) => {
           jobsFinished++;
@@ -199,12 +199,12 @@ if (isMainThread) {
     .option(
       "--max-optimizer-rounds <rounds>",
       "Maximum number of compressions to use for auto optimizations",
-      6
+      '6'
     )
     .option(
       "--optimizer-butteraugli-target <butteraugli distance>",
       "Target Butteraugli distance for auto optimizer",
-      1.4
+      '1.4'
     )
     .action(processFiles);
 
