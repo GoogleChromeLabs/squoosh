@@ -94,8 +94,8 @@ export default class WorkerPool {
   }
 
   static useThisThreadAsWorker(cb) {
-    parentPort.addEventListener("message", async ev => {
-      const { msg, id } = ev.data;
+    parentPort.on("message", async data => {
+      const { msg, id } = data;
       const result = await cb(msg);
       parentPort.postMessage({ result, id });
     });
