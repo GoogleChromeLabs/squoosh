@@ -5,6 +5,8 @@ import { cpus } from "os";
 import { extname, join, basename } from "path";
 import { promises as fsp } from "fs";
 import { version } from "json:../package.json";
+import ora from 'ora';
+import kleur from 'kleur';
 
 import supportedFormats from "./codecs.js";
 import WorkerPool from "./worker_pool.js";
@@ -55,7 +57,7 @@ async function encodeFile({
   optimizerButteraugliTarget,
   maxOptimizerRounds
 }) {
-  let out;
+  let out, infoText;
   const encoder = await supportedFormats[encName].enc();
   if (encConfig === "auto") {
     const optionToOptimize = supportedFormats[encName].autoOptimize.option;
@@ -82,11 +84,11 @@ async function encodeFile({
       }
     );
     out = binary;
-    console.log(
-      `Used \`--${encName} '${JSON.stringify({
-        [optionToOptimize]: quality
-      })}'\` for ${outputFile}`
-    );
+    const opts = {
+      // 5 significant digits is enough
+      [optionToOptimize]: Math.round(quality * 10000) / 10000
+    };
+    infoText = ` using --${encName} '${JSON5.stringify(opts)}'`;
   } else {
     out = encoder.encode(
       bitmapIn.data.buffer,
@@ -97,6 +99,7 @@ async function encodeFile({
   }
   await fsp.writeFile(outputFile, out);
   return {
+    infoText,
     inputSize: size,
     inputFile: file,
     outputFile,
@@ -114,8 +117,60 @@ function handleJob(params) {
     return decodeFile(params.file);
   }
 }
+
+function progressTracker(results) {
+  const spinner = ora();
+  const tracker = {};
+  tracker.spinner = spinner;
+  tracker.progressOffset = 0;
+  tracker.totalOffset = 0;
+  let status = '';
+  tracker.setStatus = (text) => {
+    status = text || '';
+    update();
+  };
+  let progress = '';
+  tracker.setProgress = (done, total) => {
+    spinner.prefixText = kleur.dim(`${done}/${total}`);
+    const completeness = (tracker.progressOffset + done) / (tracker.totalOffset + total);
+    progress = kleur.cyan(`▐${'▨'.repeat(completeness*10|0).padEnd(10, '╌')}▌ `);
+    update();
+  };
+  function update() {
+    spinner.text = progress + kleur.bold(status) + getResultsText();
+  }
+  tracker.finish = (text) => {
+    spinner.succeed(kleur.bold(text) + getResultsText());
+  }
+  function getResultsText() {
+    let out = '';
+    for (const [filename, result] of results.entries()) {
+      out += `\n ${kleur.cyan(filename)}: ${prettyPrintSize(result.size)}`;
+      for (const { outputFile, outputSize, infoText } of result.outputs) {
+        const name = (program.suffix + extname(outputFile)).padEnd(5);
+        out += `\n  ${kleur.dim('└')} ${kleur.cyan(name)} → ${prettyPrintSize(outputSize)}`;
+        const percent = ((outputSize / result.size) * 100).toPrecision(3);
+        out += ` (${kleur[outputSize>result.size?'red':'green'](percent+'%')})`;
+        if (infoText) out += kleur.yellow(infoText);
+      }
+    }
+    return out || '\n';
+  }
+  spinner.start();
+  return tracker;
+}
+
 async function processFiles(files) {
-  const workerPool = new WorkerPool(cpus().length, __filename);
+  const parallelism = cpus().length;
+
+  const results = new Map();
+  const progress = progressTracker(results);
+
+  progress.setStatus('Decoding...');
+  progress.totalOffset = files.length;
+  progress.setProgress(0, files.length);
+
+  const workerPool = new WorkerPool(parallelism, __filename);
   // Create output directory
   await fsp.mkdir(program.outputDir, { recursive: true });
 
@@ -131,8 +186,11 @@ async function processFiles(files) {
     return result;
   }));
 
-  const decodedFiles = await Promise.all(files.map(file => decodeFile(file)));
+  progress.progressOffset = decoded;
+  progress.setStatus('Encoding ' + kleur.dim(`(${parallelism} threads)`));
+  progress.setProgress(0, files.length);
 
+  const jobs = [];
   let jobsStarted = 0;
   let jobsFinished = 0;
   for (const { file, bitmap, size } of decodedFiles) {
@@ -155,7 +213,7 @@ async function processFiles(files) {
             );
       const outputFile = join(program.outputDir, `${base}.${value.extension}`);
       jobsStarted++;
-      workerPool
+      const p = workerPool
         .dispatchJob({
           operation: 'encode',
           file,
@@ -167,26 +225,21 @@ async function processFiles(files) {
           optimizerButteraugliTarget: Number(program.optimizerButteraugliTarget),
           maxOptimizerRounds: Number(program.maxOptimizerRounds)
         })
-        .then(({ outputFile, inputSize, outputSize }) => {
+        .then((output) => {
           jobsFinished++;
-          const numDigits = jobsStarted.toString().length;
-          console.log(
-            `${jobsFinished
-              .toString()
-              .padStart(
-                numDigits
-              )}/${jobsStarted}: ${outputFile} ${prettyPrintSize(
-              inputSize
-            )} -> ${prettyPrintSize(outputSize)} (${(
-              (outputSize / inputSize) *
-              100
-            ).toFixed(1)}%)`
-          );
+          results.get(file).outputs.push(output);
+          progress.setProgress(jobsFinished, jobsStarted);
         });
+      jobs.push(p);
     }
   }
+
+  // update the progress to account for multi-format
+  progress.setProgress(jobsFinished, jobsStarted);
   // Wait for all jobs to finish
   await workerPool.join();
+  await Promise.all(jobs);
+  progress.finish('Squoosh results:');
 }
 
 if (isMainThread) {
