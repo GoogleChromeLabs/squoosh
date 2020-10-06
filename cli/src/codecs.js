@@ -148,6 +148,11 @@ export default {
     },
     defaultEncoderOptions: {
       level: 2
+    },
+    autoOptimize: {
+      option: "level",
+      min: 6,
+      max: 1
     }
   }
 };
