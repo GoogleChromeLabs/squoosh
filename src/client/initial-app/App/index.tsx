@@ -14,10 +14,8 @@ import 'shared/initial-app/custom-els/loading-spinner';
 
 const ROUTE_EDITOR = '/editor';
 
-const compressPromise = import('client/lazy-app/Compress');
+//const compressPromise = import('client/lazy-app/Compress');
 const swBridgePromise = import('client/lazy-app/sw-bridge');
-
-console.log(compressPromise);
 
 function back() {
   window.history.back();

@@ -51,7 +51,8 @@ for (const methodName of methodNames) {
 
         return abortable(
           signal,
-          this._workerApi![methodName](...args) as any,
+          // @ts-ignore - TypeScript can't figure this out
+          this._workerApi![methodName](...args),
         ).finally(() => {
           // No longer care about aborting - this task is complete.
           signal.removeEventListener('abort', onAbort);

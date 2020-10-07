@@ -1,4 +1,4 @@
-import { EncoderState } from '../../codecs/encoders';
+import { EncoderState } from '../feature-meta';
 import { shallowEqual } from '../../lib/util';
 import { PreprocessorState } from '../../codecs/preprocessors';
 
@@ -7,7 +7,7 @@ import * as identity from '../../codecs/identity/encoder-meta';
 interface CacheResult {
   preprocessed: ImageData;
   data: ImageData;
-  file: Fileish;
+  file: File;
 }
 
 interface CacheEntry extends CacheResult {
