@@ -347,7 +347,7 @@ checksum = "260e51e7efe62b592207e9e13a68e43692a7a279171d6ba57abd208bf23645ad"
 [[package]]
 name = "oxipng"
 version = "3.0.1"
-source = "git+https://github.com/RReverser/oxipng?branch=crossbeam#d0f86d2e84eb55b423b8ad194a176e71ba3aa2c3"
+source = "git+https://github.com/RReverser/oxipng?branch=crossbeam#0df4a32921f7b88d2be4649deb1b6fb7e5707ad8"
 dependencies = [
  "bit-vec",
  "byteorder",
@@ -398,9 +398,9 @@ dependencies = [
 
 [[package]]
 name = "rayon"
-version = "1.4.0"
+version = "1.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cfd016f0c045ad38b5251be2c9c0ab806917f82da4d36b2a327e5166adad9270"
+checksum = "dcf6960dc9a5b4ee8d3e4c5787b4a112a8818e0290a42ff664ad60692fdf2032"
 dependencies = [
  "autocfg",
  "crossbeam-deque",
