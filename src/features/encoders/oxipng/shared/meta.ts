@@ -10,17 +10,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import initOxiWasm, { optimise } from 'codecs/oxipng/pkg';
-import oxiWasmUrl from 'url:codecs/oxipng/pkg/squoosh_oxipng_bg.wasm';
-import { EncodeOptions } from '../shared/meta';
-
-let wasmReady: Promise<unknown>;
-
-export default async function encode(
-  data: ArrayBuffer,
-  options: EncodeOptions,
-): Promise<ArrayBuffer> {
-  if (!wasmReady) wasmReady = initOxiWasm(oxiWasmUrl);
-  await wasmReady;
-  return optimise(new Uint8Array(data), options.level).buffer;
+export interface EncodeOptions {
+  level: number;
 }
+
+export const label = 'OxiPNG';
+export const mimeType = 'image/png';
+export const extension = 'png';
+
+export const defaultOptions: EncodeOptions = {
+  level: 2,
+};
