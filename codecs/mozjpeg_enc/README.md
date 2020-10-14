@@ -2,6 +2,7 @@
 
 - Source: <https://github.com/mozilla/mozjpeg>
 - Version: v3.3.1
+- License: BSD
 
 ## Dependencies
 
@@ -16,10 +17,6 @@ See `example.html`
 ### `int version()`
 
 Returns the version of MozJPEG as a number. va.b.c is encoded as 0x0a0b0c
-
-### `void free_result()`
-
-Frees the result created by `encode()`.
 
 ### `Uint8Array encode(std::string image_in, int image_width, int image_height, MozJpegOptions opts)`
 

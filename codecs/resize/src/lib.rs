@@ -48,7 +48,7 @@ fn alpha_multiplier_funcs(
     if with_alpha_premultiplication {
         (
             |v, a| (v * (a as f32) / 255.0) as u8,
-            |v, a| (v as f32) * 255.0 / (a as f32).clamp(0.0, 255.0),
+            |v, a| ((v as f32) * 255.0 / (a as f32)).clamp(0.0, 255.0),
         )
     } else {
         (|v, _a| v as u8, |v, _a| v as f32)

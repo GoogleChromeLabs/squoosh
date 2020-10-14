@@ -1,9 +1,7 @@
-import { EncodeOptions } from '../../src/codecs/webp/encoder-meta';
+import { EncodeOptions } from '../../../src/codecs/webp/encoder-meta';
 
 interface WebPModule extends EmscriptenWasm.Module {
-  encode(data: BufferSource, width: number, height: number, options: EncodeOptions): Uint8Array;
-  free_result(): void;
+  encode(data: BufferSource, width: number, height: number, options: EncodeOptions): Uint8Array | null;
 }
 
-
-export default function(opts: EmscriptenWasm.ModuleOpts): WebPModule;
+export default function(opts: EmscriptenWasm.ModuleOpts): Promise<WebPModule>;

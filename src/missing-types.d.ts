@@ -33,9 +33,23 @@ declare module 'url-loader!*' {
   export default value;
 }
 
+declare module 'file-loader!*' {
+  const value: string;
+  export default value;
+}
+
+declare module '*.worker.js' {
+  const value: string;
+  export default value;
+}
+
 declare var VERSION: string;
 
 declare var ga: {
   (...args: any[]): void;
   q: any[];
 };
+
+interface Navigator {
+	readonly standalone: boolean;
+}

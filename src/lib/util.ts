@@ -78,11 +78,36 @@ async function decodeImage(url: string): Promise<HTMLImageElement> {
   return img;
 }
 
+/** Caches results from canDecodeImageType */
+const canDecodeCache = new Map<string, Promise<boolean>>();
+
 /**
- * Attempts to load the given URL as an image.
+ * Tests whether the browser supports a particular image mime type.
+ *
+ * @param type Mimetype
+ * @example await canDecodeImageType('image/avif')
  */
-export function canDecodeImage(url: string): Promise<boolean> {
-  return decodeImage(url).then(() => true, () => false);
+export function canDecodeImageType(type: string): Promise<boolean> {
+  if (!canDecodeCache.has(type)) {
+    const resultPromise = (async () => {
+      const picture = document.createElement('picture');
+      const img = document.createElement('img');
+      const source = document.createElement('source');
+      source.srcset = 'data:,x';
+      source.type = type;
+      picture.append(source, img);
+
+      // Wait a single microtick just for the `img.currentSrc` to get populated.
+      await 0;
+      // At this point `img.currentSrc` will contain "data:,x" if format is supported and ""
+      // otherwise.
+      return !!img.currentSrc;
+    })();
+
+    canDecodeCache.set(type, resultPromise);
+  }
+
+  return canDecodeCache.get(type)!;
 }
 
 export function blobToArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
@@ -104,6 +129,7 @@ const magicNumberToMimeType = new Map<RegExp, string>([
   [/^II*/, 'image/tiff'],
   [/^MM\x00*/, 'image/tiff'],
   [/^RIFF....WEBPVP8[LX ]/, 'image/webp'],
+  [/^\x00\x00\x00 ftypavif\x00\x00\x00\x00/, 'image/avif'],
 ]);
 
 export async function sniffMimeType(blob: Blob): Promise<string> {
@@ -163,7 +189,7 @@ export function drawableToImageData(
   return ctx.getImageData(0, 0, width, height);
 }
 
-export async function nativeDecode(blob: Blob): Promise<ImageData> {
+export async function builtinDecode(blob: Blob): Promise<ImageData> {
   // Prefer createImageBitmap as it's the off-thread option for Firefox.
   const drawable = 'createImageBitmap' in self ?
     await createImageBitmap(blob) : await blobToImg(blob);
@@ -171,13 +197,13 @@ export async function nativeDecode(blob: Blob): Promise<ImageData> {
   return drawableToImageData(drawable);
 }
 
-export type NativeResizeMethod = 'pixelated' | 'low' | 'medium' | 'high';
+export type BuiltinResizeMethod = 'pixelated' | 'low' | 'medium' | 'high';
 
-export function nativeResize(
+export function builtinResize(
   data: ImageData,
   sx: number, sy: number, sw: number, sh: number,
   dw: number, dh: number,
-  method: NativeResizeMethod,
+  method: BuiltinResizeMethod,
 ): ImageData {
   const canvasSource = document.createElement('canvas');
   canvasSource.width = data.width;

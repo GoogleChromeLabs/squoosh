@@ -28,9 +28,8 @@
     // const rawImage = Module.quantize(image.data, image.width, image.height, 256, 1.0);
     const rawImage = Module.zx_quantize(image.data, image.width, image.height, 1.0);
     console.log('done');
-    Module.free_result();
 
-    const imageData = new ImageData(new Uint8ClampedArray(rawImage.buffer), rawImage.width, rawImage.height);
+    const imageData = new ImageData(new Uint8ClampedArray(rawImage.buffer), image.width, image.height);
     const canvas = document.createElement('canvas');
     canvas.width = image.width;
     canvas.height = image.height;

@@ -2,6 +2,7 @@
 
 - Source: <https://github.com/ImageOptim/libimagequant>
 - Version: v2.12.1
+- License: GPL3
 
 ## Dependencies
 
@@ -24,7 +25,3 @@ Quantizes the given images, using at most `numColors`, a value between 2 and 256
 ### `RawImage zx_quantize(std::string buffer, int image_width, int image_height, float dithering)`
 
 ???
-
-### `void free_result()`
-
-Frees the result created by `quantize()`.

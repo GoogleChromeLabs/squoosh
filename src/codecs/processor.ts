@@ -4,6 +4,7 @@ import { canvasEncode, blobToArrayBuffer } from '../lib/util';
 import { EncodeOptions as MozJPEGEncoderOptions } from './mozjpeg/encoder-meta';
 import { EncodeOptions as OxiPNGEncoderOptions } from './oxipng/encoder-meta';
 import { EncodeOptions as WebPEncoderOptions } from './webp/encoder-meta';
+import { EncodeOptions as AvifEncoderOptions } from './avif/encoder-meta';
 import { EncodeOptions as BrowserJPEGOptions } from './browser-jpeg/encoder-meta';
 import { EncodeOptions as BrowserWebpEncodeOptions } from './browser-webp/encoder-meta';
 import { BrowserResizeOptions, VectorResizeOptions } from './resize/processor-meta';
@@ -61,12 +62,10 @@ export default class Processor {
 
         if (!this._worker && needsWorker) {
           // worker-loader does magic here.
-          // @ts-ignore - Typescript doesn't know about the 2nd param to new Worker, and the
-          // definition can't be overwritten.
           this._worker = new Worker(
             './processor-worker',
             { name: 'processor-worker', type: 'module' },
-          ) as Worker;
+          );
           // Need to do some TypeScript trickery to make the type match.
           this._workerApi = proxy(this._worker) as any as ProcessorWorkerApi;
         }
@@ -161,6 +160,17 @@ export default class Processor {
   async webpDecode(blob: Blob): Promise<ImageData> {
     const data = await blobToArrayBuffer(blob);
     return this._workerApi!.webpDecode(data);
+  }
+
+  @Processor._processingJob({ needsWorker: true })
+  async avifDecode(blob: Blob): Promise<ImageData> {
+    const data = await blobToArrayBuffer(blob);
+    return this._workerApi!.avifDecode(data);
+  }
+
+  @Processor._processingJob({ needsWorker: true })
+  avifEncode(data: ImageData, opts: AvifEncoderOptions): Promise<ArrayBuffer> {
+    return this._workerApi!.avifEncode(data, opts);
   }
 
   // Not-worker jobs:

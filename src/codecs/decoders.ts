@@ -1,19 +1,17 @@
-import { nativeDecode, sniffMimeType, canDecodeImage } from '../lib/util';
+import { builtinDecode, sniffMimeType, canDecodeImageType } from '../lib/util';
 import Processor from './processor';
-import webpDataUrl from 'url-loader!./tiny.webp';
-
-const nativeWebPSupported = canDecodeImage(webpDataUrl);
 
 export async function decodeImage(blob: Blob, processor: Processor): Promise<ImageData> {
   const mimeType = await sniffMimeType(blob);
+  const canDecode = await canDecodeImageType(mimeType);
 
   try {
-    if (mimeType === 'image/webp' && !(await nativeWebPSupported)) {
-      return await processor.webpDecode(blob);
+    if (!canDecode) {
+      if (mimeType === 'image/avif') return await processor.avifDecode(blob);
+      if (mimeType === 'image/webp') return await processor.webpDecode(blob);
+      // If it's not one of those types, fall through and try built-in decoding for a laugh.
     }
-
-    // Otherwise, just throw it at the browser's decoder.
-    return await nativeDecode(blob);
+    return await builtinDecode(blob);
   } catch (err) {
     throw Error("Couldn't decode image");
   }

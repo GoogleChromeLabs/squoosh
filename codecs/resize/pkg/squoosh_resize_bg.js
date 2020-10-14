@@ -1,10 +1,4 @@
-import * as wasm from './oxipng_bg.wasm';
-
-const lTextDecoder = typeof TextDecoder === 'undefined' ? require('util').TextDecoder : TextDecoder;
-
-let cachedTextDecoder = new lTextDecoder('utf-8', { ignoreBOM: true, fatal: true });
-
-cachedTextDecoder.decode();
+import * as wasm from './squoosh_resize_bg.wasm';
 
 let cachegetUint8Memory0 = null;
 function getUint8Memory0() {
@@ -12,10 +6,6 @@ function getUint8Memory0() {
         cachegetUint8Memory0 = new Uint8Array(wasm.memory.buffer);
     }
     return cachegetUint8Memory0;
-}
-
-function getStringFromWasm0(ptr, len) {
-    return cachedTextDecoder.decode(getUint8Memory0().subarray(ptr, ptr + len));
 }
 
 let WASM_VECTOR_LEN = 0;
@@ -39,22 +29,24 @@ function getArrayU8FromWasm0(ptr, len) {
     return getUint8Memory0().subarray(ptr / 1, ptr / 1 + len);
 }
 /**
-* @param {Uint8Array} data
-* @param {number} level
+* @param {Uint8Array} input_image
+* @param {number} input_width
+* @param {number} input_height
+* @param {number} output_width
+* @param {number} output_height
+* @param {number} typ_idx
+* @param {boolean} premultiply
+* @param {boolean} color_space_conversion
 * @returns {Uint8Array}
 */
-export function optimise(data, level) {
-    var ptr0 = passArray8ToWasm0(data, wasm.__wbindgen_malloc);
+export function resize(input_image, input_width, input_height, output_width, output_height, typ_idx, premultiply, color_space_conversion) {
+    var ptr0 = passArray8ToWasm0(input_image, wasm.__wbindgen_malloc);
     var len0 = WASM_VECTOR_LEN;
-    wasm.optimise(8, ptr0, len0, level);
+    wasm.resize(8, ptr0, len0, input_width, input_height, output_width, output_height, typ_idx, premultiply, color_space_conversion);
     var r0 = getInt32Memory0()[8 / 4 + 0];
     var r1 = getInt32Memory0()[8 / 4 + 1];
     var v1 = getArrayU8FromWasm0(r0, r1).slice();
     wasm.__wbindgen_free(r0, r1 * 1);
     return v1;
 }
-
-export const __wbindgen_throw = function(arg0, arg1) {
-    throw new Error(getStringFromWasm0(arg0, arg1));
-};
 
