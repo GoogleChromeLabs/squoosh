@@ -104,14 +104,14 @@ async function jxlEncode(
   const { encode } = await import(
     /* webpackChunkName: "process-jxl-enc" */
     '../jxl/encoder');
-  return encode(data, options);
+  return timed('jxlEncode', () => encode(data, options));
 }
 
 async function jxlDecode(data: ArrayBuffer): Promise<ImageData> {
   const { decode } = await import(
     /* webpackChunkName: "process-jxl-dec" */
     '../jxl/decoder');
-  return decode(data);
+  return timed('jxlDecode', () => decode(data));
 }
 
 const exports = {
