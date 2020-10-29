@@ -1,8 +1,8 @@
 CODEC_URL = https://gitlab.com/wg1/jpeg-xl.git
-CODEC_VERSION = c8ce59f8ef6393ba3018917791d04662cbf1172a
+CODEC_VERSION = 4d70bd58fbcb758b61446aba447fedd9177a00c9
 CODEC_DIR = node_modules/jxl
 CODEC_BUILD_DIR := $(CODEC_DIR)/build
-CODEC_OUT := $(CODEC_BUILD_DIR)/libjpegxl-static.a
+CODEC_OUT := $(CODEC_BUILD_DIR)/lib/libjxl.a
 
 OUT_JS = enc/jxl_enc.js dec/jxl_dec.js
 OUT_WASM = $(OUT_JS:.js=.wasm)
@@ -14,9 +14,11 @@ all: $(OUT_JS)
 %.js: %.cpp $(LIBAOM_OUT) $(CODEC_OUT)
 	$(CXX) \
 		-I $(CODEC_DIR) \
-		-I $(CODEC_DIR)/include \
-		-I $(CODEC_BUILD_DIR)/include \
+		-I $(CODEC_DIR)/lib \
+		-I $(CODEC_DIR)/lib/include \
+		-I $(CODEC_BUILD_DIR)/lib/include \
 		-I $(CODEC_DIR)/third_party/highway \
+		-I $(CODEC_DIR)/third_party/skcms \
 		-I $(CODEC_DIR)/third_party/brunsli \
 		-I $(CODEC_DIR)/third_party/brunsli/c/include \
 		${CXXFLAGS} \
@@ -42,7 +44,7 @@ $(CODEC_OUT): $(CODEC_DIR)/CMakeLists.txt
 	mkdir -p $(CODEC_BUILD_DIR)
 	cd $(CODEC_BUILD_DIR) && \
 	emcmake cmake ../ && \
-	$(MAKE) jpegxl-static
+	$(MAKE) jxl-static
 
 $(CODEC_DIR)/CMakeLists.txt: $(CODEC_DIR)
 
