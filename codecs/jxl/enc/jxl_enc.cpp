@@ -1,7 +1,8 @@
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
 
-#include "jxl/enc_file.h"
+#include "lib/jxl/enc_file.h"
+#include "lib/jxl/external_image.h"
 
 using namespace emscripten;
 
@@ -23,18 +24,16 @@ val encode(std::string image, int width, int height, JXLOptions options) {
 
   cparams.speed_tier = static_cast<jxl::SpeedTier>(options.speed);
   cparams.butteraugli_distance = options.quality;
-  // cparams.color_transform = jxl::ColorTransform::kNone;
 
-  io.metadata.SetUintSamples(8);
   io.metadata.SetAlphaBits(8);
-  // io.metadata.color_encoding = jxl::ColorEncoding::SRGB(false);
 
   uint8_t* inBuffer = (uint8_t*)image.c_str();
 
-  auto result =
-      main->SetFromSRGB(width, height, /*is_gray*/ false, /*has_alpha*/ true,
-                        /*alpha_is_premultiplied*/ true, /*pixels*/ (uint8_t*)image.c_str(),
-                        /* end */ (uint8_t*)image.c_str() + width * height * 4);
+  auto result = jxl::ConvertImage(
+      jxl::Span<const uint8_t>(reinterpret_cast<const uint8_t*>(image.data()), image.size()), width,
+      height, jxl::ColorEncoding::SRGB(/*is_gray=*/false), /*has_alpha=*/true,
+      /*alpha_is_premultiplied=*/false, /*bits_per_alpha=*/8, /*bits_per_sample=*/8,
+      /*big_endian=*/false, /*flipped_y=*/false, /*pool=*/nullptr, main);
 
   if (!result) {
     return val::null();
