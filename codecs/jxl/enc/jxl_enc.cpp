@@ -23,10 +23,11 @@ val encode(std::string image, int width, int height, JXLOptions options) {
 
   cparams.speed_tier = static_cast<jxl::SpeedTier>(options.speed);
   cparams.butteraugli_distance = options.quality;
-  // cparams.color_transform = jxl::ColorTransform::kNone;
+  cparams.color_transform = jxl::ColorTransform::kNone;
 
   io.metadata.SetUintSamples(8);
   io.metadata.SetAlphaBits(8);
+  // io.metadata.color_encoding = jxl::ColorEncoding::SRGB(false);
 
   uint8_t* inBuffer = (uint8_t*)image.c_str();
 
