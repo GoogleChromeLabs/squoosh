@@ -22,6 +22,7 @@ all: $(OUT_JS)
 		--bind \
 		--closure 1 \
 		-s ALLOW_MEMORY_GROWTH=1 \
+		-s MAXIMUM_MEMORY=4GB \
 		-s MODULARIZE=1 \
 		-s 'EXPORT_NAME="$(basename $(@F))"' \
 		-o $@ \
