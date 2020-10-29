@@ -14,6 +14,8 @@ all: $(OUT_JS)
 %.js: %.cpp $(LIBAOM_OUT) $(CODEC_OUT)
 	$(CXX) \
 		-I $(CODEC_DIR) \
+		-I $(CODEC_DIR)/include \
+		-I $(CODEC_BUILD_DIR)/include \
 		-I $(CODEC_DIR)/third_party/highway \
 		-I $(CODEC_DIR)/third_party/brunsli \
 		-I $(CODEC_DIR)/third_party/brunsli/c/include \
