@@ -11,6 +11,6 @@ export const mimeType = 'image/jpegxl';
 export const extension = 'jxl';
 // These come from struct WebPConfig in encode.h.
 export const defaultOptions: EncodeOptions = {
-  speed: 1,
+  speed: 5,
   quality: 1,
 };
