@@ -42,13 +42,12 @@ val decode(std::string data) {
             JxlDecoderGetColorAsICCProfile(dec.get(), JXL_COLOR_PROFILE_TARGET_DATA,
                                            icc_profile.data(), icc_profile.size()));
 
-  std::unique_ptr<float[]> float_pixels(new float[(buffer_size + 3) / 4]);
+  auto float_pixels = std::make_unique<float[]>((buffer_size + 3) / 4);
   EXPECT_EQ(JXL_DEC_SUCCESS,
-            JxlDecoderSetImageOutBuffer(
-                dec.get(), &format, reinterpret_cast<uint8_t*>(float_pixels.get()), buffer_size));
+            JxlDecoderSetImageOutBuffer(dec.get(), &format, float_pixels.get(), buffer_size));
   EXPECT_EQ(JXL_DEC_FULL_IMAGE, JxlDecoderProcessInput(dec.get(), &next_in, &avail_in));
 
-  std::unique_ptr<uint8_t[]> pixels(new uint8_t[info.xsize * info.ysize * 4]);
+  auto pixels = std::make_unique<uint8_t[]>(info.xsize * info.ysize * 4);
   // Convert to sRGB.
   skcms_ICCProfile jxl_profile;
   // If the image is encoded in its original color space, the decoded data will be in the color
