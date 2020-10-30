@@ -82,6 +82,22 @@ async function webpDecode(data: ArrayBuffer): Promise<ImageData> {
   return timed('webpDecode', () => decode(data));
 }
 
+async function wp2Encode(
+  data: ImageData, options: import('../wp2/encoder-meta').EncodeOptions,
+): Promise<ArrayBuffer> {
+  const { encode } = await import(
+    /* webpackChunkName: "process-wp2 -enc" */
+    '../wp2/encoder');
+  return encode(data, options);
+}
+
+async function wp2Decode(data: ArrayBuffer): Promise<ImageData> {
+  const { decode } = await import(
+    /* webpackChunkName: "process-wp2-dec" */
+    '../wp2/decoder');
+  return decode(data);
+}
+
 async function avifEncode(
   data: ImageData, options: import('../avif/encoder-meta').EncodeOptions,
 ): Promise<ArrayBuffer> {
@@ -122,6 +138,8 @@ const exports = {
   oxiPngEncode,
   webpEncode,
   webpDecode,
+  wp2Encode,
+  wp2Decode,
   avifEncode,
   avifDecode,
   jxlEncode,

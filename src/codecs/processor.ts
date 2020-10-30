@@ -4,6 +4,7 @@ import { canvasEncode, blobToArrayBuffer } from '../lib/util';
 import { EncodeOptions as MozJPEGEncoderOptions } from './mozjpeg/encoder-meta';
 import { EncodeOptions as OxiPNGEncoderOptions } from './oxipng/encoder-meta';
 import { EncodeOptions as WebPEncoderOptions } from './webp/encoder-meta';
+import { EncodeOptions as WP2EncoderOptions } from './wp2/encoder-meta';
 import { EncodeOptions as AvifEncoderOptions } from './avif/encoder-meta';
 import { EncodeOptions as JXLEncoderOptions } from './jxl/encoder-meta';
 import { EncodeOptions as BrowserJPEGOptions } from './browser-jpeg/encoder-meta';
@@ -158,9 +159,20 @@ export default class Processor {
   }
 
   @Processor._processingJob({ needsWorker: true })
+  wp2Encode(data: ImageData, opts: WP2EncoderOptions): Promise<ArrayBuffer> {
+    return this._workerApi!.wp2Encode(data, opts);
+  }
+
+  @Processor._processingJob({ needsWorker: true })
   async webpDecode(blob: Blob): Promise<ImageData> {
     const data = await blobToArrayBuffer(blob);
     return this._workerApi!.webpDecode(data);
+  }
+
+  @Processor._processingJob({ needsWorker: true })
+  async wp2Decode(blob: Blob): Promise<ImageData> {
+    const data = await blobToArrayBuffer(blob);
+    return this._workerApi!.wp2Decode(data);
   }
 
   @Processor._processingJob({ needsWorker: true })

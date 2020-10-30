@@ -10,6 +10,7 @@ import * as identity from '../../codecs/identity/encoder-meta';
 import * as oxiPNG from '../../codecs/oxipng/encoder-meta';
 import * as mozJPEG from '../../codecs/mozjpeg/encoder-meta';
 import * as webP from '../../codecs/webp/encoder-meta';
+import * as wp2 from '../../codecs/wp2/encoder-meta';
 import * as avif from '../../codecs/avif/encoder-meta';
 import * as jxl from '../../codecs/jxl/encoder-meta';
 import * as browserPNG from '../../codecs/browser-png/encoder-meta';
@@ -138,6 +139,7 @@ async function compressImage(
       case oxiPNG.type: return processor.oxiPngEncode(image, encodeData.options);
       case mozJPEG.type: return processor.mozjpegEncode(image, encodeData.options);
       case webP.type: return processor.webpEncode(image, encodeData.options);
+      case wp2.type: return processor.wp2Encode(image, encodeData.options);
       case avif.type: return processor.avifEncode(image, encodeData.options);
       case jxl.type: return processor.jxlEncode(image, encodeData.options);
       case browserPNG.type: return processor.browserPngEncode(image);

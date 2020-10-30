@@ -129,6 +129,7 @@ const magicNumberToMimeType = new Map<RegExp, string>([
   [/^II*/, 'image/tiff'],
   [/^MM\x00*/, 'image/tiff'],
   [/^RIFF....WEBPVP8[LX ]/, 'image/webp'],
+  [/\xF4\xFF\x6F/, 'image/webp2'], // Not sure about this one tho lol
   [/^\x00\x00\x00 ftypavif\x00\x00\x00\x00/, 'image/avif'],
   [/^\xff\x0a/, 'image/jpegxl'],
 ]);
