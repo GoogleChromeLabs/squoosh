@@ -6,6 +6,7 @@
 #   $(OUT_JS)
 #   $(OUT_CPP)
 #   $(LIBAOM_FLAGS)
+#   $(LIBAVIF_FLAGS)
 #   $(CODEC_PACKAGE)
 #   $(LIBAOM_PACKAGE)
 
@@ -23,7 +24,6 @@ OUT_WORKER=$(OUT_JS:.js=.worker.js)
 all: $(OUT_JS)
 
 $(OUT_JS): $(OUT_CPP) $(LIBAOM_OUT) $(CODEC_OUT)
-	# ERROR_ON_UNDEFINED_SYMBOLS=0 is needed to separate the encoder and decoder
 	$(CXX) \
 		-I $(CODEC_DIR)/include \
 		$(CXXFLAGS) \
@@ -33,7 +33,6 @@ $(OUT_JS): $(OUT_CPP) $(LIBAOM_OUT) $(CODEC_OUT)
 		--closure 1 \
 		-s ALLOW_MEMORY_GROWTH=1 \
 		-s MODULARIZE=1 \
-		-s ERROR_ON_UNDEFINED_SYMBOLS=0 \
 		-s 'EXPORT_NAME="$(basename $(@F))"' \
 		-o $@ \
 		$+
@@ -45,6 +44,7 @@ $(CODEC_OUT): $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_OUT)
 		-DAVIF_CODEC_AOM=1 \
 		-DAVIF_LOCAL_AOM=1 \
 		-DAVIF_CODEC_INCLUDES=$(abspath $(LIBAOM_DIR)) \
+		$(LIBAVIF_FLAGS) \
 		-B $(CODEC_BUILD_DIR) \
 		$(CODEC_DIR) && \
 	$(MAKE) -C $(CODEC_BUILD_DIR)
