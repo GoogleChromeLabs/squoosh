@@ -49,8 +49,6 @@ val encode(std::string image, int width, int height, JXLOptions options) {
   return js_result;
 }
 
-void free_result() {}
-
 EMSCRIPTEN_BINDINGS(my_module) {
   value_object<JXLOptions>("JXLOptions")
       .field("speed", &JXLOptions::speed)
