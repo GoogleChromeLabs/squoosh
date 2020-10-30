@@ -86,7 +86,7 @@ async function wp2Encode(
   data: ImageData, options: import('../wp2/encoder-meta').EncodeOptions,
 ): Promise<ArrayBuffer> {
   const { encode } = await import(
-    /* webpackChunkName: "process-wp2 -enc" */
+    /* webpackChunkName: "process-wp2-enc" */
     '../wp2/encoder');
   return encode(data, options);
 }
