@@ -7,6 +7,7 @@ import OxiPNGEncoderOptions from '../../codecs/oxipng/options';
 import MozJpegEncoderOptions from '../../codecs/mozjpeg/options';
 import BrowserJPEGEncoderOptions from '../../codecs/browser-jpeg/options';
 import WebPEncoderOptions from '../../codecs/webp/options';
+import WP2EncoderOptions from '../../codecs/wp2/options';
 import AvifEncoderOptions from '../../codecs/avif/options';
 import JXLEncoderOptions from '../../codecs/jxl/options';
 import BrowserWebPEncoderOptions from '../../codecs/browser-webp/options';
@@ -18,6 +19,7 @@ import * as identity from '../../codecs/identity/encoder-meta';
 import * as oxiPNG from '../../codecs/oxipng/encoder-meta';
 import * as mozJPEG from '../../codecs/mozjpeg/encoder-meta';
 import * as webP from '../../codecs/webp/encoder-meta';
+import * as wp2 from '../../codecs/wp2/encoder-meta';
 import * as avif from '../../codecs/avif/encoder-meta';
 import * as jxl from '../../codecs/jxl/encoder-meta';
 import * as browserPNG from '../../codecs/browser-png/encoder-meta';
@@ -51,6 +53,7 @@ const encoderOptionsComponentMap: {
   [oxiPNG.type]: OxiPNGEncoderOptions,
   [mozJPEG.type]: MozJpegEncoderOptions,
   [webP.type]: WebPEncoderOptions,
+  [wp2.type]: WP2EncoderOptions,
   [avif.type]: AvifEncoderOptions,
   [jxl.type]: JXLEncoderOptions,
   [browserPNG.type]: undefined,

@@ -2,6 +2,7 @@ import * as identity from './identity/encoder-meta';
 import * as oxiPNG from './oxipng/encoder-meta';
 import * as mozJPEG from './mozjpeg/encoder-meta';
 import * as webP from './webp/encoder-meta';
+import * as wp2 from './wp2/encoder-meta';
 import * as avif from './avif/encoder-meta';
 import * as jxl from './jxl/encoder-meta';
 import * as browserPNG from './browser-png/encoder-meta';
@@ -22,6 +23,7 @@ export type EncoderState =
   oxiPNG.EncoderState |
   mozJPEG.EncoderState |
   webP.EncoderState |
+  wp2.EncoderState |
   avif.EncoderState |
   jxl.EncoderState |
   browserPNG.EncoderState |
@@ -38,6 +40,7 @@ export type EncoderOptions =
   oxiPNG.EncodeOptions |
   mozJPEG.EncodeOptions |
   webP.EncodeOptions |
+  wp2.EncodeOptions |
   avif.EncodeOptions |
   jxl.EncodeOptions |
   browserPNG.EncodeOptions |
@@ -56,6 +59,7 @@ export const encoderMap = {
   [oxiPNG.type]: oxiPNG,
   [mozJPEG.type]: mozJPEG,
   [webP.type]: webP,
+  [wp2.type]: wp2,
   [avif.type]: avif,
   [jxl.type]: jxl,
   [browserPNG.type]: browserPNG,
