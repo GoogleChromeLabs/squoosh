@@ -44,8 +44,6 @@ val encode(std::string image, int width, int height, JXLOptions options) {
     js_result = Uint8Array.new_(typed_memory_view(bytes.size(), bytes.data()));
   }
 
-  // TODO: Any freeing that needs to be done?
-  //
   return js_result;
 }
 
