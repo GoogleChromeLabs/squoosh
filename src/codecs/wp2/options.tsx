@@ -3,11 +3,7 @@ import { bind } from '../../lib/initial-util';
 import { inputFieldValueAsNumber, preventDefault } from '../../lib/util';
 import { EncodeOptions } from './encoder-meta';
 import * as style from '../../components/Options/style.scss';
-// import Checkbox from '../../components/checkbox';
-// import Expander from '../../components/expander';
-// import Select from '../../components/select';
 import Range from '../../components/range';
-// import linkState from 'linkstate';
 
 interface Props {
   options: EncodeOptions;
