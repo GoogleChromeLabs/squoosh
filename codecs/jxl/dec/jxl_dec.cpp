@@ -72,8 +72,6 @@ val decode(std::string data) {
       &jxl_profile, pixels.get(), skcms_PixelFormat_RGBA_8888, skcms_AlphaFormat_Unpremul,
       skcms_sRGB_profile(), info.xsize * info.ysize));
 
-  float_pixels.reset();
-
   return ImageData.new_(
       Uint8ClampedArray.new_(typed_memory_view(info.xsize * info.ysize * 4, pixels.get())),
       info.xsize, info.ysize);
