@@ -4,12 +4,12 @@ CODEC_PACKAGE = node_modules/libavif.tar.gz
 LIBAOM_URL = https://aomedia.googlesource.com/aom/+archive/v2.0.0.tar.gz
 LIBAOM_PACKAGE = node_modules/libaom.tar.gz
 
-CODEC_DIR = node_modules/libavif
+export CODEC_DIR = node_modules/libavif
 BUILD_DIR := node_modules/build
 ENC_BUILD_DIR := $(BUILD_DIR)/enc
 ENC_MT_BUILD_DIR := $(BUILD_DIR)/enc-mt
 DEC_BUILD_DIR := $(BUILD_DIR)/dec
-LIBAOM_DIR = node_modules/libaom
+export LIBAOM_DIR = node_modules/libaom
 
 OUT_ENC_JS = enc/avif_enc.js
 OUT_ENC_MT_JS = enc/avif_enc_mt.js
@@ -18,9 +18,7 @@ OUT_DEC_JS = dec/avif_dec.js
 OUT_ENC_CPP = enc/avif_enc.cpp
 OUT_DEC_CPP = dec/avif_dec.cpp
 
-HELPER_MAKEFLAGS := -f helper.Makefile \
-	CODEC_DIR=$(CODEC_DIR) \
-	LIBAOM_DIR=$(LIBAOM_DIR)
+HELPER_MAKEFLAGS := -f helper.Makefile
 
 .PHONY: all clean
 
