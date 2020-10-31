@@ -3,17 +3,16 @@
 # Params that must be supplied by the caller:
 #   $(CODEC_DIR)
 #   $(LIBAOM_DIR)
+#   $(BUILD_DIR)
 #   $(OUT_JS)
 #   $(OUT_CPP)
 #   $(LIBAOM_FLAGS)
 #   $(LIBAVIF_FLAGS)
-#   $(CODEC_PACKAGE)
-#   $(LIBAOM_PACKAGE)
 
-CODEC_BUILD_DIR := $(CODEC_DIR)/build
+CODEC_BUILD_DIR := $(BUILD_DIR)/libavif
 CODEC_OUT := $(CODEC_BUILD_DIR)/libavif.a
 
-LIBAOM_BUILD_DIR := $(CODEC_DIR)/ext/aom/build.libavif
+LIBAOM_BUILD_DIR := $(BUILD_DIR)/libaom
 LIBAOM_OUT := $(LIBAOM_BUILD_DIR)/libaom.a
 
 OUT_WASM = $(OUT_JS:.js=.wasm)
@@ -42,8 +41,8 @@ $(CODEC_OUT): $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_OUT)
 		-DCMAKE_BUILD_TYPE=Release \
 		-DBUILD_SHARED_LIBS=0 \
 		-DAVIF_CODEC_AOM=1 \
-		-DAVIF_LOCAL_AOM=1 \
-		-DAVIF_CODEC_INCLUDES=$(abspath $(LIBAOM_DIR)) \
+		-DAOM_LIBRARY=$(LIBAOM_OUT) \
+    -DAOM_INCLUDE_DIR=$(LIBAOM_DIR) \
 		$(LIBAVIF_FLAGS) \
 		-B $(CODEC_BUILD_DIR) \
 		$(CODEC_DIR) && \
@@ -66,10 +65,6 @@ $(LIBAOM_OUT): $(LIBAOM_DIR)/CMakeLists.txt
 		-B $(LIBAOM_BUILD_DIR) \
 		$(LIBAOM_DIR) && \
 	$(MAKE) -C $(LIBAOM_BUILD_DIR)
-
-$(CODEC_DIR)/CMakeLists.txt: $(CODEC_PACKAGE)
-	mkdir -p $(@D)
-	tar xzm --strip 1 -C $(@D) -f $(CODEC_PACKAGE)
 
 clean:
 	$(RM) $(OUT_JS) $(OUT_WASM) $(OUT_WORKER)
