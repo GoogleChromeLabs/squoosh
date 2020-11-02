@@ -26,13 +26,20 @@ const pngEncDecPromise = pngEncDec.default(
   fsp.readFile(pathify(pngEncDecWasm))
 );
 
+// OxiPNG
 import * as oxipng from "../../codecs/oxipng/pkg/squoosh_oxipng.js";
 import oxipngWasm from "asset-url:../../codecs/oxipng/pkg/squoosh_oxipng_bg.wasm";
 const oxipngPromise = oxipng.default(fsp.readFile(pathify(oxipngWasm)));
 
+// Resize
 import * as resize from "../../codecs/resize/pkg/squoosh_resize.js";
 import resizeWasm from "asset-url:../../codecs/resize/pkg/squoosh_resize_bg.wasm";
 const resizePromise = resize.default(fsp.readFile(pathify(resizeWasm)));
+
+// ImageQuant
+import imageQuant from "../../codecs/imagequant/imagequant.js";
+import imageQuantWasm from "asset-url:../../codecs/imagequant/imagequant.wasm";
+const imageQuantPromise = instantiateEmscriptenWasm(imageQuant, imageQuantWasm);
 
 // Our decoders currently rely on a `ImageData` global.
 import ImageData from "./image_data.js";
@@ -114,11 +121,27 @@ export const preprocessors = {
       };
     },
     defaultOptions: {
-      // This will be set to 'vector' if the input is SVG.
       method: "lanczos3",
       fitMethod: "stretch",
       premultiply: true,
       linearRGB: true
+    }
+  },
+  quant: {
+    name: "ImageQuant",
+    description: "Reduce the number of colors used (aka. paletting)",
+    instantiate: async () => {
+      const imageQuant = await imageQuantPromise;
+      return (buffer, width, height, { numColors, dither }) =>
+        new ImageData(
+          imageQuant.quantize(buffer, width, height, numColors, dither),
+          width,
+          height
+        );
+    },
+    defaultOptions: {
+      numColors: 255,
+      dither: 1.0
     }
   }
 };
