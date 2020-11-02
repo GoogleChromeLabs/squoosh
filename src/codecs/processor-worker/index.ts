@@ -88,14 +88,14 @@ async function wp2Encode(
   const { encode } = await import(
     /* webpackChunkName: "process-wp2-enc" */
     '../wp2/encoder');
-  return encode(data, options);
+  return timed('wp2Encode', () => encode(data, options));
 }
 
 async function wp2Decode(data: ArrayBuffer): Promise<ImageData> {
   const { decode } = await import(
     /* webpackChunkName: "process-wp2-dec" */
     '../wp2/decoder');
-  return decode(data);
+  return timed('wp2Decode', () => decode(data));
 }
 
 async function avifEncode(
