@@ -53,6 +53,32 @@ function resizeNameToIndex(name) {
   }
 }
 
+function resizeWithAspect({
+  input_width,
+  input_height,
+  target_width,
+  target_height
+}) {
+  if (!target_width && !target_height) {
+    throw Error("Need to specify at least width or height when resizing");
+  }
+  if (target_width && target_height) {
+    return { width: target_width, height: target_height };
+  }
+  if (!target_width) {
+    return {
+      width: Math.round((input_width / input_height) * target_height),
+      height: target_height
+    };
+  }
+  if (!target_height) {
+    return {
+      width: target_width,
+      height: Math.round((input_height / input_width) * target_width)
+    };
+  }
+}
+
 export const preprocessors = {
   resize: {
     name: "Resize",
@@ -64,8 +90,14 @@ export const preprocessors = {
         input_width,
         input_height,
         { width, height, method, premultiply, linearRGB }
-      ) =>
-        new ImageData(
+      ) => {
+        ({ width, height } = resizeWithAspect({
+          input_width,
+          input_height,
+          target_width: width,
+          target_height: height
+        }));
+        return new ImageData(
           resize.resize(
             buffer,
             input_width,
@@ -79,12 +111,9 @@ export const preprocessors = {
           width,
           height
         );
+      };
     },
     defaultOptions: {
-      // Width and height will always default to the image size.
-      // This is set elsewhere.
-      width: 1,
-      height: 1,
       // This will be set to 'vector' if the input is SVG.
       method: "lanczos3",
       fitMethod: "stretch",
