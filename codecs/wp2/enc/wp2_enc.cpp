@@ -1,18 +1,18 @@
-#include <cstdio>
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
-
+#include <cstdio>
 #include "src/wp2/encode.h"
+
 using namespace emscripten;
 
-val encode(std::string image_in, int image_width, int image_height,
-           WP2::EncoderConfig config) {
-  WP2Status status;
-  uint8_t *image_buffer = (uint8_t *)image_in.c_str();
+thread_local const val Uint8Array = val::global("Uint8Array");
+
+val encode(std::string image_in, int image_width, int image_height, WP2::EncoderConfig config) {
+  uint8_t* image_buffer = (uint8_t*)image_in.c_str();
   WP2::ArgbBuffer src = WP2::ArgbBuffer();
-  status = src.Import(WP2_rgbA_32, // Format. WP2_RGBA_32 is the same but NOT
-                                   // premultiplied alpha
-                      image_width, image_height, image_buffer, 4 * image_width);
+  WP2Status status =
+      src.Import(WP2_rgbA_32,  // Format. WP2_RGBA_32 is the same but NOT premultiplied alpha
+                 image_width, image_height, image_buffer, 4 * image_width);
   if (status != WP2_STATUS_OK) {
     return val::null();
   }
@@ -23,8 +23,7 @@ val encode(std::string image_in, int image_width, int image_height,
     return val::null();
   }
 
-  return val(typed_memory_view(memory_writer.size_, memory_writer.mem_));
-  // Lol I forgot to add the free here.
+  return Uint8Array.new_(typed_memory_view(memory_writer.size_, memory_writer.mem_));
 }
 
 EMSCRIPTEN_BINDINGS(my_module) {
