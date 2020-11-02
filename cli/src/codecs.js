@@ -36,6 +36,9 @@ import * as resize from "../../codecs/resize/pkg/squoosh_resize.js";
 import resizeWasm from "asset-url:../../codecs/resize/pkg/squoosh_resize_bg.wasm";
 const resizePromise = resize.default(fsp.readFile(pathify(resizeWasm)));
 
+// rotate
+import rotateWasm from "asset-url:../../codecs/rotate/rotate.wasm";
+
 // ImageQuant
 import imageQuant from "../../codecs/imagequant/imagequant.js";
 import imageQuantWasm from "asset-url:../../codecs/imagequant/imagequant.wasm";
@@ -127,6 +130,7 @@ export const preprocessors = {
       linearRGB: true
     }
   },
+  // TODO: Need to handle SVGs and HQX
   quant: {
     name: "ImageQuant",
     description: "Reduce the number of colors used (aka. paletting)",
@@ -142,6 +146,35 @@ export const preprocessors = {
     defaultOptions: {
       numColors: 255,
       dither: 1.0
+    }
+  },
+  rotate: {
+    name: "Rotate",
+    description: "Rotate image",
+    instantiate: async () => {
+      return async (buffer, width, height, { degrees }) => {
+        const sameDimensions = degrees == 0 || degrees == 180;
+        const size = width * height * 4;
+        const { instance } = await WebAssembly.instantiate(
+          await fsp.readFile(pathify(rotateWasm))
+        );
+        const { memory } = instance.exports;
+        const pagesNeeded = Math.ceil(
+          (size * 2 - memory.buffer.byteLength) / (64 * 1024)
+        );
+        memory.grow(pagesNeeded);
+        const view = new Uint8ClampedArray(memory.buffer);
+        view.set(buffer, 8);
+        instance.exports.rotate(width, height, degrees);
+        return new ImageData(
+          new Uint8ClampedArray(view.slice(size + 8, size * 2 + 8)),
+          sameDimensions ? width : height,
+          sameDimensions ? height : width
+        );
+      };
+    },
+    defaultOptions: {
+      numRotations: 0
     }
   }
 };

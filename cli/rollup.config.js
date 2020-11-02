@@ -3,8 +3,8 @@ import cjs from "@rollup/plugin-commonjs";
 import asset from "./lib/asset-plugin.js";
 import json from "./lib/json-plugin.js";
 import autojson from "./lib/autojson-plugin.js";
-import { getBabelOutputPlugin } from '@rollup/plugin-babel';
-import { builtinModules } from 'module';
+import { getBabelOutputPlugin } from "@rollup/plugin-babel";
+import { builtinModules } from "module";
 
 /** @type {import('rollup').RollupOptions} */
 export default ({
@@ -29,12 +29,15 @@ export default ({
       minified: true,
       comments: false,
       presets: [
-        ['@babel/preset-env', {
-          targets: {
-            node: 12
-          },
-          loose: true
-        }]
+        [
+          "@babel/preset-env",
+          {
+            targets: {
+              node: 12
+            },
+            loose: true
+          }
+        ]
       ]
     })
   ],
