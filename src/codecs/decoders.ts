@@ -18,6 +18,7 @@ export async function decodeImage(
     }
     return await builtinDecode(blob);
   } catch (err) {
-    throw Error('Couldnt decode image');
+    console.error(err);
+    throw Error("Couldn't decode image");
   }
 }
