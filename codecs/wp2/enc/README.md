@@ -1,10 +1,10 @@
 # WebP2 encoder
 
-The source for the library is not open-source _yet_. The second it is we will publicize the build steps.
+- Source: <https://chromium.googlesource.com/codecs/libwebp2>
 
 ## Dependencies
 
-N/A
+- Docker
 
 ## Example
 
@@ -12,6 +12,6 @@ N/A
 
 ## API
 
-### `UInt8Array encode(uint8_t* image_buffer, int image_width, int image_height)`
+### `UInt8Array encode(uint8_t* image_buffer, int image_width, int image_height, WP2::EncoderConfig config)`
 
-Encodes the given image with given dimension to WP2.
+Encodes the given image with given dimension to WebP2.
