@@ -30,11 +30,71 @@ import * as oxipng from "../../codecs/oxipng/pkg/squoosh_oxipng.js";
 import oxipngWasm from "asset-url:../../codecs/oxipng/pkg/squoosh_oxipng_bg.wasm";
 const oxipngPromise = oxipng.default(fsp.readFile(pathify(oxipngWasm)));
 
+import * as resize from "../../codecs/resize/pkg/squoosh_resize.js";
+import resizeWasm from "asset-url:../../codecs/resize/pkg/squoosh_resize_bg.wasm";
+const resizePromise = resize.default(fsp.readFile(pathify(resizeWasm)));
+
 // Our decoders currently rely on a `ImageData` global.
 import ImageData from "./image_data.js";
 globalThis.ImageData = ImageData;
 
-export default {
+function resizeNameToIndex(name) {
+  switch (name) {
+    case "triangle":
+      return 0;
+    case "catrom":
+      return 1;
+    case "mitchell":
+      return 2;
+    case "lanczos3":
+      return 3;
+    default:
+      throw Error(`Unknown resize algorithm "${name}"`);
+  }
+}
+
+export const preprocessors = {
+  resize: {
+    name: "Resize",
+    description: "Resize the image before compressing",
+    instantiate: async () => {
+      await resizePromise;
+      return (
+        buffer,
+        input_width,
+        input_height,
+        { width, height, method, premultiply, linearRGB }
+      ) =>
+        new ImageData(
+          resize.resize(
+            buffer,
+            input_width,
+            input_height,
+            width,
+            height,
+            resizeNameToIndex(method),
+            premultiply,
+            linearRGB
+          ),
+          width,
+          height
+        );
+    },
+    defaultOptions: {
+      // Width and height will always default to the image size.
+      // This is set elsewhere.
+      width: 1,
+      height: 1,
+      // This will be set to 'vector' if the input is SVG.
+      method: "lanczos3",
+      fitMethod: "stretch",
+      premultiply: true,
+      linearRGB: true
+    }
+  }
+};
+
+export const codecs = {
   mozjpeg: {
     name: "MozJPEG",
     extension: "jpg",

@@ -8,7 +8,7 @@ import { version } from "json:../package.json";
 import ora from 'ora';
 import kleur from 'kleur';
 
-import supportedFormats from "./codecs.js";
+import {codecs as supportedFormats, preprocessors} from "./codecs.js";
 import WorkerPool from "./worker_pool.js";
 import { autoOptimize } from "./auto-optimizer.js";
 
@@ -45,6 +45,16 @@ async function decodeFile(file) {
     bitmap: rgba,
     size: buffer.length
   };
+}
+
+async function preprocessImage({
+	preprocessorName,
+	options,
+	file
+}) {
+	const preprocessor = await preprocessors[preprocessorName].instantiate();
+	file.bitmap= await preprocessor(file.bitmap.data, file.bitmap.width, file.bitmap.height, options);
+	return file;
 }
 
 async function encodeFile({
@@ -110,12 +120,16 @@ async function encodeFile({
 // both decoding and encoding go through the worker pool
 function handleJob(params) {
   const { operation } = params;
-  if (operation === 'encode') {
+	switch(operation) {
+		case "encode":
     return encodeFile(params);
-  }
-  if (operation === 'decode') {
+		case "decode":
     return decodeFile(params.file);
-  }
+		case "preprocess":
+			return preprocessImage(params);
+		default:
+			throw Error(`Invalid job "${operation}"`);
+	}
 }
 
 function progressTracker(results) {
@@ -175,7 +189,7 @@ async function processFiles(files) {
   await fsp.mkdir(program.outputDir, { recursive: true });
 
   let decoded = 0;
-  const decodedFiles = await Promise.all(files.map(async file => {
+  let decodedFiles = await Promise.all(files.map(async file => {
     const result = await workerPool.dispatchJob({ operation: 'decode', file });
     results.set(file, {
       file: result.file,
@@ -185,6 +199,31 @@ async function processFiles(files) {
     progress.setProgress(++decoded, files.length);
     return result;
   }));
+
+	for (const [preprocessorName, value] of Object.entries(preprocessors)) {
+		if(!program[preprocessorName]) {
+			continue;
+		}
+		  const preprocessorParam = program[preprocessorName];
+		const preprocessorOptions = Object.assign(
+              {},
+              value.defaultOptions,
+              JSON5.parse(preprocessorParam)
+		);
+
+		decodedFiles = await Promise.all(decodedFiles.map(async file => {
+			return workerPool.dispatchJob({
+				file,
+				operation: "preprocess",
+				preprocessorName,
+				options: preprocessorOptions
+			});
+		}));
+	
+	  for (const { file, bitmap, size } of decodedFiles) {
+		
+	  }
+	}
 
   progress.progressOffset = decoded;
   progress.setStatus('Encoding ' + kleur.dim(`(${parallelism} threads)`));
@@ -261,6 +300,13 @@ if (isMainThread) {
     )
     .action(processFiles);
 
+  // Create a CLI option for each supported preprocessor
+  for (const [key, value] of Object.entries(preprocessors)) {
+    program.option(
+      `--${key} [config]`,
+	  value.description
+    );
+  }
   // Create a CLI option for each supported encoder
   for (const [key, value] of Object.entries(supportedFormats)) {
     program.option(
