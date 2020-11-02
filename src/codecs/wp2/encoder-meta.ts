@@ -8,7 +8,7 @@ export interface EncodeOptions {
 export interface EncoderState { type: typeof type; options: EncodeOptions; }
 
 export const type = 'wp2';
-export const label = 'WebP 2 (beta)';
+export const label = 'WebP 2 (unstable)';
 export const mimeType = 'image/webp2';
 export const extension = 'wp2';
 export const defaultOptions: EncodeOptions = {
