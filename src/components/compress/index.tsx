@@ -212,6 +212,9 @@ const buttonPositions =
 
 const originalDocumentTitle = document.title;
 
+// Prefixed to the window title if app is loading something
+const loadingIndicator = '⏳ ';
+
 export default class Compress extends Component<Props, State> {
   widthQuery = window.matchMedia('(max-width: 599px)');
 
@@ -286,6 +289,19 @@ export default class Compress extends Component<Props, State> {
     document.title = filename ? `${filename} - ${originalDocumentTitle}` : originalDocumentTitle;
   }
 
+  private updateLoadingIndicator(isLoading: boolean = false): void {
+    // Update the title if the editor loading state changes
+    if (isLoading) {
+      if (!document.title.startsWith(loadingIndicator)) {
+        document.title = loadingIndicator + document.title;
+      }
+    } else {
+      if (document.title.startsWith(loadingIndicator)) {
+        document.title = document.title.slice(loadingIndicator.length);
+      }
+    }
+  }
+
   componentWillReceiveProps(nextProps: Props): void {
     if (nextProps.file !== this.props.file) {
       this.updateFile(nextProps.file);
@@ -297,7 +313,15 @@ export default class Compress extends Component<Props, State> {
   }
 
   componentDidUpdate(prevProps: Props, prevState: State): void {
-    const { source, sides } = this.state;
+    const { loading, source, sides } = this.state;
+
+    const isLoading = loading || sides[0].loading || sides[1].loading;
+    const loadingStateChanged = isLoading !==
+      prevState.loading || prevState.sides[0].loading || prevState.sides[1].loading;
+
+    if (loadingStateChanged) {
+      this.updateLoadingIndicator(isLoading);
+    }
 
     const sourceDataChanged =
       // Has the source object become set/unset?
