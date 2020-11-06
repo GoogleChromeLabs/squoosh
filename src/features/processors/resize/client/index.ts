@@ -3,7 +3,7 @@ import {
   BuiltinResizeMethod,
   drawableToImageData,
 } from 'client/util';
-import { BrowserResizeOptions, VectorResizeOptions } from '../shared';
+import { BrowserResizeOptions, VectorResizeOptions } from '../shared/meta';
 import { getContainOffsets } from '../shared/util';
 
 export function browserResize(

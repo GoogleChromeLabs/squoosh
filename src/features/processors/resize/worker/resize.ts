@@ -1,4 +1,4 @@
-import type { WorkerResizeOptions } from '../shared';
+import type { WorkerResizeOptions } from '../shared/meta';
 import { getContainOffsets } from '../shared/util';
 import initResizeWasm, { resize as wasmResize } from 'codecs/resize/pkg';
 import resizeWasmUrl from 'url:codecs/resize/pkg/squoosh_resize_bg.wasm';

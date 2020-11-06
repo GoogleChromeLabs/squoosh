@@ -13,18 +13,13 @@
 import imagequant, { QuantizerModule } from 'codecs/imagequant/imagequant';
 import wasmUrl from 'url:codecs/imagequant/imagequant.wasm';
 import { initEmscriptenModule } from 'features/util';
-
-export interface QuantizeOptions {
-  zx: number;
-  maxNumColors: number;
-  dither: number;
-}
+import { Options } from '../shared/meta';
 
 let emscriptenModule: Promise<QuantizerModule>;
 
 export default async function process(
   data: ImageData,
-  opts: QuantizeOptions,
+  opts: Options,
 ): Promise<ImageData> {
   if (!emscriptenModule) {
     emscriptenModule = initEmscriptenModule(imagequant, wasmUrl);

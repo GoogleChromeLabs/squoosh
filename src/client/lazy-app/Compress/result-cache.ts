@@ -1,6 +1,5 @@
-import { EncoderState } from '../feature-meta';
-import { shallowEqual } from '../../lib/util';
-import { PreprocessorState } from '../../codecs/preprocessors';
+import { EncoderState, ProcessorState } from '../feature-meta';
+import { shallowEqual } from '../../util';
 
 import * as identity from '../../codecs/identity/encoder-meta';
 
@@ -11,7 +10,7 @@ interface CacheResult {
 }
 
 interface CacheEntry extends CacheResult {
-  preprocessorState: PreprocessorState;
+  processorState: ProcessorState;
   encoderState: EncoderState;
   sourceData: ImageData;
 }
@@ -32,7 +31,7 @@ export default class ResultCache {
 
   match(
     sourceData: ImageData,
-    preprocessorState: PreprocessorState,
+    processorState: ProcessorState,
     encoderState: EncoderState,
   ): CacheResult | undefined {
     const matchingIndex = this._entries.findIndex((entry) => {
@@ -41,11 +40,11 @@ export default class ResultCache {
       if (entry.encoderState.type !== encoderState.type) return false;
 
       // Check that each set of options in the preprocessor are the same
-      for (const prop in preprocessorState) {
+      for (const prop in processorState) {
         if (
           !shallowEqual(
-            (preprocessorState as any)[prop],
-            (entry.preprocessorState as any)[prop],
+            (processorState as any)[prop],
+            (entry.processorState as any)[prop],
           )
         )
           return false;

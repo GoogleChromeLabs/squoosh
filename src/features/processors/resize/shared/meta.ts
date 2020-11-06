@@ -23,7 +23,7 @@ type WorkerResizeMethods =
   | 'lanczos3'
   | 'hqx';
 
-export type ResizeOptions =
+export type Options =
   | BrowserResizeOptions
   | WorkerResizeOptions
   | VectorResizeOptions;
@@ -47,3 +47,15 @@ export interface WorkerResizeOptions extends ResizeOptionsCommon {
 export interface VectorResizeOptions extends ResizeOptionsCommon {
   method: 'vector';
 }
+
+export const defaultOptions: Options = {
+  // Width and height will always default to the image size.
+  // This is set elsewhere.
+  width: 1,
+  height: 1,
+  // This will be set to 'vector' if the input is SVG.
+  method: 'lanczos3',
+  fitMethod: 'stretch',
+  premultiply: true,
+  linearRGB: true,
+};
