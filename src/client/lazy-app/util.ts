@@ -368,6 +368,13 @@ export function preventDefault(event: Event) {
 }
 
 /**
+ * Throw an abort error if a signal is aborted.
+ */
+export function assertSignal(signal: AbortSignal) {
+  if (signal.aborted) throw new DOMException('AbortError', 'AbortError');
+}
+
+/**
  * Take a signal and promise, and returns a promise that rejects with an AbortError if the abort is
  * signalled, otherwise resolves with the promise.
  */
@@ -375,7 +382,7 @@ export async function abortable<T>(
   signal: AbortSignal,
   promise: Promise<T>,
 ): Promise<T> {
-  if (signal.aborted) throw new DOMException('AbortError', 'AbortError');
+  assertSignal(signal);
   return Promise.race([
     promise,
     new Promise<T>((_, reject) => {

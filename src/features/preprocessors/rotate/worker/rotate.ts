@@ -11,10 +11,7 @@
  * limitations under the License.
  */
 import wasmUrl from 'url:codecs/rotate/rotate.wasm';
-
-export interface RotateOptions {
-  rotate: 0 | 90 | 180 | 270;
-}
+import { Options } from '../shared/meta';
 
 export interface RotateModuleInstance {
   exports: {
@@ -33,7 +30,7 @@ const instancePromise = fetch(wasmUrl)
 
 export default async function rotate(
   data: ImageData,
-  opts: RotateOptions,
+  opts: Options,
 ): Promise<ImageData> {
   const instance = (await instancePromise).instance as RotateModuleInstance;
 

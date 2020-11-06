@@ -10,6 +10,7 @@
     { "path": "../features/encoders/identity/shared" },
     { "path": "../features/encoders/browserGIF/shared" },
     { "path": "../features/encoders/browserJPEG/shared" },
-    { "path": "../features/encoders/browserPNG/shared" }
+    { "path": "../features/encoders/browserPNG/shared" },
+    { "path": "../features/processors/resize/client" }
   ]
 }

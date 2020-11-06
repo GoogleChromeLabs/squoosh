@@ -3,13 +3,27 @@ import {
   BuiltinResizeMethod,
   drawableToImageData,
 } from 'client/lazy-app/util';
-import { BrowserResizeOptions, VectorResizeOptions } from '../shared/meta';
+import {
+  BrowserResizeOptions,
+  VectorResizeOptions,
+  WorkerResizeOptions,
+  Options,
+  workerResizeMethods,
+} from '../shared/meta';
 import { getContainOffsets } from '../shared/util';
+import type { SourceImage } from 'client/lazy-app/Compress';
+import type WorkerBridge from 'client/lazy-app/worker-bridge';
 
-export function browserResize(
-  data: ImageData,
-  opts: BrowserResizeOptions,
-): ImageData {
+/**
+ * Return whether a set of options are worker resize options.
+ *
+ * @param opts
+ */
+function isWorkerOptions(opts: Options): opts is WorkerResizeOptions {
+  return (workerResizeMethods as string[]).includes(opts.method);
+}
+
+function browserResize(data: ImageData, opts: BrowserResizeOptions): ImageData {
   let sx = 0;
   let sy = 0;
   let sw = data.width;
@@ -31,7 +45,7 @@ export function browserResize(
   );
 }
 
-export function vectorResize(
+function vectorResize(
   data: HTMLImageElement,
   opts: VectorResizeOptions,
 ): ImageData {
@@ -52,4 +66,20 @@ export function vectorResize(
     width: opts.width,
     height: opts.height,
   });
+}
+
+export async function resize(
+  signal: AbortSignal,
+  source: SourceImage,
+  options: Options,
+  workerBridge: WorkerBridge,
+) {
+  if (options.method === 'vector') {
+    if (!source.vectorImage) throw Error('No vector image available');
+    return vectorResize(source.vectorImage, options);
+  }
+  if (isWorkerOptions(options)) {
+    return workerBridge.resize(signal, source.processed, options);
+  }
+  return browserResize(source.processed, options);
 }

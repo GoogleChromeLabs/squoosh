@@ -1,5 +1,7 @@
 import { h, Component } from 'preact';
 
+import * as style from './style.css';
+import 'add-css:./style.css';
 import {
   blobToImg,
   drawableToImageData,
@@ -7,41 +9,35 @@ import {
   builtinDecode,
   sniffMimeType,
   canDecodeImageType,
+  abortable,
+  assertSignal,
 } from '../util';
-import * as style from './style.css';
-import 'add-css:./style.css';
+import {
+  PreprocessorState,
+  ProcessorState,
+  EncoderState,
+} from '../feature-meta';
 import Output from '../Output';
 import Options from '../Options';
 import ResultCache from './result-cache';
-import { decodeImage } from '../../codecs/decoders';
 import { cleanMerge, cleanSet } from '../../lib/clean-modify';
-import Processor from '../../codecs/processor';
-import {
-  BrowserResizeOptions,
-  isWorkerOptions as isWorkerResizeOptions,
-  isHqx,
-  WorkerResizeOptions,
-} from '../../codecs/resize/processor-meta';
 import './custom-els/MultiPanel';
 import Results from '../results';
 import { ExpandIcon, CopyAcrossIconProps } from '../../lib/icons';
 import SnackBarElement from '../../lib/SnackBar';
-import {
-  InputProcessorState,
-  defaultInputProcessorState,
-} from '../../codecs/input-processors';
 import WorkerBridge from '../worker-bridge';
+import { resize } from 'features/processors/resize/client';
 
 export interface SourceImage {
   file: File;
   decoded: ImageData;
   processed: ImageData;
   vectorImage?: HTMLImageElement;
-  inputProcessorState: InputProcessorState;
+  preprocessorState: PreprocessorState;
 }
 
 interface SideSettings {
-  preprocessorState: PreprocessorState;
+  processorState: ProcessorState;
   encoderState: EncoderState;
 }
 
@@ -79,8 +75,9 @@ async function decodeImage(
   blob: Blob,
   workerBridge: WorkerBridge,
 ): Promise<ImageData> {
-  const mimeType = await sniffMimeType(blob);
-  const canDecode = await canDecodeImageType(mimeType);
+  assertSignal(signal);
+  const mimeType = await abortable(signal, sniffMimeType(blob));
+  const canDecode = await abortable(signal, canDecodeImageType(mimeType));
 
   try {
     if (!canDecode) {
@@ -92,63 +89,52 @@ async function decodeImage(
       }
       // If it's not one of those types, fall through and try built-in decoding for a laugh.
     }
-    return await builtinDecode(blob);
+    return await abortable(signal, builtinDecode(blob));
   } catch (err) {
+    if (err.name === 'AbortError') throw err;
+    console.log(err);
     throw Error("Couldn't decode image");
   }
 }
 
-async function processInput(
+async function preprocessImage(
+  signal: AbortSignal,
   data: ImageData,
-  inputProcessData: InputProcessorState,
-  processor: Processor,
-) {
+  preprocessorState: PreprocessorState,
+  workerBridge: WorkerBridge,
+): Promise<ImageData> {
+  assertSignal(signal);
   let processedData = data;
 
-  if (inputProcessData.rotate.rotate !== 0) {
-    processedData = await processor.rotate(
+  if (preprocessorState.rotate.rotate !== 0) {
+    processedData = await workerBridge.rotate(
+      signal,
       processedData,
-      inputProcessData.rotate,
+      preprocessorState.rotate,
     );
   }
 
   return processedData;
 }
 
-async function preprocessImage(
+async function processImage(
+  signal: AbortSignal,
   source: SourceImage,
-  preprocessData: PreprocessorState,
-  processor: Processor,
+  processorState: ProcessorState,
+  workerBridge: WorkerBridge,
 ): Promise<ImageData> {
+  assertSignal(signal);
   let result = source.processed;
 
-  if (preprocessData.resize.enabled) {
-    if (preprocessData.resize.method === 'vector' && source.vectorImage) {
-      result = processor.vectorResize(
-        source.vectorImage,
-        preprocessData.resize,
-      );
-    } else if (isHqx(preprocessData.resize)) {
-      // Hqx can only do x2, x3 or x4.
-      result = await processor.workerResize(result, preprocessData.resize);
-      // If the target size is not a clean x2, x3 or x4, use Catmull-Rom
-      // for the remaining scaling.
-      const pixelOpts = { ...preprocessData.resize, method: 'catrom' };
-      result = await processor.workerResize(
-        result,
-        pixelOpts as WorkerResizeOptions,
-      );
-    } else if (isWorkerResizeOptions(preprocessData.resize)) {
-      result = await processor.workerResize(result, preprocessData.resize);
-    } else {
-      result = processor.resize(
-        result,
-        preprocessData.resize as BrowserResizeOptions,
-      );
-    }
+  if (processorState.resize.enabled) {
+    result = await resize(signal, source, processorState.resize, workerBridge);
   }
-  if (preprocessData.quantizer.enabled) {
-    result = await processor.imageQuant(result, preprocessData.quantizer);
+  if (processorState.quantizer.enabled) {
+    result = await workerBridge.imageQuant(
+      signal,
+      result,
+      processorState.quantizer,
+    );
   }
   return result;
 }
@@ -264,7 +250,7 @@ export default class Compress extends Component<Props, State> {
     sides: [
       {
         latestSettings: {
-          preprocessorState: defaultPreprocessorState,
+          processorState: defaultPreprocessorState,
           encoderState: {
             type: identity.type,
             options: identity.defaultOptions,
@@ -276,7 +262,7 @@ export default class Compress extends Component<Props, State> {
       },
       {
         latestSettings: {
-          preprocessorState: defaultPreprocessorState,
+          processorState: defaultPreprocessorState,
           encoderState: { type: mozJPEG.type, options: mozJPEG.defaultOptions },
         },
         loadingCounter: 0,
@@ -376,8 +362,7 @@ export default class Compress extends Component<Props, State> {
       const encoderChanged =
         side.latestSettings.encoderState !== prevSettings.encoderState;
       const preprocessorChanged =
-        side.latestSettings.preprocessorState !==
-        prevSettings.preprocessorState;
+        side.latestSettings.processorState !== prevSettings.processorState;
 
       // The image only needs updated if the encoder/preprocessor settings have changed, or the
       // source has changed.
@@ -421,7 +406,7 @@ export default class Compress extends Component<Props, State> {
     const source = this.state.source;
     if (!source) return;
 
-    const oldRotate = source.inputProcessorState.rotate.rotate;
+    const oldRotate = source.preprocessorState.rotate.rotate;
     const newRotate = options.rotate.rotate;
     const orientationChanged = oldRotate % 180 !== newRotate % 180;
     const loadingCounter = this.state.loadingCounter + 1;
@@ -439,7 +424,11 @@ export default class Compress extends Component<Props, State> {
     this.rightProcessor.abortCurrent();
 
     try {
-      const processed = await processInput(source.decoded, options, processor);
+      const processed = await preprocessImage(
+        source.decoded,
+        options,
+        processor,
+      );
 
       // Another file has been opened/processed before this one processed.
       if (this.state.loadingCounter !== loadingCounter) return;
@@ -452,7 +441,7 @@ export default class Compress extends Component<Props, State> {
         // If orientation has changed, we should flip the resize values.
         for (const i of [0, 1]) {
           const resizeSettings =
-            newState.sides[i].latestSettings.preprocessorState.resize;
+            newState.sides[i].latestSettings.processorState.resize;
           newState = cleanMerge(
             newState,
             `sides.${i}.latestSettings.preprocessorState.resize`,
@@ -500,7 +489,7 @@ export default class Compress extends Component<Props, State> {
         decoded = await decodeImage(file, processor);
       }
 
-      const processed = await processInput(
+      const processed = await preprocessImage(
         decoded,
         defaultInputProcessorState,
         processor,
@@ -516,7 +505,7 @@ export default class Compress extends Component<Props, State> {
           file,
           vectorImage,
           processed,
-          inputProcessorState: defaultInputProcessorState,
+          preprocessorState: defaultInputProcessorState,
         },
         loading: false,
       };
@@ -617,7 +606,7 @@ export default class Compress extends Component<Props, State> {
           preprocessed =
             skipPreprocessing && side.preprocessed
               ? side.preprocessed
-              : await preprocessImage(
+              : await processImage(
                   source,
                   settings.preprocessorState,
                   processor,
@@ -679,7 +668,7 @@ export default class Compress extends Component<Props, State> {
       <Options
         source={source}
         mobileView={mobileView}
-        preprocessorState={side.latestSettings.preprocessorState}
+        preprocessorState={side.latestSettings.processorState}
         encoderState={side.latestSettings.encoderState}
         onEncoderTypeChange={this.onEncoderTypeChange.bind(
           this,
@@ -729,11 +718,11 @@ export default class Compress extends Component<Props, State> {
     const rightDisplaySettings =
       rightSide.encodedSettings || rightSide.latestSettings;
     const leftImgContain =
-      leftDisplaySettings.preprocessorState.resize.enabled &&
-      leftDisplaySettings.preprocessorState.resize.fitMethod === 'contain';
+      leftDisplaySettings.processorState.resize.enabled &&
+      leftDisplaySettings.processorState.resize.fitMethod === 'contain';
     const rightImgContain =
-      rightDisplaySettings.preprocessorState.resize.enabled &&
-      rightDisplaySettings.preprocessorState.resize.fitMethod === 'contain';
+      rightDisplaySettings.processorState.resize.enabled &&
+      rightDisplaySettings.processorState.resize.fitMethod === 'contain';
 
     return (
       <div class={style.compress}>
@@ -745,7 +734,7 @@ export default class Compress extends Component<Props, State> {
           leftImgContain={leftImgContain}
           rightImgContain={rightImgContain}
           onBack={onBack}
-          inputProcessorState={source && source.inputProcessorState}
+          inputProcessorState={source && source.preprocessorState}
           onInputProcessorChange={this.onInputProcessorChange}
         />
         {mobileView ? (
