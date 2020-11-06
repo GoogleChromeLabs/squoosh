@@ -1,34 +1,18 @@
 import { h, Component } from 'preact';
 
-import { bind, Fileish } from '../../lib/initial-util';
-import { blobToImg, drawableToImageData, blobToText } from '../../lib/util';
-import * as style from './style.scss';
+import {
+  blobToImg,
+  drawableToImageData,
+  blobToText,
+  builtinDecode,
+  sniffMimeType,
+  canDecodeImageType,
+} from '../util';
+import * as style from './style.css';
+import 'add-css:./style.css';
 import Output from '../Output';
 import Options from '../Options';
 import ResultCache from './result-cache';
-import * as identity from '../../codecs/identity/encoder-meta';
-import * as oxiPNG from '../../codecs/oxipng/encoder-meta';
-import * as mozJPEG from '../../codecs/mozjpeg/encoder-meta';
-import * as webP from '../../codecs/webp/encoder-meta';
-import * as avif from '../../codecs/avif/encoder-meta';
-import * as browserPNG from '../../codecs/browser-png/encoder-meta';
-import * as browserJPEG from '../../codecs/browser-jpeg/encoder-meta';
-import * as browserWebP from '../../codecs/browser-webp/encoder-meta';
-import * as browserGIF from '../../codecs/browser-gif/encoder-meta';
-import * as browserTIFF from '../../codecs/browser-tiff/encoder-meta';
-import * as browserJP2 from '../../codecs/browser-jp2/encoder-meta';
-import * as browserBMP from '../../codecs/browser-bmp/encoder-meta';
-import * as browserPDF from '../../codecs/browser-pdf/encoder-meta';
-import {
-  EncoderState,
-  EncoderType,
-  EncoderOptions,
-  encoderMap,
-} from '../../codecs/encoders';
-import {
-  PreprocessorState,
-  defaultPreprocessorState,
-} from '../../codecs/preprocessors';
 import { decodeImage } from '../../codecs/decoders';
 import { cleanMerge, cleanSet } from '../../lib/clean-modify';
 import Processor from '../../codecs/processor';
@@ -46,9 +30,10 @@ import {
   InputProcessorState,
   defaultInputProcessorState,
 } from '../../codecs/input-processors';
+import WorkerBridge from '../worker-bridge';
 
 export interface SourceImage {
-  file: File | Fileish;
+  file: File;
   decoded: ImageData;
   processed: ImageData;
   vectorImage?: HTMLImageElement;
@@ -62,20 +47,16 @@ interface SideSettings {
 
 interface Side {
   preprocessed?: ImageData;
-  file?: Fileish;
+  file?: File;
   downloadUrl?: string;
   data?: ImageData;
   latestSettings: SideSettings;
   encodedSettings?: SideSettings;
   loading: boolean;
-  /** Counter of the latest bmp currently encoding */
-  loadingCounter: number;
-  /** Counter of the latest bmp encoded */
-  loadedCounter: number;
 }
 
 interface Props {
-  file: File | Fileish;
+  file: File;
   showSnack: SnackBarElement['showSnackbar'];
   onBack: () => void;
 }
@@ -85,13 +66,36 @@ interface State {
   sides: [Side, Side];
   /** Source image load */
   loading: boolean;
-  loadingCounter: number;
   error?: string;
   mobileView: boolean;
 }
 
 interface UpdateImageOptions {
   skipPreprocessing?: boolean;
+}
+
+async function decodeImage(
+  signal: AbortSignal,
+  blob: Blob,
+  workerBridge: WorkerBridge,
+): Promise<ImageData> {
+  const mimeType = await sniffMimeType(blob);
+  const canDecode = await canDecodeImageType(mimeType);
+
+  try {
+    if (!canDecode) {
+      if (mimeType === 'image/avif') {
+        return await workerBridge.avifDecode(signal, blob);
+      }
+      if (mimeType === 'image/webp') {
+        return await workerBridge.webpDecode(signal, blob);
+      }
+      // If it's not one of those types, fall through and try built-in decoding for a laugh.
+    }
+    return await builtinDecode(blob);
+  } catch (err) {
+    throw Error("Couldn't decode image");
+  }
 }
 
 async function processInput(
@@ -154,7 +158,7 @@ async function compressImage(
   encodeData: EncoderState,
   sourceFilename: string,
   processor: Processor,
-): Promise<Fileish> {
+): Promise<File> {
   const compressedData = await (() => {
     switch (encodeData.type) {
       case oxiPNG.type:
@@ -188,7 +192,7 @@ async function compressImage(
 
   const encoder = encoderMap[encodeData.type];
 
-  return new Fileish(
+  return new File(
     [compressedData],
     sourceFilename.replace(/.[^.]*$/, `.${encoder.extension}`),
     { type: encoder.mimeType },
@@ -300,10 +304,9 @@ export default class Compress extends Component<Props, State> {
     import('../../lib/sw-bridge').then(({ mainAppLoaded }) => mainAppLoaded());
   }
 
-  @bind
-  private onMobileWidthChange() {
+  private onMobileWidthChange = () => {
     this.setState({ mobileView: this.widthQuery.matches });
-  }
+  };
 
   private onEncoderTypeChange(index: 0 | 1, newType: EncoderType): void {
     this.setState({
@@ -412,10 +415,9 @@ export default class Compress extends Component<Props, State> {
     });
   }
 
-  @bind
-  private async onInputProcessorChange(
+  private onInputProcessorChange = async (
     options: InputProcessorState,
-  ): Promise<void> {
+  ): Promise<void> => {
     const source = this.state.source;
     if (!source) return;
 
@@ -470,10 +472,9 @@ export default class Compress extends Component<Props, State> {
       this.props.showSnack('Processing error');
       this.setState({ loading: false });
     }
-  }
+  };
 
-  @bind
-  private async updateFile(file: File | Fileish) {
+  private updateFile = async (file: File) => {
     const loadingCounter = this.state.loadingCounter + 1;
     // Either processor is good enough here.
     const processor = this.leftProcessor;
@@ -545,7 +546,7 @@ export default class Compress extends Component<Props, State> {
       this.props.showSnack('Invalid image');
       this.setState({ loading: false });
     }
-  }
+  };
 
   /**
    * Debounce the heavy lifting of updateImage.
@@ -589,7 +590,7 @@ export default class Compress extends Component<Props, State> {
     const side = sides[index];
     const settings = side.latestSettings;
 
-    let file: File | Fileish | undefined;
+    let file: File | undefined;
     let preprocessed: ImageData | undefined;
     let data: ImageData | undefined;
     const cacheResult = this.encodeCache.match(

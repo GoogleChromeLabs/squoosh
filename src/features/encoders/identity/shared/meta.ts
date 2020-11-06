@@ -10,17 +10,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export function initEmscriptenModule<T extends EmscriptenWasm.Module>(
-  moduleFactory: EmscriptenWasm.ModuleFactory<T>,
-  wasmUrl: string,
-): Promise<T> {
-  return moduleFactory({
-    // Just to be safe, don't automatically invoke any wasm functions
-    noInitialRun: true,
-    locateFile: () => wasmUrl,
-  });
-}
-
-export function blobToArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
-  return new Response(blob).arrayBuffer();
-}
+export interface EncodeOptions {}
+export const label = 'Original image';
+export const defaultOptions: EncodeOptions = {};

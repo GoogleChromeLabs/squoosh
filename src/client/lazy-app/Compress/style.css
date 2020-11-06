@@ -42,7 +42,7 @@
   flex-flow: column;
   overflow: hidden;
 
-  // Reorder so headings appear after content:
+  /* Reorder so headings appear after content: */
   & > :nth-child(1) {
     order: 2;
     margin-bottom: 10px;
@@ -71,5 +71,5 @@
 }
 
 :focus .expand-icon {
-  fill: #34B9EB;
+  fill: #34b9eb;
 }

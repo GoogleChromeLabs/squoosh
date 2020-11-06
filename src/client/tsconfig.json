@@ -4,5 +4,12 @@
     "lib": ["esnext", "dom", "dom.iterable"],
     "types": []
   },
-  "references": [{ "path": "../features-worker" }, { "path": "../shared" }]
+  "references": [
+    { "path": "../features-worker" },
+    { "path": "../shared" },
+    { "path": "../features/encoders/identity/shared" },
+    { "path": "../features/encoders/browserGIF/shared" },
+    { "path": "../features/encoders/browserJPEG/shared" },
+    { "path": "../features/encoders/browserPNG/shared" }
+  ]
 }

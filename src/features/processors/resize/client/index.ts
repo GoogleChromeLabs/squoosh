@@ -2,7 +2,7 @@ import {
   builtinResize,
   BuiltinResizeMethod,
   drawableToImageData,
-} from 'client/util';
+} from 'client/lazy-app/util';
 import { BrowserResizeOptions, VectorResizeOptions } from '../shared/meta';
 import { getContainOffsets } from '../shared/util';
 

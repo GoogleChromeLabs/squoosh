@@ -1,8 +1,6 @@
 import { EncoderState, ProcessorState } from '../feature-meta';
 import { shallowEqual } from '../../util';
 
-import * as identity from '../../codecs/identity/encoder-meta';
-
 interface CacheResult {
   preprocessed: ImageData;
   data: ImageData;
@@ -21,8 +19,9 @@ export default class ResultCache {
   private readonly _entries: CacheEntry[] = [];
 
   add(entry: CacheEntry) {
-    if (entry.encoderState.type === identity.type)
+    if (entry.encoderState.type === 'identity') {
       throw Error('Cannot cache identity encodes');
+    }
     // Add the new entry to the start
     this._entries.unshift(entry);
     // Remove the last entry if we're now bigger than SIZE
@@ -46,13 +45,15 @@ export default class ResultCache {
             (processorState as any)[prop],
             (entry.processorState as any)[prop],
           )
-        )
+        ) {
           return false;
+        }
       }
 
       // Check detailed encoder options
-      if (!shallowEqual(encoderState.options, entry.encoderState.options))
+      if (!shallowEqual(encoderState.options, entry.encoderState.options)) {
         return false;
+      }
 
       return true;
     });

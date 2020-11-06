@@ -12,16 +12,20 @@
  */
 import webpDecoder, { WebPModule } from 'codecs/webp/dec/webp_dec';
 import wasmUrl from 'url:codecs/webp/dec/webp_dec.wasm';
-import { initEmscriptenModule } from 'features/util';
+import { initEmscriptenModule, blobToArrayBuffer } from 'features/util';
 
 let emscriptenModule: Promise<WebPModule>;
 
-export default async function decode(data: ArrayBuffer): Promise<ImageData> {
+export default async function decode(blob: Blob): Promise<ImageData> {
   if (!emscriptenModule) {
     emscriptenModule = initEmscriptenModule(webpDecoder, wasmUrl);
   }
 
-  const module = await emscriptenModule;
+  const [module, data] = await Promise.all([
+    emscriptenModule,
+    blobToArrayBuffer(blob),
+  ]);
+
   const result = module.decode(data);
   if (!result) throw new Error('Decoding error');
   return result;
