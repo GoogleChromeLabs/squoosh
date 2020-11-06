@@ -5,10 +5,7 @@ LIBAOM_URL = https://aomedia.googlesource.com/aom/+archive/v2.0.0.tar.gz
 LIBAOM_PACKAGE = node_modules/libaom.tar.gz
 
 export CODEC_DIR = node_modules/libavif
-BUILD_DIR := node_modules/build
-ENC_BUILD_DIR := $(BUILD_DIR)/enc
-ENC_MT_BUILD_DIR := $(BUILD_DIR)/enc-mt
-DEC_BUILD_DIR := $(BUILD_DIR)/dec
+export BUILD_DIR = node_modules/build
 export LIBAOM_DIR = node_modules/libaom
 
 OUT_ENC_JS = enc/avif_enc.js
@@ -27,7 +24,6 @@ all: $(OUT_ENC_JS) $(OUT_DEC_JS) $(OUT_ENC_MT_JS)
 $(OUT_ENC_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt
 	$(MAKE) \
 		$(HELPER_MAKEFLAGS) \
-		BUILD_DIR=$(ENC_BUILD_DIR) \
 		OUT_JS=$@ \
 		OUT_CPP=$< \
 		LIBAOM_FLAGS="\
@@ -40,7 +36,6 @@ $(OUT_ENC_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLis
 $(OUT_ENC_MT_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt
 	$(MAKE) \
 		$(HELPER_MAKEFLAGS) \
-		BUILD_DIR=$(ENC_MT_BUILD_DIR) \
 		OUT_JS=$@ \
 		OUT_CPP=$< \
 		LIBAOM_FLAGS="\
@@ -53,7 +48,6 @@ $(OUT_ENC_MT_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMake
 $(OUT_DEC_JS): $(OUT_DEC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt
 	$(MAKE) \
 		$(HELPER_MAKEFLAGS) \
-		BUILD_DIR=$(DEC_BUILD_DIR) \
 		OUT_JS=$@ \
 		OUT_CPP=$< \
 		LIBAOM_FLAGS="\
@@ -79,6 +73,6 @@ $(LIBAOM_DIR)/CMakeLists.txt: $(LIBAOM_PACKAGE)
 	tar xzm -C $(@D) -f $(LIBAOM_PACKAGE)
 
 clean:
-	$(MAKE) $(HELPER_MAKEFLAGS) BUILD_DIR=$(ENC_BUILD_DIR) OUT_JS=$(OUT_ENC_JS) clean
-	$(MAKE) $(HELPER_MAKEFLAGS) BUILD_DIR=$(ENC_MT_BUILD_DIR) OUT_JS=$(OUT_ENC_MT_JS) clean
-	$(MAKE) $(HELPER_MAKEFLAGS) BUILD_DIR=$(DEC_BUILD_DIR) OUT_JS=$(OUT_DEC_JS) clean
+	$(MAKE) $(HELPER_MAKEFLAGS) OUT_JS=$(OUT_ENC_JS) clean
+	$(MAKE) $(HELPER_MAKEFLAGS) OUT_JS=$(OUT_ENC_MT_JS) clean
+	$(MAKE) $(HELPER_MAKEFLAGS) OUT_JS=$(OUT_DEC_JS) clean
