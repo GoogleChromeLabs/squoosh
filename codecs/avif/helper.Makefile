@@ -9,10 +9,12 @@
 #   $(LIBAOM_FLAGS)
 #   $(LIBAVIF_FLAGS)
 
-CODEC_BUILD_DIR := $(BUILD_DIR)/libavif
+OUT_BUILD_DIR := $(BUILD_DIR)/$(basename $(OUT_JS))
+
+CODEC_BUILD_DIR := $(OUT_BUILD_DIR)/libavif
 CODEC_OUT := $(CODEC_BUILD_DIR)/libavif.a
 
-LIBAOM_BUILD_DIR := $(BUILD_DIR)/libaom
+LIBAOM_BUILD_DIR := $(OUT_BUILD_DIR)/libaom
 LIBAOM_OUT := $(LIBAOM_BUILD_DIR)/libaom.a
 
 OUT_WASM = $(OUT_JS:.js=.wasm)
