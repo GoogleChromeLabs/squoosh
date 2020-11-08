@@ -16,6 +16,7 @@ import {
   PreprocessorState,
   ProcessorState,
   EncoderState,
+  encoderMap,
 } from '../feature-meta';
 import Output from '../Output';
 import Options from '../Options';
@@ -129,59 +130,38 @@ async function processImage(
   if (processorState.resize.enabled) {
     result = await resize(signal, source, processorState.resize, workerBridge);
   }
-  if (processorState.quantizer.enabled) {
-    result = await workerBridge.imageQuant(
+  if (processorState.quantize.enabled) {
+    result = await workerBridge.quantize(
       signal,
       result,
-      processorState.quantizer,
+      processorState.quantize,
     );
   }
   return result;
 }
 
 async function compressImage(
+  signal: AbortSignal,
   image: ImageData,
   encodeData: EncoderState,
   sourceFilename: string,
-  processor: Processor,
+  workerBridge: WorkerBridge,
 ): Promise<File> {
-  const compressedData = await (() => {
-    switch (encodeData.type) {
-      case oxiPNG.type:
-        return processor.oxiPngEncode(image, encodeData.options);
-      case mozJPEG.type:
-        return processor.mozjpegEncode(image, encodeData.options);
-      case webP.type:
-        return processor.webpEncode(image, encodeData.options);
-      case avif.type:
-        return processor.avifEncode(image, encodeData.options);
-      case browserPNG.type:
-        return processor.browserPngEncode(image);
-      case browserJPEG.type:
-        return processor.browserJpegEncode(image, encodeData.options);
-      case browserWebP.type:
-        return processor.browserWebpEncode(image, encodeData.options);
-      case browserGIF.type:
-        return processor.browserGifEncode(image);
-      case browserTIFF.type:
-        return processor.browserTiffEncode(image);
-      case browserJP2.type:
-        return processor.browserJp2Encode(image);
-      case browserBMP.type:
-        return processor.browserBmpEncode(image);
-      case browserPDF.type:
-        return processor.browserPdfEncode(image);
-      default:
-        throw Error(`Unexpected encoder ${JSON.stringify(encodeData)}`);
-    }
-  })();
+  assertSignal(signal);
 
   const encoder = encoderMap[encodeData.type];
+  // The type of encodeData.options is enforced via the previous line
+  const compressedData = await encoder.encode(
+    signal,
+    workerBridge,
+    image,
+    encodeData.options as any,
+  );
 
   return new File(
     [compressedData],
-    sourceFilename.replace(/.[^.]*$/, `.${encoder.extension}`),
-    { type: encoder.mimeType },
+    sourceFilename.replace(/.[^.]*$/, `.${encoder.meta.extension}`),
+    { type: encoder.meta.mimeType },
   );
 }
 

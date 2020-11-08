@@ -10,3 +10,4 @@ src/features-worker/index.ts
 src/features-worker/tsconfig.json
 src/client/lazy-app/worker-bridge/meta.ts
 src/client/lazy-app/feature-meta/index.ts
+src/client/tsconfig.json
