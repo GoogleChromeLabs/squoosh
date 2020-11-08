@@ -20,3 +20,27 @@ export default function () {
 ```
 
 …will be bundled into the worker and exposed via comlink as `shout()`.
+
+# Encoder format
+
+Encoders must have the following:
+
+`shared/meta.ts` which exposes the following:
+
+- `label` - The name of the codec as displayed to the user.
+- `mimeType` - The mime type to be used when generating the output file.
+- `extension` - The file extension to be used when generating the output file.
+- `EncodeOptions` - An interface for the codec's options.
+- `defaultOptions` - An object of type `EncodeOptions`.
+
+`client/index.ts` which exposes the following.
+
+- `encode` - A method which takes args
+  - `AbortSignal`
+  - `WorkerBridge`
+  - `ImageData`
+  - `EncodeOptions`
+
+And returns (a promise for) an `ArrayBuffer`.
+
+Optionally it may include a method `featureTest`, which returns a boolean for support for this decoder.

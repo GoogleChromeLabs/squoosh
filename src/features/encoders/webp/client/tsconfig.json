@@ -6,7 +6,6 @@
   },
   "include": [
     "./*.ts",
-    "../../../../client/lazy-app/util.ts",
     "../../../../client/lazy-app/worker-bridge/index.ts",
     "../shared/*.ts"
   ],

@@ -10,12 +10,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import webpEncoder, {
-  WebPModule,
-  EncodeOptions,
-} from 'codecs/webp/enc/webp_enc';
+import webpEncoder, { WebPModule } from 'codecs/webp/enc/webp_enc';
 import wasmUrl from 'url:codecs/webp/enc/webp_enc.wasm';
 import { initEmscriptenModule } from 'features/util';
+import type { EncodeOptions } from '../shared/meta';
 
 let emscriptenModule: Promise<WebPModule>;
 
