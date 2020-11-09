@@ -7,6 +7,7 @@
   "include": [
     "src/features/**/client/**/*",
     "src/features/**/shared/**/*",
-    "src/shared/**/*"
+    "src/shared/**/*",
+    "src/client/**/*"
   ]
 }
