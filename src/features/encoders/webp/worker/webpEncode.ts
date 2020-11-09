@@ -12,7 +12,7 @@
  */
 import webpEncoder, { WebPModule } from 'codecs/webp/enc/webp_enc';
 import wasmUrl from 'url:codecs/webp/enc/webp_enc.wasm';
-import { initEmscriptenModule } from 'features/util';
+import { initEmscriptenModule } from 'features/worker-utils';
 import type { EncodeOptions } from '../shared/meta';
 
 let emscriptenModule: Promise<WebPModule>;

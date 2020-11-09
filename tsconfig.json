@@ -2,9 +2,8 @@
   "extends": "./generic-tsconfig.json",
   "files": [],
   "references": [
-    { "path": "./src/client" },
-    { "path": "./src/static-build" },
-    { "path": "./src/shared" },
-    { "path": "./src/sw" }
+    { "path": "./client-tsconfig.json" },
+    { "path": "./worker-tsconfig.json" },
+    { "path": "./static-build-tsconfig.json" }
   ]
 }

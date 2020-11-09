@@ -1,7 +1,0 @@
-{
-  "extends": "../../../../../generic-tsconfig.json",
-  "compilerOptions": {
-    "lib": ["webworker", "esnext"]
-  },
-  "references": [{ "path": "../../../" }, { "path": "../shared" }]
-}

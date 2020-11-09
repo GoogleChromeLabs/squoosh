@@ -1,0 +1,12 @@
+{
+  "extends": "./generic-tsconfig.json",
+  "compilerOptions": {
+    "lib": ["esnext", "dom", "dom.iterable"],
+    "types": []
+  },
+  "include": [
+    "src/features/**/client/**/*",
+    "src/features/**/shared/**/*",
+    "src/shared/**/*"
+  ]
+}

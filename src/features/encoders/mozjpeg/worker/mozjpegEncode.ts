@@ -13,7 +13,7 @@
 import mozjpeg_enc, { MozJPEGModule } from 'codecs/mozjpeg_enc/mozjpeg_enc';
 import { EncodeOptions } from '../shared/meta';
 import wasmUrl from 'url:codecs/mozjpeg_enc/mozjpeg_enc.wasm';
-import { initEmscriptenModule } from 'features/util';
+import { initEmscriptenModule } from 'features/worker-utils';
 
 let emscriptenModule: Promise<MozJPEGModule>;
 

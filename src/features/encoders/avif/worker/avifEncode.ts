@@ -13,7 +13,7 @@
 import avifEncoder, { AVIFModule } from 'codecs/avif/enc/avif_enc';
 import type { EncodeOptions } from '../shared/meta';
 import wasmUrl from 'url:codecs/avif/enc/avif_enc.wasm';
-import { initEmscriptenModule } from 'features/util';
+import { initEmscriptenModule } from 'features/worker-utils';
 
 let emscriptenModule: Promise<AVIFModule>;
 

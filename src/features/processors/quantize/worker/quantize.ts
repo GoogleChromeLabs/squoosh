@@ -12,7 +12,7 @@
  */
 import imagequant, { QuantizerModule } from 'codecs/imagequant/imagequant';
 import wasmUrl from 'url:codecs/imagequant/imagequant.wasm';
-import { initEmscriptenModule } from 'features/util';
+import { initEmscriptenModule } from 'features/worker-utils';
 import { Options } from '../shared/meta';
 
 let emscriptenModule: Promise<QuantizerModule>;

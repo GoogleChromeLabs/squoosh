@@ -1,0 +1,8 @@
+{
+  "extends": "./generic-tsconfig.json",
+  "compilerOptions": {
+    "lib": ["esnext", "dom"],
+    "types": ["node"]
+  },
+  "include": ["src/shared/**/*", "src/static-build/**/*"]
+}

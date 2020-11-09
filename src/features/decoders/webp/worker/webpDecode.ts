@@ -12,7 +12,7 @@
  */
 import webpDecoder, { WebPModule } from 'codecs/webp/dec/webp_dec';
 import wasmUrl from 'url:codecs/webp/dec/webp_dec.wasm';
-import { initEmscriptenModule, blobToArrayBuffer } from 'features/util';
+import { initEmscriptenModule, blobToArrayBuffer } from 'features/worker-utils';
 
 let emscriptenModule: Promise<WebPModule>;
 

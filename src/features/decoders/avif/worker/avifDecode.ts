@@ -12,7 +12,7 @@
  */
 import avifDecoder, { AVIFModule } from 'codecs/avif/dec/avif_dec';
 import wasmUrl from 'url:codecs/avif/dec/avif_dec.wasm';
-import { initEmscriptenModule, blobToArrayBuffer } from 'features/util';
+import { initEmscriptenModule, blobToArrayBuffer } from 'features/worker-utils';
 
 let emscriptenModule: Promise<AVIFModule>;
 
