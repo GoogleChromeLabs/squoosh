@@ -17,6 +17,8 @@ import {
   ProcessorState,
   EncoderState,
   encoderMap,
+  defaultPreprocessorState,
+  defaultProcessorState,
 } from '../feature-meta';
 import Output from '../Output';
 import Options from '../Options';
@@ -39,7 +41,7 @@ export interface SourceImage {
 
 interface SideSettings {
   processorState: ProcessorState;
-  encoderState: EncoderState;
+  encoderState?: EncoderState;
 }
 
 interface Side {
@@ -150,11 +152,11 @@ async function compressImage(
   assertSignal(signal);
 
   const encoder = encoderMap[encodeData.type];
-  // The type of encodeData.options is enforced via the previous line
   const compressedData = await encoder.encode(
     signal,
     workerBridge,
     image,
+    // The type of encodeData.options is enforced via the previous line
     encodeData.options as any,
   );
 
@@ -165,7 +167,7 @@ async function compressImage(
   );
 }
 
-function stateForNewSourceData(state: State, newSource: SourceImage): State {
+function stateForNewSourceData(state: State): State {
   let newState = { ...state };
 
   for (const i of [0, 1]) {
@@ -211,12 +213,9 @@ async function processSvg(blob: Blob): Promise<HTMLImageElement> {
 }
 
 // These are only used in the mobile view
-const resultTitles = ['Top', 'Bottom'];
+const resultTitles = ['Top', 'Bottom'] as const;
 // These are only used in the desktop view
-const buttonPositions = ['download-left', 'download-right'] as (
-  | 'download-left'
-  | 'download-right'
-)[];
+const buttonPositions = ['download-left', 'download-right'] as const;
 
 const originalDocumentTitle = document.title;
 
@@ -226,27 +225,22 @@ export default class Compress extends Component<Props, State> {
   state: State = {
     source: undefined,
     loading: false,
-    loadingCounter: 0,
     sides: [
       {
         latestSettings: {
-          processorState: defaultPreprocessorState,
-          encoderState: {
-            type: identity.type,
-            options: identity.defaultOptions,
-          },
+          processorState: defaultProcessorState,
+          encoderState: undefined,
         },
-        loadingCounter: 0,
-        loadedCounter: 0,
         loading: false,
       },
       {
         latestSettings: {
-          processorState: defaultPreprocessorState,
-          encoderState: { type: mozJPEG.type, options: mozJPEG.defaultOptions },
+          processorState: defaultProcessorState,
+          encoderState: {
+            type: 'mozJPEG',
+            options: encoderMap.mozJPEG.meta.defaultOptions,
+          },
         },
-        loadingCounter: 0,
-        loadedCounter: 0,
         loading: false,
       },
     ],
@@ -254,8 +248,9 @@ export default class Compress extends Component<Props, State> {
   };
 
   private readonly encodeCache = new ResultCache();
-  private readonly leftProcessor = new Processor();
-  private readonly rightProcessor = new Processor();
+  // YOU ARE HERE
+  private readonly leftWorkerBridge = new WorkerBridge();
+  private readonly rightWorkerBridge = new WorkerBridge();
   // For debouncing calls to updateImage for each side.
   private readonly updateImageTimeoutIds: [number?, number?] = [
     undefined,
@@ -391,7 +386,7 @@ export default class Compress extends Component<Props, State> {
     const orientationChanged = oldRotate % 180 !== newRotate % 180;
     const loadingCounter = this.state.loadingCounter + 1;
     // Either processor is good enough here.
-    const processor = this.leftProcessor;
+    const processor = this.leftWorkerBridge;
 
     this.setState({
       loadingCounter,
@@ -400,8 +395,8 @@ export default class Compress extends Component<Props, State> {
     });
 
     // Abort any current encode jobs, as they're redundant now.
-    this.leftProcessor.abortCurrent();
-    this.rightProcessor.abortCurrent();
+    this.leftWorkerBridge.abortCurrent();
+    this.rightWorkerBridge.abortCurrent();
 
     try {
       const processed = await preprocessImage(
@@ -446,13 +441,13 @@ export default class Compress extends Component<Props, State> {
   private updateFile = async (file: File) => {
     const loadingCounter = this.state.loadingCounter + 1;
     // Either processor is good enough here.
-    const processor = this.leftProcessor;
+    const processor = this.leftWorkerBridge;
 
     this.setState({ loadingCounter, loading: true });
 
     // Abort any current encode jobs, as they're redundant now.
-    this.leftProcessor.abortCurrent();
-    this.rightProcessor.abortCurrent();
+    this.leftWorkerBridge.abortCurrent();
+    this.rightWorkerBridge.abortCurrent();
 
     try {
       let decoded: ImageData;
@@ -567,7 +562,8 @@ export default class Compress extends Component<Props, State> {
       settings.preprocessorState,
       settings.encoderState,
     );
-    const processor = index === 0 ? this.leftProcessor : this.rightProcessor;
+    const processor =
+      index === 0 ? this.leftWorkerBridge : this.rightWorkerBridge;
 
     // Abort anything the processor is currently doing.
     // Although the processor will abandon current tasks when a new one is called,
