@@ -19,17 +19,21 @@ import {
   encoderMap,
   defaultPreprocessorState,
   defaultProcessorState,
+  EncoderType,
+  EncoderOptions,
 } from '../feature-meta';
 import Output from '../Output';
 import Options from '../Options';
 import ResultCache from './result-cache';
-import { cleanMerge, cleanSet } from '../../lib/clean-modify';
+import { cleanMerge, cleanSet } from '../util/clean-modify';
 import './custom-els/MultiPanel';
 import Results from '../results';
 import { ExpandIcon, CopyAcrossIconProps } from '../../lib/icons';
 import SnackBarElement from '../../lib/SnackBar';
 import WorkerBridge from '../worker-bridge';
 import { resize } from 'features/processors/resize/client';
+
+type OutputType = EncoderType | 'identity';
 
 export interface SourceImage {
   file: File;
@@ -248,7 +252,6 @@ export default class Compress extends Component<Props, State> {
   };
 
   private readonly encodeCache = new ResultCache();
-  // YOU ARE HERE
   private readonly leftWorkerBridge = new WorkerBridge();
   private readonly rightWorkerBridge = new WorkerBridge();
   // For debouncing calls to updateImage for each side.
@@ -262,34 +265,36 @@ export default class Compress extends Component<Props, State> {
     this.widthQuery.addListener(this.onMobileWidthChange);
     this.updateFile(props.file);
 
-    import('../../lib/sw-bridge').then(({ mainAppLoaded }) => mainAppLoaded());
+    import('../sw-bridge').then(({ mainAppLoaded }) => mainAppLoaded());
   }
 
   private onMobileWidthChange = () => {
     this.setState({ mobileView: this.widthQuery.matches });
   };
 
-  private onEncoderTypeChange(index: 0 | 1, newType: EncoderType): void {
+  private onEncoderTypeChange(index: 0 | 1, newType: OutputType): void {
     this.setState({
       sides: cleanSet(
         this.state.sides,
         `${index}.latestSettings.encoderState`,
-        {
-          type: newType,
-          options: encoderMap[newType].defaultOptions,
-        },
+        newType === 'identity'
+          ? undefined
+          : {
+              type: newType,
+              options: encoderMap[newType].meta.defaultOptions,
+            },
       ),
     });
   }
 
-  private onPreprocessorOptionsChange(
+  private onProcessorOptionsChange(
     index: 0 | 1,
-    options: PreprocessorState,
+    options: ProcessorState,
   ): void {
     this.setState({
       sides: cleanSet(
         this.state.sides,
-        `${index}.latestSettings.preprocessorState`,
+        `${index}.latestSettings.processorState`,
         options,
       ),
     });
@@ -654,7 +659,7 @@ export default class Compress extends Component<Props, State> {
           this,
           index as 0 | 1,
         )}
-        onPreprocessorOptionsChange={this.onPreprocessorOptionsChange.bind(
+        onPreprocessorOptionsChange={this.onProcessorOptionsChange.bind(
           this,
           index as 0 | 1,
         )}

@@ -14,7 +14,7 @@ import 'shared/initial-app/custom-els/loading-spinner';
 
 const ROUTE_EDITOR = '/editor';
 
-//const compressPromise = import('client/lazy-app/Compress');
+const compressPromise = import('client/lazy-app/Compress');
 const swBridgePromise = import('client/lazy-app/sw-bridge');
 
 function back() {
@@ -27,7 +27,7 @@ interface State {
   awaitingShareTarget: boolean;
   file?: File;
   isEditorOpen: Boolean;
-  Compress?: undefined; // typeof import('../compress').default;
+  Compress?: typeof import('client/lazy-app/Compress').default;
 }
 
 export default class App extends Component<Props, State> {
@@ -45,13 +45,13 @@ export default class App extends Component<Props, State> {
   constructor() {
     super();
 
-    /*compressPromise
+    compressPromise
       .then((module) => {
         this.setState({ Compress: module.default });
       })
       .catch(() => {
         this.showSnack('Failed to load app');
-      });*/
+      });
 
     swBridgePromise.then(async ({ offliner, getSharedImage }) => {
       offliner(this.showSnack);
@@ -123,9 +123,9 @@ export default class App extends Component<Props, State> {
           {showSpinner ? (
             <loading-spinner class={style.appLoader} />
           ) : isEditorOpen ? (
-            Compress &&
-            //<Compress file={file!} showSnack={this.showSnack} onBack={back} />
-            'TODO: uncomment above'
+            Compress && (
+              <Compress file={file!} showSnack={this.showSnack} onBack={back} />
+            )
           ) : (
             <Intro onFile={this.onIntroPickFile} showSnack={this.showSnack} />
           )}
