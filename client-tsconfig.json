@@ -7,6 +7,11 @@
   "include": [
     "src/features/**/client/**/*",
     "src/features/**/shared/**/*",
+    // Not really clean, but we need to access the type of the functions here
+    // for comlink
+    "src/features/**/worker/**/*",
+    // And again.
+    "src/features-worker/**/*",
     "src/shared/**/*",
     "src/client/**/*"
   ]
