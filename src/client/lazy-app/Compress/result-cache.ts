@@ -1,5 +1,5 @@
 import { EncoderState, ProcessorState } from '../feature-meta';
-import { shallowEqual } from '../../util';
+import { shallowEqual } from '../util';
 
 interface CacheResult {
   preprocessed: ImageData;
@@ -19,9 +19,6 @@ export default class ResultCache {
   private readonly _entries: CacheEntry[] = [];
 
   add(entry: CacheEntry) {
-    if (entry.encoderState.type === 'identity') {
-      throw Error('Cannot cache identity encodes');
-    }
     // Add the new entry to the start
     this._entries.unshift(entry);
     // Remove the last entry if we're now bigger than SIZE

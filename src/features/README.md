@@ -21,6 +21,14 @@ export default function () {
 
 …will be bundled into the worker and exposed via comlink as `shout()`.
 
+# Folders
+
+Within a feature, files in the:
+
+- `client` folder will be part of the client project.
+- `worker` folder will be part of the worker project.
+- `shared` folder will be part of the shared project. Both the client and worker projects can access the shared project.
+
 # Encoder format
 
 Encoders must have the following:
