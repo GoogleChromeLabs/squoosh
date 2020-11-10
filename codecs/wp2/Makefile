@@ -46,16 +46,11 @@ $(OUT_JS):
 %/libwebp2.a: %/Makefile
 	$(MAKE) -C $(@D)
 
-# Disable SIMD for non-SIMD builds.
-$(CODEC_BASELINE_BUILD_DIR)/Makefile $(CODEC_MT_BUILD_DIR)/Makefile: CMAKE_FLAGS+=-DWP2_ENABLE_SIMD=0
-
 # Disable threads for the single-threaded build.
 $(CODEC_BASELINE_BUILD_DIR)/Makefile: CMAKE_FLAGS+=-DCMAKE_DISABLE_FIND_PACKAGE_Threads=1
 
-# The line below should be unnecessary in the future.
-# See https://github.com/emscripten-core/emscripten/issues/12714 for -msimd128.
-# See https://github.com/emscripten-core/emscripten/issues/12746 for -msse4.2.
-$(CODEC_MT_SIMD_BUILD_DIR)/Makefile: CXXFLAGS+=-msimd128 -msse4.2
+# Enable SIMD on a SIMD build.
+$(CODEC_MT_SIMD_BUILD_DIR)/Makefile: CMAKE_FLAGS+=-DWP2_ENABLE_SIMD=1
 
 %/Makefile: $(CODEC_DIR)/CMakeLists.txt
 	emcmake cmake \
