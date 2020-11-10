@@ -2,7 +2,7 @@ import { EncoderState, ProcessorState } from '../feature-meta';
 import { shallowEqual } from '../util';
 
 interface CacheResult {
-  preprocessed: ImageData;
+  processed: ImageData;
   data: ImageData;
   file: File;
 }
@@ -10,7 +10,7 @@ interface CacheResult {
 interface CacheEntry extends CacheResult {
   processorState: ProcessorState;
   encoderState: EncoderState;
-  sourceData: ImageData;
+  preprocessed: ImageData;
 }
 
 const SIZE = 5;
@@ -26,13 +26,13 @@ export default class ResultCache {
   }
 
   match(
-    sourceData: ImageData,
+    preprocessed: ImageData,
     processorState: ProcessorState,
     encoderState: EncoderState,
   ): CacheResult | undefined {
     const matchingIndex = this._entries.findIndex((entry) => {
       // Check for quick exits:
-      if (entry.sourceData !== sourceData) return false;
+      if (entry.preprocessed !== preprocessed) return false;
       if (entry.encoderState.type !== encoderState.type) return false;
 
       // Check that each set of options in the preprocessor are the same
@@ -65,10 +65,6 @@ export default class ResultCache {
       this._entries.unshift(matchingEntry);
     }
 
-    return {
-      data: matchingEntry.data,
-      preprocessed: matchingEntry.preprocessed,
-      file: matchingEntry.file,
-    };
+    return { ...matchingEntry };
   }
 }
