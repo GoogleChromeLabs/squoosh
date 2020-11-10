@@ -1,5 +1,6 @@
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
+#include <emscripten/threading.h>
 #include <cstdio>
 #include "src/wp2/encode.h"
 
@@ -42,6 +43,7 @@ val encode(std::string image_in, int image_width, int image_height, WP2Options o
   }
 
   WP2::MemoryWriter memory_writer;
+  config.thread_level = emscripten_num_logical_cores() - 1;
   status = WP2::Encode(src, &memory_writer, config);
   if (status != WP2_STATUS_OK) {
     return val::null();

@@ -10,24 +10,56 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import wp2Encoder, { WP2Module } from 'codecs/wp2/enc/wp2_enc';
-import wasmUrl from 'url:codecs/wp2/enc/wp2_enc.wasm';
-import { initEmscriptenModule } from 'features/worker-utils';
+import type { WP2Module } from 'codecs/wp2/enc/wp2_enc';
 import type { EncodeOptions } from '../shared/meta';
 
+import { initEmscriptenModule } from 'features/worker-utils';
+import { threads, simd } from 'wasm-feature-detect';
+
+import wasmUrl from 'url:codecs/wp2/enc/wp2_enc.wasm';
+
+import wasmUrlWithMT from 'url:codecs/wp2/enc/wp2_enc_mt.wasm';
+import workerUrl from 'omt:codecs/wp2/enc/wp2_enc_mt.worker.js';
+
+import wasmUrlWithMTAndSIMD from 'url:codecs/wp2/enc/wp2_enc_mt_simd.wasm';
+import workerUrlWithSIMD from 'omt:codecs/wp2/enc/wp2_enc_mt_simd.worker.js';
+
 let emscriptenModule: Promise<WP2Module>;
+
+async function init() {
+  if (await threads()) {
+    if (await simd()) {
+      const wp2Encoder = await import('codecs/wp2/enc/wp2_enc_mt_simd');
+      return initEmscriptenModule(
+        wp2Encoder.default,
+        wasmUrlWithMTAndSIMD,
+        workerUrlWithSIMD,
+      );
+    }
+    const wp2Encoder = await import('codecs/wp2/enc/wp2_enc_mt');
+    return initEmscriptenModule(
+      wp2Encoder.default,
+      wasmUrlWithMT,
+      workerUrl,
+    );
+  }
+  const wp2Encoder = await import('codecs/wp2/enc/wp2_enc');
+  return initEmscriptenModule(
+    wp2Encoder.default,
+    wasmUrl,
+  );
+}
 
 export default async function encode(
   data: ImageData,
   options: EncodeOptions,
 ): Promise<ArrayBuffer> {
-  if (!emscriptenModule) {
-    emscriptenModule = initEmscriptenModule(wp2Encoder, wasmUrl);
-  }
+  if (!emscriptenModule) emscriptenModule = init();
 
   const module = await emscriptenModule;
   const result = module.encode(data.data, data.width, data.height, options);
+
   if (!result) throw new Error('Encoding error.');
-  // wasm can’t run on SharedArrayBuffers, so we hard-cast to ArrayBuffer.
-  return result.buffer as ArrayBuffer;
+
+  return result.buffer;
 }
