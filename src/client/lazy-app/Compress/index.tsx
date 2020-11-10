@@ -22,8 +22,8 @@ import {
   EncoderType,
   EncoderOptions,
 } from '../feature-meta';
-import Output from '../Output';
-import Options from '../Options';
+import Output from './Output';
+import Options from './Options';
 import ResultCache from './result-cache';
 import { cleanMerge, cleanSet } from '../util/clean-modify';
 import './custom-els/MultiPanel';

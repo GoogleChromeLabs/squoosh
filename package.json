@@ -24,6 +24,7 @@
     "lint-staged": "^10.4.0",
     "lodash.camelcase": "^4.3.0",
     "mime-types": "^2.1.27",
+    "pointer-tracker": "^2.4.0",
     "postcss": "^7.0.35",
     "postcss-modules": "^3.2.2",
     "postcss-nested": "^4.2.3",
