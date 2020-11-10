@@ -1,4 +1,4 @@
-CODEC_URL = https://chromium.googlesource.com/codecs/libwebp2/+archive/c90b5b476004c9a98731ae1c175cebab5de50fbf.tar.gz
+CODEC_URL = https://github.com/RReverser/libwebp2/archive/emscripten-simd.tar.gz
 CODEC_DIR = node_modules/wp2
 CODEC_BUILD_ROOT := $(CODEC_DIR)/build
 CODEC_BASELINE_BUILD_DIR := $(CODEC_BUILD_ROOT)/baseline
@@ -37,7 +37,7 @@ $(OUT_JS):
 		$+
 
 %.o: %.cpp $(CODEC_DIR)/CMakeLists.txt
-	$(CXX) \
+	$(CXX) -c \
 		$(CXXFLAGS) \
 		-I $(CODEC_DIR) \
 		-o $@ \
@@ -56,7 +56,6 @@ $(CODEC_MT_SIMD_BUILD_DIR)/Makefile: CMAKE_FLAGS+=-DWP2_ENABLE_SIMD=1
 	emcmake cmake \
 		$(CMAKE_FLAGS) \
 		-DWP2_BUILD_TESTS=0 \
-		-DWP2_ENABLE_TESTS=0 \
 		-DWP2_BUILD_EXAMPLES=0 \
 		-DWP2_BUILD_EXTRAS=0 \
 		-B $(@D) \
@@ -64,7 +63,7 @@ $(CODEC_MT_SIMD_BUILD_DIR)/Makefile: CMAKE_FLAGS+=-DWP2_ENABLE_SIMD=1
 
 $(CODEC_DIR)/CMakeLists.txt:
 	mkdir -p $(CODEC_DIR)
-	curl -sL $(CODEC_URL) | tar xz -C $(CODEC_DIR)
+	curl -sL $(CODEC_URL) | tar xz --strip 1 -C $(CODEC_DIR)
 
 clean:
 	$(RM) $(OUT_JS) $(OUT_WASM) $(OUT_WORKER)
