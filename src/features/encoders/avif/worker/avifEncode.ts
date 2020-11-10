@@ -44,6 +44,5 @@ export default async function encode(
 
   if (!result) throw new Error('Encoding error');
 
-  // wasm can’t run on SharedArrayBuffers, so we hard-cast to ArrayBuffer.
-  return result.buffer as ArrayBuffer;
+  return result.buffer;
 }
