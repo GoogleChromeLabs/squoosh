@@ -497,7 +497,17 @@ export default class Compress extends Component<Props, State> {
       }
     }
 
-    if (!jobNeeded) return;
+    if (!jobNeeded) {
+      // Clear any loading that may be happening
+      this.setState((state) => ({
+        loading: false,
+        sides: state.sides.map((side) => ({ ...side, loading: false })) as [
+          Side,
+          Side,
+        ],
+      }));
+      return;
+    }
 
     const mainSignal = this.mainAbortController.signal;
     const sideSignals = this.sideAbortControllers.map((ac) => ac.signal);
