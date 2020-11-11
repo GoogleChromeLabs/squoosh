@@ -133,7 +133,7 @@ export default class Options extends Component<Props, State> {
 
               <label class={style.sectionEnabler}>
                 <Checkbox
-                  name="quantizer.enable"
+                  name="quantize.enable"
                   checked={!!processorState.quantize.enabled}
                   onChange={this.onProcessorEnabledChange}
                 />
@@ -173,12 +173,12 @@ export default class Options extends Component<Props, State> {
         </section>
 
         <Expander>
-          {EncoderOptionComponent && encoderState && (
+          {EncoderOptionComponent && (
             <EncoderOptionComponent
               options={
                 // Casting options, as encoderOptionsComponentMap[encodeData.type] ensures
                 // the correct type, but typescript isn't smart enough.
-                encoderState.options as any
+                encoderState!.options as any
               }
               onChange={onEncoderOptionsChange}
             />

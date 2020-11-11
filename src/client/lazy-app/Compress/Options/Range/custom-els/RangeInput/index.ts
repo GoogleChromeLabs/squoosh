@@ -107,6 +107,8 @@ class RangeInputElement extends HTMLElement {
   };
 
   private _update = () => {
+    // Not connected?
+    if (!this._valueDisplay) return;
     const value = Number(this.value) || 0;
     const min = Number(this.min) || 0;
     const max = Number(this.max) || 100;

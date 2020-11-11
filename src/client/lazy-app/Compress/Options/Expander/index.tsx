@@ -7,71 +7,59 @@ interface Props {
   children: ComponentChildren;
 }
 interface State {
-  outgoingChildren: ComponentChild[];
+  children: ComponentChildren;
+  outgoingChildren: ComponentChildren;
 }
 
 export default class Expander extends Component<Props, State> {
-  state: State = {
-    outgoingChildren: [],
-  };
-  private lastElHeight: number = 0;
-
-  componentWillReceiveProps(nextProps: Props) {
-    const children = this.props.children as ComponentChild[] | undefined;
-    const nextChildren = nextProps.children as ComponentChild[] | undefined;
-
-    if (!nextChildren && children && children[0]) {
-      // Cache the current children for the shrink animation.
-      this.setState({ outgoingChildren: children });
+  static getDerivedStateFromProps(
+    props: Props,
+    state: State,
+  ): Partial<State> | null {
+    if (!props.children && state.children) {
+      return { children: props.children, outgoingChildren: state.children };
     }
+
+    if (props.children !== state.children) {
+      return { children: props.children, outgoingChildren: undefined };
+    }
+
+    return null;
   }
 
-  componentWillUpdate(nextProps: Props) {
-    const children = this.props.children as ComponentChild[] | undefined;
-    const nextChildren = nextProps.children as ComponentChild[] | undefined;
+  async componentDidUpdate(_: Props, previousState: State) {
+    let heightFrom: number;
+    let heightTo: number;
 
-    // Only interested if going from empty to not-empty, or not-empty to empty.
-    if ((children && nextChildren) || (!children && !nextChildren)) return;
-    this.lastElHeight = (this
-      .base as HTMLElement).getBoundingClientRect().height;
-  }
-
-  async componentDidUpdate(previousProps: Props) {
-    const children = this.props.children as ComponentChild[] | undefined;
-    const previousChildren = previousProps.children as
-      | ComponentChild[]
-      | undefined;
-
-    // Only interested if going from empty to not-empty, or not-empty to empty.
-    if ((children && previousChildren) || (!children && !previousChildren))
+    if (previousState.children && !this.state.children) {
+      heightFrom = (this.base as HTMLElement).getBoundingClientRect().height;
+      heightTo = 0;
+    } else if (!previousState.children && this.state.children) {
+      heightFrom = 0;
+      heightTo = (this.base as HTMLElement).getBoundingClientRect().height;
+    } else {
       return;
+    }
 
-    // What height do we need to transition to?
-    (this.base as HTMLElement).style.height = '';
     (this.base as HTMLElement).style.overflow = 'hidden';
-    const newHeight = children
-      ? (this.base as HTMLElement).getBoundingClientRect().height
-      : 0;
 
     await transitionHeight(this.base as HTMLElement, {
       duration: 300,
-      from: this.lastElHeight,
-      to: newHeight,
+      from: heightFrom,
+      to: heightTo,
     });
 
     // Unset the height & overflow, so element changes do the right thing.
     (this.base as HTMLElement).style.height = '';
     (this.base as HTMLElement).style.overflow = '';
-    if (this.state.outgoingChildren[0]) this.setState({ outgoingChildren: [] });
+
+    this.setState({ outgoingChildren: undefined });
   }
 
-  render(props: Props, { outgoingChildren }: State) {
-    const children = props.children as ComponentChild[] | undefined;
-    const childrenExiting = (!children || !children[0]) && outgoingChildren[0];
-
+  render({}: Props, { children, outgoingChildren }: State) {
     return (
-      <div class={childrenExiting ? style.childrenExiting : ''}>
-        {children && children[0] ? children : outgoingChildren}
+      <div class={outgoingChildren ? style.childrenExiting : ''}>
+        {outgoingChildren || children}
       </div>
     );
   }
