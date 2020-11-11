@@ -230,6 +230,24 @@ async function processSvg(
   );
 }
 
+/**
+ * If two processors are disabled, they're considered equivalent, otherwise
+ * equivalence is based on ===
+ */
+function processorStateEquivalent(a: ProcessorState, b: ProcessorState) {
+  // Quick exit
+  if (a === b) return true;
+
+  // All processors have the same keys
+  for (const key of Object.keys(a) as Array<keyof ProcessorState>) {
+    // If both processors are disabled, they're the same.
+    if (!a[key].enabled && !b[key].enabled) continue;
+    if (a !== b) return false;
+  }
+
+  return true;
+}
+
 // These are only used in the mobile view
 const resultTitles = ['Top', 'Bottom'] as const;
 // These are only used in the desktop view
@@ -476,7 +494,11 @@ export default class Compress extends Component<Props, State> {
     const sideWorksNeeded = latestSideJobStates.map((latestSideJob, i) => {
       const needsProcessing =
         needsPreprocessing ||
-        latestSideJob.processorState !== sideJobStates[i].processorState;
+        !latestSideJob.processorState ||
+        !processorStateEquivalent(
+          latestSideJob.processorState,
+          sideJobStates[i].processorState,
+        );
 
       return {
         processing: needsProcessing,
@@ -505,6 +527,7 @@ export default class Compress extends Component<Props, State> {
     }
 
     if (!jobNeeded) return;
+    console.log('Processing');
 
     const mainSignal = this.mainAbortController.signal;
     const sideSignals = this.sideAbortControllers.map((ac) => ac.signal);
