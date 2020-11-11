@@ -87,7 +87,7 @@ export default class Options extends Component<Props, State> {
 
   private onQuantizerOptionsChange = (opts: ProcessorOptions['quantize']) => {
     this.props.onProcessorOptionsChange(
-      cleanMerge(this.props.processorState, 'quantizer', opts),
+      cleanMerge(this.props.processorState, 'quantize', opts),
     );
   };
 
