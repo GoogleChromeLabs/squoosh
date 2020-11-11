@@ -110,6 +110,7 @@ export default async function ({ watch }) {
             replace({ __PRERENDER__: false, __PRODUCTION__: isProduction }),
             terser({ module: true }),
           ],
+          preserveEntrySignatures: false,
         },
         {
           dir,

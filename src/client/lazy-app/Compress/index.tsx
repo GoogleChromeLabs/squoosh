@@ -527,7 +527,6 @@ export default class Compress extends Component<Props, State> {
     }
 
     if (!jobNeeded) return;
-    console.log('Processing');
 
     const mainSignal = this.mainAbortController.signal;
     const sideSignals = this.sideAbortControllers.map((ac) => ac.signal);
