@@ -43,7 +43,7 @@
     color: #000;
   }
 
-  // Remove the number controls
+  /* Remove the number controls */
   -moz-appearance: textfield;
 
   &::-webkit-outer-spin-button,

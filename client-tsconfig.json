@@ -13,6 +13,7 @@
     // Not really clean, but we need these to access the type of the functions
     // for comlink
     "src/features/**/worker/**/*",
-    "src/features-worker/**/*"
+    "src/features-worker/**/*",
+    "src/features/worker-utils/**/*"
   ]
 }

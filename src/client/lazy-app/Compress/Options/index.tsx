@@ -1,7 +1,7 @@
 import { h, Component } from 'preact';
 
 import * as style from './style.css';
-import 'add-css:./styles.css';
+import 'add-css:./style.css';
 import { cleanSet, cleanMerge } from '../../util/clean-modify';
 
 import type { SourceImage, OutputType } from '..';

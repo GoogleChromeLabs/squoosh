@@ -1,6 +1,6 @@
 import { h, Component } from 'preact';
 import * as style from './style.css';
-import 'add-css:./styles.css';
+import 'add-css:./style.css';
 
 interface Props extends preact.JSX.HTMLAttributes {
   large?: boolean;

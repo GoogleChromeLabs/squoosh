@@ -4,7 +4,7 @@ import type { ScaleToOpts } from './custom-els/PinchZoom';
 import './custom-els/PinchZoom';
 import './custom-els/TwoUp';
 import * as style from './style.css';
-import 'add-css:./styles.css';
+import 'add-css:./style.css';
 import { shallowEqual, drawDataToCanvas } from '../../util';
 import {
   ToggleBackgroundIcon,

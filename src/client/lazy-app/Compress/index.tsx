@@ -27,8 +27,7 @@ import Options from './Options';
 import ResultCache from './result-cache';
 import { cleanMerge, cleanSet } from '../util/clean-modify';
 import './custom-els/MultiPanel';
-// TODO: you are here
-import Results from '../results';
+import Results from './results';
 import WorkerBridge from '../worker-bridge';
 import { resize } from 'features/processors/resize/client';
 import type SnackBarElement from 'shared/initial-app/custom-els/snack-bar';
@@ -462,7 +461,10 @@ export default class Compress extends Component<Props, State> {
       preprocessorState: currentState.preprocessorState,
     };
     const sideJobStates: SideJob[] = currentState.sides.map((side) => ({
-      processorState: side.latestSettings.processorState,
+      // If there isn't an encoder selected, we don't process either
+      processorState: side.latestSettings.encoderState
+        ? side.latestSettings.processorState
+        : defaultProcessorState,
       encoderState: side.latestSettings.encoderState,
     }));
 
@@ -471,14 +473,18 @@ export default class Compress extends Component<Props, State> {
     const needsPreprocessing =
       needsDecoding ||
       latestMainJobState.preprocessorState !== mainJobState.preprocessorState;
-    const sideWorksNeeded = latestSideJobStates.map((latestSideJob, i) => ({
-      processing:
+    const sideWorksNeeded = latestSideJobStates.map((latestSideJob, i) => {
+      const needsProcessing =
         needsPreprocessing ||
-        latestSideJob.processorState !== sideJobStates[i].processorState,
-      encoding:
-        needsPreprocessing ||
-        latestSideJob.encoderState !== sideJobStates[i].encoderState,
-    }));
+        latestSideJob.processorState !== sideJobStates[i].processorState;
+
+      return {
+        processing: needsProcessing,
+        encoding:
+          needsProcessing ||
+          latestSideJob.encoderState !== sideJobStates[i].encoderState,
+      };
+    });
 
     let jobNeeded = false;
 
@@ -499,14 +505,20 @@ export default class Compress extends Component<Props, State> {
     }
 
     if (!jobNeeded) {
-      // Clear any loading that may be happening
-      this.setState((state) => ({
-        loading: false,
-        sides: state.sides.map((side) => ({ ...side, loading: false })) as [
-          Side,
-          Side,
-        ],
-      }));
+      // Clear any loading that may be happening.
+      // Putting this behind an if to avoid looping.
+      if (
+        currentState.loading ||
+        currentState.sides.some((side) => side.loading)
+      ) {
+        this.setState((state) => ({
+          loading: false,
+          sides: state.sides.map((side) => ({ ...side, loading: false })) as [
+            Side,
+            Side,
+          ],
+        }));
+      }
       return;
     }
 
@@ -645,7 +657,7 @@ export default class Compress extends Component<Props, State> {
         // If there's no encoder state, this is "original image", which also
         // doesn't allow processing.
         if (!jobState.encoderState) {
-          file = currentState.source!.file;
+          file = source.file;
           data = source.preprocessed;
         } else {
           const cacheResult = this.encodeCache.match(
@@ -731,10 +743,7 @@ export default class Compress extends Component<Props, State> {
             loading: false,
             processed,
             encodedSettings: {
-              // If we didn't encode, we didn't preprocess either
-              processorState: jobState.encoderState
-                ? jobState.processorState
-                : defaultProcessorState,
+              processorState: jobState.processorState,
               encoderState: jobState.encoderState,
             },
           };
