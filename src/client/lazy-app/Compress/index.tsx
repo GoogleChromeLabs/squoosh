@@ -27,13 +27,14 @@ import Options from './Options';
 import ResultCache from './result-cache';
 import { cleanMerge, cleanSet } from '../util/clean-modify';
 import './custom-els/MultiPanel';
+// TODO: you are here
 import Results from '../results';
-import { ExpandIcon, CopyAcrossIconProps } from '../../lib/icons';
-import SnackBarElement from '../../lib/SnackBar';
 import WorkerBridge from '../worker-bridge';
 import { resize } from 'features/processors/resize/client';
+import type SnackBarElement from 'shared/initial-app/custom-els/snack-bar';
+import { CopyAcrossIconProps, ExpandIcon } from '../icons';
 
-type OutputType = EncoderType | 'identity';
+export type OutputType = EncoderType | 'identity';
 
 export interface SourceImage {
   file: File;
@@ -761,7 +762,7 @@ export default class Compress extends Component<Props, State> {
       <Options
         source={source}
         mobileView={mobileView}
-        preprocessorState={side.latestSettings.processorState}
+        processorState={side.latestSettings.processorState}
         encoderState={side.latestSettings.encoderState}
         onEncoderTypeChange={this.onEncoderTypeChange.bind(
           this,
@@ -771,7 +772,7 @@ export default class Compress extends Component<Props, State> {
           this,
           index as 0 | 1,
         )}
-        onPreprocessorOptionsChange={this.onProcessorOptionsChange.bind(
+        onProcessorOptionsChange={this.onProcessorOptionsChange.bind(
           this,
           index as 0 | 1,
         )}

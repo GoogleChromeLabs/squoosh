@@ -21,6 +21,7 @@
     "file-drop-element": "^1.0.1",
     "husky": "^4.3.0",
     "idb-keyval": "^3.2.0",
+    "linkstate": "^1.1.1",
     "lint-staged": "^10.4.0",
     "lodash.camelcase": "^4.3.0",
     "mime-types": "^2.1.27",

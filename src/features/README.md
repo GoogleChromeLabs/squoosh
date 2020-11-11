@@ -41,9 +41,9 @@ Encoders must have the following:
 - `EncodeOptions` - An interface for the codec's options.
 - `defaultOptions` - An object of type `EncodeOptions`.
 
-`client/index.ts` which exposes the following.
+`client/index.ts` which exposes the following:
 
-- `encode` - A method which takes args
+- `encode` - A method which takes args:
   - `AbortSignal`
   - `WorkerBridge`
   - `ImageData`
@@ -51,4 +51,15 @@ Encoders must have the following:
 
 And returns (a promise for) an `ArrayBuffer`.
 
-Optionally it may include a method `featureTest`, which returns a boolean indicating support for this decoder.
+Optionally it may export a method `featureTest`, which returns a boolean indicating support for this decoder.
+
+Optionally it may export a component, `Options`, with the following props:
+
+```ts
+interface Props {
+  options: EncodeOptions;
+  onChange(newOptions: EncodeOptions): void;
+}
+```
+
+…where `EncodeOptions` are the options for that encoder.
