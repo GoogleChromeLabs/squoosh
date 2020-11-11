@@ -504,23 +504,7 @@ export default class Compress extends Component<Props, State> {
       }
     }
 
-    if (!jobNeeded) {
-      // Clear any loading that may be happening.
-      // Putting this behind an if to avoid looping.
-      if (
-        currentState.loading ||
-        currentState.sides.some((side) => side.loading)
-      ) {
-        this.setState((state) => ({
-          loading: false,
-          sides: state.sides.map((side) => ({ ...side, loading: false })) as [
-            Side,
-            Side,
-          ],
-        }));
-      }
-      return;
-    }
+    if (!jobNeeded) return;
 
     const mainSignal = this.mainAbortController.signal;
     const sideSignals = this.sideAbortControllers.map((ac) => ac.signal);
