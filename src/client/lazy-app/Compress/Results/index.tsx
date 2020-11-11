@@ -36,7 +36,7 @@ const loadingReactionDelay = 500;
 
 export default class Results extends Component<Props, State> {
   state: State = {
-    showLoadingState: false,
+    showLoadingState: this.props.loading,
   };
 
   /** The timeout ID between entering the loading state, and changing UI */
