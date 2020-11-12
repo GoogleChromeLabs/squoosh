@@ -14,7 +14,7 @@ import { h, FunctionalComponent } from 'preact';
 
 import baseCss from 'css:./base.css';
 import initialCss from 'initial-css:';
-import clientBundleURL, { imports } from 'client-bundle:client/initial-app';
+import { allSrc } from 'client-bundle:client/initial-app';
 import favicon from 'url:static-build/assets/favicon.ico';
 import { escapeStyleScriptContent } from 'static-build/utils';
 import Intro from 'shared/initial-app/Intro';
@@ -46,15 +46,16 @@ const Index: FunctionalComponent<Props> = () => (
           __html: escapeStyleScriptContent(initialCss),
         }}
       />
-      <script src={clientBundleURL} defer />
-      {imports.map((v) => (
-        <link rel="preload" as="script" href={v} />
-      ))}
     </head>
     <body>
       <div id="app">
         <Intro />
       </div>
+      <script
+        dangerouslySetInnerHTML={{
+          __html: escapeStyleScriptContent(allSrc),
+        }}
+      />
     </body>
   </html>
 );
