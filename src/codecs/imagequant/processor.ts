@@ -1,5 +1,5 @@
-import imagequant, { QuantizerModule } from '../../../codecs/imagequant/imagequant';
-import wasmUrl from '../../../codecs/imagequant/imagequant.wasm';
+import imagequant, { QuantizerModule } from '../../codec-impl/imagequant/imagequant';
+import wasmUrl from 'url:../../codec-impl/imagequant/imagequant.wasm';
 import { QuantizeOptions } from './processor-meta';
 import { initEmscriptenModule } from '../util';
 

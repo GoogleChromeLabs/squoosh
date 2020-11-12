@@ -1,4 +1,4 @@
-import wasmUrl from '../../../codecs/rotate/rotate.wasm';
+import wasmUrl from 'url:../../codec-impl/rotate/rotate.wasm';
 import { RotateOptions, RotateModuleInstance } from './processor-meta';
 
 // We are loading a 500B module here. Loading the code to feature-detect

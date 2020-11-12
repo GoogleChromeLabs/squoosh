@@ -1,4 +1,5 @@
 import { proxy } from 'comlink';
+import workerURL from 'bundle:./processor-worker/index.ts';
 import { QuantizeOptions } from './imagequant/processor-meta';
 import { canvasEncode, blobToArrayBuffer } from '../lib/util';
 import { EncodeOptions as MozJPEGEncoderOptions } from './mozjpeg/encoder-meta';
@@ -69,7 +70,8 @@ export default class Processor {
       // definition can't be overwritten.
       this._worker = new Worker(
         // './processor-worker',
-        new URL('./processor-worker/index.ts', import.meta.url),
+        // new URL('./processor-worker/index.ts', import.meta.url),
+        workerURL,
         { name: 'processor-worker', type: 'module' },
         // { name: 'processor-worker', type: 'module' },
       ) as Worker;

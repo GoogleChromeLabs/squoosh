@@ -1,5 +1,5 @@
-import webp_dec, { WebPModule } from '../../../codecs/webp/dec/webp_dec';
-import wasmUrl from '../../../codecs/webp/dec/webp_dec.wasm';
+import webp_dec, { WebPModule } from '../../codec-impl/webp/dec/webp_dec';
+import wasmUrl from 'url:../../codec-impl/webp/dec/webp_dec.wasm';
 import { initEmscriptenModule } from '../util';
 
 let emscriptenModule: Promise<WebPModule>;

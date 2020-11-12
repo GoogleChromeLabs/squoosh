@@ -1,4 +1,4 @@
-import { resize } from '../../../codecs/hqx/pkg';
+import { resize } from '../../codec-impl/hqx/pkg';
 import { HqxOptions } from './processor-meta';
 
 export async function hqx(
