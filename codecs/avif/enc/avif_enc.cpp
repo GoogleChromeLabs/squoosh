@@ -1,4 +1,5 @@
 #include <emscripten/bind.h>
+#include <emscripten/threading.h>
 #include <emscripten/val.h>
 #include "avif/avif.h"
 
@@ -50,13 +51,10 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
 
   avifImage* image = avifImageCreate(width, height, depth, format);
 
-  if (
-    options.maxQuantizer == AVIF_QUANTIZER_LOSSLESS &&
-    options.minQuantizer == AVIF_QUANTIZER_LOSSLESS &&
-    options.minQuantizerAlpha == AVIF_QUANTIZER_LOSSLESS &&
-    options.maxQuantizerAlpha == AVIF_QUANTIZER_LOSSLESS &&
-    format == AVIF_PIXEL_FORMAT_YUV444
-  ) {
+  if (options.maxQuantizer == AVIF_QUANTIZER_LOSSLESS &&
+      options.minQuantizer == AVIF_QUANTIZER_LOSSLESS &&
+      options.minQuantizerAlpha == AVIF_QUANTIZER_LOSSLESS &&
+      options.maxQuantizerAlpha == AVIF_QUANTIZER_LOSSLESS && format == AVIF_PIXEL_FORMAT_YUV444) {
     image->matrixCoefficients = AVIF_MATRIX_COEFFICIENTS_IDENTITY;
   } else {
     image->matrixCoefficients = AVIF_MATRIX_COEFFICIENTS_BT709;
@@ -71,7 +69,7 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
   avifImageRGBToYUV(image, &srcRGB);
 
   avifEncoder* encoder = avifEncoderCreate();
-  encoder->maxThreads = 1;
+  encoder->maxThreads = emscripten_num_logical_cores();
   encoder->minQuantizer = options.minQuantizer;
   encoder->maxQuantizer = options.maxQuantizer;
   encoder->minQuantizerAlpha = options.minQuantizerAlpha;

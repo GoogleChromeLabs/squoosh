@@ -49,5 +49,8 @@
     "*.{js,css,json,md,ts,tsx}": [
       "prettier --write"
     ]
+  },
+  "dependencies": {
+    "wasm-feature-detect": "^1.2.9"
   }
 }
