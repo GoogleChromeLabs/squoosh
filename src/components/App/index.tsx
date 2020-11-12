@@ -4,10 +4,10 @@ import { linkRef, Fileish } from '../../lib/initial-util';
 import * as style from './style.module.scss';
 import { FileDropEvent } from 'file-drop-element';
 import 'file-drop-element';
-import SnackBarElement, { SnackOptions } from '../../lib/SnackBar';
-import '../../lib/SnackBar';
-import Intro from '../intro';
-import '../custom-els/LoadingSpinner';
+import SnackBarElement, { SnackOptions } from '../../lib/SnackBar/index';
+import '../../lib/SnackBar/index';
+import Intro from '../intro/index';
+import '../custom-els/LoadingSpinner/index';
 
 const ROUTE_EDITOR = '/editor';
 

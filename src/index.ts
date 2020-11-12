@@ -10,7 +10,7 @@ if (!('customElements' in self)) {
   init();
 }
 
-if (typeof process.env.PRERENDER === 'undefined') {
+if (typeof window !== 'undefined') {
   // Determine the current display mode.
   let displayMode = 'browser';
   const mqStandAlone = '(display-mode: standalone)';

@@ -45,6 +45,11 @@ declare module 'data-url:*' {
   export default value;
 }
 
+declare module 'bundle:*' {
+  const value: string;
+  export default value;
+}
+
 declare var VERSION: string;
 
 declare var ga: {

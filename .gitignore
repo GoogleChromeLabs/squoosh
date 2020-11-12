@@ -5,3 +5,5 @@ node_modules
 *.css.d.ts
 *.o
 .parcel-cache
+.cache
+/public
