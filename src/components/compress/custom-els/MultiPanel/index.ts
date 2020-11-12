@@ -87,7 +87,7 @@ export default class MultiPanel extends HTMLElement {
     this._childrenChange();
   }
 
-  attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null) {
+  attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null) {
     if (name === openOneOnlyAttr && newValue === null) {
       this._closeAll({ exceptFirst: true });
     }

@@ -67,7 +67,7 @@ export default class ResizerOptions extends Component<Props, State> {
     return this.props.inputWidth / this.props.inputHeight;
   }
 
-  componentDidUpdate(prevProps: Props, prevState: State) {
+  componentDidUpdate(_prevProps: Props, prevState: State) {
     if (!prevState.maintainAspect && this.state.maintainAspect) {
       this.form!.height.value = Math.round(Number(this.form!.width.value) / this.getAspect());
       this.reportOptions();

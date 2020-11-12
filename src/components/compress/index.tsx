@@ -159,7 +159,7 @@ async function compressImage(
   );
 }
 
-function stateForNewSourceData(state: State, newSource: SourceImage): State {
+function stateForNewSourceData(state: State, _newSource: SourceImage): State {
   let newState = { ...state };
 
   for (const i of [0, 1]) {
@@ -296,7 +296,7 @@ export default class Compress extends Component<Props, State> {
     this.updateDocumentTitle();
   }
 
-  componentDidUpdate(prevProps: Props, prevState: State): void {
+  componentDidUpdate(_prevProps: Props, prevState: State): void {
     const { source, sides } = this.state;
 
     const sourceDataChanged =

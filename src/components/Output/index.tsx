@@ -77,7 +77,7 @@ export default class Output extends Component<Props, State> {
     }
   }
 
-  componentDidUpdate(prevProps: Props, prevState: State) {
+  componentDidUpdate(prevProps: Props, _prevState: State) {
     const prevLeftDraw = this.leftDrawable(prevProps);
     const prevRightDraw = this.rightDrawable(prevProps);
     const leftDraw = this.leftDrawable();
@@ -198,7 +198,7 @@ export default class Output extends Component<Props, State> {
   }
 
   @bind
-  private onPinchZoomLeftChange(event: Event) {
+  private onPinchZoomLeftChange(_event: Event) {
     if (!this.pinchZoomRight || !this.pinchZoomLeft) throw Error('Missing pinch-zoom element');
     this.setState({
       scale: this.pinchZoomLeft.scale,

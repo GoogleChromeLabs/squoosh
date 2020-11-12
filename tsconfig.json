@@ -7,6 +7,8 @@
     "moduleResolution": "node",
     "experimentalDecorators": true,
     "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
     "sourceMap": true,
     "jsx": "react",
     "jsxFactory": "h",
