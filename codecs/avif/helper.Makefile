@@ -32,9 +32,9 @@ $(OUT_JS): $(OUT_CPP) $(LIBAOM_OUT) $(CODEC_OUT)
 		--closure 1 \
 		-s ALLOW_MEMORY_GROWTH=1 \
 		-s MODULARIZE=1 \
-    -s TEXTDECODER=2 \
-    -s ENVIRONMENT='worker' \
-    -s EXPORT_ES6=1 \
+		-s TEXTDECODER=2 \
+		-s ENVIRONMENT='worker' \
+		-s EXPORT_ES6=1 \
 		-o $@ \
 		$+
 
