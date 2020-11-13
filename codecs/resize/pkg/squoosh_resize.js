@@ -1,3 +1,5 @@
+import * as __wbg_star0 from 'env';
+
 let wasm;
 
 let cachegetUint8Memory0 = null;
@@ -111,6 +113,7 @@ async function init(input) {
     input = import.meta.url.replace(/\.js$/, '_bg.wasm');
   }
   const imports = {};
+  imports['env'] = __wbg_star0;
 
   if (
     typeof input === 'string' ||
