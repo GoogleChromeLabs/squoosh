@@ -35,6 +35,7 @@ $(OUT_JS): $(OUT_CPP) $(LIBAOM_OUT) $(CODEC_OUT)
 		-s TEXTDECODER=2 \
 		-s ENVIRONMENT='worker' \
 		-s EXPORT_ES6=1 \
+		-s EXPORT_NAME="$(basename $(@F))" \
 		-o $@ \
 		$+
 

@@ -30,6 +30,7 @@ all: $(OUT_JS)
 		-s TEXTDECODER=2 \
 		-s ENVIRONMENT='worker' \
 		-s EXPORT_ES6=1 \
+		-s EXPORT_NAME="$(basename $(@F))" \
 		-o $@ \
 		$+ \
 		$(CODEC_BUILD_DIR)/artifacts/libbrunslienc-static.bc \
