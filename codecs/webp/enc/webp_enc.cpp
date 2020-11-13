@@ -71,7 +71,6 @@ EMSCRIPTEN_BINDINGS(my_module) {
       .field("partitions", &WebPConfig::partitions)
       .field("partition_limit", &WebPConfig::partition_limit)
       .field("emulate_jpeg_size", &WebPConfig::emulate_jpeg_size)
-      .field("thread_level", &WebPConfig::thread_level)
       .field("low_memory", &WebPConfig::low_memory)
       .field("near_lossless", &WebPConfig::near_lossless)
       .field("exact", &WebPConfig::exact)
