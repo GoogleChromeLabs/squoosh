@@ -10,24 +10,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import webpEncoder, { WebPModule } from 'codecs/webp/enc/webp_enc';
-import wasmUrl from 'url:codecs/webp/enc/webp_enc.wasm';
-import { initEmscriptenModule } from 'features/worker-utils';
+import type { WebPModule } from 'codecs/webp/enc/webp_enc';
 import type { EncodeOptions } from '../shared/meta';
 
+import { initEmscriptenModule } from 'features/worker-utils';
+import { simd } from 'wasm-feature-detect';
+
+import wasmUrl from 'url:codecs/webp/enc/webp_enc.wasm';
+
+import wasmUrlWithMTAndSIMD from 'url:codecs/webp/enc/webp_enc_simd.wasm';
+import workerUrlWithSIMD from 'omt:codecs/webp/enc/webp_enc_simd.worker.js';
+
 let emscriptenModule: Promise<WebPModule>;
+
+async function init() {
+  if (await simd()) {
+    const webpEncoder = await import('codecs/webp/enc/webp_enc_simd');
+    return initEmscriptenModule(
+      webpEncoder.default,
+      wasmUrlWithMTAndSIMD,
+      workerUrlWithSIMD,
+    );
+  }
+  const webpEncoder = await import('codecs/webp/enc/webp_enc');
+  return initEmscriptenModule(
+    webpEncoder.default,
+    wasmUrl,
+  );
+}
 
 export default async function encode(
   data: ImageData,
   options: EncodeOptions,
 ): Promise<ArrayBuffer> {
-  if (!emscriptenModule) {
-    emscriptenModule = initEmscriptenModule(webpEncoder, wasmUrl);
-  }
+  if (!emscriptenModule) emscriptenModule = init();
 
   const module = await emscriptenModule;
   const result = module.encode(data.data, data.width, data.height, options);
+
   if (!result) throw new Error('Encoding error.');
-  // wasm can’t run on SharedArrayBuffers, so we hard-cast to ArrayBuffer.
-  return result.buffer as ArrayBuffer;
+
+  return result.buffer;
 }
