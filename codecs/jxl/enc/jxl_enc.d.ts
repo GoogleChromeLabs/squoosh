@@ -1,6 +1,9 @@
-import { EncodeOptions } from '../../../src/codecs/jxl/encoder-meta';
+export interface EncodeOptions {
+  speed: number;
+  quality: number;
+}
 
-interface JXLModule extends EmscriptenWasm.Module {
+export interface JXLModule extends EmscriptenWasm.Module {
   encode(
     data: BufferSource,
     width: number,
@@ -9,4 +12,6 @@ interface JXLModule extends EmscriptenWasm.Module {
   ): Uint8Array | null;
 }
 
-export default function (opts: EmscriptenWasm.ModuleOpts): Promise<JXLModule>;
+declare var moduleFactory: EmscriptenWasm.ModuleFactory<JXLModule>;
+
+export default moduleFactory;

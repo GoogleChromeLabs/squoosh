@@ -10,4 +10,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/// <reference path="../../../../../missing-types.d.ts" />
+import type { EncodeOptions } from 'codecs/jxl/enc/jxl_enc';
+
+export { EncodeOptions };
+
+export const label = 'JPEG XL (beta)';
+export const mimeType = 'image/jpegxl';
+export const extension = 'jxl';
+export const defaultOptions: EncodeOptions = {
+  speed: 5,
+  quality: 1,
+};
