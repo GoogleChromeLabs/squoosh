@@ -1,6 +1,6 @@
 {
   "name": "oxipng",
   "scripts": {
-    "build": "../build-rust-nightly.sh ./build.sh"
+    "build": "RUST_IMG=rustlang/rust:nightly ../build-rust.sh ./build.sh"
   }
 }
