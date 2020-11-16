@@ -107,6 +107,7 @@ export default async function ({ watch }) {
       { resolveFileUrl, resolveImportMeta },
       clientBundlePlugin(
         {
+          external: ['worker_threads'],
           plugins: [
             { resolveFileUrl, resolveImportMeta },
             OMT({ loader: await omtLoaderPromise }),
@@ -115,7 +116,7 @@ export default async function ({ watch }) {
             commonjs(),
             resolve(),
             replace({ __PRERENDER__: false, __PRODUCTION__: isProduction }),
-            terser({ module: true }),
+            isProduction ? terser({ module: true }) : {},
           ],
           preserveEntrySignatures: false,
         },
