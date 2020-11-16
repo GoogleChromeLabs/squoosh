@@ -23,7 +23,6 @@ let emscriptenModule: Promise<AVIFModule>;
 async function init() {
   if (await threads()) {
     const avifEncoder = await import('codecs/avif/enc/avif_enc_mt');
-    console.log(avifEncoder);
     return initEmscriptenModule<AVIFModule>(
       avifEncoder.default,
       wasmUrlWithMT,

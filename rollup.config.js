@@ -125,6 +125,9 @@ export default async function ({ watch }) {
           format: 'amd',
           chunkFileNames: jsFileName,
           entryFileNames: jsFileName,
+          // This is needed because emscripten's workers use 'this', so they trigger all kinds of interop things,
+          // such as double-wrapping objects in { default }.
+          interop: false,
         },
         resolveFileUrl,
       ),
