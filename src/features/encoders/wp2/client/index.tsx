@@ -21,7 +21,7 @@ interface State {
   showAdvanced: boolean;
 }
 
-export default class WP2EncoderOptions extends Component<Props, State> {
+export class Options extends Component<Props, State> {
   state: State = {
     showAdvanced: false,
   };

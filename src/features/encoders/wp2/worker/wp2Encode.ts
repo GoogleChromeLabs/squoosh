@@ -11,7 +11,7 @@
  * limitations under the License.
  */
 import wp2Encoder, { WP2Module } from 'codecs/wp2/enc/wp2_enc';
-import wasmUrl from 'url:codecs/webp/enc/webp_enc.wasm';
+import wasmUrl from 'url:codecs/wp2/enc/wp2_enc.wasm';
 import { initEmscriptenModule } from 'features/worker-utils';
 import type { EncodeOptions } from '../shared/meta';
 

@@ -101,7 +101,7 @@ async function decodeImage(
       if (mimeType === 'image/webp') {
         return await workerBridge.webpDecode(signal, blob);
       }
-      if (mimeType === 'image/jxl') {
+      if (mimeType === 'image/jpegxl') {
         return await workerBridge.jxlDecode(signal, blob);
       }
       if (mimeType === 'image/webp2') {

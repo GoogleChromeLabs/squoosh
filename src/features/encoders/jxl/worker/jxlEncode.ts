@@ -11,7 +11,7 @@
  * limitations under the License.
  */
 import jxlEncoder, { JXLModule } from 'codecs/jxl/enc/jxl_enc';
-import wasmUrl from 'url:codecs/webp/enc/webp_enc.wasm';
+import wasmUrl from 'url:codecs/jxl/enc/jxl_enc.wasm';
 import { initEmscriptenModule } from 'features/worker-utils';
 import type { EncodeOptions } from '../shared/meta';
 
