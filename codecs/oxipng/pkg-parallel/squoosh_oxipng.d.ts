@@ -49,5 +49,5 @@ export interface InitOutput {
  */
 export default function init(
   module_or_path?: InitInput | Promise<InitInput>,
-  maybe_memory: WebAssembly.Memory,
+  maybe_memory?: WebAssembly.Memory,
 ): Promise<InitOutput>;
