@@ -10,4 +10,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/// <reference path="../../../../../missing-types.d.ts" />
+import type { EncodeOptions } from 'codecs/wp2/enc/wp2_enc';
+
+export { EncodeOptions };
+
+export const label = 'WebP v2 (unstable)';
+export const mimeType = 'image/webp2';
+export const extension = 'wp2';
+export const defaultOptions: EncodeOptions = {
+  quality: 75,
+  alpha_quality: 100,
+  speed: 5,
+  pass: 1,
+  sns: 50,
+};

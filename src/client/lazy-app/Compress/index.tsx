@@ -104,6 +104,9 @@ async function decodeImage(
       if (mimeType === 'image/jxl') {
         return await workerBridge.jxlDecode(signal, blob);
       }
+      if (mimeType === 'image/webp2') {
+        return await workerBridge.wp2Decode(signal, blob);
+      }
       // If it's not one of those types, fall through and try built-in decoding for a laugh.
     }
     return await abortable(signal, builtinDecode(blob));
