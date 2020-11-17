@@ -27,7 +27,7 @@ import Options from './Options';
 import ResultCache from './result-cache';
 import { cleanMerge, cleanSet } from '../util/clean-modify';
 import './custom-els/MultiPanel';
-import Results from './results';
+import Results from './Results';
 import WorkerBridge from '../worker-bridge';
 import { resize } from 'features/processors/resize/client';
 import type SnackBarElement from 'shared/initial-app/custom-els/snack-bar';
