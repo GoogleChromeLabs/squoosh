@@ -1,6 +1,12 @@
-import { EncodeOptions } from '../../../src/codecs/wp2/encoder-meta';
+export interface EncodeOptions {
+  quality: number;
+  alpha_quality: number;
+  speed: number;
+  pass: number;
+  sns: number;
+}
 
-interface WP2Module extends EmscriptenWasm.Module {
+export interface WP2Module extends EmscriptenWasm.Module {
   encode(
     data: BufferSource,
     width: number,
@@ -9,4 +15,6 @@ interface WP2Module extends EmscriptenWasm.Module {
   ): Uint8Array | null;
 }
 
-export default function (opts: EmscriptenWasm.ModuleOpts): Promise<WP2Module>;
+declare var moduleFactory: EmscriptenWasm.ModuleFactory<WP2Module>;
+
+export default moduleFactory;
