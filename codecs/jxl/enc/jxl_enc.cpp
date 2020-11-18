@@ -33,7 +33,7 @@ val encode(std::string image, int width, int height, JXLOptions options) {
 
   // Quality settings roughly match libjpeg qualities.
   if (quality < 7 || quality == 100) {
-    cparams.modular_group_mode = true;
+    cparams.modular_mode = true;
     // Internal modular quality to roughly match VarDCT size.
     cparams.quality_pair.first = cparams.quality_pair.second =
         std::min(35 + (quality - 7) * 3.0f, 100.0f);
@@ -51,7 +51,7 @@ val encode(std::string image, int width, int height, JXLOptions options) {
     cparams.responsive = 1;
   }
 
-  if (cparams.modular_group_mode) {
+  if (cparams.modular_mode) {
     if (cparams.quality_pair.first != 100 || cparams.quality_pair.second != 100) {
       cparams.color_transform = jxl::ColorTransform::kXYB;
     } else {
@@ -64,7 +64,7 @@ val encode(std::string image, int width, int height, JXLOptions options) {
     cparams.responsive = 0;
   }
 
-  io.metadata.SetAlphaBits(8);
+  io.metadata.m.SetAlphaBits(8);
 
   uint8_t* inBuffer = (uint8_t*)image.c_str();
 
