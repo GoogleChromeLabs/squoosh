@@ -366,6 +366,10 @@ export default class Compress extends Component<Props, State> {
 
   componentWillUnmount(): void {
     updateDocumentTitle();
+    this.mainAbortController.abort();
+    for (const controller of this.sideAbortControllers) {
+      controller.abort();
+    }
   }
 
   componentDidUpdate(prevProps: Props, prevState: State): void {
