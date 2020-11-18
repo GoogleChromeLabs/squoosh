@@ -5,6 +5,7 @@ import { preventDefault, shallowEqual } from 'client/lazy-app/util';
 import * as style from 'client/lazy-app/Compress/Options/style.css';
 import Range from 'client/lazy-app/Compress/Options/Range';
 import Checkbox from 'client/lazy-app/Compress/Options/Checkbox';
+import Expander from 'client/lazy-app/Compress/Options/Expander';
 
 export const encode = (
   signal: AbortSignal,
@@ -24,6 +25,7 @@ interface State {
   quality: number;
   progressive: boolean;
   edgePreservingFilter: number;
+  lossless: boolean;
 }
 
 const maxSpeed = 7;
@@ -46,8 +48,14 @@ export class Options extends Component<Props, State> {
       quality: options.quality,
       progressive: options.progressive,
       edgePreservingFilter: options.epf,
+      lossless: options.quality === 100,
     };
   }
+
+  // The rest of the defaults are set in getDerivedStateFromProps
+  state: State = {
+    lossless: false,
+  } as State;
 
   private _inputChangeCallbacks = new Map<string, (event: Event) => void>();
 
@@ -74,9 +82,10 @@ export class Options extends Component<Props, State> {
 
         const newOptions: EncodeOptions = {
           speed: maxSpeed - optionState.effort,
-          quality: optionState.quality,
+          quality: optionState.lossless ? 100 : optionState.quality,
           progressive: optionState.progressive,
           epf: optionState.edgePreservingFilter,
+          nearLossless: 0,
         };
 
         // Updating options, so we don't recalculate in getDerivedStateFromProps.
@@ -93,23 +102,47 @@ export class Options extends Component<Props, State> {
 
   render(
     {}: Props,
-    { effort, quality, progressive, edgePreservingFilter }: State,
+    { effort, quality, progressive, edgePreservingFilter, lossless }: State,
   ) {
     // I'm rendering both lossy and lossless forms, as it becomes much easier when
     // gathering the data.
     return (
       <form class={style.optionsSection} onSubmit={preventDefault}>
-        <div class={style.optionOneCell}>
-          <Range
-            min="0"
-            max="100"
-            step="0.1"
-            value={quality}
-            onInput={this._inputChange('quality', 'number')}
-          >
-            Quality:
-          </Range>
-        </div>
+        <label class={style.optionInputFirst}>
+          <Checkbox
+            name="lossless"
+            checked={lossless}
+            onChange={this._inputChange('lossless', 'boolean')}
+          />
+          Lossless
+        </label>
+        <Expander>
+          {!lossless && (
+            <div>
+              <div class={style.optionOneCell}>
+                <Range
+                  min="0"
+                  max="99.9"
+                  step="0.1"
+                  value={quality}
+                  onInput={this._inputChange('quality', 'number')}
+                >
+                  Quality:
+                </Range>
+              </div>
+              <div class={style.optionOneCell}>
+                <Range
+                  min="0"
+                  max="3"
+                  value={edgePreservingFilter}
+                  onInput={this._inputChange('edgePreservingFilter', 'number')}
+                >
+                  Edge preserving filter:
+                </Range>
+              </div>
+            </div>
+          )}
+        </Expander>
         <label class={style.optionInputFirst}>
           <Checkbox
             name="progressive"
@@ -118,16 +151,6 @@ export class Options extends Component<Props, State> {
           />
           Progressive rendering
         </label>
-        <div class={style.optionOneCell}>
-          <Range
-            min="0"
-            max="3"
-            value={edgePreservingFilter}
-            onInput={this._inputChange('edgePreservingFilter', 'number')}
-          >
-            Edge preserving filter:
-          </Range>
-        </div>
         <div class={style.optionOneCell}>
           <Range
             min="0"

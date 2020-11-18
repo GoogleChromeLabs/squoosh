@@ -3,6 +3,7 @@ export interface EncodeOptions {
   quality: number;
   progressive: boolean;
   epf: number;
+  nearLossless: number;
 }
 
 export interface JXLModule extends EmscriptenWasm.Module {

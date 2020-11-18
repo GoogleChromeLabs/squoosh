@@ -1304,7 +1304,7 @@ var jxl_enc = (function () {
       n: function (a, b, c, d, g, h) {
         Ha[a] = { name: U(b), la: Y(c, d), ma: Y(g, h), ba: [] };
       },
-      g: function (a, b, c, d, g, h, m, k, n, p) {
+      f: function (a, b, c, d, g, h, m, k, n, p) {
         Ha[a].ba.push({
           ea: U(b),
           ia: c,
@@ -1325,7 +1325,7 @@ var jxl_enc = (function () {
           toWireType: function () {},
         });
       },
-      f: Ua,
+      g: Ua,
       C: function (a) {
         if (0 === a) return Va(ib());
         var b = hb[a];

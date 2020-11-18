@@ -22,4 +22,5 @@ export const defaultOptions: EncodeOptions = {
   quality: 50,
   progressive: false,
   epf: 2,
+  nearLossless: 0,
 };

@@ -15,6 +15,7 @@ struct JXLOptions {
   float quality;
   bool progressive;
   int epf;
+  int nearLossless;
 };
 
 val encode(std::string image, int width, int height, JXLOptions options) {
@@ -26,6 +27,7 @@ val encode(std::string image, int width, int height, JXLOptions options) {
 
   cparams.epf = options.epf;
   cparams.speed_tier = static_cast<jxl::SpeedTier>(options.speed);
+  cparams.near_lossless = options.nearLossless;
 
   float quality = options.quality;
 
@@ -89,6 +91,7 @@ EMSCRIPTEN_BINDINGS(my_module) {
       .field("speed", &JXLOptions::speed)
       .field("quality", &JXLOptions::quality)
       .field("progressive", &JXLOptions::progressive)
+      .field("nearLossless", &JXLOptions::nearLossless)
       .field("epf", &JXLOptions::epf);
 
   function("encode", &encode);
