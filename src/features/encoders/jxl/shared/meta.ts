@@ -21,4 +21,5 @@ export const defaultOptions: EncodeOptions = {
   speed: 5,
   quality: 50,
   progressive: false,
+  epf: 2,
 };

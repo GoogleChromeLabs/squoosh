@@ -2,6 +2,7 @@ export interface EncodeOptions {
   speed: number;
   quality: number;
   progressive: boolean;
+  epf: number;
 }
 
 export interface JXLModule extends EmscriptenWasm.Module {

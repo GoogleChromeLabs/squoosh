@@ -14,6 +14,7 @@ struct JXLOptions {
   int speed;
   float quality;
   bool progressive;
+  int epf;
 };
 
 val encode(std::string image, int width, int height, JXLOptions options) {
@@ -23,6 +24,7 @@ val encode(std::string image, int width, int height, JXLOptions options) {
   jxl::PaddedBytes bytes;
   jxl::ImageBundle* main = &io.Main();
 
+  cparams.epf = options.epf;
   cparams.speed_tier = static_cast<jxl::SpeedTier>(options.speed);
 
   float quality = options.quality;
@@ -45,6 +47,14 @@ val encode(std::string image, int width, int height, JXLOptions options) {
     cparams.qprogressive_mode = true;
     cparams.progressive_dc = 1;
     cparams.responsive = 1;
+  }
+
+  if (cparams.modular_group_mode) {
+    if (cparams.quality_pair.first != 100 || cparams.quality_pair.second != 100) {
+      cparams.color_transform = jxl::ColorTransform::kXYB;
+    } else {
+      cparams.color_transform = jxl::ColorTransform::kNone;
+    }
   }
 
   if (cparams.near_lossless) {
@@ -78,7 +88,8 @@ EMSCRIPTEN_BINDINGS(my_module) {
   value_object<JXLOptions>("JXLOptions")
       .field("speed", &JXLOptions::speed)
       .field("quality", &JXLOptions::quality)
-      .field("progressive", &JXLOptions::progressive);
+      .field("progressive", &JXLOptions::progressive)
+      .field("epf", &JXLOptions::epf);
 
   function("encode", &encode);
 }

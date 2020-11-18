@@ -23,6 +23,7 @@ interface State {
   effort: number;
   quality: number;
   progressive: boolean;
+  edgePreservingFilter: number;
 }
 
 const maxSpeed = 7;
@@ -44,6 +45,7 @@ export class Options extends Component<Props, State> {
       effort: maxSpeed - options.speed,
       quality: options.quality,
       progressive: options.progressive,
+      edgePreservingFilter: options.epf,
     };
   }
 
@@ -74,6 +76,7 @@ export class Options extends Component<Props, State> {
           speed: maxSpeed - optionState.effort,
           quality: optionState.quality,
           progressive: optionState.progressive,
+          epf: optionState.edgePreservingFilter,
         };
 
         // Updating options, so we don't recalculate in getDerivedStateFromProps.
@@ -88,7 +91,10 @@ export class Options extends Component<Props, State> {
     return this._inputChangeCallbacks.get(prop)!;
   };
 
-  render({}: Props, { effort, quality, progressive }: State) {
+  render(
+    {}: Props,
+    { effort, quality, progressive, edgePreservingFilter }: State,
+  ) {
     // I'm rendering both lossy and lossless forms, as it becomes much easier when
     // gathering the data.
     return (
@@ -112,6 +118,16 @@ export class Options extends Component<Props, State> {
           />
           Progressive rendering
         </label>
+        <div class={style.optionOneCell}>
+          <Range
+            min="0"
+            max="3"
+            value={edgePreservingFilter}
+            onInput={this._inputChange('edgePreservingFilter', 'number')}
+          >
+            Edge preserving filter:
+          </Range>
+        </div>
         <div class={style.optionOneCell}>
           <Range
             min="0"
