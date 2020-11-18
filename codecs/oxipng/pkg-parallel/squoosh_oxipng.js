@@ -116,9 +116,7 @@ export function start_main_thread() {
 /**
  */
 export function start_worker_thread() {
-  console.log('before wasm.start_worker_thread');
   wasm.start_worker_thread();
-  console.log('after wasm.start_worker_thread');
 }
 
 async function load(module, imports, maybe_memory) {
