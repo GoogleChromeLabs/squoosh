@@ -17,26 +17,17 @@ import { initEmscriptenModule } from 'features/worker-utils';
 import { simd } from 'wasm-feature-detect';
 
 import wasmUrl from 'url:codecs/webp/enc/webp_enc.wasm';
-
 import wasmUrlWithMTAndSIMD from 'url:codecs/webp/enc/webp_enc_simd.wasm';
-import workerUrlWithSIMD from 'omt:codecs/webp/enc/webp_enc_simd.worker.js';
 
 let emscriptenModule: Promise<WebPModule>;
 
 async function init() {
   if (await simd()) {
     const webpEncoder = await import('codecs/webp/enc/webp_enc_simd');
-    return initEmscriptenModule(
-      webpEncoder.default,
-      wasmUrlWithMTAndSIMD,
-      workerUrlWithSIMD,
-    );
+    return initEmscriptenModule(webpEncoder.default, wasmUrlWithMTAndSIMD);
   }
   const webpEncoder = await import('codecs/webp/enc/webp_enc');
-  return initEmscriptenModule(
-    webpEncoder.default,
-    wasmUrl,
-  );
+  return initEmscriptenModule(webpEncoder.default, wasmUrl);
 }
 
 export default async function encode(
