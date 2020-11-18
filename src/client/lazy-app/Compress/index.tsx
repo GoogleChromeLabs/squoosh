@@ -505,6 +505,8 @@ export default class Compress extends Component<Props, State> {
       const needsProcessing =
         needsPreprocessing ||
         !latestSideJob.processorState ||
+        // If we're going to or from 'original image' we should reprocess
+        !!latestSideJob.encoderState !== !!sideJobStates[i].encoderState ||
         !processorStateEquivalent(
           latestSideJob.processorState,
           sideJobStates[i].processorState,

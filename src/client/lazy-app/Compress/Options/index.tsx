@@ -156,11 +156,11 @@ export default class Options extends Component<Props, State> {
         <section class={`${style.optionOneCell} ${style.optionsSection}`}>
           {supportedEncoderMap ? (
             <Select
-              value={encoderState ? encoderState.type : ''}
+              value={encoderState ? encoderState.type : 'identity'}
               onChange={this.onEncoderTypeChange}
               large
             >
-              <option value="">Original Image</option>
+              <option value="identity">Original Image</option>
               {Object.entries(supportedEncoderMap).map(([type, encoder]) => (
                 <option value={type}>{encoder.meta.label}</option>
               ))}
