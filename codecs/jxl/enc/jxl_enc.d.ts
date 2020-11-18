@@ -1,6 +1,7 @@
 export interface EncodeOptions {
   speed: number;
   quality: number;
+  progressive: boolean;
 }
 
 export interface JXLModule extends EmscriptenWasm.Module {

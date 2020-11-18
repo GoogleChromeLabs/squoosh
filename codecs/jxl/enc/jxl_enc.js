@@ -1250,7 +1250,7 @@ var jxl_enc = (function () {
           },
         });
       },
-      g: function (a, b, c) {
+      h: function (a, b, c) {
         c = U(c);
         if (2 === b) {
           var d = ma;
@@ -1304,7 +1304,7 @@ var jxl_enc = (function () {
       n: function (a, b, c, d, g, h) {
         Ha[a] = { name: U(b), la: Y(c, d), ma: Y(g, h), ba: [] };
       },
-      h: function (a, b, c, d, g, h, m, k, n, p) {
+      g: function (a, b, c, d, g, h, m, k, n, p) {
         Ha[a].ba.push({
           ea: U(b),
           ia: c,

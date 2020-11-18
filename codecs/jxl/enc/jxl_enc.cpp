@@ -13,6 +13,7 @@ struct JXLOptions {
   // 7 = fastest
   int speed;
   float quality;
+  bool progressive;
 };
 
 val encode(std::string image, int width, int height, JXLOptions options) {
@@ -23,7 +24,33 @@ val encode(std::string image, int width, int height, JXLOptions options) {
   jxl::ImageBundle* main = &io.Main();
 
   cparams.speed_tier = static_cast<jxl::SpeedTier>(options.speed);
-  cparams.butteraugli_distance = options.quality;
+
+  float quality = options.quality;
+
+  // Quality settings roughly match libjpeg qualities.
+  if (quality < 7 || quality == 100) {
+    cparams.modular_group_mode = true;
+    // Internal modular quality to roughly match VarDCT size.
+    cparams.quality_pair.first = cparams.quality_pair.second =
+        std::min(35 + (quality - 7) * 3.0f, 100.0f);
+  } else {
+    if (quality >= 30) {
+      cparams.butteraugli_distance = 0.1 + (100 - quality) * 0.09;
+    } else {
+      cparams.butteraugli_distance = 6.4 + pow(2.5, (30 - quality) / 5.0f) / 6.25f;
+    }
+  }
+
+  if (options.progressive) {
+    cparams.qprogressive_mode = true;
+    cparams.progressive_dc = 1;
+    cparams.responsive = 1;
+  }
+
+  if (cparams.near_lossless) {
+    // Near-lossless assumes -R 0
+    cparams.responsive = 0;
+  }
 
   io.metadata.SetAlphaBits(8);
 
@@ -50,7 +77,8 @@ val encode(std::string image, int width, int height, JXLOptions options) {
 EMSCRIPTEN_BINDINGS(my_module) {
   value_object<JXLOptions>("JXLOptions")
       .field("speed", &JXLOptions::speed)
-      .field("quality", &JXLOptions::quality);
+      .field("quality", &JXLOptions::quality)
+      .field("progressive", &JXLOptions::progressive);
 
   function("encode", &encode);
 }

@@ -19,5 +19,6 @@ export const mimeType = 'image/jpegxl';
 export const extension = 'jxl';
 export const defaultOptions: EncodeOptions = {
   speed: 5,
-  quality: 1,
+  quality: 50,
+  progressive: false,
 };
