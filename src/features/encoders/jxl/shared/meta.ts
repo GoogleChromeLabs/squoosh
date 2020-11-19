@@ -18,8 +18,8 @@ export const label = 'JPEG XL (beta)';
 export const mimeType = 'image/jpegxl';
 export const extension = 'jxl';
 export const defaultOptions: EncodeOptions = {
-  speed: 5,
-  quality: 50,
+  speed: 4,
+  quality: 75,
   progressive: false,
   epf: 2,
   nearLossless: 0,
