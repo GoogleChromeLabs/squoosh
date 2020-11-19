@@ -7,7 +7,7 @@ RUN wget -qO- https://github.com/rustwasm/wasm-pack/releases/download/v0.9.1/was
 FROM $RUST_IMG AS rust
 ARG RUST_IMG
 RUN rustup target add wasm32-unknown-unknown
-RUN if [[ $RUST_IMG = rustlang/rust:* ]] ; then rustup component add rust-src ; fi
+RUN case $RUST_IMG in rustlang/rust@*) rustup component add rust-src; esac
 COPY --from=wasm-tools /emsdk/upstream/bin/wasm-opt /emsdk/upstream/bin/clang /usr/local/bin/
 COPY --from=wasm-tools /emsdk/upstream/lib/ /usr/local/lib/
 COPY --from=wasm-tools /emsdk/upstream/emscripten/system/include/libc/ /wasm32/include/
