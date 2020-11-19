@@ -1,7 +1,11 @@
 import { EncodeOptions } from '../shared/meta';
 import type WorkerBridge from 'client/lazy-app/worker-bridge';
 import { h, Component } from 'preact';
-import { inputFieldValueAsNumber, preventDefault } from 'client/lazy-app/util';
+import {
+  inputFieldValueAsNumber,
+  preventDefault,
+  shallowEqual,
+} from 'client/lazy-app/util';
 import * as style from 'client/lazy-app/Compress/Options/style.css';
 import Range from 'client/lazy-app/Compress/Options/Range';
 
@@ -18,30 +22,80 @@ interface Props {
 }
 
 interface State {
-  showAdvanced: boolean;
+  options: EncodeOptions;
+  effort: number;
+  quality: number;
+  alphaQuality: number;
+  passes: number;
+  sns: number;
+  uvMode: number;
 }
 
 export class Options extends Component<Props, State> {
-  state: State = {
-    showAdvanced: false,
-  };
+  static getDerivedStateFromProps(
+    props: Props,
+    state: State,
+  ): Partial<State> | null {
+    if (state.options && shallowEqual(state.options, props.options)) {
+      return null;
+    }
 
-  private onChange = (event: Event) => {
-    const form = (event.currentTarget as HTMLInputElement).closest(
-      'form',
-    ) as HTMLFormElement;
-    const { options } = this.props;
-    const newOptions: EncodeOptions = {
-      quality: inputFieldValueAsNumber(form.quality, options.quality),
-      alpha_quality: inputFieldValueAsNumber(
-        form.alpha_quality,
-        options.alpha_quality,
-      ),
-      speed: inputFieldValueAsNumber(form.speed, options.speed),
-      pass: inputFieldValueAsNumber(form.pass, options.pass),
-      sns: inputFieldValueAsNumber(form.sns, options.sns),
+    const { options } = props;
+
+    // Create default form state from options
+    return {
+      options,
+      effort: options.speed,
+      quality: options.quality,
+      alphaQuality: options.alpha_quality,
+      passes: options.pass,
+      sns: options.sns,
+      uvMode: options.uv_mode,
     };
-    this.props.onChange(newOptions);
+  }
+
+  private _inputChangeCallbacks = new Map<string, (event: Event) => void>();
+
+  private _inputChange = (prop: keyof State, type: 'number' | 'boolean') => {
+    // Cache the callback for performance
+    if (!this._inputChangeCallbacks.has(prop)) {
+      this._inputChangeCallbacks.set(prop, (event: Event) => {
+        const formEl = event.target as HTMLInputElement | HTMLSelectElement;
+        const newVal =
+          type === 'boolean'
+            ? 'checked' in formEl
+              ? formEl.checked
+              : !!formEl.value
+            : Number(formEl.value);
+
+        const newState: Partial<State> = {
+          [prop]: newVal,
+        };
+
+        const optionState = {
+          ...this.state,
+          ...newState,
+        };
+
+        const newOptions: EncodeOptions = {
+          speed: optionState.effort,
+          quality: optionState.quality,
+          alpha_quality: optionState.alphaQuality,
+          pass: optionState.passes,
+          sns: optionState.sns,
+          uv_mode: optionState.uvMode,
+        };
+
+        // Updating options, so we don't recalculate in getDerivedStateFromProps.
+        newState.options = newOptions;
+
+        this.setState(newState);
+
+        this.props.onChange(newOptions);
+      });
+    }
+
+    return this._inputChangeCallbacks.get(prop)!;
   };
 
   render({ options }: Props) {

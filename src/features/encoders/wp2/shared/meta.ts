@@ -11,6 +11,7 @@
  * limitations under the License.
  */
 import type { EncodeOptions } from 'codecs/wp2/enc/wp2_enc';
+import { UVMode } from 'codecs/wp2/enc/wp2_enc';
 
 export { EncodeOptions };
 
@@ -23,4 +24,5 @@ export const defaultOptions: EncodeOptions = {
   speed: 5,
   pass: 1,
   sns: 50,
+  uv_mode: UVMode.UVModeAuto,
 };

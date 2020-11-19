@@ -4,6 +4,14 @@ export interface EncodeOptions {
   speed: number;
   pass: number;
   sns: number;
+  uv_mode: UVMode;
+}
+
+export const enum UVMode {
+  UVModeAdapt = 0, // Mix of 420 and 444 (per block)
+  UVMode420, // All blocks 420
+  UVMode444, // All blocks 444
+  UVModeAuto, // Choose any of the above automatically
 }
 
 export interface WP2Module extends EmscriptenWasm.Module {

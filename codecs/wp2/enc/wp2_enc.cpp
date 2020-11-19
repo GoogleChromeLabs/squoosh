@@ -32,6 +32,7 @@ EMSCRIPTEN_BINDINGS(my_module) {
       .field("alpha_quality", &WP2::EncoderConfig::alpha_quality)
       .field("speed", &WP2::EncoderConfig::speed)
       .field("pass", &WP2::EncoderConfig::pass)
+      .field("uv_mode", &WP2::EncoderConfig::uv_mode)
       .field("sns", &WP2::EncoderConfig::sns);
 
   function("encode", &encode);
