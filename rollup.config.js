@@ -52,7 +52,7 @@ function jsFileName(chunkInfo) {
   const parsedPath = path.parse(chunkInfo.facadeModuleId);
   if (parsedPath.name !== 'index') return jsPath;
   // Come up with a better name than 'index'
-  const name = parsedPath.dir.split('/').slice(-1);
+  const name = parsedPath.dir.split(/\\|\//).slice(-1);
   return jsPath.replace('[name]', name);
 }
 
