@@ -26,6 +26,7 @@ interface State {
   progressive: boolean;
   edgePreservingFilter: number;
   lossless: boolean;
+  slightLoss: boolean;
 }
 
 const maxSpeed = 7;
@@ -49,6 +50,7 @@ export class Options extends Component<Props, State> {
       progressive: options.progressive,
       edgePreservingFilter: options.epf,
       lossless: options.quality === 100,
+      slightLoss: options.lossyPalette,
     };
   }
 
@@ -86,6 +88,7 @@ export class Options extends Component<Props, State> {
           progressive: optionState.progressive,
           epf: optionState.edgePreservingFilter,
           nearLossless: 0,
+          lossyPalette: optionState.lossless ? optionState.slightLoss : false,
         };
 
         // Updating options, so we don't recalculate in getDerivedStateFromProps.
@@ -102,7 +105,14 @@ export class Options extends Component<Props, State> {
 
   render(
     {}: Props,
-    { effort, quality, progressive, edgePreservingFilter, lossless }: State,
+    {
+      effort,
+      quality,
+      progressive,
+      edgePreservingFilter,
+      lossless,
+      slightLoss,
+    }: State,
   ) {
     // I'm rendering both lossy and lossless forms, as it becomes much easier when
     // gathering the data.
@@ -116,6 +126,18 @@ export class Options extends Component<Props, State> {
           />
           Lossless
         </label>
+        <Expander>
+          {lossless && (
+            <label class={style.optionInputFirst}>
+              <Checkbox
+                name="slightLoss"
+                checked={slightLoss}
+                onChange={this._inputChange('slightLoss', 'boolean')}
+              />
+              Slight loss
+            </label>
+          )}
+        </Expander>
         <Expander>
           {!lossless && (
             <div>

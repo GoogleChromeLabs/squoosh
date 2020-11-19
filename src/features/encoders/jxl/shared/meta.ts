@@ -23,4 +23,5 @@ export const defaultOptions: EncodeOptions = {
   progressive: false,
   epf: 2,
   nearLossless: 0,
+  lossyPalette: false,
 };

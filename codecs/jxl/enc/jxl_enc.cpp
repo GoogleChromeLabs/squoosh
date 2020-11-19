@@ -16,6 +16,7 @@ struct JXLOptions {
   bool progressive;
   int epf;
   int nearLossless;
+  bool lossyPalette;
 };
 
 val encode(std::string image, int width, int height, JXLOptions options) {
@@ -28,6 +29,12 @@ val encode(std::string image, int width, int height, JXLOptions options) {
   cparams.epf = options.epf;
   cparams.speed_tier = static_cast<jxl::SpeedTier>(options.speed);
   cparams.near_lossless = options.nearLossless;
+
+  if (options.lossyPalette) {
+    cparams.lossy_palette = true;
+    cparams.palette_colors = 0;
+    cparams.options.predictor = jxl::Predictor::Zero;
+  }
 
   // Reduce memory usage of tree learning for lossless data.
   // TODO(veluca93): this is a mitigation for excessive memory usage in the JXL encoder.
@@ -101,6 +108,7 @@ EMSCRIPTEN_BINDINGS(my_module) {
       .field("quality", &JXLOptions::quality)
       .field("progressive", &JXLOptions::progressive)
       .field("nearLossless", &JXLOptions::nearLossless)
+      .field("lossyPalette", &JXLOptions::lossyPalette)
       .field("epf", &JXLOptions::epf);
 
   function("encode", &encode);
