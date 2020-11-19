@@ -4,6 +4,15 @@ CODEC_DIR = node_modules/jxl
 CODEC_BUILD_DIR := $(CODEC_DIR)/build
 CODEC_OUT := $(CODEC_BUILD_DIR)/lib/libjxl.a
 
+CODEC_DEBUG = 0
+
+ifeq ($(CODEC_DEBUG),1)
+CODEC_CXX_FLAGS := -DJXL_DEBUG_ON_ALL_ERROR=1 -g
+CXXFLAGS := $(CXXFLAGS) -g -DJXL_DEBUG_ON_ALL_ERROR=1 -s ASSERTIONS=1
+else
+CODEC_CXX_FLAGS :=
+endif
+
 OUT_JS = enc/jxl_enc.js dec/jxl_dec.js
 OUT_WASM = $(OUT_JS:.js=.wasm)
 
@@ -11,7 +20,7 @@ OUT_WASM = $(OUT_JS:.js=.wasm)
 
 all: $(OUT_JS)
 
-%.js: %.cpp $(LIBAOM_OUT) $(CODEC_OUT)
+%.js: %.cpp $(CODEC_OUT) Makefile
 	$(CXX) \
 		-I $(CODEC_DIR) \
 		-I $(CODEC_DIR)/lib \
@@ -32,7 +41,7 @@ all: $(OUT_JS)
 		-s EXPORT_ES6=1 \
 		-s EXPORT_NAME="$(basename $(@F))" \
 		-o $@ \
-		$+ \
+		$< $(CODEC_OUT) \
 		$(CODEC_BUILD_DIR)/artifacts/libbrunslienc-static.bc \
 		$(CODEC_BUILD_DIR)/artifacts/libbrunslicommon-static.bc \
 		$(CODEC_BUILD_DIR)/artifacts/libbrunslidec-static.bc \
@@ -42,10 +51,10 @@ all: $(OUT_JS)
 		$(CODEC_BUILD_DIR)/third_party/libskcms.a \
 		$(CODEC_BUILD_DIR)/third_party/highway/libhwy.a
 
-$(CODEC_OUT): $(CODEC_DIR)/CMakeLists.txt
+$(CODEC_OUT): $(CODEC_DIR)/CMakeLists.txt Makefile
 	mkdir -p $(CODEC_BUILD_DIR)
 	cd $(CODEC_BUILD_DIR) && \
-	emcmake cmake ../ && \
+	emcmake cmake ../ -DCMAKE_CXX_FLAGS="$(CODEC_CXX_FLAGS)" && \
 	$(MAKE) jxl-static
 
 $(CODEC_DIR)/CMakeLists.txt: $(CODEC_DIR)
