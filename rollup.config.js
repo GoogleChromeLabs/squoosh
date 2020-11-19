@@ -107,6 +107,7 @@ export default async function ({ watch }) {
       { resolveFileUrl, resolveImportMeta },
       clientBundlePlugin(
         {
+          external: ['worker_threads'],
           plugins: [
             { resolveFileUrl, resolveImportMeta },
             OMT({ loader: await omtLoaderPromise }),
@@ -115,7 +116,7 @@ export default async function ({ watch }) {
             commonjs(),
             resolve(),
             replace({ __PRERENDER__: false, __PRODUCTION__: isProduction }),
-            terser({ module: true }),
+            isProduction ? terser({ module: true }) : {},
           ],
           preserveEntrySignatures: false,
         },
@@ -124,6 +125,9 @@ export default async function ({ watch }) {
           format: 'amd',
           chunkFileNames: jsFileName,
           entryFileNames: jsFileName,
+          // This is needed because emscripten's workers use 'this', so they trigger all kinds of interop things,
+          // such as double-wrapping objects in { default }.
+          interop: false,
         },
         resolveFileUrl,
       ),

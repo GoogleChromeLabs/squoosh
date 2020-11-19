@@ -9,7 +9,7 @@ import {
   CopyAcrossIconProps,
 } from 'client/lazy-app/icons';
 import 'shared/initial-app/custom-els/loading-spinner';
-import { SourceImage } from '../../compress';
+import { SourceImage } from '../';
 
 interface Props {
   loading: boolean;

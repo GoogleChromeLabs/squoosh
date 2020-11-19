@@ -27,7 +27,7 @@ import Options from './Options';
 import ResultCache from './result-cache';
 import { cleanMerge, cleanSet } from '../util/clean-modify';
 import './custom-els/MultiPanel';
-import Results from './results';
+import Results from './Results';
 import WorkerBridge from '../worker-bridge';
 import { resize } from 'features/processors/resize/client';
 import type SnackBarElement from 'shared/initial-app/custom-els/snack-bar';
@@ -100,6 +100,12 @@ async function decodeImage(
       }
       if (mimeType === 'image/webp') {
         return await workerBridge.webpDecode(signal, blob);
+      }
+      if (mimeType === 'image/jpegxl') {
+        return await workerBridge.jxlDecode(signal, blob);
+      }
+      if (mimeType === 'image/webp2') {
+        return await workerBridge.wp2Decode(signal, blob);
       }
       // If it's not one of those types, fall through and try built-in decoding for a laugh.
     }
@@ -360,6 +366,10 @@ export default class Compress extends Component<Props, State> {
 
   componentWillUnmount(): void {
     updateDocumentTitle();
+    this.mainAbortController.abort();
+    for (const controller of this.sideAbortControllers) {
+      controller.abort();
+    }
   }
 
   componentDidUpdate(prevProps: Props, prevState: State): void {
@@ -495,6 +505,8 @@ export default class Compress extends Component<Props, State> {
       const needsProcessing =
         needsPreprocessing ||
         !latestSideJob.processorState ||
+        // If we're going to or from 'original image' we should reprocess
+        !!latestSideJob.encoderState !== !!sideJobStates[i].encoderState ||
         !processorStateEquivalent(
           latestSideJob.processorState,
           sideJobStates[i].processorState,

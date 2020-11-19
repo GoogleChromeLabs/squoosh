@@ -38,7 +38,8 @@
     "rollup": "^2.33.1",
     "rollup-plugin-terser": "^7.0.2",
     "serve": "^11.3.2",
-    "typescript": "^4.0.5"
+    "typescript": "^4.0.5",
+    "which": "^2.0.2"
   },
   "husky": {
     "hooks": {
@@ -49,5 +50,8 @@
     "*.{js,css,json,md,ts,tsx}": [
       "prettier --write"
     ]
+  },
+  "dependencies": {
+    "wasm-feature-detect": "^1.2.9"
   }
 }
