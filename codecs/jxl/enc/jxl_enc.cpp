@@ -29,15 +29,20 @@ val encode(std::string image, int width, int height, JXLOptions options) {
   cparams.speed_tier = static_cast<jxl::SpeedTier>(options.speed);
   cparams.near_lossless = options.nearLossless;
 
+  // Reduce memory usage of tree learning for lossless data.
+  // TODO(veluca93): this is a mitigation for excessive memory usage in the JXL encoder.
+  cparams.options.nb_repeats = 0.1;
+
   float quality = options.quality;
 
   // Quality settings roughly match libjpeg qualities.
   if (quality < 7 || quality == 100) {
-    cparams.modular_group_mode = true;
+    cparams.modular_mode = true;
     // Internal modular quality to roughly match VarDCT size.
     cparams.quality_pair.first = cparams.quality_pair.second =
         std::min(35 + (quality - 7) * 3.0f, 100.0f);
   } else {
+    cparams.modular_mode = false;
     if (quality >= 30) {
       cparams.butteraugli_distance = 0.1 + (100 - quality) * 0.09;
     } else {
@@ -51,7 +56,7 @@ val encode(std::string image, int width, int height, JXLOptions options) {
     cparams.responsive = 1;
   }
 
-  if (cparams.modular_group_mode) {
+  if (cparams.modular_mode) {
     if (cparams.quality_pair.first != 100 || cparams.quality_pair.second != 100) {
       cparams.color_transform = jxl::ColorTransform::kXYB;
     } else {
@@ -62,9 +67,13 @@ val encode(std::string image, int width, int height, JXLOptions options) {
   if (cparams.near_lossless) {
     // Near-lossless assumes -R 0
     cparams.responsive = 0;
+    cparams.modular_mode = true;
   }
 
-  io.metadata.SetAlphaBits(8);
+  io.metadata.m.SetAlphaBits(8);
+  if (!io.metadata.size.Set(width, height)) {
+    return val::null();
+  }
 
   uint8_t* inBuffer = (uint8_t*)image.c_str();
 
