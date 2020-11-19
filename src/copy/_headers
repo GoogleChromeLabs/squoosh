@@ -9,6 +9,6 @@
   Cross-Origin-Embedder-Policy: require-corp
   Cross-Origin-Opener-Policy: same-origin
 # Origin trial for WebAssembly SIMD.
-# ATTENTION: This one is configured for merge-v2-codecs--squoosh.netlify.app preview.
+# ATTENTION: This one is configured for dev--squoosh.netlify.app preview.
 # For production squoosh.app, replace with AgoKiDqjr0GVPtrwV/vuVlrrSvbDa5Yb99s+q66ly816DrrAQ8Cdas33NgDtmhxM4BtDP9PEdyuxHPyTQHD5ZAcAAABUeyJvcmlnaW4iOiJodHRwczovL3NxdW9vc2guYXBwOjQ0MyIsImZlYXR1cmUiOiJXZWJBc3NlbWJseVNpbWQiLCJleHBpcnkiOjE2MDg2NzI5OTR9.
-  Origin-Trial: Anr6rjkQpYjMoR5pS5JZUJvCBZfYCHkrevHoDVENE+km6fqRscjRrsY0CWTKY0FH1KX+gv0aw/W2liJw8H58Uw8AAABteyJvcmlnaW4iOiJodHRwczovL21lcmdlLXYyLWNvZGVjcy0tc3F1b29zaC5uZXRsaWZ5LmFwcDo0NDMiLCJmZWF0dXJlIjoiV2ViQXNzZW1ibHlTaW1kIiwiZXhwaXJ5IjoxNjA5MzU3MTg5fQ==
+  Origin-Trial: As3b1fXjclhF8ZgvUkIqOo3r1/Jqvx0mNuT6Ilgb7SdpeJnV8lUdYr7i+OKgCmcVTWkqjkF23LJ+xZ111VYMEQIAAABheyJvcmlnaW4iOiJodHRwczovL2Rldi0tc3F1b29zaC5uZXRsaWZ5LmFwcDo0NDMiLCJmZWF0dXJlIjoiV2ViQXNzZW1ibHlTaW1kIiwiZXhwaXJ5IjoxNjA5NDI4Nzk4fQ==
