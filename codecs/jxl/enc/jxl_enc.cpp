@@ -38,7 +38,14 @@ val encode(std::string image, int width, int height, JXLOptions options) {
 
   // Reduce memory usage of tree learning for lossless data.
   // TODO(veluca93): this is a mitigation for excessive memory usage in the JXL encoder.
-  cparams.options.nb_repeats = 0.1;
+  float megapixels = width * height * 0.000001;
+  if (megapixels > 8) {
+    cparams.options.nb_repeats = 0.1;
+  } else if (megapixels > 4) {
+    cparams.options.nb_repeats = 0.3;
+  } else {
+    // default is OK.
+  }
 
   float quality = options.quality;
 
@@ -59,8 +66,10 @@ val encode(std::string image, int width, int height, JXLOptions options) {
 
   if (options.progressive) {
     cparams.qprogressive_mode = true;
-    cparams.progressive_dc = 1;
     cparams.responsive = 1;
+    if (!cparams.modular_mode) {
+      cparams.progressive_dc = 1;
+    }
   }
 
   if (cparams.modular_mode) {

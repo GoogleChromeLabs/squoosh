@@ -14,12 +14,33 @@ thread_local const val ImageData = val::global("ImageData");
 // R, G, B, A
 #define COMPONENTS_PER_PIXEL 4
 
+#ifndef JXL_DEBUG_ON_ALL_ERROR
+#define JXL_DEBUG_ON_ALL_ERROR 0
+#endif
+
+#if JXL_DEBUG_ON_ALL_ERROR
+#define EXPECT_TRUE(a)                                             \
+  if (!(a)) {                                                      \
+    fprintf(stderr, "Assertion failure (%d): %s\n", __LINE__, #a); \
+    return val::null();                                            \
+  }
+#define EXPECT_EQ(a, b)                                                                          \
+  {                                                                                              \
+    int a_ = a;                                                                                  \
+    int b_ = b;                                                                                  \
+    if (a_ != b_) {                                                                              \
+      fprintf(stderr, "Assertion failure (%d): %s (%d) != %s (%d)\n", __LINE__, #a, a_, #b, b_); \
+      return val::null();                                                                        \
+    }                                                                                            \
+  }
+#else
 #define EXPECT_TRUE(a)  \
   if (!(a)) {           \
     return val::null(); \
   }
 
 #define EXPECT_EQ(a, b) EXPECT_TRUE((a) == (b));
+#endif
 
 val decode(std::string data) {
   std::unique_ptr<JxlDecoder,
