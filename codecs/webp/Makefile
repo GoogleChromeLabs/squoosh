@@ -1,4 +1,4 @@
-CODEC_URL := https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-1.0.2.tar.gz
+CODEC_URL := https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-1.1.0.tar.gz
 CODEC_DIR = node_modules/libwebp
 CODEC_OUT_RELATIVE = src/.libs/libwebp.a
 CODEC_OUT := $(addprefix $(CODEC_DIR)/, $(CODEC_OUT_RELATIVE))
@@ -18,7 +18,9 @@ all: $(OUT_JS)
 		--closure 1 \
 		-s ALLOW_MEMORY_GROWTH=1 \
 		-s MODULARIZE=1 \
-		-s 'EXPORT_NAME="$(basename $(@F))"' \
+		-s TEXTDECODER=2 \
+		-s ENVIRONMENT='worker' \
+		-s EXPORT_ES6=1 \
 		-o $@ \
 		$+
 

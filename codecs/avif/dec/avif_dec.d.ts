@@ -1,6 +1,7 @@
-interface AVIFModule extends EmscriptenWasm.Module {
+export interface AVIFModule extends EmscriptenWasm.Module {
   decode(data: BufferSource): ImageData | null;
 }
 
-export default function(opts: EmscriptenWasm.ModuleOpts): Promise<AVIFModule>;
+declare var moduleFactory: EmscriptenWasm.ModuleFactory<AVIFModule>;
 
+export default moduleFactory;

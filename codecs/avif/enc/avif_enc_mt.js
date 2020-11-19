@@ -1,155 +1,3268 @@
+var avif_enc_mt = (function () {
+  var _scriptDir = import.meta.url;
 
-var avif_enc_mt = (function() {
-  var _scriptDir = typeof document !== 'undefined' && document.currentScript ? document.currentScript.src : undefined;
-  if (typeof __filename !== 'undefined') _scriptDir = _scriptDir || __filename;
-  return (
-function(avif_enc_mt) {
-  avif_enc_mt = avif_enc_mt || {};
+  return function (avif_enc_mt) {
+    avif_enc_mt = avif_enc_mt || {};
 
+    function f() {
+      m.buffer != n && p(m.buffer);
+      return aa;
+    }
+    function t() {
+      m.buffer != n && p(m.buffer);
+      return ba;
+    }
+    function ca() {
+      m.buffer != n && p(m.buffer);
+      return da;
+    }
+    function ea() {
+      m.buffer != n && p(m.buffer);
+      return fa;
+    }
+    function w() {
+      m.buffer != n && p(m.buffer);
+      return ha;
+    }
+    function x() {
+      m.buffer != n && p(m.buffer);
+      return ia;
+    }
+    function ja() {
+      m.buffer != n && p(m.buffer);
+      return ka;
+    }
+    function la() {
+      m.buffer != n && p(m.buffer);
+      return ma;
+    }
+    var z;
+    z || (z = typeof avif_enc_mt !== 'undefined' ? avif_enc_mt : {});
+    var na, oa;
+    z.ready = new Promise(function (a, b) {
+      na = a;
+      oa = b;
+    });
+    var pa = {},
+      A;
+    for (A in z) z.hasOwnProperty(A) && (pa[A] = z[A]);
+    var D = z.ENVIRONMENT_IS_PTHREAD || !1;
+    D && (n = z.buffer);
+    var F = '';
+    function qa(a) {
+      return z.locateFile ? z.locateFile(a, F) : F + a;
+    }
+    var ra;
+    F = self.location.href;
+    _scriptDir && (F = _scriptDir);
+    0 !== F.indexOf('blob:')
+      ? (F = F.substr(0, F.lastIndexOf('/') + 1))
+      : (F = '');
+    ra = function (a) {
+      var b = new XMLHttpRequest();
+      b.open('GET', a, !1);
+      b.responseType = 'arraybuffer';
+      b.send(null);
+      return new Uint8Array(b.response);
+    };
+    var sa = z.print || console.log.bind(console),
+      G = z.printErr || console.warn.bind(console);
+    for (A in pa) pa.hasOwnProperty(A) && (z[A] = pa[A]);
+    pa = null;
+    var ta = 0,
+      ua;
+    z.wasmBinary && (ua = z.wasmBinary);
+    var noExitRuntime;
+    z.noExitRuntime && (noExitRuntime = z.noExitRuntime);
+    'object' !== typeof WebAssembly && H('no native wasm support detected');
+    var m,
+      wa,
+      threadInfoStruct = 0,
+      selfThreadId = 0,
+      xa = !1;
+    function ya(a, b) {
+      a || H('Assertion failed: ' + b);
+    }
+    function za(a, b, c) {
+      c = b + c;
+      for (var d = ''; !(b >= c); ) {
+        var e = a[b++];
+        if (!e) break;
+        if (e & 128) {
+          var g = a[b++] & 63;
+          if (192 == (e & 224)) d += String.fromCharCode(((e & 31) << 6) | g);
+          else {
+            var h = a[b++] & 63;
+            e =
+              224 == (e & 240)
+                ? ((e & 15) << 12) | (g << 6) | h
+                : ((e & 7) << 18) | (g << 12) | (h << 6) | (a[b++] & 63);
+            65536 > e
+              ? (d += String.fromCharCode(e))
+              : ((e -= 65536),
+                (d += String.fromCharCode(
+                  55296 | (e >> 10),
+                  56320 | (e & 1023),
+                )));
+          }
+        } else d += String.fromCharCode(e);
+      }
+      return d;
+    }
+    function I(a, b) {
+      return a ? za(t(), a, b) : '';
+    }
+    function Aa(a, b, c, d) {
+      if (!(0 < d)) return 0;
+      var e = c;
+      d = c + d - 1;
+      for (var g = 0; g < a.length; ++g) {
+        var h = a.charCodeAt(g);
+        if (55296 <= h && 57343 >= h) {
+          var k = a.charCodeAt(++g);
+          h = (65536 + ((h & 1023) << 10)) | (k & 1023);
+        }
+        if (127 >= h) {
+          if (c >= d) break;
+          b[c++] = h;
+        } else {
+          if (2047 >= h) {
+            if (c + 1 >= d) break;
+            b[c++] = 192 | (h >> 6);
+          } else {
+            if (65535 >= h) {
+              if (c + 2 >= d) break;
+              b[c++] = 224 | (h >> 12);
+            } else {
+              if (c + 3 >= d) break;
+              b[c++] = 240 | (h >> 18);
+              b[c++] = 128 | ((h >> 12) & 63);
+            }
+            b[c++] = 128 | ((h >> 6) & 63);
+          }
+          b[c++] = 128 | (h & 63);
+        }
+      }
+      b[c] = 0;
+      return c - e;
+    }
+    function Ba(a, b, c) {
+      Aa(a, t(), b, c);
+    }
+    function Ca(a) {
+      for (var b = 0, c = 0; c < a.length; ++c) {
+        var d = a.charCodeAt(c);
+        55296 <= d &&
+          57343 >= d &&
+          (d = (65536 + ((d & 1023) << 10)) | (a.charCodeAt(++c) & 1023));
+        127 >= d ? ++b : (b = 2047 >= d ? b + 2 : 65535 >= d ? b + 3 : b + 4);
+      }
+      return b;
+    }
+    function Da(a, b) {
+      for (var c = 0, d = ''; ; ) {
+        var e = ca()[(a + 2 * c) >> 1];
+        if (0 == e || c == b / 2) return d;
+        ++c;
+        d += String.fromCharCode(e);
+      }
+    }
+    function Ea(a, b, c) {
+      void 0 === c && (c = 2147483647);
+      if (2 > c) return 0;
+      c -= 2;
+      var d = b;
+      c = c < 2 * a.length ? c / 2 : a.length;
+      for (var e = 0; e < c; ++e) {
+        var g = a.charCodeAt(e);
+        ca()[b >> 1] = g;
+        b += 2;
+      }
+      ca()[b >> 1] = 0;
+      return b - d;
+    }
+    function Fa(a) {
+      return 2 * a.length;
+    }
+    function Ga(a, b) {
+      for (var c = 0, d = ''; !(c >= b / 4); ) {
+        var e = w()[(a + 4 * c) >> 2];
+        if (0 == e) break;
+        ++c;
+        65536 <= e
+          ? ((e -= 65536),
+            (d += String.fromCharCode(55296 | (e >> 10), 56320 | (e & 1023))))
+          : (d += String.fromCharCode(e));
+      }
+      return d;
+    }
+    function Ha(a, b, c) {
+      void 0 === c && (c = 2147483647);
+      if (4 > c) return 0;
+      var d = b;
+      c = d + c - 4;
+      for (var e = 0; e < a.length; ++e) {
+        var g = a.charCodeAt(e);
+        if (55296 <= g && 57343 >= g) {
+          var h = a.charCodeAt(++e);
+          g = (65536 + ((g & 1023) << 10)) | (h & 1023);
+        }
+        w()[b >> 2] = g;
+        b += 4;
+        if (b + 4 > c) break;
+      }
+      w()[b >> 2] = 0;
+      return b - d;
+    }
+    function Ia(a) {
+      for (var b = 0, c = 0; c < a.length; ++c) {
+        var d = a.charCodeAt(c);
+        55296 <= d && 57343 >= d && ++c;
+        b += 4;
+      }
+      return b;
+    }
+    var n, aa, ba, da, fa, ha, ia, ka, ma;
+    function p(a) {
+      n = a;
+      z.HEAP8 = aa = new Int8Array(a);
+      z.HEAP16 = da = new Int16Array(a);
+      z.HEAP32 = ha = new Int32Array(a);
+      z.HEAPU8 = ba = new Uint8Array(a);
+      z.HEAPU16 = fa = new Uint16Array(a);
+      z.HEAPU32 = ia = new Uint32Array(a);
+      z.HEAPF32 = ka = new Float32Array(a);
+      z.HEAPF64 = ma = new Float64Array(a);
+    }
+    var Ja = z.INITIAL_MEMORY || 16777216;
+    if (D) (m = z.wasmMemory), (n = z.buffer);
+    else if (z.wasmMemory) m = z.wasmMemory;
+    else if (
+      ((m = new WebAssembly.Memory({
+        initial: Ja / 65536,
+        maximum: 32768,
+        shared: !0,
+      })),
+      !(m.buffer instanceof SharedArrayBuffer))
+    )
+      throw (
+        (G(
+          'requested a shared WebAssembly.Memory but the returned buffer is not a SharedArrayBuffer, indicating that while the browser has SharedArrayBuffer it does not have WebAssembly threads support - you may need to set a flag',
+        ),
+        Error('bad memory'))
+      );
+    m && (n = m.buffer);
+    Ja = n.byteLength;
+    p(n);
+    var J,
+      Ka = [],
+      La = [],
+      Ma = [],
+      Na = [];
+    function Oa() {
+      var a = z.preRun.shift();
+      Ka.unshift(a);
+    }
+    var K = 0,
+      Pa = null,
+      Qa = null;
+    z.preloadedImages = {};
+    z.preloadedAudios = {};
+    function H(a) {
+      if (z.onAbort) z.onAbort(a);
+      D && console.error('Pthread aborting at ' + Error().stack);
+      G(a);
+      xa = !0;
+      a = new WebAssembly.RuntimeError(
+        'abort(' + a + '). Build with -s ASSERTIONS=1 for more info.',
+      );
+      oa(a);
+      throw a;
+    }
+    function Ra() {
+      var a = Sa;
+      return String.prototype.startsWith
+        ? a.startsWith('data:application/octet-stream;base64,')
+        : 0 === a.indexOf('data:application/octet-stream;base64,');
+    }
+    var Sa = 'avif_enc_mt.wasm';
+    Ra() || (Sa = qa(Sa));
+    function Ta() {
+      try {
+        if (ua) return new Uint8Array(ua);
+        if (ra) return ra(Sa);
+        throw 'both async and sync fetching of the wasm failed';
+      } catch (a) {
+        H(a);
+      }
+    }
+    function Ua() {
+      return ua || 'function' !== typeof fetch
+        ? Promise.resolve().then(Ta)
+        : fetch(Sa, { credentials: 'same-origin' })
+            .then(function (a) {
+              if (!a.ok)
+                throw "failed to load wasm binary file at '" + Sa + "'";
+              return a.arrayBuffer();
+            })
+            .catch(function () {
+              return Ta();
+            });
+    }
+    var Va,
+      Wa,
+      Ya = {
+        575941: function (a, b) {
+          setTimeout(function () {
+            Xa(a, b);
+          }, 0);
+        },
+        576019: function () {
+          throw 'Canceled!';
+        },
+      };
+    function Za(a) {
+      for (; 0 < a.length; ) {
+        var b = a.shift();
+        if ('function' == typeof b) b(z);
+        else {
+          var c = b.pc;
+          'number' === typeof c
+            ? void 0 === b.sb
+              ? J.get(c)()
+              : J.get(c)(b.sb)
+            : c(void 0 === b.sb ? null : b.sb);
+        }
+      }
+    }
+    function $a(a, b, c) {
+      var d;
+      -1 != a.indexOf('j')
+        ? (d =
+            c && c.length
+              ? z['dynCall_' + a].apply(null, [b].concat(c))
+              : z['dynCall_' + a].call(null, b))
+        : (d = J.get(b).apply(null, c));
+      return d;
+    }
+    z.dynCall = $a;
+    var ab = 0,
+      bb = 0,
+      cb = 0;
+    function db(a, b, c) {
+      ab = a | 0;
+      cb = b | 0;
+      bb = c | 0;
+    }
+    z.registerPthreadPtr = db;
+    function eb(a, b) {
+      if (0 >= a || a > f().length || a & 1 || 0 > b) return -28;
+      if (0 == b) return 0;
+      2147483647 <= b && (b = Infinity);
+      var c = Atomics.load(w(), L.Yb >> 2),
+        d = 0;
+      if (
+        c == a &&
+        Atomics.compareExchange(w(), L.Yb >> 2, c, 0) == c &&
+        (--b, (d = 1), 0 >= b)
+      )
+        return 1;
+      a = Atomics.notify(w(), a >> 2, b);
+      if (0 <= a) return a + d;
+      throw 'Atomics.notify returned an unexpected value ' + a;
+    }
+    z._emscripten_futex_wake = eb;
+    function fb(a) {
+      if (D)
+        throw 'Internal Error! cleanupThread() can only ever be called from main application thread!';
+      if (!a) throw 'Internal Error! Null pthread_ptr in cleanupThread!';
+      w()[(a + 12) >> 2] = 0;
+      (a = L.fb[a]) && L.Cb(a.worker);
+    }
+    var L = {
+      Sc: 1,
+      hd: { hc: 0, ic: 0 },
+      bb: [],
+      lb: [],
+      wc: function () {
+        for (var a = navigator.hardwareConcurrency, b = 0; b < a; ++b) L.Nb();
+      },
+      xc: function () {
+        L.$a = M(232);
+        for (var a = 0; 58 > a; ++a) x()[L.$a / 4 + a] = 0;
+        w()[(L.$a + 12) >> 2] = L.$a;
+        a = L.$a + 156;
+        w()[a >> 2] = a;
+        var b = M(512);
+        for (a = 0; 128 > a; ++a) x()[b / 4 + a] = 0;
+        Atomics.store(x(), (L.$a + 104) >> 2, b);
+        Atomics.store(x(), (L.$a + 40) >> 2, L.$a);
+        Atomics.store(x(), (L.$a + 44) >> 2, 42);
+        L.Wb();
+        db(L.$a, !1, 1);
+        gb(L.$a);
+      },
+      yc: function () {
+        L.Wb();
+        na(z);
+        L.receiveObjectTransfer = L.Gc;
+        L.setThreadStatus = L.Jc;
+        L.threadCancel = L.Oc;
+        L.threadExit = L.Pc;
+      },
+      Wb: function () {
+        L.Yb = hb;
+      },
+      fb: {},
+      Eb: [],
+      Jc: function () {},
+      fc: function () {
+        for (; 0 < L.Eb.length; ) L.Eb.pop()();
+        D && threadInfoStruct && ib();
+      },
+      Pc: function (a) {
+        var b = ab | 0;
+        b &&
+          (Atomics.store(x(), (b + 4) >> 2, a),
+          Atomics.store(x(), (b + 0) >> 2, 1),
+          Atomics.store(x(), (b + 60) >> 2, 1),
+          Atomics.store(x(), (b + 64) >> 2, 0),
+          L.fc(),
+          eb(b + 0, 2147483647),
+          db(0, 0, 0),
+          (threadInfoStruct = 0),
+          D && postMessage({ cmd: 'exit' }));
+      },
+      Oc: function () {
+        L.fc();
+        Atomics.store(x(), (threadInfoStruct + 4) >> 2, -1);
+        Atomics.store(x(), (threadInfoStruct + 0) >> 2, 1);
+        eb(threadInfoStruct + 0, 2147483647);
+        threadInfoStruct = selfThreadId = 0;
+        db(0, 0, 0);
+        postMessage({ cmd: 'cancelDone' });
+      },
+      td: function () {
+        for (var a in L.fb) {
+          var b = L.fb[a];
+          b && b.worker && L.Cb(b.worker);
+        }
+        L.fb = {};
+        for (a = 0; a < L.bb.length; ++a) {
+          var c = L.bb[a];
+          c.terminate();
+        }
+        L.bb = [];
+        for (a = 0; a < L.lb.length; ++a)
+          (c = L.lb[a]), (b = c.ab), L.Hb(b), c.terminate();
+        L.lb = [];
+      },
+      Hb: function (a) {
+        if (a) {
+          if (a.threadInfoStruct) {
+            var b = w()[(a.threadInfoStruct + 104) >> 2];
+            w()[(a.threadInfoStruct + 104) >> 2] = 0;
+            O(b);
+            O(a.threadInfoStruct);
+          }
+          a.threadInfoStruct = 0;
+          a.Fb && a.ob && O(a.ob);
+          a.ob = 0;
+          a.worker && (a.worker.ab = null);
+        }
+      },
+      Cb: function (a) {
+        delete L.fb[a.ab.jc];
+        L.bb.push(a);
+        L.lb.splice(L.lb.indexOf(a), 1);
+        L.Hb(a.ab);
+        a.ab = void 0;
+      },
+      Gc: function () {},
+      Xb: function (a, b) {
+        a.onmessage = function (c) {
+          var d = c.data,
+            e = d.cmd;
+          a.ab && (L.Gb = a.ab.threadInfoStruct);
+          if (d.targetThread && d.targetThread != (ab | 0)) {
+            var g = L.fb[d.sd];
+            g
+              ? g.worker.postMessage(c.data, d.transferList)
+              : console.error(
+                  'Internal error! Worker sent a message "' +
+                    e +
+                    '" to target pthread ' +
+                    d.targetThread +
+                    ', but that thread no longer exists!',
+                );
+          } else if ('processQueuedMainThreadWork' === e) jb();
+          else if ('spawnThread' === e) kb(c.data);
+          else if ('cleanupThread' === e) fb(d.thread);
+          else if ('killThread' === e) {
+            c = d.thread;
+            if (D)
+              throw 'Internal Error! killThread() can only ever be called from main application thread!';
+            if (!c) throw 'Internal Error! Null pthread_ptr in killThread!';
+            w()[(c + 12) >> 2] = 0;
+            c = L.fb[c];
+            c.worker.terminate();
+            L.Hb(c);
+            L.lb.splice(L.lb.indexOf(c.worker), 1);
+            c.worker.ab = void 0;
+          } else if ('cancelThread' === e) {
+            c = d.thread;
+            if (D)
+              throw 'Internal Error! cancelThread() can only ever be called from main application thread!';
+            if (!c) throw 'Internal Error! Null pthread_ptr in cancelThread!';
+            L.fb[c].worker.postMessage({ cmd: 'cancel' });
+          } else
+            'loaded' === e
+              ? ((a.loaded = !0), b && b(a), a.vb && (a.vb(), delete a.vb))
+              : 'print' === e
+              ? sa('Thread ' + d.threadId + ': ' + d.text)
+              : 'printErr' === e
+              ? G('Thread ' + d.threadId + ': ' + d.text)
+              : 'alert' === e
+              ? alert('Thread ' + d.threadId + ': ' + d.text)
+              : 'exit' === e
+              ? a.ab && Atomics.load(x(), (a.ab.jc + 68) >> 2) && L.Cb(a)
+              : 'cancelDone' === e
+              ? L.Cb(a)
+              : 'objectTransfer' !== e &&
+                ('setimmediate' === c.data.target
+                  ? a.postMessage(c.data)
+                  : G('worker sent an unknown command ' + e));
+          L.Gb = void 0;
+        };
+        a.onerror = function (c) {
+          G(
+            'pthread sent an error! ' +
+              c.filename +
+              ':' +
+              c.lineno +
+              ': ' +
+              c.message,
+          );
+        };
+        a.postMessage({
+          cmd: 'load',
+          urlOrBlob: z.mainScriptUrlOrBlob || _scriptDir,
+          wasmMemory: m,
+          wasmModule: wa,
+        });
+      },
+      Nb: function () {
+        var a = qa('avif_enc_mt.worker.js');
+        L.bb.push(new Worker(a));
+      },
+      qc: function () {
+        0 == L.bb.length && (L.Nb(), L.Xb(L.bb[0]));
+        return 0 < L.bb.length ? L.bb.pop() : null;
+      },
+      Wc: function (a) {
+        for (a = performance.now() + a; performance.now() < a; );
+      },
+    };
+    z.establishStackSpace = function (a) {
+      P(a);
+    };
+    z.getNoExitRuntime = function () {
+      return noExitRuntime;
+    };
+    var lb;
+    lb = D
+      ? function () {
+          return performance.now() - z.__performance_now_clock_drift;
+        }
+      : function () {
+          return performance.now();
+        };
+    function mb(a, b) {
+      L.Eb.push(function () {
+        J.get(a)(b);
+      });
+    }
+    function nb(a, b) {
+      for (var c = 0, d = a.length - 1; 0 <= d; d--) {
+        var e = a[d];
+        '.' === e
+          ? a.splice(d, 1)
+          : '..' === e
+          ? (a.splice(d, 1), c++)
+          : c && (a.splice(d, 1), c--);
+      }
+      if (b) for (; c; c--) a.unshift('..');
+      return a;
+    }
+    function ob(a) {
+      var b = '/' === a.charAt(0),
+        c = '/' === a.substr(-1);
+      (a = nb(
+        a.split('/').filter(function (d) {
+          return !!d;
+        }),
+        !b,
+      ).join('/')) ||
+        b ||
+        (a = '.');
+      a && c && (a += '/');
+      return (b ? '/' : '') + a;
+    }
+    function pb(a) {
+      var b = /^(\/?|)([\s\S]*?)((?:\.{1,2}|[^\/]+?|)(\.[^.\/]*|))(?:[\/]*)$/
+        .exec(a)
+        .slice(1);
+      a = b[0];
+      b = b[1];
+      if (!a && !b) return '.';
+      b && (b = b.substr(0, b.length - 1));
+      return a + b;
+    }
+    function qb(a) {
+      if ('/' === a) return '/';
+      a = ob(a);
+      a = a.replace(/\/$/, '');
+      var b = a.lastIndexOf('/');
+      return -1 === b ? a : a.substr(b + 1);
+    }
+    function rb() {
+      if (
+        'object' === typeof crypto &&
+        'function' === typeof crypto.getRandomValues
+      ) {
+        var a = new Uint8Array(1);
+        return function () {
+          crypto.getRandomValues(a);
+          return a[0];
+        };
+      }
+      return function () {
+        H('randomDevice');
+      };
+    }
+    function sb() {
+      for (var a = '', b = !1, c = arguments.length - 1; -1 <= c && !b; c--) {
+        b = 0 <= c ? arguments[c] : '/';
+        if ('string' !== typeof b)
+          throw new TypeError('Arguments to path.resolve must be strings');
+        if (!b) return '';
+        a = b + '/' + a;
+        b = '/' === b.charAt(0);
+      }
+      a = nb(
+        a.split('/').filter(function (d) {
+          return !!d;
+        }),
+        !b,
+      ).join('/');
+      return (b ? '/' : '') + a || '.';
+    }
+    var tb = [];
+    function ub(a, b) {
+      tb[a] = { input: [], Za: [], pb: b };
+      vb(a, wb);
+    }
+    var wb = {
+        open: function (a) {
+          var b = tb[a.node.Bb];
+          if (!b) throw new Q(43);
+          a.Ya = b;
+          a.seekable = !1;
+        },
+        close: function (a) {
+          a.Ya.pb.flush(a.Ya);
+        },
+        flush: function (a) {
+          a.Ya.pb.flush(a.Ya);
+        },
+        read: function (a, b, c, d) {
+          if (!a.Ya || !a.Ya.pb.Vb) throw new Q(60);
+          for (var e = 0, g = 0; g < d; g++) {
+            try {
+              var h = a.Ya.pb.Vb(a.Ya);
+            } catch (k) {
+              throw new Q(29);
+            }
+            if (void 0 === h && 0 === e) throw new Q(6);
+            if (null === h || void 0 === h) break;
+            e++;
+            b[c + g] = h;
+          }
+          e && (a.node.timestamp = Date.now());
+          return e;
+        },
+        write: function (a, b, c, d) {
+          if (!a.Ya || !a.Ya.pb.Jb) throw new Q(60);
+          try {
+            for (var e = 0; e < d; e++) a.Ya.pb.Jb(a.Ya, b[c + e]);
+          } catch (g) {
+            throw new Q(29);
+          }
+          d && (a.node.timestamp = Date.now());
+          return e;
+        },
+      },
+      xb = {
+        Vb: function (a) {
+          if (!a.input.length) {
+            var b = null;
+            'undefined' != typeof window && 'function' == typeof window.prompt
+              ? ((b = window.prompt('Input: ')), null !== b && (b += '\n'))
+              : 'function' == typeof readline &&
+                ((b = readline()), null !== b && (b += '\n'));
+            if (!b) return null;
+            var c = Array(Ca(b) + 1);
+            b = Aa(b, c, 0, c.length);
+            c.length = b;
+            a.input = c;
+          }
+          return a.input.shift();
+        },
+        Jb: function (a, b) {
+          null === b || 10 === b
+            ? (sa(za(a.Za, 0)), (a.Za = []))
+            : 0 != b && a.Za.push(b);
+        },
+        flush: function (a) {
+          a.Za && 0 < a.Za.length && (sa(za(a.Za, 0)), (a.Za = []));
+        },
+      },
+      yb = {
+        Jb: function (a, b) {
+          null === b || 10 === b
+            ? (G(za(a.Za, 0)), (a.Za = []))
+            : 0 != b && a.Za.push(b);
+        },
+        flush: function (a) {
+          a.Za && 0 < a.Za.length && (G(za(a.Za, 0)), (a.Za = []));
+        },
+      },
+      R = {
+        cb: null,
+        ib: function () {
+          return R.createNode(null, '/', 16895, 0);
+        },
+        createNode: function (a, b, c, d) {
+          if (24576 === (c & 61440) || 4096 === (c & 61440)) throw new Q(63);
+          R.cb ||
+            (R.cb = {
+              dir: {
+                node: {
+                  kb: R.Va.kb,
+                  gb: R.Va.gb,
+                  tb: R.Va.tb,
+                  zb: R.Va.zb,
+                  dc: R.Va.dc,
+                  kc: R.Va.kc,
+                  ec: R.Va.ec,
+                  cc: R.Va.cc,
+                  Db: R.Va.Db,
+                },
+                stream: { nb: R.Wa.nb },
+              },
+              file: {
+                node: { kb: R.Va.kb, gb: R.Va.gb },
+                stream: {
+                  nb: R.Wa.nb,
+                  read: R.Wa.read,
+                  write: R.Wa.write,
+                  Mb: R.Wa.Mb,
+                  Zb: R.Wa.Zb,
+                  ac: R.Wa.ac,
+                },
+              },
+              link: {
+                node: { kb: R.Va.kb, gb: R.Va.gb, ub: R.Va.ub },
+                stream: {},
+              },
+              Ob: { node: { kb: R.Va.kb, gb: R.Va.gb }, stream: zb },
+            });
+          c = Ab(a, b, c, d);
+          16384 === (c.mode & 61440)
+            ? ((c.Va = R.cb.dir.node), (c.Wa = R.cb.dir.stream), (c.Ua = {}))
+            : 32768 === (c.mode & 61440)
+            ? ((c.Va = R.cb.file.node),
+              (c.Wa = R.cb.file.stream),
+              (c.Xa = 0),
+              (c.Ua = null))
+            : 40960 === (c.mode & 61440)
+            ? ((c.Va = R.cb.link.node), (c.Wa = R.cb.link.stream))
+            : 8192 === (c.mode & 61440) &&
+              ((c.Va = R.cb.Ob.node), (c.Wa = R.cb.Ob.stream));
+          c.timestamp = Date.now();
+          a && (a.Ua[b] = c);
+          return c;
+        },
+        bd: function (a) {
+          if (a.Ua && a.Ua.subarray) {
+            for (var b = [], c = 0; c < a.Xa; ++c) b.push(a.Ua[c]);
+            return b;
+          }
+          return a.Ua;
+        },
+        cd: function (a) {
+          return a.Ua
+            ? a.Ua.subarray
+              ? a.Ua.subarray(0, a.Xa)
+              : new Uint8Array(a.Ua)
+            : new Uint8Array(0);
+        },
+        Rb: function (a, b) {
+          var c = a.Ua ? a.Ua.length : 0;
+          c >= b ||
+            ((b = Math.max(b, (c * (1048576 > c ? 2 : 1.125)) >>> 0)),
+            0 != c && (b = Math.max(b, 256)),
+            (c = a.Ua),
+            (a.Ua = new Uint8Array(b)),
+            0 < a.Xa && a.Ua.set(c.subarray(0, a.Xa), 0));
+        },
+        Hc: function (a, b) {
+          if (a.Xa != b)
+            if (0 == b) (a.Ua = null), (a.Xa = 0);
+            else {
+              if (!a.Ua || a.Ua.subarray) {
+                var c = a.Ua;
+                a.Ua = new Uint8Array(b);
+                c && a.Ua.set(c.subarray(0, Math.min(b, a.Xa)));
+              } else if ((a.Ua || (a.Ua = []), a.Ua.length > b))
+                a.Ua.length = b;
+              else for (; a.Ua.length < b; ) a.Ua.push(0);
+              a.Xa = b;
+            }
+        },
+        Va: {
+          kb: function (a) {
+            var b = {};
+            b.$c = 8192 === (a.mode & 61440) ? a.id : 1;
+            b.fd = a.id;
+            b.mode = a.mode;
+            b.md = 1;
+            b.uid = 0;
+            b.dd = 0;
+            b.Bb = a.Bb;
+            16384 === (a.mode & 61440)
+              ? (b.size = 4096)
+              : 32768 === (a.mode & 61440)
+              ? (b.size = a.Xa)
+              : 40960 === (a.mode & 61440)
+              ? (b.size = a.link.length)
+              : (b.size = 0);
+            b.Uc = new Date(a.timestamp);
+            b.kd = new Date(a.timestamp);
+            b.Zc = new Date(a.timestamp);
+            b.mc = 4096;
+            b.Vc = Math.ceil(b.size / b.mc);
+            return b;
+          },
+          gb: function (a, b) {
+            void 0 !== b.mode && (a.mode = b.mode);
+            void 0 !== b.timestamp && (a.timestamp = b.timestamp);
+            void 0 !== b.size && R.Hc(a, b.size);
+          },
+          tb: function () {
+            throw Bb[44];
+          },
+          zb: function (a, b, c, d) {
+            return R.createNode(a, b, c, d);
+          },
+          dc: function (a, b, c) {
+            if (16384 === (a.mode & 61440)) {
+              try {
+                var d = Cb(b, c);
+              } catch (g) {}
+              if (d) for (var e in d.Ua) throw new Q(55);
+            }
+            delete a.parent.Ua[a.name];
+            a.name = c;
+            b.Ua[c] = a;
+            a.parent = b;
+          },
+          kc: function (a, b) {
+            delete a.Ua[b];
+          },
+          ec: function (a, b) {
+            var c = Cb(a, b),
+              d;
+            for (d in c.Ua) throw new Q(55);
+            delete a.Ua[b];
+          },
+          cc: function (a) {
+            var b = ['.', '..'],
+              c;
+            for (c in a.Ua) a.Ua.hasOwnProperty(c) && b.push(c);
+            return b;
+          },
+          Db: function (a, b, c) {
+            a = R.createNode(a, b, 41471, 0);
+            a.link = c;
+            return a;
+          },
+          ub: function (a) {
+            if (40960 !== (a.mode & 61440)) throw new Q(28);
+            return a.link;
+          },
+        },
+        Wa: {
+          read: function (a, b, c, d, e) {
+            var g = a.node.Ua;
+            if (e >= a.node.Xa) return 0;
+            a = Math.min(a.node.Xa - e, d);
+            if (8 < a && g.subarray) b.set(g.subarray(e, e + a), c);
+            else for (d = 0; d < a; d++) b[c + d] = g[e + d];
+            return a;
+          },
+          write: function (a, b, c, d, e, g) {
+            b.buffer === f().buffer && (g = !1);
+            if (!d) return 0;
+            a = a.node;
+            a.timestamp = Date.now();
+            if (b.subarray && (!a.Ua || a.Ua.subarray)) {
+              if (g) return (a.Ua = b.subarray(c, c + d)), (a.Xa = d);
+              if (0 === a.Xa && 0 === e)
+                return (a.Ua = b.slice(c, c + d)), (a.Xa = d);
+              if (e + d <= a.Xa) return a.Ua.set(b.subarray(c, c + d), e), d;
+            }
+            R.Rb(a, e + d);
+            if (a.Ua.subarray && b.subarray) a.Ua.set(b.subarray(c, c + d), e);
+            else for (g = 0; g < d; g++) a.Ua[e + g] = b[c + g];
+            a.Xa = Math.max(a.Xa, e + d);
+            return d;
+          },
+          nb: function (a, b, c) {
+            1 === c
+              ? (b += a.position)
+              : 2 === c && 32768 === (a.node.mode & 61440) && (b += a.node.Xa);
+            if (0 > b) throw new Q(28);
+            return b;
+          },
+          Mb: function (a, b, c) {
+            R.Rb(a.node, b + c);
+            a.node.Xa = Math.max(a.node.Xa, b + c);
+          },
+          Zb: function (a, b, c, d, e, g) {
+            ya(0 === b);
+            if (32768 !== (a.node.mode & 61440)) throw new Q(43);
+            a = a.node.Ua;
+            if (g & 2 || a.buffer !== n) {
+              if (0 < d || d + c < a.length)
+                a.subarray
+                  ? (a = a.subarray(d, d + c))
+                  : (a = Array.prototype.slice.call(a, d, d + c));
+              d = !0;
+              g = 16384 * Math.ceil(c / 16384);
+              for (b = M(g); c < g; ) f()[b + c++] = 0;
+              c = b;
+              if (!c) throw new Q(48);
+              f().set(a, c);
+            } else (d = !1), (c = a.byteOffset);
+            return { qd: c, Tc: d };
+          },
+          ac: function (a, b, c, d, e) {
+            if (32768 !== (a.node.mode & 61440)) throw new Q(43);
+            if (e & 2) return 0;
+            R.Wa.write(a, b, 0, d, c, !1);
+            return 0;
+          },
+        },
+      },
+      Db = null,
+      Eb = {},
+      Fb = [],
+      Gb = 1,
+      Hb = null,
+      Ib = !0,
+      Jb = {},
+      Q = null,
+      Bb = {};
+    function Kb(a, b) {
+      a = sb('/', a);
+      b = b || {};
+      if (!a) return { path: '', node: null };
+      var c = { Ub: !0, Kb: 0 },
+        d;
+      for (d in c) void 0 === b[d] && (b[d] = c[d]);
+      if (8 < b.Kb) throw new Q(32);
+      a = nb(
+        a.split('/').filter(function (h) {
+          return !!h;
+        }),
+        !1,
+      );
+      var e = Db;
+      c = '/';
+      for (d = 0; d < a.length; d++) {
+        var g = d === a.length - 1;
+        if (g && b.parent) break;
+        e = Cb(e, a[d]);
+        c = ob(c + '/' + a[d]);
+        e.Ab && (!g || (g && b.Ub)) && (e = e.Ab.root);
+        if (!g || b.Tb)
+          for (g = 0; 40960 === (e.mode & 61440); )
+            if (
+              ((e = Lb(c)),
+              (c = sb(pb(c), e)),
+              (e = Kb(c, { Kb: b.Kb }).node),
+              40 < g++)
+            )
+              throw new Q(32);
+      }
+      return { path: c, node: e };
+    }
+    function Mb(a) {
+      for (var b; ; ) {
+        if (a === a.parent)
+          return (
+            (a = a.ib.$b),
+            b ? ('/' !== a[a.length - 1] ? a + '/' + b : a + b) : a
+          );
+        b = b ? a.name + '/' + b : a.name;
+        a = a.parent;
+      }
+    }
+    function Nb(a, b) {
+      for (var c = 0, d = 0; d < b.length; d++)
+        c = ((c << 5) - c + b.charCodeAt(d)) | 0;
+      return ((a + c) >>> 0) % Hb.length;
+    }
+    function Cb(a, b) {
+      var c;
+      if ((c = (c = Ob(a, 'x')) ? c : a.Va.tb ? 0 : 2)) throw new Q(c, a);
+      for (c = Hb[Nb(a.id, b)]; c; c = c.Cc) {
+        var d = c.name;
+        if (c.parent.id === a.id && d === b) return c;
+      }
+      return a.Va.tb(a, b);
+    }
+    function Ab(a, b, c, d) {
+      a = new Pb(a, b, c, d);
+      b = Nb(a.parent.id, a.name);
+      a.Cc = Hb[b];
+      return (Hb[b] = a);
+    }
+    var Qb = {
+      r: 0,
+      rs: 1052672,
+      'r+': 2,
+      w: 577,
+      wx: 705,
+      xw: 705,
+      'w+': 578,
+      'wx+': 706,
+      'xw+': 706,
+      a: 1089,
+      ax: 1217,
+      xa: 1217,
+      'a+': 1090,
+      'ax+': 1218,
+      'xa+': 1218,
+    };
+    function Rb(a) {
+      var b = ['r', 'w', 'rw'][a & 3];
+      a & 512 && (b += 'w');
+      return b;
+    }
+    function Ob(a, b) {
+      if (Ib) return 0;
+      if (-1 === b.indexOf('r') || a.mode & 292) {
+        if (
+          (-1 !== b.indexOf('w') && !(a.mode & 146)) ||
+          (-1 !== b.indexOf('x') && !(a.mode & 73))
+        )
+          return 2;
+      } else return 2;
+      return 0;
+    }
+    function Sb(a, b) {
+      try {
+        return Cb(a, b), 20;
+      } catch (c) {}
+      return Ob(a, 'wx');
+    }
+    function Tb(a) {
+      var b = 4096;
+      for (a = a || 0; a <= b; a++) if (!Fb[a]) return a;
+      throw new Q(33);
+    }
+    function Ub(a, b) {
+      Vb || ((Vb = function () {}), (Vb.prototype = {}));
+      var c = new Vb(),
+        d;
+      for (d in a) c[d] = a[d];
+      a = c;
+      b = Tb(b);
+      a.jb = b;
+      return (Fb[b] = a);
+    }
+    var zb = {
+      open: function (a) {
+        a.Wa = Eb[a.node.Bb].Wa;
+        a.Wa.open && a.Wa.open(a);
+      },
+      nb: function () {
+        throw new Q(70);
+      },
+    };
+    function vb(a, b) {
+      Eb[a] = { Wa: b };
+    }
+    function Wb(a, b) {
+      var c = '/' === b,
+        d = !b;
+      if (c && Db) throw new Q(10);
+      if (!c && !d) {
+        var e = Kb(b, { Ub: !1 });
+        b = e.path;
+        e = e.node;
+        if (e.Ab) throw new Q(10);
+        if (16384 !== (e.mode & 61440)) throw new Q(54);
+      }
+      b = { type: a, od: {}, $b: b, Bc: [] };
+      a = a.ib(b);
+      a.ib = b;
+      b.root = a;
+      c ? (Db = a) : e && ((e.Ab = b), e.ib && e.ib.Bc.push(b));
+    }
+    function Xb(a, b, c) {
+      var d = Kb(a, { parent: !0 }).node;
+      a = qb(a);
+      if (!a || '.' === a || '..' === a) throw new Q(28);
+      var e = Sb(d, a);
+      if (e) throw new Q(e);
+      if (!d.Va.zb) throw new Q(63);
+      return d.Va.zb(d, a, b, c);
+    }
+    function S(a) {
+      Xb(a, 16895, 0);
+    }
+    function Yb(a, b, c) {
+      'undefined' === typeof c && ((c = b), (b = 438));
+      Xb(a, b | 8192, c);
+    }
+    function Zb(a, b) {
+      if (!sb(a)) throw new Q(44);
+      var c = Kb(b, { parent: !0 }).node;
+      if (!c) throw new Q(44);
+      b = qb(b);
+      var d = Sb(c, b);
+      if (d) throw new Q(d);
+      if (!c.Va.Db) throw new Q(63);
+      c.Va.Db(c, b, a);
+    }
+    function Lb(a) {
+      a = Kb(a).node;
+      if (!a) throw new Q(44);
+      if (!a.Va.ub) throw new Q(28);
+      return sb(Mb(a.parent), a.Va.ub(a));
+    }
+    function $b(a, b, c, d) {
+      if ('' === a) throw new Q(44);
+      if ('string' === typeof b) {
+        var e = Qb[b];
+        if ('undefined' === typeof e)
+          throw Error('Unknown file open mode: ' + b);
+        b = e;
+      }
+      c = b & 64 ? (('undefined' === typeof c ? 438 : c) & 4095) | 32768 : 0;
+      if ('object' === typeof a) var g = a;
+      else {
+        a = ob(a);
+        try {
+          g = Kb(a, { Tb: !(b & 131072) }).node;
+        } catch (k) {}
+      }
+      e = !1;
+      if (b & 64)
+        if (g) {
+          if (b & 128) throw new Q(20);
+        } else (g = Xb(a, c, 0)), (e = !0);
+      if (!g) throw new Q(44);
+      8192 === (g.mode & 61440) && (b &= -513);
+      if (b & 65536 && 16384 !== (g.mode & 61440)) throw new Q(54);
+      if (
+        !e &&
+        (c = g
+          ? 40960 === (g.mode & 61440)
+            ? 32
+            : 16384 === (g.mode & 61440) && ('r' !== Rb(b) || b & 512)
+            ? 31
+            : Ob(g, Rb(b))
+          : 44)
+      )
+        throw new Q(c);
+      if (b & 512) {
+        c = g;
+        var h;
+        'string' === typeof c ? (h = Kb(c, { Tb: !0 }).node) : (h = c);
+        if (!h.Va.gb) throw new Q(63);
+        if (16384 === (h.mode & 61440)) throw new Q(31);
+        if (32768 !== (h.mode & 61440)) throw new Q(28);
+        if ((c = Ob(h, 'w'))) throw new Q(c);
+        h.Va.gb(h, { size: 0, timestamp: Date.now() });
+      }
+      b &= -131713;
+      d = Ub(
+        {
+          node: g,
+          path: Mb(g),
+          flags: b,
+          seekable: !0,
+          position: 0,
+          Wa: g.Wa,
+          Rc: [],
+          error: !1,
+        },
+        d,
+      );
+      d.Wa.open && d.Wa.open(d);
+      !z.logReadFiles ||
+        b & 1 ||
+        (ac || (ac = {}),
+        a in ac ||
+          ((ac[a] = 1), G('FS.trackingDelegate error on read file: ' + a)));
+      try {
+        Jb.onOpenFile &&
+          ((g = 0),
+          1 !== (b & 2097155) && (g |= 1),
+          0 !== (b & 2097155) && (g |= 2),
+          Jb.onOpenFile(a, g));
+      } catch (k) {
+        G(
+          "FS.trackingDelegate['onOpenFile']('" +
+            a +
+            "', flags) threw an exception: " +
+            k.message,
+        );
+      }
+      return d;
+    }
+    function bc(a, b, c) {
+      if (null === a.jb) throw new Q(8);
+      if (!a.seekable || !a.Wa.nb) throw new Q(70);
+      if (0 != c && 1 != c && 2 != c) throw new Q(28);
+      a.position = a.Wa.nb(a, b, c);
+      a.Rc = [];
+    }
+    function cc() {
+      Q ||
+        ((Q = function (a, b) {
+          this.node = b;
+          this.Ic = function (c) {
+            this.mb = c;
+          };
+          this.Ic(a);
+          this.message = 'FS error';
+        }),
+        (Q.prototype = Error()),
+        (Q.prototype.constructor = Q),
+        [44].forEach(function (a) {
+          Bb[a] = new Q(a);
+          Bb[a].stack = '<generic error, no stack>';
+        }));
+    }
+    var dc;
+    function ec(a, b) {
+      var c = 0;
+      a && (c |= 365);
+      b && (c |= 146);
+      return c;
+    }
+    function fc(a, b, c) {
+      a = ob('/dev/' + a);
+      var d = ec(!!b, !!c);
+      gc || (gc = 64);
+      var e = (gc++ << 8) | 0;
+      vb(e, {
+        open: function (g) {
+          g.seekable = !1;
+        },
+        close: function () {
+          c && c.buffer && c.buffer.length && c(10);
+        },
+        read: function (g, h, k, l) {
+          for (var q = 0, r = 0; r < l; r++) {
+            try {
+              var v = b();
+            } catch (y) {
+              throw new Q(29);
+            }
+            if (void 0 === v && 0 === q) throw new Q(6);
+            if (null === v || void 0 === v) break;
+            q++;
+            h[k + r] = v;
+          }
+          q && (g.node.timestamp = Date.now());
+          return q;
+        },
+        write: function (g, h, k, l) {
+          for (var q = 0; q < l; q++)
+            try {
+              c(h[k + q]);
+            } catch (r) {
+              throw new Q(29);
+            }
+          l && (g.node.timestamp = Date.now());
+          return q;
+        },
+      });
+      Yb(a, d, e);
+    }
+    var gc,
+      hc = {},
+      Vb,
+      ac,
+      ic = void 0;
+    function jc() {
+      ic += 4;
+      return w()[(ic - 4) >> 2];
+    }
+    function kc(a) {
+      a = Fb[a];
+      if (!a) throw new Q(8);
+      return a;
+    }
+    function lc(a, b, c) {
+      if (D) return T(1, 1, a, b, c);
+      ic = c;
+      try {
+        var d = kc(a);
+        switch (b) {
+          case 0:
+            var e = jc();
+            return 0 > e ? -28 : $b(d.path, d.flags, 0, e).jb;
+          case 1:
+          case 2:
+            return 0;
+          case 3:
+            return d.flags;
+          case 4:
+            return (e = jc()), (d.flags |= e), 0;
+          case 12:
+            return (e = jc()), (ca()[(e + 0) >> 1] = 2), 0;
+          case 13:
+          case 14:
+            return 0;
+          case 16:
+          case 8:
+            return -28;
+          case 9:
+            return (w()[mc() >> 2] = 28), -1;
+          default:
+            return -28;
+        }
+      } catch (g) {
+        return ('undefined' !== typeof hc && g instanceof Q) || H(g), -g.mb;
+      }
+    }
+    function nc(a, b, c) {
+      if (D) return T(2, 1, a, b, c);
+      ic = c;
+      try {
+        var d = kc(a);
+        switch (b) {
+          case 21509:
+          case 21505:
+            return d.Ya ? 0 : -59;
+          case 21510:
+          case 21511:
+          case 21512:
+          case 21506:
+          case 21507:
+          case 21508:
+            return d.Ya ? 0 : -59;
+          case 21519:
+            if (!d.Ya) return -59;
+            var e = jc();
+            return (w()[e >> 2] = 0);
+          case 21520:
+            return d.Ya ? -28 : -59;
+          case 21531:
+            a = e = jc();
+            if (!d.Wa.zc) throw new Q(59);
+            return d.Wa.zc(d, b, a);
+          case 21523:
+            return d.Ya ? 0 : -59;
+          case 21524:
+            return d.Ya ? 0 : -59;
+          default:
+            H('bad ioctl syscall ' + b);
+        }
+      } catch (g) {
+        return ('undefined' !== typeof hc && g instanceof Q) || H(g), -g.mb;
+      }
+    }
+    function oc(a, b, c) {
+      if (D) return T(3, 1, a, b, c);
+      ic = c;
+      try {
+        var d = I(a),
+          e = jc();
+        return $b(d, b, e).jb;
+      } catch (g) {
+        return ('undefined' !== typeof hc && g instanceof Q) || H(g), -g.mb;
+      }
+    }
+    var pc = {};
+    function qc(a) {
+      for (; a.length; ) {
+        var b = a.pop();
+        a.pop()(b);
+      }
+    }
+    function rc(a) {
+      return this.fromWireType(x()[a >> 2]);
+    }
+    var sc = {},
+      tc = {},
+      uc = {};
+    function vc(a) {
+      if (void 0 === a) return '_unknown';
+      a = a.replace(/[^a-zA-Z0-9_]/g, '$');
+      var b = a.charCodeAt(0);
+      return 48 <= b && 57 >= b ? '_' + a : a;
+    }
+    function wc(a, b) {
+      a = vc(a);
+      return new Function(
+        'body',
+        'return function ' +
+          a +
+          '() {\n    "use strict";    return body.apply(this, arguments);\n};\n',
+      )(b);
+    }
+    function xc(a) {
+      var b = Error,
+        c = wc(a, function (d) {
+          this.name = a;
+          this.message = d;
+          d = Error(d).stack;
+          void 0 !== d &&
+            (this.stack =
+              this.toString() + '\n' + d.replace(/^Error(:[^\n]*)?\n/, ''));
+        });
+      c.prototype = Object.create(b.prototype);
+      c.prototype.constructor = c;
+      c.prototype.toString = function () {
+        return void 0 === this.message
+          ? this.name
+          : this.name + ': ' + this.message;
+      };
+      return c;
+    }
+    var yc = void 0;
+    function zc(a, b, c) {
+      function d(k) {
+        k = c(k);
+        if (k.length !== a.length)
+          throw new yc('Mismatched type converter count');
+        for (var l = 0; l < a.length; ++l) U(a[l], k[l]);
+      }
+      a.forEach(function (k) {
+        uc[k] = b;
+      });
+      var e = Array(b.length),
+        g = [],
+        h = 0;
+      b.forEach(function (k, l) {
+        tc.hasOwnProperty(k)
+          ? (e[l] = tc[k])
+          : (g.push(k),
+            sc.hasOwnProperty(k) || (sc[k] = []),
+            sc[k].push(function () {
+              e[l] = tc[k];
+              ++h;
+              h === g.length && d(e);
+            }));
+      });
+      0 === g.length && d(e);
+    }
+    function Ac(a) {
+      switch (a) {
+        case 1:
+          return 0;
+        case 2:
+          return 1;
+        case 4:
+          return 2;
+        case 8:
+          return 3;
+        default:
+          throw new TypeError('Unknown type size: ' + a);
+      }
+    }
+    var Bc = void 0;
+    function V(a) {
+      for (var b = ''; t()[a]; ) b += Bc[t()[a++]];
+      return b;
+    }
+    var Cc = void 0;
+    function W(a) {
+      throw new Cc(a);
+    }
+    function U(a, b, c) {
+      c = c || {};
+      if (!('argPackAdvance' in b))
+        throw new TypeError(
+          'registerType registeredInstance requires argPackAdvance',
+        );
+      var d = b.name;
+      a || W('type "' + d + '" must have a positive integer typeid pointer');
+      if (tc.hasOwnProperty(a)) {
+        if (c.uc) return;
+        W("Cannot register type '" + d + "' twice");
+      }
+      tc[a] = b;
+      delete uc[a];
+      sc.hasOwnProperty(a) &&
+        ((b = sc[a]),
+        delete sc[a],
+        b.forEach(function (e) {
+          e();
+        }));
+    }
+    var Dc = [],
+      X = [
+        {},
+        { value: void 0 },
+        { value: null },
+        { value: !0 },
+        { value: !1 },
+      ];
+    function Ec(a) {
+      4 < a && 0 === --X[a].Lb && ((X[a] = void 0), Dc.push(a));
+    }
+    function Fc(a) {
+      switch (a) {
+        case void 0:
+          return 1;
+        case null:
+          return 2;
+        case !0:
+          return 3;
+        case !1:
+          return 4;
+        default:
+          var b = Dc.length ? Dc.pop() : X.length;
+          X[b] = { Lb: 1, value: a };
+          return b;
+      }
+    }
+    function Gc(a) {
+      if (null === a) return 'null';
+      var b = typeof a;
+      return 'object' === b || 'array' === b || 'function' === b
+        ? a.toString()
+        : '' + a;
+    }
+    function Hc(a, b) {
+      switch (b) {
+        case 2:
+          return function (c) {
+            return this.fromWireType(ja()[c >> 2]);
+          };
+        case 3:
+          return function (c) {
+            return this.fromWireType(la()[c >> 3]);
+          };
+        default:
+          throw new TypeError('Unknown float type: ' + a);
+      }
+    }
+    function Ic(a) {
+      var b = Function;
+      if (!(b instanceof Function))
+        throw new TypeError(
+          'new_ called with constructor type ' +
+            typeof b +
+            ' which is not a function',
+        );
+      var c = wc(b.name || 'unknownFunctionName', function () {});
+      c.prototype = b.prototype;
+      c = new c();
+      a = b.apply(c, a);
+      return a instanceof Object ? a : c;
+    }
+    function Jc(a, b) {
+      var c = z;
+      if (void 0 === c[a].eb) {
+        var d = c[a];
+        c[a] = function () {
+          c[a].eb.hasOwnProperty(arguments.length) ||
+            W(
+              "Function '" +
+                b +
+                "' called with an invalid number of arguments (" +
+                arguments.length +
+                ') - expects one of (' +
+                c[a].eb +
+                ')!',
+            );
+          return c[a].eb[arguments.length].apply(this, arguments);
+        };
+        c[a].eb = [];
+        c[a].eb[d.lc] = d;
+      }
+    }
+    function Kc(a, b, c) {
+      z.hasOwnProperty(a)
+        ? ((void 0 === c || (void 0 !== z[a].eb && void 0 !== z[a].eb[c])) &&
+            W("Cannot register public name '" + a + "' twice"),
+          Jc(a, a),
+          z.hasOwnProperty(c) &&
+            W(
+              'Cannot register multiple overloads of a function with the same number of arguments (' +
+                c +
+                ')!',
+            ),
+          (z[a].eb[c] = b))
+        : ((z[a] = b), void 0 !== c && (z[a].nd = c));
+    }
+    function Lc(a, b) {
+      for (var c = [], d = 0; d < a; d++) c.push(w()[(b >> 2) + d]);
+      return c;
+    }
+    function Mc(a, b) {
+      ya(
+        0 <= a.indexOf('j'),
+        'getDynCaller should only be called with i64 sigs',
+      );
+      var c = [];
+      return function () {
+        c.length = arguments.length;
+        for (var d = 0; d < arguments.length; d++) c[d] = arguments[d];
+        return $a(a, b, c);
+      };
+    }
+    function Nc(a, b) {
+      a = V(a);
+      var c = -1 != a.indexOf('j') ? Mc(a, b) : J.get(b);
+      'function' !== typeof c &&
+        W('unknown function pointer with signature ' + a + ': ' + b);
+      return c;
+    }
+    var Oc = void 0;
+    function Pc(a) {
+      a = Qc(a);
+      var b = V(a);
+      O(a);
+      return b;
+    }
+    function Rc(a, b) {
+      function c(g) {
+        e[g] || tc[g] || (uc[g] ? uc[g].forEach(c) : (d.push(g), (e[g] = !0)));
+      }
+      var d = [],
+        e = {};
+      b.forEach(c);
+      throw new Oc(a + ': ' + d.map(Pc).join([', ']));
+    }
+    function Sc(a, b, c) {
+      switch (b) {
+        case 0:
+          return c
+            ? function (d) {
+                return f()[d];
+              }
+            : function (d) {
+                return t()[d];
+              };
+        case 1:
+          return c
+            ? function (d) {
+                return ca()[d >> 1];
+              }
+            : function (d) {
+                return ea()[d >> 1];
+              };
+        case 2:
+          return c
+            ? function (d) {
+                return w()[d >> 2];
+              }
+            : function (d) {
+                return x()[d >> 2];
+              };
+        default:
+          throw new TypeError('Unknown integer type: ' + a);
+      }
+    }
+    var Tc = {};
+    function Uc() {
+      return 'object' === typeof globalThis
+        ? globalThis
+        : Function('return this')();
+    }
+    function Vc(a, b) {
+      var c = tc[a];
+      void 0 === c && W(b + ' has unknown type ' + Pc(a));
+      return c;
+    }
+    var Wc = {};
+    function Xc(a, b, c) {
+      if (0 >= a || a > f().length || a & 1) return -28;
+      a = Atomics.wait(w(), a >> 2, b, c);
+      if ('timed-out' === a) return -73;
+      if ('not-equal' === a) return -6;
+      if ('ok' === a) return 0;
+      throw 'Atomics.wait returned an unexpected value ' + a;
+    }
+    function T(a, b) {
+      for (
+        var c = arguments.length - 2, d = Y(), e = Yc(8 * c), g = e >> 3, h = 0;
+        h < c;
+        h++
+      )
+        la()[g + h] = arguments[2 + h];
+      c = Zc(a, c, e, b);
+      P(d);
+      return c;
+    }
+    var $c = [],
+      ad = [],
+      bd = [
+        0,
+        'undefined' !== typeof document ? document : 0,
+        'undefined' !== typeof window ? window : 0,
+      ];
+    function cd(a) {
+      a = 2 < a ? I(a) : a;
+      return (
+        bd[a] ||
+        ('undefined' !== typeof document ? document.querySelector(a) : void 0)
+      );
+    }
+    function dd(a, b, c) {
+      var d = cd(a);
+      if (!d) return -4;
+      d.yb && ((w()[d.yb >> 2] = b), (w()[(d.yb + 4) >> 2] = c));
+      if (d.bc || !d.Yc)
+        d.bc && (d = d.bc),
+          (a = !1),
+          d.xb &&
+            d.xb.wb &&
+            ((a = d.xb.wb.getParameter(2978)),
+            (a =
+              0 === a[0] &&
+              0 === a[1] &&
+              a[2] === d.width &&
+              a[3] === d.height)),
+          (d.width = b),
+          (d.height = c),
+          a && d.xb.wb.viewport(0, 0, b, c);
+      else {
+        if (d.yb) {
+          d = w()[(d.yb + 8) >> 2];
+          a = a ? I(a) : '';
+          var e = Y(),
+            g = Yc(12),
+            h = 0;
+          if (a) {
+            h = Ca(a) + 1;
+            var k = M(h);
+            Ba(a, k, h);
+            h = k;
+          }
+          w()[g >> 2] = h;
+          w()[(g + 4) >> 2] = b;
+          w()[(g + 8) >> 2] = c;
+          ed(0, d, 657457152, 0, h, g);
+          P(e);
+          return 1;
+        }
+        return -4;
+      }
+      return 0;
+    }
+    function fd(a, b, c) {
+      return D ? T(4, 1, a, b, c) : dd(a, b, c);
+    }
+    function gd(a) {
+      var b = a.getExtension('ANGLE_instanced_arrays');
+      b &&
+        ((a.vertexAttribDivisor = function (c, d) {
+          b.vertexAttribDivisorANGLE(c, d);
+        }),
+        (a.drawArraysInstanced = function (c, d, e, g) {
+          b.drawArraysInstancedANGLE(c, d, e, g);
+        }),
+        (a.drawElementsInstanced = function (c, d, e, g, h) {
+          b.drawElementsInstancedANGLE(c, d, e, g, h);
+        }));
+    }
+    function hd(a) {
+      var b = a.getExtension('OES_vertex_array_object');
+      b &&
+        ((a.createVertexArray = function () {
+          return b.createVertexArrayOES();
+        }),
+        (a.deleteVertexArray = function (c) {
+          b.deleteVertexArrayOES(c);
+        }),
+        (a.bindVertexArray = function (c) {
+          b.bindVertexArrayOES(c);
+        }),
+        (a.isVertexArray = function (c) {
+          return b.isVertexArrayOES(c);
+        }));
+    }
+    function id(a) {
+      var b = a.getExtension('WEBGL_draw_buffers');
+      b &&
+        (a.drawBuffers = function (c, d) {
+          b.drawBuffersWEBGL(c, d);
+        });
+    }
+    function jd(a) {
+      a || (a = kd);
+      if (!a.vc) {
+        a.vc = !0;
+        var b = a.wb;
+        gd(b);
+        hd(b);
+        id(b);
+        b.ad = b.getExtension('EXT_disjoint_timer_query');
+        b.ld = b.getExtension('WEBGL_multi_draw');
+        var c = 'OES_texture_float OES_texture_half_float OES_standard_derivatives OES_vertex_array_object WEBGL_compressed_texture_s3tc WEBGL_depth_texture OES_element_index_uint EXT_texture_filter_anisotropic EXT_frag_depth WEBGL_draw_buffers ANGLE_instanced_arrays OES_texture_float_linear OES_texture_half_float_linear EXT_blend_minmax EXT_shader_texture_lod EXT_texture_norm16 WEBGL_compressed_texture_pvrtc EXT_color_buffer_half_float WEBGL_color_buffer_float EXT_sRGB WEBGL_compressed_texture_etc1 EXT_disjoint_timer_query WEBGL_compressed_texture_etc WEBGL_compressed_texture_astc EXT_color_buffer_float WEBGL_compressed_texture_s3tc_srgb EXT_disjoint_timer_query_webgl2 WEBKIT_WEBGL_compressed_texture_pvrtc'.split(
+          ' ',
+        );
+        (b.getSupportedExtensions() || []).forEach(function (d) {
+          -1 != c.indexOf(d) && b.getExtension(d);
+        });
+      }
+    }
+    var kd,
+      ld = ['default', 'low-power', 'high-performance'];
+    function md(a) {
+      if (D) return T(5, 1, a);
+      try {
+        var b = kc(a);
+        if (null === b.jb) throw new Q(8);
+        b.Ib && (b.Ib = null);
+        try {
+          b.Wa.close && b.Wa.close(b);
+        } catch (c) {
+          throw c;
+        } finally {
+          Fb[b.jb] = null;
+        }
+        b.jb = null;
+        return 0;
+      } catch (c) {
+        return ('undefined' !== typeof hc && c instanceof Q) || H(c), c.mb;
+      }
+    }
+    function nd(a, b, c, d) {
+      if (D) return T(6, 1, a, b, c, d);
+      try {
+        a: {
+          for (var e = kc(a), g = (a = 0); g < c; g++) {
+            var h = w()[(b + 8 * g) >> 2],
+              k = w()[(b + (8 * g + 4)) >> 2],
+              l = e,
+              q = f(),
+              r = h,
+              v = k,
+              y = void 0;
+            if (0 > v || 0 > y) throw new Q(28);
+            if (null === l.jb) throw new Q(8);
+            if (1 === (l.flags & 2097155)) throw new Q(8);
+            if (16384 === (l.node.mode & 61440)) throw new Q(31);
+            if (!l.Wa.read) throw new Q(28);
+            var B = 'undefined' !== typeof y;
+            if (!B) y = l.position;
+            else if (!l.seekable) throw new Q(70);
+            var u = l.Wa.read(l, q, r, v, y);
+            B || (l.position += u);
+            var N = u;
+            if (0 > N) {
+              var E = -1;
+              break a;
+            }
+            a += N;
+            if (N < k) break;
+          }
+          E = a;
+        }
+        w()[d >> 2] = E;
+        return 0;
+      } catch (C) {
+        return ('undefined' !== typeof hc && C instanceof Q) || H(C), C.mb;
+      }
+    }
+    function od(a, b, c, d, e) {
+      if (D) return T(7, 1, a, b, c, d, e);
+      try {
+        var g = kc(a);
+        a = 4294967296 * c + (b >>> 0);
+        if (-9007199254740992 >= a || 9007199254740992 <= a) return -61;
+        bc(g, a, d);
+        Wa = [
+          g.position >>> 0,
+          ((Va = g.position),
+          1 <= +Math.abs(Va)
+            ? 0 < Va
+              ? (Math.min(+Math.floor(Va / 4294967296), 4294967295) | 0) >>> 0
+              : ~~+Math.ceil((Va - +(~~Va >>> 0)) / 4294967296) >>> 0
+            : 0),
+        ];
+        w()[e >> 2] = Wa[0];
+        w()[(e + 4) >> 2] = Wa[1];
+        g.Ib && 0 === a && 0 === d && (g.Ib = null);
+        return 0;
+      } catch (h) {
+        return ('undefined' !== typeof hc && h instanceof Q) || H(h), h.mb;
+      }
+    }
+    function pd(a, b, c, d) {
+      if (D) return T(8, 1, a, b, c, d);
+      try {
+        a: {
+          for (var e = kc(a), g = (a = 0); g < c; g++) {
+            var h = w()[(b + 8 * g) >> 2],
+              k = w()[(b + (8 * g + 4)) >> 2],
+              l = e,
+              q = f(),
+              r = h,
+              v = k,
+              y = void 0;
+            if (0 > v || 0 > y) throw new Q(28);
+            if (null === l.jb) throw new Q(8);
+            if (0 === (l.flags & 2097155)) throw new Q(8);
+            if (16384 === (l.node.mode & 61440)) throw new Q(31);
+            if (!l.Wa.write) throw new Q(28);
+            l.seekable && l.flags & 1024 && bc(l, 0, 2);
+            var B = 'undefined' !== typeof y;
+            if (!B) y = l.position;
+            else if (!l.seekable) throw new Q(70);
+            var u = l.Wa.write(l, q, r, v, y, void 0);
+            B || (l.position += u);
+            try {
+              if (l.path && Jb.onWriteToFile) Jb.onWriteToFile(l.path);
+            } catch (C) {
+              G(
+                "FS.trackingDelegate['onWriteToFile']('" +
+                  l.path +
+                  "') threw an exception: " +
+                  C.message,
+              );
+            }
+            var N = u;
+            if (0 > N) {
+              var E = -1;
+              break a;
+            }
+            a += N;
+          }
+          E = a;
+        }
+        w()[d >> 2] = E;
+        return 0;
+      } catch (C) {
+        return ('undefined' !== typeof hc && C instanceof Q) || H(C), C.mb;
+      }
+    }
+    function kb(a) {
+      if (D)
+        throw 'Internal Error! spawnThread() can only ever be called from main application thread!';
+      var b = L.qc();
+      if (void 0 !== b.ab) throw 'Internal error!';
+      if (!a.qb) throw 'Internal error, no pthread ptr!';
+      L.lb.push(b);
+      for (var c = M(512), d = 0; 128 > d; ++d) w()[(c + 4 * d) >> 2] = 0;
+      var e = a.ob + a.rb;
+      d = L.fb[a.qb] = {
+        worker: b,
+        ob: a.ob,
+        rb: a.rb,
+        Fb: a.Fb,
+        jc: a.qb,
+        threadInfoStruct: a.qb,
+      };
+      var g = d.threadInfoStruct >> 2;
+      Atomics.store(x(), g, 0);
+      Atomics.store(x(), g + 1, 0);
+      Atomics.store(x(), g + 2, 0);
+      Atomics.store(x(), g + 17, a.Pb);
+      Atomics.store(x(), g + 26, c);
+      Atomics.store(x(), g + 12, 0);
+      Atomics.store(x(), g + 10, d.threadInfoStruct);
+      Atomics.store(x(), g + 11, 42);
+      Atomics.store(x(), g + 27, a.rb);
+      Atomics.store(x(), g + 21, a.rb);
+      Atomics.store(x(), g + 20, e);
+      Atomics.store(x(), g + 29, e);
+      Atomics.store(x(), g + 30, a.Pb);
+      Atomics.store(x(), g + 32, a.hc);
+      Atomics.store(x(), g + 33, a.ic);
+      c = qd() + 40;
+      Atomics.store(x(), g + 44, c);
+      b.ab = d;
+      var h = {
+        cmd: 'run',
+        start_routine: a.Nc,
+        arg: a.sb,
+        threadInfoStruct: a.qb,
+        selfThreadId: a.qb,
+        parentThreadId: a.Dc,
+        stackBase: a.ob,
+        stackSize: a.rb,
+      };
+      b.vb = function () {
+        h.time = performance.now();
+        b.postMessage(h, a.Qc);
+      };
+      b.loaded && (b.vb(), delete b.vb);
+    }
+    function rd() {
+      return ab | 0;
+    }
+    z._pthread_self = rd;
+    function sd(a, b) {
+      if (!a) return G('pthread_join attempted on a null thread pointer!'), 71;
+      if (D && selfThreadId == a)
+        return G('PThread ' + a + ' is attempting to join to itself!'), 16;
+      if (!D && L.$a == a)
+        return G('Main thread ' + a + ' is attempting to join to itself!'), 16;
+      if (w()[(a + 12) >> 2] !== a)
+        return (
+          G(
+            'pthread_join attempted on thread ' +
+              a +
+              ', which does not point to a valid thread, or does not exist anymore!',
+          ),
+          71
+        );
+      if (Atomics.load(x(), (a + 68) >> 2))
+        return (
+          G('Attempted to join thread ' + a + ', which was already detached!'),
+          28
+        );
+      for (;;) {
+        var c = Atomics.load(x(), (a + 0) >> 2);
+        if (1 == c)
+          return (
+            (c = Atomics.load(x(), (a + 4) >> 2)),
+            b && (w()[b >> 2] = c),
+            Atomics.store(x(), (a + 68) >> 2, 1),
+            D ? postMessage({ cmd: 'cleanupThread', thread: a }) : fb(a),
+            0
+          );
+        if (
+          D &&
+          threadInfoStruct &&
+          !Atomics.load(x(), (threadInfoStruct + 60) >> 2) &&
+          2 == Atomics.load(x(), (threadInfoStruct + 0) >> 2)
+        )
+          throw 'Canceled!';
+        D || jb();
+        Xc(a + 0, c, D ? 100 : 1);
+      }
+    }
+    D || L.wc();
+    function Pb(a, b, c, d) {
+      a || (a = this);
+      this.parent = a;
+      this.ib = a.ib;
+      this.Ab = null;
+      this.id = Gb++;
+      this.name = b;
+      this.mode = c;
+      this.Va = {};
+      this.Wa = {};
+      this.Bb = d;
+    }
+    Object.defineProperties(Pb.prototype, {
+      read: {
+        get: function () {
+          return 365 === (this.mode & 365);
+        },
+        set: function (a) {
+          a ? (this.mode |= 365) : (this.mode &= -366);
+        },
+      },
+      write: {
+        get: function () {
+          return 146 === (this.mode & 146);
+        },
+        set: function (a) {
+          a ? (this.mode |= 146) : (this.mode &= -147);
+        },
+      },
+    });
+    cc();
+    Hb = Array(4096);
+    Wb(R, '/');
+    S('/tmp');
+    S('/home');
+    S('/home/web_user');
+    (function () {
+      S('/dev');
+      vb(259, {
+        read: function () {
+          return 0;
+        },
+        write: function (b, c, d, e) {
+          return e;
+        },
+      });
+      Yb('/dev/null', 259);
+      ub(1280, xb);
+      ub(1536, yb);
+      Yb('/dev/tty', 1280);
+      Yb('/dev/tty1', 1536);
+      var a = rb();
+      fc('random', a);
+      fc('urandom', a);
+      S('/dev/shm');
+      S('/dev/shm/tmp');
+    })();
+    S('/proc');
+    S('/proc/self');
+    S('/proc/self/fd');
+    Wb(
+      {
+        ib: function () {
+          var a = Ab('/proc/self', 'fd', 16895, 73);
+          a.Va = {
+            tb: function (b, c) {
+              var d = Fb[+c];
+              if (!d) throw new Q(8);
+              b = {
+                parent: null,
+                ib: { $b: 'fake' },
+                Va: {
+                  ub: function () {
+                    return d.path;
+                  },
+                },
+              };
+              return (b.parent = b);
+            },
+          };
+          return a;
+        },
+      },
+      '/proc/self/fd',
+    );
+    yc = z.InternalError = xc('InternalError');
+    for (var td = Array(256), ud = 0; 256 > ud; ++ud)
+      td[ud] = String.fromCharCode(ud);
+    Bc = td;
+    Cc = z.BindingError = xc('BindingError');
+    z.count_emval_handles = function () {
+      for (var a = 0, b = 5; b < X.length; ++b) void 0 !== X[b] && ++a;
+      return a;
+    };
+    z.get_first_emval = function () {
+      for (var a = 5; a < X.length; ++a) if (void 0 !== X[a]) return X[a];
+      return null;
+    };
+    Oc = z.UnboundTypeError = xc('UnboundTypeError');
+    var vd = [null, lc, nc, oc, fd, md, nd, od, pd];
+    D ||
+      La.push({
+        pc: function () {
+          wd();
+        },
+      });
+    var Gd = {
+      m: function (a, b, c, d) {
+        H(
+          'Assertion failed: ' +
+            I(a) +
+            ', at: ' +
+            [b ? I(b) : 'unknown filename', c, d ? I(d) : 'unknown function'],
+        );
+      },
+      fa: function (a, b) {
+        return mb(a, b);
+      },
+      C: lc,
+      Y: nc,
+      Z: oc,
+      K: function (a) {
+        var b = pc[a];
+        delete pc[a];
+        var c = b.Ec,
+          d = b.Fc,
+          e = b.Sb,
+          g = e
+            .map(function (h) {
+              return h.tc;
+            })
+            .concat(
+              e.map(function (h) {
+                return h.Lc;
+              }),
+            );
+        zc([a], g, function (h) {
+          var k = {};
+          e.forEach(function (l, q) {
+            var r = h[q],
+              v = l.rc,
+              y = l.sc,
+              B = h[q + e.length],
+              u = l.Kc,
+              N = l.Mc;
+            k[l.oc] = {
+              read: function (E) {
+                return r.fromWireType(v(y, E));
+              },
+              write: function (E, C) {
+                var va = [];
+                u(N, E, B.toWireType(va, C));
+                qc(va);
+              },
+            };
+          });
+          return [
+            {
+              name: b.name,
+              fromWireType: function (l) {
+                var q = {},
+                  r;
+                for (r in k) q[r] = k[r].read(l);
+                d(l);
+                return q;
+              },
+              toWireType: function (l, q) {
+                for (var r in k)
+                  if (!(r in q))
+                    throw new TypeError('Missing field:  "' + r + '"');
+                var v = c();
+                for (r in k) k[r].write(v, q[r]);
+                null !== l && l.push(d, v);
+                return v;
+              },
+              argPackAdvance: 8,
+              readValueFromPointer: rc,
+              hb: d,
+            },
+          ];
+        });
+      },
+      aa: function (a, b, c, d, e) {
+        var g = Ac(c);
+        b = V(b);
+        U(a, {
+          name: b,
+          fromWireType: function (h) {
+            return !!h;
+          },
+          toWireType: function (h, k) {
+            return k ? d : e;
+          },
+          argPackAdvance: 8,
+          readValueFromPointer: function (h) {
+            if (1 === c) var k = f();
+            else if (2 === c) k = ca();
+            else if (4 === c) k = w();
+            else throw new TypeError('Unknown boolean type size: ' + b);
+            return this.fromWireType(k[h >> g]);
+          },
+          hb: null,
+        });
+      },
+      $: function (a, b) {
+        b = V(b);
+        U(a, {
+          name: b,
+          fromWireType: function (c) {
+            var d = X[c].value;
+            Ec(c);
+            return d;
+          },
+          toWireType: function (c, d) {
+            return Fc(d);
+          },
+          argPackAdvance: 8,
+          readValueFromPointer: rc,
+          hb: null,
+        });
+      },
+      F: function (a, b, c) {
+        c = Ac(c);
+        b = V(b);
+        U(a, {
+          name: b,
+          fromWireType: function (d) {
+            return d;
+          },
+          toWireType: function (d, e) {
+            if ('number' !== typeof e && 'boolean' !== typeof e)
+              throw new TypeError(
+                'Cannot convert "' + Gc(e) + '" to ' + this.name,
+              );
+            return e;
+          },
+          argPackAdvance: 8,
+          readValueFromPointer: Hc(b, c),
+          hb: null,
+        });
+      },
+      J: function (a, b, c, d, e, g) {
+        var h = Lc(b, c);
+        a = V(a);
+        e = Nc(d, e);
+        Kc(
+          a,
+          function () {
+            Rc('Cannot call ' + a + ' due to unbound types', h);
+          },
+          b - 1,
+        );
+        zc([], h, function (k) {
+          var l = a,
+            q = a;
+          k = [k[0], null].concat(k.slice(1));
+          var r = e,
+            v = k.length;
+          2 > v &&
+            W(
+              "argTypes array size mismatch! Must at least get return value and 'this' types!",
+            );
+          for (var y = null !== k[1] && !1, B = !1, u = 1; u < k.length; ++u)
+            if (null !== k[u] && void 0 === k[u].hb) {
+              B = !0;
+              break;
+            }
+          var N = 'void' !== k[0].name,
+            E = '',
+            C = '';
+          for (u = 0; u < v - 2; ++u)
+            (E += (0 !== u ? ', ' : '') + 'arg' + u),
+              (C += (0 !== u ? ', ' : '') + 'arg' + u + 'Wired');
+          q =
+            'return function ' +
+            vc(q) +
+            '(' +
+            E +
+            ') {\nif (arguments.length !== ' +
+            (v - 2) +
+            ") {\nthrowBindingError('function " +
+            q +
+            " called with ' + arguments.length + ' arguments, expected " +
+            (v - 2) +
+            " args!');\n}\n";
+          B && (q += 'var destructors = [];\n');
+          var va = B ? 'destructors' : 'null';
+          E = 'throwBindingError invoker fn runDestructors retType classParam'.split(
+            ' ',
+          );
+          r = [W, r, g, qc, k[0], k[1]];
+          y &&
+            (q += 'var thisWired = classParam.toWireType(' + va + ', this);\n');
+          for (u = 0; u < v - 2; ++u)
+            (q +=
+              'var arg' +
+              u +
+              'Wired = argType' +
+              u +
+              '.toWireType(' +
+              va +
+              ', arg' +
+              u +
+              '); // ' +
+              k[u + 2].name +
+              '\n'),
+              E.push('argType' + u),
+              r.push(k[u + 2]);
+          y && (C = 'thisWired' + (0 < C.length ? ', ' : '') + C);
+          q +=
+            (N ? 'var rv = ' : '') +
+            'invoker(fn' +
+            (0 < C.length ? ', ' : '') +
+            C +
+            ');\n';
+          if (B) q += 'runDestructors(destructors);\n';
+          else
+            for (u = y ? 1 : 2; u < k.length; ++u)
+              (v = 1 === u ? 'thisWired' : 'arg' + (u - 2) + 'Wired'),
+                null !== k[u].hb &&
+                  ((q += v + '_dtor(' + v + '); // ' + k[u].name + '\n'),
+                  E.push(v + '_dtor'),
+                  r.push(k[u].hb));
+          N && (q += 'var ret = retType.fromWireType(rv);\nreturn ret;\n');
+          E.push(q + '}\n');
+          k = Ic(E).apply(null, r);
+          u = b - 1;
+          if (!z.hasOwnProperty(l))
+            throw new yc('Replacing nonexistant public symbol');
+          void 0 !== z[l].eb && void 0 !== u
+            ? (z[l].eb[u] = k)
+            : ((z[l] = k), (z[l].lc = u));
+          return [];
+        });
+      },
+      n: function (a, b, c, d, e) {
+        function g(q) {
+          return q;
+        }
+        b = V(b);
+        -1 === e && (e = 4294967295);
+        var h = Ac(c);
+        if (0 === d) {
+          var k = 32 - 8 * c;
+          g = function (q) {
+            return (q << k) >>> k;
+          };
+        }
+        var l = -1 != b.indexOf('unsigned');
+        U(a, {
+          name: b,
+          fromWireType: g,
+          toWireType: function (q, r) {
+            if ('number' !== typeof r && 'boolean' !== typeof r)
+              throw new TypeError(
+                'Cannot convert "' + Gc(r) + '" to ' + this.name,
+              );
+            if (r < d || r > e)
+              throw new TypeError(
+                'Passing a number "' +
+                  Gc(r) +
+                  '" from JS side to C/C++ side to an argument of type "' +
+                  b +
+                  '", which is outside the valid range [' +
+                  d +
+                  ', ' +
+                  e +
+                  ']!',
+              );
+            return l ? r >>> 0 : r | 0;
+          },
+          argPackAdvance: 8,
+          readValueFromPointer: Sc(b, h, 0 !== d),
+          hb: null,
+        });
+      },
+      k: function (a, b, c) {
+        function d(g) {
+          g >>= 2;
+          var h = x();
+          return new e(n, h[g + 1], h[g]);
+        }
+        var e = [
+          Int8Array,
+          Uint8Array,
+          Int16Array,
+          Uint16Array,
+          Int32Array,
+          Uint32Array,
+          Float32Array,
+          Float64Array,
+        ][b];
+        c = V(c);
+        U(
+          a,
+          {
+            name: c,
+            fromWireType: d,
+            argPackAdvance: 8,
+            readValueFromPointer: d,
+          },
+          { uc: !0 },
+        );
+      },
+      G: function (a, b) {
+        b = V(b);
+        var c = 'std::string' === b;
+        U(a, {
+          name: b,
+          fromWireType: function (d) {
+            var e = x()[d >> 2];
+            if (c)
+              for (var g = d + 4, h = 0; h <= e; ++h) {
+                var k = d + 4 + h;
+                if (h == e || 0 == t()[k]) {
+                  g = I(g, k - g);
+                  if (void 0 === l) var l = g;
+                  else (l += String.fromCharCode(0)), (l += g);
+                  g = k + 1;
+                }
+              }
+            else {
+              l = Array(e);
+              for (h = 0; h < e; ++h)
+                l[h] = String.fromCharCode(t()[d + 4 + h]);
+              l = l.join('');
+            }
+            O(d);
+            return l;
+          },
+          toWireType: function (d, e) {
+            e instanceof ArrayBuffer && (e = new Uint8Array(e));
+            var g = 'string' === typeof e;
+            g ||
+              e instanceof Uint8Array ||
+              e instanceof Uint8ClampedArray ||
+              e instanceof Int8Array ||
+              W('Cannot pass non-string to std::string');
+            var h = (c && g
+                ? function () {
+                    return Ca(e);
+                  }
+                : function () {
+                    return e.length;
+                  })(),
+              k = M(4 + h + 1);
+            x()[k >> 2] = h;
+            if (c && g) Ba(e, k + 4, h + 1);
+            else if (g)
+              for (g = 0; g < h; ++g) {
+                var l = e.charCodeAt(g);
+                255 < l &&
+                  (O(k),
+                  W('String has UTF-16 code units that do not fit in 8 bits'));
+                t()[k + 4 + g] = l;
+              }
+            else for (g = 0; g < h; ++g) t()[k + 4 + g] = e[g];
+            null !== d && d.push(O, k);
+            return k;
+          },
+          argPackAdvance: 8,
+          readValueFromPointer: rc,
+          hb: function (d) {
+            O(d);
+          },
+        });
+      },
+      x: function (a, b, c) {
+        c = V(c);
+        if (2 === b) {
+          var d = Da;
+          var e = Ea;
+          var g = Fa;
+          var h = function () {
+            return ea();
+          };
+          var k = 1;
+        } else
+          4 === b &&
+            ((d = Ga),
+            (e = Ha),
+            (g = Ia),
+            (h = function () {
+              return x();
+            }),
+            (k = 2));
+        U(a, {
+          name: c,
+          fromWireType: function (l) {
+            for (
+              var q = x()[l >> 2], r = h(), v, y = l + 4, B = 0;
+              B <= q;
+              ++B
+            ) {
+              var u = l + 4 + B * b;
+              if (B == q || 0 == r[u >> k])
+                (y = d(y, u - y)),
+                  void 0 === v
+                    ? (v = y)
+                    : ((v += String.fromCharCode(0)), (v += y)),
+                  (y = u + b);
+            }
+            O(l);
+            return v;
+          },
+          toWireType: function (l, q) {
+            'string' !== typeof q &&
+              W('Cannot pass non-string to C++ string type ' + c);
+            var r = g(q),
+              v = M(4 + r + b);
+            x()[v >> 2] = r >> k;
+            e(q, v + 4, r + b);
+            null !== l && l.push(O, v);
+            return v;
+          },
+          argPackAdvance: 8,
+          readValueFromPointer: rc,
+          hb: function (l) {
+            O(l);
+          },
+        });
+      },
+      N: function (a, b, c, d, e, g) {
+        pc[a] = { name: V(b), Ec: Nc(c, d), Fc: Nc(e, g), Sb: [] };
+      },
+      p: function (a, b, c, d, e, g, h, k, l, q) {
+        pc[a].Sb.push({
+          oc: V(b),
+          tc: c,
+          rc: Nc(d, e),
+          sc: g,
+          Lc: h,
+          Kc: Nc(k, l),
+          Mc: q,
+        });
+      },
+      ba: function (a, b) {
+        b = V(b);
+        U(a, {
+          gd: !0,
+          name: b,
+          argPackAdvance: 0,
+          fromWireType: function () {},
+          toWireType: function () {},
+        });
+      },
+      T: function (a, b) {
+        if (a == b) postMessage({ cmd: 'processQueuedMainThreadWork' });
+        else if (D) postMessage({ targetThread: a, cmd: 'processThreadQueue' });
+        else {
+          a = (a = L.fb[a]) && a.worker;
+          if (!a) return;
+          a.postMessage({ cmd: 'processThreadQueue' });
+        }
+        return 1;
+      },
+      w: Ec,
+      _: function (a) {
+        if (0 === a) return Fc(Uc());
+        var b = Tc[a];
+        a = void 0 === b ? V(a) : b;
+        return Fc(Uc()[a]);
+      },
+      I: function (a) {
+        4 < a && (X[a].Lb += 1);
+      },
+      U: function (a, b, c, d) {
+        a || W('Cannot use deleted val. handle = ' + a);
+        a = X[a].value;
+        var e = Wc[b];
+        if (!e) {
+          e = '';
+          for (var g = 0; g < b; ++g) e += (0 !== g ? ', ' : '') + 'arg' + g;
+          var h =
+            'return function emval_allocator_' +
+            b +
+            '(constructor, argTypes, args) {\n';
+          for (g = 0; g < b; ++g)
+            h +=
+              'var argType' +
+              g +
+              " = requireRegisteredType(Module['HEAP32'][(argTypes >>> 2) + " +
+              g +
+              '], "parameter ' +
+              g +
+              '");\nvar arg' +
+              g +
+              ' = argType' +
+              g +
+              '.readValueFromPointer(args);\nargs += argType' +
+              g +
+              "['argPackAdvance'];\n";
+          e = new Function(
+            'requireRegisteredType',
+            'Module',
+            '__emval_register',
+            h +
+              ('var obj = new constructor(' +
+                e +
+                ');\nreturn __emval_register(obj);\n}\n'),
+          )(Vc, z, Fc);
+          Wc[b] = e;
+        }
+        return e(a, c, d);
+      },
+      o: function () {
+        H();
+      },
+      t: function (a, b, c) {
+        ad.length = 0;
+        var d;
+        for (c >>= 2; (d = t()[b++]); )
+          (d = 105 > d) && c & 1 && c++,
+            ad.push(d ? la()[c++ >> 1] : w()[c]),
+            ++c;
+        return Ya[a].apply(null, ad);
+      },
+      W: function () {},
+      A: function () {},
+      h: Xc,
+      i: eb,
+      f: lb,
+      v: function () {
+        return cb | 0;
+      },
+      u: function () {
+        return bb | 0;
+      },
+      j: function (a, b) {
+        Z(a, b || 1);
+        throw 'longjmp';
+      },
+      P: function (a, b, c) {
+        t().copyWithin(a, b, b + c);
+      },
+      ea: function () {
+        return navigator.hardwareConcurrency;
+      },
+      Q: function (a, b, c) {
+        $c.length = b;
+        c >>= 3;
+        for (var d = 0; d < b; d++) $c[d] = la()[c + d];
+        return (0 > a ? Ya[-a - 1] : vd[a]).apply(null, $c);
+      },
+      q: function (a) {
+        a >>>= 0;
+        var b = t().length;
+        if (a <= b || 2147483648 < a) return !1;
+        for (var c = 1; 4 >= c; c *= 2) {
+          var d = b * (1 + 0.2 / c);
+          d = Math.min(d, a + 100663296);
+          d = Math.max(16777216, a, d);
+          0 < d % 65536 && (d += 65536 - (d % 65536));
+          a: {
+            try {
+              m.grow((Math.min(2147483648, d) - n.byteLength + 65535) >>> 16);
+              p(m.buffer);
+              var e = 1;
+              break a;
+            } catch (g) {}
+            e = void 0;
+          }
+          if (e) return !0;
+        }
+        return !1;
+      },
+      R: function (a, b, c) {
+        return cd(a) ? dd(a, b, c) : fd(a, b, c);
+      },
+      g: function () {},
+      S: function (a, b) {
+        var c = {};
+        b >>= 2;
+        c.alpha = !!w()[b];
+        c.depth = !!w()[b + 1];
+        c.stencil = !!w()[b + 2];
+        c.antialias = !!w()[b + 3];
+        c.premultipliedAlpha = !!w()[b + 4];
+        c.preserveDrawingBuffer = !!w()[b + 5];
+        var d = w()[b + 6];
+        c.powerPreference = ld[d];
+        c.failIfMajorPerformanceCaveat = !!w()[b + 7];
+        c.Ac = w()[b + 8];
+        c.jd = w()[b + 9];
+        c.Qb = w()[b + 10];
+        c.nc = w()[b + 11];
+        c.pd = w()[b + 12];
+        c.rd = w()[b + 13];
+        a = cd(a);
+        !a || c.nc
+          ? (c = 0)
+          : (a = a.getContext('webgl', c))
+          ? ((b = M(8)),
+            (w()[(b + 4) >> 2] = ab | 0),
+            (d = { ed: b, attributes: c, version: c.Ac, wb: a }),
+            a.canvas && (a.canvas.xb = d),
+            ('undefined' === typeof c.Qb || c.Qb) && jd(d),
+            (c = b))
+          : (c = 0);
+        return c;
+      },
+      E: md,
+      X: nd,
+      L: od,
+      D: pd,
+      c: function () {
+        return ta | 0;
+      },
+      O: function () {
+        L.xc();
+      },
+      z: xd,
+      M: yd,
+      y: zd,
+      r: Ad,
+      s: Bd,
+      l: Cd,
+      d: Dd,
+      a: m || z.wasmMemory,
+      V: function (a) {
+        var b = L.Eb.pop();
+        a && b();
+      },
+      B: mb,
+      H: function (a, b, c, d) {
+        if ('undefined' === typeof SharedArrayBuffer)
+          return (
+            G(
+              'Current environment does not support SharedArrayBuffer, pthreads are not available!',
+            ),
+            6
+          );
+        if (!a)
+          return G('pthread_create called with a null thread pointer!'), 28;
+        var e = [];
+        if (D && 0 === e.length) return Ed(687865856, a, b, c, d);
+        var g = 0,
+          h = 0,
+          k = 0,
+          l = 0;
+        if (b) {
+          var q = w()[b >> 2];
+          q += 81920;
+          g = w()[(b + 8) >> 2];
+          h = 0 !== w()[(b + 12) >> 2];
+          if (0 === w()[(b + 16) >> 2]) {
+            var r = w()[(b + 20) >> 2],
+              v = w()[(b + 24) >> 2];
+            k = b + 20;
+            l = b + 24;
+            var y = L.Gb ? L.Gb : ab | 0;
+            if (k || l)
+              if (y)
+                if (w()[(y + 12) >> 2] !== y)
+                  G(
+                    'pthread_getschedparam attempted on thread ' +
+                      y +
+                      ', which does not point to a valid thread, or does not exist anymore!',
+                  );
+                else {
+                  var B = Atomics.load(x(), (y + 108 + 20) >> 2);
+                  y = Atomics.load(x(), (y + 108 + 24) >> 2);
+                  k && (w()[k >> 2] = B);
+                  l && (w()[l >> 2] = y);
+                }
+              else
+                G('pthread_getschedparam called with a null thread pointer!');
+            k = w()[(b + 20) >> 2];
+            l = w()[(b + 24) >> 2];
+            w()[(b + 20) >> 2] = r;
+            w()[(b + 24) >> 2] = v;
+          } else (k = w()[(b + 20) >> 2]), (l = w()[(b + 24) >> 2]);
+        } else q = 2097152;
+        (b = 0 == g) ? (g = Fd(16, q)) : ((g -= q), ya(0 < g));
+        r = M(232);
+        for (v = 0; 58 > v; ++v) x()[(r >> 2) + v] = 0;
+        w()[a >> 2] = r;
+        w()[(r + 12) >> 2] = r;
+        a = r + 156;
+        w()[a >> 2] = a;
+        c = {
+          ob: g,
+          rb: q,
+          Fb: b,
+          hc: k,
+          ic: l,
+          Pb: h,
+          Nc: c,
+          qb: r,
+          Dc: ab | 0,
+          sb: d,
+          Qc: e,
+        };
+        D ? ((c.Xc = 'spawnThread'), postMessage(c, e)) : kb(c);
+        return 0;
+      },
+      ca: function (a, b) {
+        return sd(a, b);
+      },
+      e: rd,
+      b: function (a) {
+        ta = a | 0;
+      },
+      da: function (a) {
+        var b = (Date.now() / 1e3) | 0;
+        a && (w()[a >> 2] = b);
+        return b;
+      },
+    };
+    (function () {
+      function a(e, g) {
+        z.asm = e.exports;
+        J = z.asm.ga;
+        wa = g;
+        if (!D) {
+          var h = L.bb.length;
+          L.bb.forEach(function (k) {
+            L.Xb(k, function () {
+              if (
+                !--h &&
+                (K--,
+                z.monitorRunDependencies && z.monitorRunDependencies(K),
+                0 == K && (null !== Pa && (clearInterval(Pa), (Pa = null)), Qa))
+              ) {
+                var l = Qa;
+                Qa = null;
+                l();
+              }
+            });
+          });
+        }
+      }
+      function b(e) {
+        a(e.instance, e.module);
+      }
+      function c(e) {
+        return Ua()
+          .then(function (g) {
+            return WebAssembly.instantiate(g, d);
+          })
+          .then(e, function (g) {
+            G('failed to asynchronously prepare wasm: ' + g);
+            H(g);
+          });
+      }
+      var d = { a: Gd };
+      D ||
+        (ya(!D, 'addRunDependency cannot be used in a pthread worker'),
+        K++,
+        z.monitorRunDependencies && z.monitorRunDependencies(K));
+      if (z.instantiateWasm)
+        try {
+          return z.instantiateWasm(d, a);
+        } catch (e) {
+          return (
+            G('Module.instantiateWasm callback failed with error: ' + e), !1
+          );
+        }
+      (function () {
+        return ua ||
+          'function' !== typeof WebAssembly.instantiateStreaming ||
+          Ra() ||
+          'function' !== typeof fetch
+          ? c(b)
+          : fetch(Sa, { credentials: 'same-origin' }).then(function (e) {
+              return WebAssembly.instantiateStreaming(e, d).then(b, function (
+                g,
+              ) {
+                G('wasm streaming compile failed: ' + g);
+                G('falling back to ArrayBuffer instantiation');
+                return c(b);
+              });
+            });
+      })().catch(oa);
+      return {};
+    })();
+    var wd = (z.___wasm_call_ctors = function () {
+        return (wd = z.___wasm_call_ctors = z.asm.ha).apply(null, arguments);
+      }),
+      M = (z._malloc = function () {
+        return (M = z._malloc = z.asm.ia).apply(null, arguments);
+      }),
+      O = (z._free = function () {
+        return (O = z._free = z.asm.ja).apply(null, arguments);
+      }),
+      Qc = (z.___getTypeName = function () {
+        return (Qc = z.___getTypeName = z.asm.ka).apply(null, arguments);
+      });
+    z.___embind_register_native_and_builtin_types = function () {
+      return (z.___embind_register_native_and_builtin_types = z.asm.la).apply(
+        null,
+        arguments,
+      );
+    };
+    var qd = (z._emscripten_get_global_libc = function () {
+        return (qd = z._emscripten_get_global_libc = z.asm.ma).apply(
+          null,
+          arguments,
+        );
+      }),
+      mc = (z.___errno_location = function () {
+        return (mc = z.___errno_location = z.asm.na).apply(null, arguments);
+      });
+    z.___em_js__initPthreadsJS = function () {
+      return (z.___em_js__initPthreadsJS = z.asm.oa).apply(null, arguments);
+    };
+    var Y = (z.stackSave = function () {
+        return (Y = z.stackSave = z.asm.pa).apply(null, arguments);
+      }),
+      P = (z.stackRestore = function () {
+        return (P = z.stackRestore = z.asm.qa).apply(null, arguments);
+      }),
+      Yc = (z.stackAlloc = function () {
+        return (Yc = z.stackAlloc = z.asm.ra).apply(null, arguments);
+      }),
+      Z = (z._setThrew = function () {
+        return (Z = z._setThrew = z.asm.sa).apply(null, arguments);
+      }),
+      Fd = (z._memalign = function () {
+        return (Fd = z._memalign = z.asm.ta).apply(null, arguments);
+      });
+    z._emscripten_main_browser_thread_id = function () {
+      return (z._emscripten_main_browser_thread_id = z.asm.ua).apply(
+        null,
+        arguments,
+      );
+    };
+    var ib = (z.___pthread_tsd_run_dtors = function () {
+        return (ib = z.___pthread_tsd_run_dtors = z.asm.va).apply(
+          null,
+          arguments,
+        );
+      }),
+      jb = (z._emscripten_main_thread_process_queued_calls = function () {
+        return (jb = z._emscripten_main_thread_process_queued_calls =
+          z.asm.wa).apply(null, arguments);
+      });
+    z._emscripten_current_thread_process_queued_calls = function () {
+      return (z._emscripten_current_thread_process_queued_calls =
+        z.asm.xa).apply(null, arguments);
+    };
+    var gb = (z._emscripten_register_main_browser_thread_id = function () {
+        return (gb = z._emscripten_register_main_browser_thread_id =
+          z.asm.ya).apply(null, arguments);
+      }),
+      Xa = (z._do_emscripten_dispatch_to_thread = function () {
+        return (Xa = z._do_emscripten_dispatch_to_thread = z.asm.za).apply(
+          null,
+          arguments,
+        );
+      });
+    z._emscripten_async_run_in_main_thread = function () {
+      return (z._emscripten_async_run_in_main_thread = z.asm.Aa).apply(
+        null,
+        arguments,
+      );
+    };
+    z._emscripten_sync_run_in_main_thread = function () {
+      return (z._emscripten_sync_run_in_main_thread = z.asm.Ba).apply(
+        null,
+        arguments,
+      );
+    };
+    z._emscripten_sync_run_in_main_thread_0 = function () {
+      return (z._emscripten_sync_run_in_main_thread_0 = z.asm.Ca).apply(
+        null,
+        arguments,
+      );
+    };
+    z._emscripten_sync_run_in_main_thread_1 = function () {
+      return (z._emscripten_sync_run_in_main_thread_1 = z.asm.Da).apply(
+        null,
+        arguments,
+      );
+    };
+    z._emscripten_sync_run_in_main_thread_2 = function () {
+      return (z._emscripten_sync_run_in_main_thread_2 = z.asm.Ea).apply(
+        null,
+        arguments,
+      );
+    };
+    z._emscripten_sync_run_in_main_thread_xprintf_varargs = function () {
+      return (z._emscripten_sync_run_in_main_thread_xprintf_varargs =
+        z.asm.Fa).apply(null, arguments);
+    };
+    z._emscripten_sync_run_in_main_thread_3 = function () {
+      return (z._emscripten_sync_run_in_main_thread_3 = z.asm.Ga).apply(
+        null,
+        arguments,
+      );
+    };
+    var Ed = (z._emscripten_sync_run_in_main_thread_4 = function () {
+      return (Ed = z._emscripten_sync_run_in_main_thread_4 = z.asm.Ha).apply(
+        null,
+        arguments,
+      );
+    });
+    z._emscripten_sync_run_in_main_thread_5 = function () {
+      return (z._emscripten_sync_run_in_main_thread_5 = z.asm.Ia).apply(
+        null,
+        arguments,
+      );
+    };
+    z._emscripten_sync_run_in_main_thread_6 = function () {
+      return (z._emscripten_sync_run_in_main_thread_6 = z.asm.Ja).apply(
+        null,
+        arguments,
+      );
+    };
+    z._emscripten_sync_run_in_main_thread_7 = function () {
+      return (z._emscripten_sync_run_in_main_thread_7 = z.asm.Ka).apply(
+        null,
+        arguments,
+      );
+    };
+    var Zc = (z._emscripten_run_in_main_runtime_thread_js = function () {
+        return (Zc = z._emscripten_run_in_main_runtime_thread_js =
+          z.asm.La).apply(null, arguments);
+      }),
+      ed = (z.__emscripten_call_on_thread = function () {
+        return (ed = z.__emscripten_call_on_thread = z.asm.Ma).apply(
+          null,
+          arguments,
+        );
+      });
+    z._emscripten_tls_init = function () {
+      return (z._emscripten_tls_init = z.asm.Na).apply(null, arguments);
+    };
+    z.dynCall_jiiiiiiiii = function () {
+      return (z.dynCall_jiiiiiiiii = z.asm.Oa).apply(null, arguments);
+    };
+    z.dynCall_jiji = function () {
+      return (z.dynCall_jiji = z.asm.Pa).apply(null, arguments);
+    };
+    z.dynCall_jiiiiiiii = function () {
+      return (z.dynCall_jiiiiiiii = z.asm.Qa).apply(null, arguments);
+    };
+    z.dynCall_jiiiiii = function () {
+      return (z.dynCall_jiiiiii = z.asm.Ra).apply(null, arguments);
+    };
+    z.dynCall_jiiiii = function () {
+      return (z.dynCall_jiiiii = z.asm.Sa).apply(null, arguments);
+    };
+    z.dynCall_iiijii = function () {
+      return (z.dynCall_iiijii = z.asm.Ta).apply(null, arguments);
+    };
+    var hb = (z._main_thread_futex = 877788);
+    function Bd(a, b) {
+      var c = Y();
+      try {
+        J.get(a)(b);
+      } catch (d) {
+        P(c);
+        if (d !== d + 0 && 'longjmp' !== d) throw d;
+        Z(1, 0);
+      }
+    }
+    function Dd(a, b, c, d, e) {
+      var g = Y();
+      try {
+        J.get(a)(b, c, d, e);
+      } catch (h) {
+        P(g);
+        if (h !== h + 0 && 'longjmp' !== h) throw h;
+        Z(1, 0);
+      }
+    }
+    function Cd(a, b, c) {
+      var d = Y();
+      try {
+        J.get(a)(b, c);
+      } catch (e) {
+        P(d);
+        if (e !== e + 0 && 'longjmp' !== e) throw e;
+        Z(1, 0);
+      }
+    }
+    function Ad(a, b, c, d, e, g, h, k, l) {
+      var q = Y();
+      try {
+        return J.get(a)(b, c, d, e, g, h, k, l);
+      } catch (r) {
+        P(q);
+        if (r !== r + 0 && 'longjmp' !== r) throw r;
+        Z(1, 0);
+      }
+    }
+    function xd(a, b, c) {
+      var d = Y();
+      try {
+        return J.get(a)(b, c);
+      } catch (e) {
+        P(d);
+        if (e !== e + 0 && 'longjmp' !== e) throw e;
+        Z(1, 0);
+      }
+    }
+    function zd(a, b, c, d, e) {
+      var g = Y();
+      try {
+        return J.get(a)(b, c, d, e);
+      } catch (h) {
+        P(g);
+        if (h !== h + 0 && 'longjmp' !== h) throw h;
+        Z(1, 0);
+      }
+    }
+    function yd(a, b, c, d) {
+      var e = Y();
+      try {
+        return J.get(a)(b, c, d);
+      } catch (g) {
+        P(e);
+        if (g !== g + 0 && 'longjmp' !== g) throw g;
+        Z(1, 0);
+      }
+    }
+    z.PThread = L;
+    z.PThread = L;
+    z._pthread_self = rd;
+    z.wasmMemory = m;
+    z.ExitStatus = Hd;
+    var Id;
+    function Hd(a) {
+      this.name = 'ExitStatus';
+      this.message = 'Program terminated with exit(' + a + ')';
+      this.status = a;
+    }
+    Qa = function Jd() {
+      Id || Kd();
+      Id || (Qa = Jd);
+    };
+    function Kd() {
+      function a() {
+        if (!Id && ((Id = !0), (z.calledRun = !0), !xa)) {
+          z.noFSInit ||
+            dc ||
+            ((dc = !0),
+            cc(),
+            (z.stdin = z.stdin),
+            (z.stdout = z.stdout),
+            (z.stderr = z.stderr),
+            z.stdin ? fc('stdin', z.stdin) : Zb('/dev/tty', '/dev/stdin'),
+            z.stdout
+              ? fc('stdout', null, z.stdout)
+              : Zb('/dev/tty', '/dev/stdout'),
+            z.stderr
+              ? fc('stderr', null, z.stderr)
+              : Zb('/dev/tty1', '/dev/stderr'),
+            $b('/dev/stdin', 'r'),
+            $b('/dev/stdout', 'w'),
+            $b('/dev/stderr', 'w'));
+          Za(La);
+          D || ((Ib = !1), Za(Ma));
+          na(z);
+          if (z.onRuntimeInitialized) z.onRuntimeInitialized();
+          if (!D) {
+            if (z.postRun)
+              for (
+                'function' == typeof z.postRun && (z.postRun = [z.postRun]);
+                z.postRun.length;
 
-function e(){m.buffer!=n&&p(m.buffer);return aa}function t(){m.buffer!=n&&p(m.buffer);return ba}function ca(){m.buffer!=n&&p(m.buffer);return da}function ea(){m.buffer!=n&&p(m.buffer);return fa}function w(){m.buffer!=n&&p(m.buffer);return ha}function x(){m.buffer!=n&&p(m.buffer);return ia}function ja(){m.buffer!=n&&p(m.buffer);return ka}function la(){m.buffer!=n&&p(m.buffer);return ma}var z;z||(z=typeof avif_enc_mt !== 'undefined' ? avif_enc_mt : {});var na,oa;
-z.ready=new Promise(function(a,b){na=a;oa=b});var pa={},A;for(A in z)z.hasOwnProperty(A)&&(pa[A]=z[A]);var qa=!1,D=!1,F=!1,ra=!1;qa="object"===typeof window;D="function"===typeof importScripts;F="object"===typeof process&&"object"===typeof process.versions&&"string"===typeof process.versions.node;ra=!qa&&!F&&!D;var G=z.ENVIRONMENT_IS_PTHREAD||!1;G&&(n=z.buffer,sa=z.DYNAMIC_BASE,ta=z.DYNAMICTOP_PTR);var H="";function ua(a){return z.locateFile?z.locateFile(a,H):H+a}var va,wa,I,xa;
-if(F){H=D?require("path").dirname(H)+"/":__dirname+"/";va=function(a,b){I||(I=require("fs"));xa||(xa=require("path"));a=xa.normalize(a);return I.readFileSync(a,b?null:"utf8")};wa=function(a){a=va(a,!0);a.buffer||(a=new Uint8Array(a));assert(a.buffer);return a};1<process.argv.length&&process.argv[1].replace(/\\/g,"/");process.argv.slice(2);process.on("uncaughtException",function(a){if(!(a instanceof ya))throw a;});process.on("unhandledRejection",J);z.inspect=function(){return"[Emscripten Module object]"};
-var za;try{za=require("worker_threads")}catch(a){throw console.error('The "worker_threads" module is not supported in this node.js build - perhaps a newer version is needed?'),a;}global.Worker=za.Worker}else if(ra)"undefined"!=typeof read&&(va=function(a){return read(a)}),wa=function(a){if("function"===typeof readbuffer)return new Uint8Array(readbuffer(a));a=read(a,"binary");assert("object"===typeof a);return a},"undefined"!==typeof print&&("undefined"===typeof console&&(console={}),console.log=print,
-console.warn=console.error="undefined"!==typeof printErr?printErr:print);else if(qa||D)D?H=self.location.href:document.currentScript&&(H=document.currentScript.src),_scriptDir&&(H=_scriptDir),0!==H.indexOf("blob:")?H=H.substr(0,H.lastIndexOf("/")+1):H="",F?(va=function(a,b){I||(I=require("fs"));xa||(xa=require("path"));a=xa.normalize(a);return I.readFileSync(a,b?null:"utf8")},wa=function(a){a=va(a,!0);a.buffer||(a=new Uint8Array(a));assert(a.buffer);return a}):(va=function(a){var b=new XMLHttpRequest;
-b.open("GET",a,!1);b.send(null);return b.responseText},D&&(wa=function(a){var b=new XMLHttpRequest;b.open("GET",a,!1);b.responseType="arraybuffer";b.send(null);return new Uint8Array(b.response)}));F&&"undefined"===typeof performance&&(global.performance=require("perf_hooks").performance);var Aa=z.print||console.log.bind(console),K=z.printErr||console.warn.bind(console);for(A in pa)pa.hasOwnProperty(A)&&(z[A]=pa[A]);pa=null;var Ca,Da=0,Ea;z.wasmBinary&&(Ea=z.wasmBinary);var noExitRuntime;
-z.noExitRuntime&&(noExitRuntime=z.noExitRuntime);"object"!==typeof WebAssembly&&J("no native wasm support detected");var m,Fa=new WebAssembly.Table({initial:874,maximum:874,element:"anyfunc"}),Ga,threadInfoStruct=0,selfThreadId=0,Ha=!1;function assert(a,b){a||J("Assertion failed: "+b)}
-function Ia(a,b,c){c=b+c;for(var d="";!(b>=c);){var f=a[b++];if(!f)break;if(f&128){var g=a[b++]&63;if(192==(f&224))d+=String.fromCharCode((f&31)<<6|g);else{var h=a[b++]&63;f=224==(f&240)?(f&15)<<12|g<<6|h:(f&7)<<18|g<<12|h<<6|a[b++]&63;65536>f?d+=String.fromCharCode(f):(f-=65536,d+=String.fromCharCode(55296|f>>10,56320|f&1023))}}else d+=String.fromCharCode(f)}return d}function Ja(a,b){return a?Ia(t(),a,b):""}
-function Ka(a,b,c,d){if(!(0<d))return 0;var f=c;d=c+d-1;for(var g=0;g<a.length;++g){var h=a.charCodeAt(g);if(55296<=h&&57343>=h){var l=a.charCodeAt(++g);h=65536+((h&1023)<<10)|l&1023}if(127>=h){if(c>=d)break;b[c++]=h}else{if(2047>=h){if(c+1>=d)break;b[c++]=192|h>>6}else{if(65535>=h){if(c+2>=d)break;b[c++]=224|h>>12}else{if(c+3>=d)break;b[c++]=240|h>>18;b[c++]=128|h>>12&63}b[c++]=128|h>>6&63}b[c++]=128|h&63}}b[c]=0;return c-f}function La(a,b,c){Ka(a,t(),b,c)}
-function Ma(a){for(var b=0,c=0;c<a.length;++c){var d=a.charCodeAt(c);55296<=d&&57343>=d&&(d=65536+((d&1023)<<10)|a.charCodeAt(++c)&1023);127>=d?++b:b=2047>=d?b+2:65535>=d?b+3:b+4}return b}function Na(a,b){for(var c=0,d="";;){var f=ca()[a+2*c>>1];if(0==f||c==b/2)return d;++c;d+=String.fromCharCode(f)}}function Oa(a,b,c){void 0===c&&(c=2147483647);if(2>c)return 0;c-=2;var d=b;c=c<2*a.length?c/2:a.length;for(var f=0;f<c;++f){var g=a.charCodeAt(f);ca()[b>>1]=g;b+=2}ca()[b>>1]=0;return b-d}
-function Pa(a){return 2*a.length}function Qa(a,b){for(var c=0,d="";!(c>=b/4);){var f=w()[a+4*c>>2];if(0==f)break;++c;65536<=f?(f-=65536,d+=String.fromCharCode(55296|f>>10,56320|f&1023)):d+=String.fromCharCode(f)}return d}function Ra(a,b,c){void 0===c&&(c=2147483647);if(4>c)return 0;var d=b;c=d+c-4;for(var f=0;f<a.length;++f){var g=a.charCodeAt(f);if(55296<=g&&57343>=g){var h=a.charCodeAt(++f);g=65536+((g&1023)<<10)|h&1023}w()[b>>2]=g;b+=4;if(b+4>c)break}w()[b>>2]=0;return b-d}
-function Sa(a){for(var b=0,c=0;c<a.length;++c){var d=a.charCodeAt(c);55296<=d&&57343>=d&&++c;b+=4}return b}var n,aa,ba,da,fa,ha,ia,ka,ma;function p(a){n=a;z.HEAP8=aa=new Int8Array(a);z.HEAP16=da=new Int16Array(a);z.HEAP32=ha=new Int32Array(a);z.HEAPU8=ba=new Uint8Array(a);z.HEAPU16=fa=new Uint16Array(a);z.HEAPU32=ia=new Uint32Array(a);z.HEAPF32=ka=new Float32Array(a);z.HEAPF64=ma=new Float64Array(a)}var sa=6123216,ta=879408,Ta=z.INITIAL_MEMORY||16777216;
-if(G)m=z.wasmMemory,n=z.buffer;else if(z.wasmMemory)m=z.wasmMemory;else if(m=new WebAssembly.Memory({initial:Ta/65536,maximum:32768,shared:!0}),!(m.buffer instanceof SharedArrayBuffer))throw K("requested a shared WebAssembly.Memory but the returned buffer is not a SharedArrayBuffer, indicating that while the browser has SharedArrayBuffer it does not have WebAssembly threads support - you may need to set a flag"),F&&console.log("(on node you may need: --experimental-wasm-threads --experimental-wasm-bulk-memory and also use a recent version)"),
-Error("bad memory");m&&(n=m.buffer);Ta=n.byteLength;p(n);G||(w()[ta>>2]=sa);function Ua(a){for(;0<a.length;){var b=a.shift();if("function"==typeof b)b(z);else{var c=b.yc;"number"===typeof c?void 0===b.Mb?z.dynCall_v(c):z.dynCall_vi(c,b.Mb):c(void 0===b.Mb?null:b.Mb)}}}var Va=[],Wa=[],Xa=[],Ya=[];function Za(){var a=z.preRun.shift();Va.unshift(a)}var $a=Math.abs,ab=Math.ceil,bb=Math.floor,cb=Math.min,db=0,eb=null,fb=null;z.preloadedImages={};z.preloadedAudios={};
-function J(a){if(z.onAbort)z.onAbort(a);G&&console.error("Pthread aborting at "+Error().stack);K(a);Ha=!0;a=new WebAssembly.RuntimeError("abort("+a+"). Build with -s ASSERTIONS=1 for more info.");oa(a);throw a;}function gb(a){var b=hb;return String.prototype.startsWith?b.startsWith(a):0===b.indexOf(a)}function ib(){return gb("data:application/octet-stream;base64,")}var hb="avif_enc_mt.wasm";ib()||(hb=ua(hb));
-function jb(){try{if(Ea)return new Uint8Array(Ea);if(wa)return wa(hb);throw"both async and sync fetching of the wasm failed";}catch(a){J(a)}}function kb(){return Ea||!qa&&!D||"function"!==typeof fetch||gb("file://")?new Promise(function(a){a(jb())}):fetch(hb,{credentials:"same-origin"}).then(function(a){if(!a.ok)throw"failed to load wasm binary file at '"+hb+"'";return a.arrayBuffer()}).catch(function(){return jb()})}
-var lb,mb,ob={575937:function(a,b){setTimeout(function(){nb(a,b)},0)},576015:function(){throw"Canceled!";}};G||Wa.push({yc:function(){pb()}});var qb=0,rb=0,sb=0;function tb(a,b,c){qb=a|0;sb=b|0;rb=c|0}z.registerPthreadPtr=tb;
-function ub(a,b){if(0>=a||a>e().length||a&1||0>b)return-28;if(0==b)return 0;2147483647<=b&&(b=Infinity);var c=Atomics.load(w(),220080),d=0;if(c==a&&Atomics.compareExchange(w(),220080,c,0)==c&&(--b,d=1,0>=b))return 1;a=Atomics.notify(w(),a>>2,b);if(0<=a)return a+d;throw"Atomics.notify returned an unexpected value "+a;}z._emscripten_futex_wake=ub;
-function vb(a){if(G)throw"Internal Error! cleanupThread() can only ever be called from main application thread!";if(!a)throw"Internal Error! Null pthread_ptr in cleanupThread!";w()[a+12>>2]=0;(a=L.Ab[a])&&L.Tb(a.worker)}
-var L={bd:1,nd:{rc:0,sc:0},xb:[],Fb:[],Gc:function(){tb(L.vb,!D,1);wb(L.vb)},Fc:function(){for(var a=navigator.hardwareConcurrency,b=0;b<a;++b)L.cc();L.vb=879568;for(b=0;58>b;++b)x()[L.vb/4+b]=0;w()[L.vb+12>>2]=L.vb;a=L.vb+156;w()[a>>2]=a;for(b=0;128>b;++b)x()[219952+b]=0;Atomics.store(x(),L.vb+104>>2,879808);Atomics.store(x(),L.vb+40>>2,L.vb);Atomics.store(x(),L.vb+44>>2,42)},Hc:function(){L.receiveObjectTransfer=L.Qc;L.setThreadStatus=L.Tc;L.threadCancel=L.Yc;L.threadExit=L.Zc},Ab:{},Ub:[],Tc:function(){},
-qc:function(){for(;0<L.Ub.length;)L.Ub.pop()();G&&threadInfoStruct&&xb()},Zc:function(a){var b=qb|0;b&&(Atomics.store(x(),b+4>>2,a),Atomics.store(x(),b+0>>2,1),Atomics.store(x(),b+60>>2,1),Atomics.store(x(),b+64>>2,0),L.qc(),ub(b+0,2147483647),tb(0,0,0),threadInfoStruct=0,G&&postMessage({cmd:"exit"}))},Yc:function(){L.qc();Atomics.store(x(),threadInfoStruct+4>>2,-1);Atomics.store(x(),threadInfoStruct+0>>2,1);ub(threadInfoStruct+0,2147483647);threadInfoStruct=selfThreadId=0;tb(0,0,0);postMessage({cmd:"cancelDone"})},
-vd:function(){for(var a in L.Ab){var b=L.Ab[a];b&&b.worker&&L.Tb(b.worker)}L.Ab={};for(a=0;a<L.xb.length;++a){var c=L.xb[a];c.terminate()}L.xb=[];for(a=0;a<L.Fb.length;++a)c=L.Fb[a],b=c.wb,L.Xb(b),c.terminate();L.Fb=[]},Xb:function(a){if(a){if(a.threadInfoStruct){var b=w()[a.threadInfoStruct+104>>2];w()[a.threadInfoStruct+104>>2]=0;M(b);M(a.threadInfoStruct)}a.threadInfoStruct=0;a.Vb&&a.Ib&&M(a.Ib);a.Ib=0;a.worker&&(a.worker.wb=null)}},Tb:function(a){delete L.Ab[a.wb.tc];L.xb.push(a);L.Fb.splice(L.Fb.indexOf(a),
-1);L.Xb(a.wb);a.wb=void 0},Qc:function(){},lc:function(a,b){a.onmessage=function(c){var d=c.data,f=d.cmd;a.wb&&(L.Wb=a.wb.threadInfoStruct);if(d.targetThread&&d.targetThread!=(qb|0)){var g=L.Ab[d.ud];g?g.worker.postMessage(c.data,d.transferList):console.error('Internal error! Worker sent a message "'+f+'" to target pthread '+d.targetThread+", but that thread no longer exists!")}else if("processQueuedMainThreadWork"===f)yb();else if("spawnThread"===f)zb(c.data);else if("cleanupThread"===f)vb(d.thread);
-else if("killThread"===f){c=d.thread;if(G)throw"Internal Error! killThread() can only ever be called from main application thread!";if(!c)throw"Internal Error! Null pthread_ptr in killThread!";w()[c+12>>2]=0;c=L.Ab[c];c.worker.terminate();L.Xb(c);L.Fb.splice(L.Fb.indexOf(c.worker),1);c.worker.wb=void 0}else if("cancelThread"===f){c=d.thread;if(G)throw"Internal Error! cancelThread() can only ever be called from main application thread!";if(!c)throw"Internal Error! Null pthread_ptr in cancelThread!";
-L.Ab[c].worker.postMessage({cmd:"cancel"})}else"loaded"===f?(a.loaded=!0,b&&b(a),a.Nb&&(a.Nb(),delete a.Nb)):"print"===f?Aa("Thread "+d.threadId+": "+d.text):"printErr"===f?K("Thread "+d.threadId+": "+d.text):"alert"===f?alert("Thread "+d.threadId+": "+d.text):"exit"===f?a.wb&&Atomics.load(x(),a.wb.tc+68>>2)&&L.Tb(a):"cancelDone"===f?L.Tb(a):"objectTransfer"!==f&&("setimmediate"===c.data.target?a.postMessage(c.data):K("worker sent an unknown command "+f));L.Wb=void 0};a.onerror=function(c){K("pthread sent an error! "+
-c.filename+":"+c.lineno+": "+c.message)};F&&(a.on("message",function(c){a.onmessage({data:c})}),a.on("error",function(c){a.onerror(c)}),a.on("exit",function(){console.log("worker exited - TODO: update the worker queue?")}));a.postMessage({cmd:"load",urlOrBlob:z.mainScriptUrlOrBlob||_scriptDir,wasmMemory:m,wasmModule:Ga,DYNAMIC_BASE:sa,DYNAMICTOP_PTR:ta})},cc:function(){var a=ua("avif_enc_mt.worker.js");L.xb.push(new Worker(a))},zc:function(){0==L.xb.length&&(L.cc(),L.lc(L.xb[0]));return 0<L.xb.length?
-L.xb.pop():null},dd:function(a){for(a=performance.now()+a;performance.now()<a;);}};z.establishStackSpace=function(a){N(a)};z.getNoExitRuntime=function(){return noExitRuntime};var Ab;F?Ab=function(){var a=process.hrtime();return 1E3*a[0]+a[1]/1E6}:G?Ab=function(){return performance.now()-z.__performance_now_clock_drift}:"undefined"!==typeof dateNow?Ab=dateNow:Ab=function(){return performance.now()};function Bb(a,b){L.Ub.push(function(){Cb(a,b)})}
-function Db(a,b){for(var c=0,d=a.length-1;0<=d;d--){var f=a[d];"."===f?a.splice(d,1):".."===f?(a.splice(d,1),c++):c&&(a.splice(d,1),c--)}if(b)for(;c;c--)a.unshift("..");return a}function Eb(a){var b="/"===a.charAt(0),c="/"===a.substr(-1);(a=Db(a.split("/").filter(function(d){return!!d}),!b).join("/"))||b||(a=".");a&&c&&(a+="/");return(b?"/":"")+a}
-function Fb(a){var b=/^(\/?|)([\s\S]*?)((?:\.{1,2}|[^\/]+?|)(\.[^.\/]*|))(?:[\/]*)$/.exec(a).slice(1);a=b[0];b=b[1];if(!a&&!b)return".";b&&(b=b.substr(0,b.length-1));return a+b}function Gb(a){if("/"===a)return"/";var b=a.lastIndexOf("/");return-1===b?a:a.substr(b+1)}
-function Hb(){for(var a="",b=!1,c=arguments.length-1;-1<=c&&!b;c--){b=0<=c?arguments[c]:"/";if("string"!==typeof b)throw new TypeError("Arguments to path.resolve must be strings");if(!b)return"";a=b+"/"+a;b="/"===b.charAt(0)}a=Db(a.split("/").filter(function(d){return!!d}),!b).join("/");return(b?"/":"")+a||"."}var Ib=[];function Jb(a,b){Ib[a]={input:[],output:[],Jb:b};Kb(a,Lb)}
-var Lb={open:function(a){var b=Ib[a.node.rdev];if(!b)throw new P(43);a.tty=b;a.seekable=!1},close:function(a){a.tty.Jb.flush(a.tty)},flush:function(a){a.tty.Jb.flush(a.tty)},read:function(a,b,c,d){if(!a.tty||!a.tty.Jb.kc)throw new P(60);for(var f=0,g=0;g<d;g++){try{var h=a.tty.Jb.kc(a.tty)}catch(l){throw new P(29);}if(void 0===h&&0===f)throw new P(6);if(null===h||void 0===h)break;f++;b[c+g]=h}f&&(a.node.timestamp=Date.now());return f},write:function(a,b,c,d){if(!a.tty||!a.tty.Jb.Zb)throw new P(60);
-try{for(var f=0;f<d;f++)a.tty.Jb.Zb(a.tty,b[c+f])}catch(g){throw new P(29);}d&&(a.node.timestamp=Date.now());return f}},Mb={kc:function(a){if(!a.input.length){var b=null;if(F){var c=Buffer.Pc?Buffer.Pc(256):new Buffer(256),d=0;try{d=I.readSync(process.stdin.fd,c,0,256,null)}catch(f){if(-1!=f.toString().indexOf("EOF"))d=0;else throw f;}0<d?b=c.slice(0,d).toString("utf-8"):b=null}else"undefined"!=typeof window&&"function"==typeof window.prompt?(b=window.prompt("Input: "),null!==b&&(b+="\n")):"function"==
-typeof readline&&(b=readline(),null!==b&&(b+="\n"));if(!b)return null;c=Array(Ma(b)+1);b=Ka(b,c,0,c.length);c.length=b;a.input=c}return a.input.shift()},Zb:function(a,b){null===b||10===b?(Aa(Ia(a.output,0)),a.output=[]):0!=b&&a.output.push(b)},flush:function(a){a.output&&0<a.output.length&&(Aa(Ia(a.output,0)),a.output=[])}},Nb={Zb:function(a,b){null===b||10===b?(K(Ia(a.output,0)),a.output=[]):0!=b&&a.output.push(b)},flush:function(a){a.output&&0<a.output.length&&(K(Ia(a.output,0)),a.output=[])}},
-Q={yb:null,Db:function(){return Q.createNode(null,"/",16895,0)},createNode:function(a,b,c,d){if(24576===(c&61440)||4096===(c&61440))throw new P(63);Q.yb||(Q.yb={dir:{node:{Eb:Q.sb.Eb,Bb:Q.sb.Bb,lookup:Q.sb.lookup,Rb:Q.sb.Rb,rename:Q.sb.rename,unlink:Q.sb.unlink,rmdir:Q.sb.rmdir,readdir:Q.sb.readdir,symlink:Q.sb.symlink},stream:{Hb:Q.tb.Hb}},file:{node:{Eb:Q.sb.Eb,Bb:Q.sb.Bb},stream:{Hb:Q.tb.Hb,read:Q.tb.read,write:Q.tb.write,bc:Q.tb.bc,mc:Q.tb.mc,oc:Q.tb.oc}},link:{node:{Eb:Q.sb.Eb,Bb:Q.sb.Bb,readlink:Q.sb.readlink},
-stream:{}},dc:{node:{Eb:Q.sb.Eb,Bb:Q.sb.Bb},stream:Ob}});c=Pb(a,b,c,d);16384===(c.mode&61440)?(c.sb=Q.yb.dir.node,c.tb=Q.yb.dir.stream,c.rb={}):32768===(c.mode&61440)?(c.sb=Q.yb.file.node,c.tb=Q.yb.file.stream,c.ub=0,c.rb=null):40960===(c.mode&61440)?(c.sb=Q.yb.link.node,c.tb=Q.yb.link.stream):8192===(c.mode&61440)&&(c.sb=Q.yb.dc.node,c.tb=Q.yb.dc.stream);c.timestamp=Date.now();a&&(a.rb[b]=c);return c},jd:function(a){if(a.rb&&a.rb.subarray){for(var b=[],c=0;c<a.ub;++c)b.push(a.rb[c]);return b}return a.rb},
-kd:function(a){return a.rb?a.rb.subarray?a.rb.subarray(0,a.ub):new Uint8Array(a.rb):new Uint8Array(0)},fc:function(a,b){var c=a.rb?a.rb.length:0;c>=b||(b=Math.max(b,c*(1048576>c?2:1.125)>>>0),0!=c&&(b=Math.max(b,256)),c=a.rb,a.rb=new Uint8Array(b),0<a.ub&&a.rb.set(c.subarray(0,a.ub),0))},Rc:function(a,b){if(a.ub!=b)if(0==b)a.rb=null,a.ub=0;else{if(!a.rb||a.rb.subarray){var c=a.rb;a.rb=new Uint8Array(b);c&&a.rb.set(c.subarray(0,Math.min(b,a.ub)))}else if(a.rb||(a.rb=[]),a.rb.length>b)a.rb.length=b;
-else for(;a.rb.length<b;)a.rb.push(0);a.ub=b}},sb:{Eb:function(a){var b={};b.dev=8192===(a.mode&61440)?a.id:1;b.ino=a.id;b.mode=a.mode;b.nlink=1;b.uid=0;b.gid=0;b.rdev=a.rdev;16384===(a.mode&61440)?b.size=4096:32768===(a.mode&61440)?b.size=a.ub:40960===(a.mode&61440)?b.size=a.link.length:b.size=0;b.atime=new Date(a.timestamp);b.mtime=new Date(a.timestamp);b.ctime=new Date(a.timestamp);b.vc=4096;b.blocks=Math.ceil(b.size/b.vc);return b},Bb:function(a,b){void 0!==b.mode&&(a.mode=b.mode);void 0!==b.timestamp&&
-(a.timestamp=b.timestamp);void 0!==b.size&&Q.Rc(a,b.size)},lookup:function(){throw Qb[44];},Rb:function(a,b,c,d){return Q.createNode(a,b,c,d)},rename:function(a,b,c){if(16384===(a.mode&61440)){try{var d=Rb(b,c)}catch(g){}if(d)for(var f in d.rb)throw new P(55);}delete a.parent.rb[a.name];a.name=c;b.rb[c]=a;a.parent=b},unlink:function(a,b){delete a.rb[b]},rmdir:function(a,b){var c=Rb(a,b),d;for(d in c.rb)throw new P(55);delete a.rb[b]},readdir:function(a){var b=[".",".."],c;for(c in a.rb)a.rb.hasOwnProperty(c)&&
-b.push(c);return b},symlink:function(a,b,c){a=Q.createNode(a,b,41471,0);a.link=c;return a},readlink:function(a){if(40960!==(a.mode&61440))throw new P(28);return a.link}},tb:{read:function(a,b,c,d,f){var g=a.node.rb;if(f>=a.node.ub)return 0;a=Math.min(a.node.ub-f,d);if(8<a&&g.subarray)b.set(g.subarray(f,f+a),c);else for(d=0;d<a;d++)b[c+d]=g[f+d];return a},write:function(a,b,c,d,f,g){b.buffer===e().buffer&&(g=!1);if(!d)return 0;a=a.node;a.timestamp=Date.now();if(b.subarray&&(!a.rb||a.rb.subarray)){if(g)return a.rb=
-b.subarray(c,c+d),a.ub=d;if(0===a.ub&&0===f)return a.rb=b.slice(c,c+d),a.ub=d;if(f+d<=a.ub)return a.rb.set(b.subarray(c,c+d),f),d}Q.fc(a,f+d);if(a.rb.subarray&&b.subarray)a.rb.set(b.subarray(c,c+d),f);else for(g=0;g<d;g++)a.rb[f+g]=b[c+g];a.ub=Math.max(a.ub,f+d);return d},Hb:function(a,b,c){1===c?b+=a.position:2===c&&32768===(a.node.mode&61440)&&(b+=a.node.ub);if(0>b)throw new P(28);return b},bc:function(a,b,c){Q.fc(a.node,b+c);a.node.ub=Math.max(a.node.ub,b+c)},mc:function(a,b,c,d,f,g){assert(0===
-b);if(32768!==(a.node.mode&61440))throw new P(43);a=a.node.rb;if(g&2||a.buffer!==n){if(0<d||d+c<a.length)a.subarray?a=a.subarray(d,d+c):a=Array.prototype.slice.call(a,d,d+c);d=!0;g=16384*Math.ceil(c/16384);for(b=R(g);c<g;)e()[b+c++]=0;c=b;if(!c)throw new P(48);e().set(a,c)}else d=!1,c=a.byteOffset;return{sd:c,cd:d}},oc:function(a,b,c,d,f){if(32768!==(a.node.mode&61440))throw new P(43);if(f&2)return 0;Q.tb.write(a,b,0,d,c,!1);return 0}}},Sb=null,Tb={},Ub=[],Vb=1,Wb=null,Xb=!0,Yb={},P=null,Qb={};
-function Zb(a,b){a=Hb("/",a);b=b||{};if(!a)return{path:"",node:null};var c={jc:!0,$b:0},d;for(d in c)void 0===b[d]&&(b[d]=c[d]);if(8<b.$b)throw new P(32);a=Db(a.split("/").filter(function(h){return!!h}),!1);var f=Sb;c="/";for(d=0;d<a.length;d++){var g=d===a.length-1;if(g&&b.parent)break;f=Rb(f,a[d]);c=Eb(c+"/"+a[d]);f.Sb&&(!g||g&&b.jc)&&(f=f.Sb.root);if(!g||b.ic)for(g=0;40960===(f.mode&61440);)if(f=$b(c),c=Hb(Fb(c),f),f=Zb(c,{$b:b.$b}).node,40<g++)throw new P(32);}return{path:c,node:f}}
-function ac(a){for(var b;;){if(a===a.parent)return a=a.Db.nc,b?"/"!==a[a.length-1]?a+"/"+b:a+b:a;b=b?a.name+"/"+b:a.name;a=a.parent}}function bc(a,b){for(var c=0,d=0;d<b.length;d++)c=(c<<5)-c+b.charCodeAt(d)|0;return(a+c>>>0)%Wb.length}function Rb(a,b){var c;if(c=(c=cc(a,"x"))?c:a.sb.lookup?0:2)throw new P(c,a);for(c=Wb[bc(a.id,b)];c;c=c.Lc){var d=c.name;if(c.parent.id===a.id&&d===b)return c}return a.sb.lookup(a,b)}
-function Pb(a,b,c,d){a=new dc(a,b,c,d);b=bc(a.parent.id,a.name);a.Lc=Wb[b];return Wb[b]=a}var ec={r:0,rs:1052672,"r+":2,w:577,wx:705,xw:705,"w+":578,"wx+":706,"xw+":706,a:1089,ax:1217,xa:1217,"a+":1090,"ax+":1218,"xa+":1218};function fc(a){var b=["r","w","rw"][a&3];a&512&&(b+="w");return b}function cc(a,b){if(Xb)return 0;if(-1===b.indexOf("r")||a.mode&292){if(-1!==b.indexOf("w")&&!(a.mode&146)||-1!==b.indexOf("x")&&!(a.mode&73))return 2}else return 2;return 0}
-function hc(a,b){try{return Rb(a,b),20}catch(c){}return cc(a,"wx")}function ic(a){var b=4096;for(a=a||0;a<=b;a++)if(!Ub[a])return a;throw new P(33);}function jc(a,b){kc||(kc=function(){},kc.prototype={});var c=new kc,d;for(d in a)c[d]=a[d];a=c;b=ic(b);a.fd=b;return Ub[b]=a}var Ob={open:function(a){a.tb=Tb[a.node.rdev].tb;a.tb.open&&a.tb.open(a)},Hb:function(){throw new P(70);}};function Kb(a,b){Tb[a]={tb:b}}
-function lc(a,b){var c="/"===b,d=!b;if(c&&Sb)throw new P(10);if(!c&&!d){var f=Zb(b,{jc:!1});b=f.path;f=f.node;if(f.Sb)throw new P(10);if(16384!==(f.mode&61440))throw new P(54);}b={type:a,qd:{},nc:b,Kc:[]};a=a.Db(b);a.Db=b;b.root=a;c?Sb=a:f&&(f.Sb=b,f.Db&&f.Db.Kc.push(b))}function mc(a,b,c){var d=Zb(a,{parent:!0}).node;a=Gb(a);if(!a||"."===a||".."===a)throw new P(28);var f=hc(d,a);if(f)throw new P(f);if(!d.sb.Rb)throw new P(63);return d.sb.Rb(d,a,b,c)}function S(a){mc(a,16895,0)}
-function nc(a,b,c){"undefined"===typeof c&&(c=b,b=438);mc(a,b|8192,c)}function oc(a,b){if(!Hb(a))throw new P(44);var c=Zb(b,{parent:!0}).node;if(!c)throw new P(44);b=Gb(b);var d=hc(c,b);if(d)throw new P(d);if(!c.sb.symlink)throw new P(63);c.sb.symlink(c,b,a)}function $b(a){a=Zb(a).node;if(!a)throw new P(44);if(!a.sb.readlink)throw new P(28);return Hb(ac(a.parent),a.sb.readlink(a))}
-function pc(a,b,c,d){if(""===a)throw new P(44);if("string"===typeof b){var f=ec[b];if("undefined"===typeof f)throw Error("Unknown file open mode: "+b);b=f}c=b&64?("undefined"===typeof c?438:c)&4095|32768:0;if("object"===typeof a)var g=a;else{a=Eb(a);try{g=Zb(a,{ic:!(b&131072)}).node}catch(l){}}f=!1;if(b&64)if(g){if(b&128)throw new P(20);}else g=mc(a,c,0),f=!0;if(!g)throw new P(44);8192===(g.mode&61440)&&(b&=-513);if(b&65536&&16384!==(g.mode&61440))throw new P(54);if(!f&&(c=g?40960===(g.mode&61440)?
-32:16384===(g.mode&61440)&&("r"!==fc(b)||b&512)?31:cc(g,fc(b)):44))throw new P(c);if(b&512){c=g;var h;"string"===typeof c?h=Zb(c,{ic:!0}).node:h=c;if(!h.sb.Bb)throw new P(63);if(16384===(h.mode&61440))throw new P(31);if(32768!==(h.mode&61440))throw new P(28);if(c=cc(h,"w"))throw new P(c);h.sb.Bb(h,{size:0,timestamp:Date.now()})}b&=-131713;d=jc({node:g,path:ac(g),flags:b,seekable:!0,position:0,tb:g.tb,ad:[],error:!1},d);d.tb.open&&d.tb.open(d);!z.logReadFiles||b&1||(qc||(qc={}),a in qc||(qc[a]=1,K("FS.trackingDelegate error on read file: "+
-a)));try{Yb.onOpenFile&&(g=0,1!==(b&2097155)&&(g|=1),0!==(b&2097155)&&(g|=2),Yb.onOpenFile(a,g))}catch(l){K("FS.trackingDelegate['onOpenFile']('"+a+"', flags) threw an exception: "+l.message)}return d}function rc(a,b,c){if(null===a.fd)throw new P(8);if(!a.seekable||!a.tb.Hb)throw new P(70);if(0!=c&&1!=c&&2!=c)throw new P(28);a.position=a.tb.Hb(a,b,c);a.ad=[]}
-function sc(){P||(P=function(a,b){this.node=b;this.Sc=function(c){this.Gb=c};this.Sc(a);this.message="FS error"},P.prototype=Error(),P.prototype.constructor=P,[44].forEach(function(a){Qb[a]=new P(a);Qb[a].stack="<generic error, no stack>"}))}var tc;function uc(a,b){var c=0;a&&(c|=365);b&&(c|=146);return c}
-function vc(a,b,c){a=Eb("/dev/"+a);var d=uc(!!b,!!c);wc||(wc=64);var f=wc++<<8|0;Kb(f,{open:function(g){g.seekable=!1},close:function(){c&&c.buffer&&c.buffer.length&&c(10)},read:function(g,h,l,k){for(var q=0,r=0;r<k;r++){try{var v=b()}catch(y){throw new P(29);}if(void 0===v&&0===q)throw new P(6);if(null===v||void 0===v)break;q++;h[l+r]=v}q&&(g.node.timestamp=Date.now());return q},write:function(g,h,l,k){for(var q=0;q<k;q++)try{c(h[l+q])}catch(r){throw new P(29);}k&&(g.node.timestamp=Date.now());return q}});
-nc(a,d,f)}var wc,xc={},kc,qc,yc=void 0;function zc(){yc+=4;return w()[yc-4>>2]}function Ac(a){a=Ub[a];if(!a)throw new P(8);return a}
-function Bc(a,b,c){if(G)return T(1,1,a,b,c);yc=c;try{var d=Ac(a);switch(b){case 0:var f=zc();return 0>f?-28:pc(d.path,d.flags,0,f).fd;case 1:case 2:return 0;case 3:return d.flags;case 4:return f=zc(),d.flags|=f,0;case 12:return f=zc(),ca()[f+0>>1]=2,0;case 13:case 14:return 0;case 16:case 8:return-28;case 9:return w()[Cc()>>2]=28,-1;default:return-28}}catch(g){return"undefined"!==typeof xc&&g instanceof P||J(g),-g.Gb}}
-function Dc(a,b,c){if(G)return T(2,1,a,b,c);yc=c;try{var d=Ac(a);switch(b){case 21509:case 21505:return d.tty?0:-59;case 21510:case 21511:case 21512:case 21506:case 21507:case 21508:return d.tty?0:-59;case 21519:if(!d.tty)return-59;var f=zc();return w()[f>>2]=0;case 21520:return d.tty?-28:-59;case 21531:a=f=zc();if(!d.tb.Ic)throw new P(59);return d.tb.Ic(d,b,a);case 21523:return d.tty?0:-59;case 21524:return d.tty?0:-59;default:J("bad ioctl syscall "+b)}}catch(g){return"undefined"!==typeof xc&&g instanceof
-P||J(g),-g.Gb}}function Ec(a,b,c){if(G)return T(3,1,a,b,c);yc=c;try{var d=Ja(a),f=zc();return pc(d,b,f).fd}catch(g){return"undefined"!==typeof xc&&g instanceof P||J(g),-g.Gb}}var Fc={};function Gc(a){for(;a.length;){var b=a.pop();a.pop()(b)}}function Hc(a){return this.fromWireType(x()[a>>2])}var Ic={},Jc={},Kc={};function Lc(a){if(void 0===a)return"_unknown";a=a.replace(/[^a-zA-Z0-9_]/g,"$");var b=a.charCodeAt(0);return 48<=b&&57>=b?"_"+a:a}
-function Mc(a,b){a=Lc(a);return(new Function("body","return function "+a+'() {\n    "use strict";    return body.apply(this, arguments);\n};\n'))(b)}function Nc(a){var b=Error,c=Mc(a,function(d){this.name=a;this.message=d;d=Error(d).stack;void 0!==d&&(this.stack=this.toString()+"\n"+d.replace(/^Error(:[^\n]*)?\n/,""))});c.prototype=Object.create(b.prototype);c.prototype.constructor=c;c.prototype.toString=function(){return void 0===this.message?this.name:this.name+": "+this.message};return c}
-var Oc=void 0;function Pc(a,b,c){function d(l){l=c(l);if(l.length!==a.length)throw new Oc("Mismatched type converter count");for(var k=0;k<a.length;++k)U(a[k],l[k])}a.forEach(function(l){Kc[l]=b});var f=Array(b.length),g=[],h=0;b.forEach(function(l,k){Jc.hasOwnProperty(l)?f[k]=Jc[l]:(g.push(l),Ic.hasOwnProperty(l)||(Ic[l]=[]),Ic[l].push(function(){f[k]=Jc[l];++h;h===g.length&&d(f)}))});0===g.length&&d(f)}
-function Qc(a){switch(a){case 1:return 0;case 2:return 1;case 4:return 2;case 8:return 3;default:throw new TypeError("Unknown type size: "+a);}}var Rc=void 0;function V(a){for(var b="";t()[a];)b+=Rc[t()[a++]];return b}var Sc=void 0;function W(a){throw new Sc(a);}
-function U(a,b,c){c=c||{};if(!("argPackAdvance"in b))throw new TypeError("registerType registeredInstance requires argPackAdvance");var d=b.name;a||W('type "'+d+'" must have a positive integer typeid pointer');if(Jc.hasOwnProperty(a)){if(c.Dc)return;W("Cannot register type '"+d+"' twice")}Jc[a]=b;delete Kc[a];Ic.hasOwnProperty(a)&&(b=Ic[a],delete Ic[a],b.forEach(function(f){f()}))}var Tc=[],X=[{},{value:void 0},{value:null},{value:!0},{value:!1}];
-function Uc(a){4<a&&0===--X[a].ac&&(X[a]=void 0,Tc.push(a))}function Vc(a){switch(a){case void 0:return 1;case null:return 2;case !0:return 3;case !1:return 4;default:var b=Tc.length?Tc.pop():X.length;X[b]={ac:1,value:a};return b}}function Wc(a){if(null===a)return"null";var b=typeof a;return"object"===b||"array"===b||"function"===b?a.toString():""+a}
-function Xc(a,b){switch(b){case 2:return function(c){return this.fromWireType(ja()[c>>2])};case 3:return function(c){return this.fromWireType(la()[c>>3])};default:throw new TypeError("Unknown float type: "+a);}}function Yc(a){var b=Function;if(!(b instanceof Function))throw new TypeError("new_ called with constructor type "+typeof b+" which is not a function");var c=Mc(b.name||"unknownFunctionName",function(){});c.prototype=b.prototype;c=new c;a=b.apply(c,a);return a instanceof Object?a:c}
-function Zc(a,b){var c=z;if(void 0===c[a].zb){var d=c[a];c[a]=function(){c[a].zb.hasOwnProperty(arguments.length)||W("Function '"+b+"' called with an invalid number of arguments ("+arguments.length+") - expects one of ("+c[a].zb+")!");return c[a].zb[arguments.length].apply(this,arguments)};c[a].zb=[];c[a].zb[d.uc]=d}}
-function $c(a,b,c){z.hasOwnProperty(a)?((void 0===c||void 0!==z[a].zb&&void 0!==z[a].zb[c])&&W("Cannot register public name '"+a+"' twice"),Zc(a,a),z.hasOwnProperty(c)&&W("Cannot register multiple overloads of a function with the same number of arguments ("+c+")!"),z[a].zb[c]=b):(z[a]=b,void 0!==c&&(z[a].pd=c))}function ad(a,b){for(var c=[],d=0;d<a;d++)c.push(w()[(b>>2)+d]);return c}
-function bd(a,b){a=V(a);var c=z["dynCall_"+a];for(var d=[],f=1;f<a.length;++f)d.push("a"+f);f="return function dynCall_"+(a+"_"+b)+"("+d.join(", ")+") {\n";f+="    return dynCall(rawFunction"+(d.length?", ":"")+d.join(", ")+");\n";c=(new Function("dynCall","rawFunction",f+"};\n"))(c,b);"function"!==typeof c&&W("unknown function pointer with signature "+a+": "+b);return c}var cd=void 0;function dd(a){a=ed(a);var b=V(a);M(a);return b}
-function fd(a,b){function c(g){f[g]||Jc[g]||(Kc[g]?Kc[g].forEach(c):(d.push(g),f[g]=!0))}var d=[],f={};b.forEach(c);throw new cd(a+": "+d.map(dd).join([", "]));}function gd(a,b,c){switch(b){case 0:return c?function(d){return e()[d]}:function(d){return t()[d]};case 1:return c?function(d){return ca()[d>>1]}:function(d){return ea()[d>>1]};case 2:return c?function(d){return w()[d>>2]}:function(d){return x()[d>>2]};default:throw new TypeError("Unknown integer type: "+a);}}var hd={};
-function id(){return"object"===typeof globalThis?globalThis:Function("return this")()}function jd(a,b){var c=Jc[a];void 0===c&&W(b+" has unknown type "+dd(a));return c}var kd={};
-function ld(){F||D||(Ca||(Ca={}),Ca["Blocking on the main thread is very dangerous, see https://emscripten.org/docs/porting/pthreads.html#blocking-on-the-main-browser-thread"]||(Ca["Blocking on the main thread is very dangerous, see https://emscripten.org/docs/porting/pthreads.html#blocking-on-the-main-browser-thread"]=1,K("Blocking on the main thread is very dangerous, see https://emscripten.org/docs/porting/pthreads.html#blocking-on-the-main-browser-thread")))}
-function md(a,b,c){if(0>=a||a>e().length||a&1)return-28;if(D){a=Atomics.wait(w(),a>>2,b,c);if("timed-out"===a)return-73;if("not-equal"===a)return-6;if("ok"===a)return 0;throw"Atomics.wait returned an unexpected value "+a;}var d=Atomics.load(w(),a>>2);if(b!=d)return-6;b=performance.now();c=b+c;Atomics.store(w(),220080,a);for(d=a;a==d;){b=performance.now();if(b>c)return-73;yb();a=Atomics.load(w(),220080)}return 0}
-function T(a,b){for(var c=arguments.length-2,d=Y(),f=nd(8*c),g=f>>3,h=0;h<c;h++)la()[g+h]=arguments[2+h];c=od(a,c,f,b);N(d);return c}var pd=[],qd=[],rd=[0,"undefined"!==typeof document?document:0,"undefined"!==typeof window?window:0];function sd(a){a=2<a?Ja(a):a;return rd[a]||("undefined"!==typeof document?document.querySelector(a):void 0)}
-function td(a,b,c){var d=sd(a);if(!d)return-4;d.Qb&&(w()[d.Qb>>2]=b,w()[d.Qb+4>>2]=c);if(d.pc||!d.gd)d.pc&&(d=d.pc),a=!1,d.Pb&&d.Pb.Ob&&(a=d.Pb.Ob.getParameter(2978),a=0===a[0]&&0===a[1]&&a[2]===d.width&&a[3]===d.height),d.width=b,d.height=c,a&&d.Pb.Ob.viewport(0,0,b,c);else{if(d.Qb){d=w()[d.Qb+8>>2];a=a?Ja(a):"";var f=Y(),g=nd(12),h=0;if(a){h=Ma(a)+1;var l=R(h);La(a,l,h);h=l}w()[g>>2]=h;w()[g+4>>2]=b;w()[g+8>>2]=c;ud(0,d,657457152,0,h,g);N(f);return 1}return-4}return 0}
-function vd(a,b,c){return G?T(4,1,a,b,c):td(a,b,c)}function wd(a){var b=a.getExtension("ANGLE_instanced_arrays");b&&(a.vertexAttribDivisor=function(c,d){b.vertexAttribDivisorANGLE(c,d)},a.drawArraysInstanced=function(c,d,f,g){b.drawArraysInstancedANGLE(c,d,f,g)},a.drawElementsInstanced=function(c,d,f,g,h){b.drawElementsInstancedANGLE(c,d,f,g,h)})}
-function xd(a){var b=a.getExtension("OES_vertex_array_object");b&&(a.createVertexArray=function(){return b.createVertexArrayOES()},a.deleteVertexArray=function(c){b.deleteVertexArrayOES(c)},a.bindVertexArray=function(c){b.bindVertexArrayOES(c)},a.isVertexArray=function(c){return b.isVertexArrayOES(c)})}function yd(a){var b=a.getExtension("WEBGL_draw_buffers");b&&(a.drawBuffers=function(c,d){b.drawBuffersWEBGL(c,d)})}
-function zd(a){a||(a=Ad);if(!a.Ec){a.Ec=!0;var b=a.Ob;wd(b);xd(b);yd(b);b.hd=b.getExtension("EXT_disjoint_timer_query");var c="OES_texture_float OES_texture_half_float OES_standard_derivatives OES_vertex_array_object WEBGL_compressed_texture_s3tc WEBGL_depth_texture OES_element_index_uint EXT_texture_filter_anisotropic EXT_frag_depth WEBGL_draw_buffers ANGLE_instanced_arrays OES_texture_float_linear OES_texture_half_float_linear EXT_blend_minmax EXT_shader_texture_lod EXT_texture_norm16 WEBGL_compressed_texture_pvrtc EXT_color_buffer_half_float WEBGL_color_buffer_float EXT_sRGB WEBGL_compressed_texture_etc1 EXT_disjoint_timer_query WEBGL_compressed_texture_etc WEBGL_compressed_texture_astc EXT_color_buffer_float WEBGL_compressed_texture_s3tc_srgb EXT_disjoint_timer_query_webgl2 WEBKIT_WEBGL_compressed_texture_pvrtc".split(" ");
-(b.getSupportedExtensions()||[]).forEach(function(d){-1!=c.indexOf(d)&&b.getExtension(d)})}}var Ad,Bd=["default","low-power","high-performance"];function Cd(a){if(G)return T(5,1,a);try{var b=Ac(a);if(null===b.fd)throw new P(8);b.Yb&&(b.Yb=null);try{b.tb.close&&b.tb.close(b)}catch(c){throw c;}finally{Ub[b.fd]=null}b.fd=null;return 0}catch(c){return"undefined"!==typeof xc&&c instanceof P||J(c),c.Gb}}
-function Dd(a,b,c,d){if(G)return T(6,1,a,b,c,d);try{a:{for(var f=Ac(a),g=a=0;g<c;g++){var h=w()[b+8*g>>2],l=w()[b+(8*g+4)>>2],k=f,q=e(),r=h,v=l,y=void 0;if(0>v||0>y)throw new P(28);if(null===k.fd)throw new P(8);if(1===(k.flags&2097155))throw new P(8);if(16384===(k.node.mode&61440))throw new P(31);if(!k.tb.read)throw new P(28);var B="undefined"!==typeof y;if(!B)y=k.position;else if(!k.seekable)throw new P(70);var u=k.tb.read(k,q,r,v,y);B||(k.position+=u);var O=u;if(0>O){var E=-1;break a}a+=O;if(O<
-l)break}E=a}w()[d>>2]=E;return 0}catch(C){return"undefined"!==typeof xc&&C instanceof P||J(C),C.Gb}}
-function Ed(a,b,c,d,f){if(G)return T(7,1,a,b,c,d,f);try{var g=Ac(a);a=4294967296*c+(b>>>0);if(-9007199254740992>=a||9007199254740992<=a)return-61;rc(g,a,d);mb=[g.position>>>0,(lb=g.position,1<=+$a(lb)?0<lb?(cb(+bb(lb/4294967296),4294967295)|0)>>>0:~~+ab((lb-+(~~lb>>>0))/4294967296)>>>0:0)];w()[f>>2]=mb[0];w()[f+4>>2]=mb[1];g.Yb&&0===a&&0===d&&(g.Yb=null);return 0}catch(h){return"undefined"!==typeof xc&&h instanceof P||J(h),h.Gb}}
-function Fd(a,b,c,d){if(G)return T(8,1,a,b,c,d);try{a:{for(var f=Ac(a),g=a=0;g<c;g++){var h=w()[b+8*g>>2],l=w()[b+(8*g+4)>>2],k=f,q=e(),r=h,v=l,y=void 0;if(0>v||0>y)throw new P(28);if(null===k.fd)throw new P(8);if(0===(k.flags&2097155))throw new P(8);if(16384===(k.node.mode&61440))throw new P(31);if(!k.tb.write)throw new P(28);k.seekable&&k.flags&1024&&rc(k,0,2);var B="undefined"!==typeof y;if(!B)y=k.position;else if(!k.seekable)throw new P(70);var u=k.tb.write(k,q,r,v,y,void 0);B||(k.position+=u);
-try{if(k.path&&Yb.onWriteToFile)Yb.onWriteToFile(k.path)}catch(C){K("FS.trackingDelegate['onWriteToFile']('"+k.path+"') threw an exception: "+C.message)}var O=u;if(0>O){var E=-1;break a}a+=O}E=a}w()[d>>2]=E;return 0}catch(C){return"undefined"!==typeof xc&&C instanceof P||J(C),C.Gb}}
-function zb(a){if(G)throw"Internal Error! spawnThread() can only ever be called from main application thread!";var b=L.zc();if(void 0!==b.wb)throw"Internal error!";if(!a.Kb)throw"Internal error, no pthread ptr!";L.Fb.push(b);for(var c=R(512),d=0;128>d;++d)w()[c+4*d>>2]=0;var f=a.Ib+a.Lb;d=L.Ab[a.Kb]={worker:b,Ib:a.Ib,Lb:a.Lb,Vb:a.Vb,tc:a.Kb,threadInfoStruct:a.Kb};var g=d.threadInfoStruct>>2;Atomics.store(x(),g,0);Atomics.store(x(),g+1,0);Atomics.store(x(),g+2,0);Atomics.store(x(),g+17,a.detached);
-Atomics.store(x(),g+26,c);Atomics.store(x(),g+12,0);Atomics.store(x(),g+10,d.threadInfoStruct);Atomics.store(x(),g+11,42);Atomics.store(x(),g+27,a.Lb);Atomics.store(x(),g+21,a.Lb);Atomics.store(x(),g+20,f);Atomics.store(x(),g+29,f);Atomics.store(x(),g+30,a.detached);Atomics.store(x(),g+32,a.rc);Atomics.store(x(),g+33,a.sc);c=Gd()+40;Atomics.store(x(),g+44,c);b.wb=d;var h={cmd:"run",start_routine:a.Xc,arg:a.Mb,threadInfoStruct:a.Kb,selfThreadId:a.Kb,parentThreadId:a.Mc,stackBase:a.Ib,stackSize:a.Lb};
-b.Nb=function(){h.time=performance.now();b.postMessage(h,a.$c)};b.loaded&&(b.Nb(),delete b.Nb)}function Hd(){return qb|0}z._pthread_self=Hd;
-function Id(a,b){if(!a)return K("pthread_join attempted on a null thread pointer!"),71;if(G&&selfThreadId==a)return K("PThread "+a+" is attempting to join to itself!"),16;if(!G&&L.vb==a)return K("Main thread "+a+" is attempting to join to itself!"),16;if(w()[a+12>>2]!==a)return K("pthread_join attempted on thread "+a+", which does not point to a valid thread, or does not exist anymore!"),71;if(Atomics.load(x(),a+68>>2))return K("Attempted to join thread "+a+", which was already detached!"),28;for(ld();;){var c=
-Atomics.load(x(),a+0>>2);if(1==c)return c=Atomics.load(x(),a+4>>2),b&&(w()[b>>2]=c),Atomics.store(x(),a+68>>2,1),G?postMessage({cmd:"cleanupThread",thread:a}):vb(a),0;if(G&&threadInfoStruct&&!Atomics.load(x(),threadInfoStruct+60>>2)&&2==Atomics.load(x(),threadInfoStruct+0>>2))throw"Canceled!";G||yb();md(a+0,c,G?100:1)}}G?L.Hc():L.Fc();function dc(a,b,c,d){a||(a=this);this.parent=a;this.Db=a.Db;this.Sb=null;this.id=Vb++;this.name=b;this.mode=c;this.sb={};this.tb={};this.rdev=d}
-Object.defineProperties(dc.prototype,{read:{get:function(){return 365===(this.mode&365)},set:function(a){a?this.mode|=365:this.mode&=-366}},write:{get:function(){return 146===(this.mode&146)},set:function(a){a?this.mode|=146:this.mode&=-147}}});sc();Wb=Array(4096);lc(Q,"/");S("/tmp");S("/home");S("/home/web_user");
-(function(){S("/dev");Kb(259,{read:function(){return 0},write:function(d,f,g,h){return h}});nc("/dev/null",259);Jb(1280,Mb);Jb(1536,Nb);nc("/dev/tty",1280);nc("/dev/tty1",1536);if("object"===typeof crypto&&"function"===typeof crypto.getRandomValues){var a=new Uint8Array(1);var b=function(){crypto.getRandomValues(a);return a[0]}}else if(F)try{var c=require("crypto");b=function(){return c.randomBytes(1)[0]}}catch(d){}b||(b=function(){J("random_device")});vc("random",b);vc("urandom",b);S("/dev/shm");
-S("/dev/shm/tmp")})();S("/proc");S("/proc/self");S("/proc/self/fd");lc({Db:function(){var a=Pb("/proc/self","fd",16895,73);a.sb={lookup:function(b,c){var d=Ub[+c];if(!d)throw new P(8);b={parent:null,Db:{nc:"fake"},sb:{readlink:function(){return d.path}}};return b.parent=b}};return a}},"/proc/self/fd");Oc=z.InternalError=Nc("InternalError");for(var Jd=Array(256),Kd=0;256>Kd;++Kd)Jd[Kd]=String.fromCharCode(Kd);Rc=Jd;Sc=z.BindingError=Nc("BindingError");
-z.count_emval_handles=function(){for(var a=0,b=5;b<X.length;++b)void 0!==X[b]&&++a;return a};z.get_first_emval=function(){for(var a=5;a<X.length;++a)if(void 0!==X[a])return X[a];return null};cd=z.UnboundTypeError=Nc("UnboundTypeError");
-var Ld=[null,Bc,Dc,Ec,vd,Cd,Dd,Ed,Fd],Vd={n:function(a,b,c,d){J("Assertion failed: "+Ja(a)+", at: "+[b?Ja(b):"unknown filename",c,d?Ja(d):"unknown function"])},ga:function(a,b){return Bb(a,b)},D:Bc,Z:Dc,_:Ec,K:function(a){var b=Fc[a];delete Fc[a];var c=b.Nc,d=b.Oc,f=b.hc,g=f.map(function(h){return h.Cc}).concat(f.map(function(h){return h.Vc}));Pc([a],g,function(h){var l={};f.forEach(function(k,q){var r=h[q],v=k.Ac,y=k.Bc,B=h[q+f.length],u=k.Uc,O=k.Wc;l[k.xc]={read:function(E){return r.fromWireType(v(y,
-E))},write:function(E,C){var Ba=[];u(O,E,B.toWireType(Ba,C));Gc(Ba)}}});return[{name:b.name,fromWireType:function(k){var q={},r;for(r in l)q[r]=l[r].read(k);d(k);return q},toWireType:function(k,q){for(var r in l)if(!(r in q))throw new TypeError('Missing field:  "'+r+'"');var v=c();for(r in l)l[r].write(v,q[r]);null!==k&&k.push(d,v);return v},argPackAdvance:8,readValueFromPointer:Hc,Cb:d}]})},ba:function(a,b,c,d,f){var g=Qc(c);b=V(b);U(a,{name:b,fromWireType:function(h){return!!h},toWireType:function(h,
-l){return l?d:f},argPackAdvance:8,readValueFromPointer:function(h){if(1===c)var l=e();else if(2===c)l=ca();else if(4===c)l=w();else throw new TypeError("Unknown boolean type size: "+b);return this.fromWireType(l[h>>g])},Cb:null})},aa:function(a,b){b=V(b);U(a,{name:b,fromWireType:function(c){var d=X[c].value;Uc(c);return d},toWireType:function(c,d){return Vc(d)},argPackAdvance:8,readValueFromPointer:Hc,Cb:null})},F:function(a,b,c){c=Qc(c);b=V(b);U(a,{name:b,fromWireType:function(d){return d},toWireType:function(d,
-f){if("number"!==typeof f&&"boolean"!==typeof f)throw new TypeError('Cannot convert "'+Wc(f)+'" to '+this.name);return f},argPackAdvance:8,readValueFromPointer:Xc(b,c),Cb:null})},J:function(a,b,c,d,f,g){var h=ad(b,c);a=V(a);f=bd(d,f);$c(a,function(){fd("Cannot call "+a+" due to unbound types",h)},b-1);Pc([],h,function(l){var k=[l[0],null].concat(l.slice(1)),q=l=a,r=f,v=k.length;2>v&&W("argTypes array size mismatch! Must at least get return value and 'this' types!");for(var y=null!==k[1]&&!1,B=!1,
-u=1;u<k.length;++u)if(null!==k[u]&&void 0===k[u].Cb){B=!0;break}var O="void"!==k[0].name,E="",C="";for(u=0;u<v-2;++u)E+=(0!==u?", ":"")+"arg"+u,C+=(0!==u?", ":"")+"arg"+u+"Wired";q="return function "+Lc(q)+"("+E+") {\nif (arguments.length !== "+(v-2)+") {\nthrowBindingError('function "+q+" called with ' + arguments.length + ' arguments, expected "+(v-2)+" args!');\n}\n";B&&(q+="var destructors = [];\n");var Ba=B?"destructors":"null";E="throwBindingError invoker fn runDestructors retType classParam".split(" ");
-r=[W,r,g,Gc,k[0],k[1]];y&&(q+="var thisWired = classParam.toWireType("+Ba+", this);\n");for(u=0;u<v-2;++u)q+="var arg"+u+"Wired = argType"+u+".toWireType("+Ba+", arg"+u+"); // "+k[u+2].name+"\n",E.push("argType"+u),r.push(k[u+2]);y&&(C="thisWired"+(0<C.length?", ":"")+C);q+=(O?"var rv = ":"")+"invoker(fn"+(0<C.length?", ":"")+C+");\n";if(B)q+="runDestructors(destructors);\n";else for(u=y?1:2;u<k.length;++u)v=1===u?"thisWired":"arg"+(u-2)+"Wired",null!==k[u].Cb&&(q+=v+"_dtor("+v+"); // "+k[u].name+
-"\n",E.push(v+"_dtor"),r.push(k[u].Cb));O&&(q+="var ret = retType.fromWireType(rv);\nreturn ret;\n");E.push(q+"}\n");k=Yc(E).apply(null,r);u=b-1;if(!z.hasOwnProperty(l))throw new Oc("Replacing nonexistant public symbol");void 0!==z[l].zb&&void 0!==u?z[l].zb[u]=k:(z[l]=k,z[l].uc=u);return[]})},o:function(a,b,c,d,f){function g(q){return q}b=V(b);-1===f&&(f=4294967295);var h=Qc(c);if(0===d){var l=32-8*c;g=function(q){return q<<l>>>l}}var k=-1!=b.indexOf("unsigned");U(a,{name:b,fromWireType:g,toWireType:function(q,
-r){if("number"!==typeof r&&"boolean"!==typeof r)throw new TypeError('Cannot convert "'+Wc(r)+'" to '+this.name);if(r<d||r>f)throw new TypeError('Passing a number "'+Wc(r)+'" from JS side to C/C++ side to an argument of type "'+b+'", which is outside the valid range ['+d+", "+f+"]!");return k?r>>>0:r|0},argPackAdvance:8,readValueFromPointer:gd(b,h,0!==d),Cb:null})},j:function(a,b,c){function d(g){g>>=2;var h=x();return new f(n,h[g+1],h[g])}var f=[Int8Array,Uint8Array,Int16Array,Uint16Array,Int32Array,
-Uint32Array,Float32Array,Float64Array][b];c=V(c);U(a,{name:c,fromWireType:d,argPackAdvance:8,readValueFromPointer:d},{Dc:!0})},G:function(a,b){b=V(b);var c="std::string"===b;U(a,{name:b,fromWireType:function(d){var f=x()[d>>2];if(c)for(var g=d+4,h=0;h<=f;++h){var l=d+4+h;if(h==f||0==t()[l]){g=Ja(g,l-g);if(void 0===k)var k=g;else k+=String.fromCharCode(0),k+=g;g=l+1}}else{k=Array(f);for(h=0;h<f;++h)k[h]=String.fromCharCode(t()[d+4+h]);k=k.join("")}M(d);return k},toWireType:function(d,f){f instanceof
-ArrayBuffer&&(f=new Uint8Array(f));var g="string"===typeof f;g||f instanceof Uint8Array||f instanceof Uint8ClampedArray||f instanceof Int8Array||W("Cannot pass non-string to std::string");var h=(c&&g?function(){return Ma(f)}:function(){return f.length})(),l=R(4+h+1);x()[l>>2]=h;if(c&&g)La(f,l+4,h+1);else if(g)for(g=0;g<h;++g){var k=f.charCodeAt(g);255<k&&(M(l),W("String has UTF-16 code units that do not fit in 8 bits"));t()[l+4+g]=k}else for(g=0;g<h;++g)t()[l+4+g]=f[g];null!==d&&d.push(M,l);return l},
-argPackAdvance:8,readValueFromPointer:Hc,Cb:function(d){M(d)}})},x:function(a,b,c){c=V(c);if(2===b){var d=Na;var f=Oa;var g=Pa;var h=function(){return ea()};var l=1}else 4===b&&(d=Qa,f=Ra,g=Sa,h=function(){return x()},l=2);U(a,{name:c,fromWireType:function(k){for(var q=x()[k>>2],r=h(),v,y=k+4,B=0;B<=q;++B){var u=k+4+B*b;if(B==q||0==r[u>>l])y=d(y,u-y),void 0===v?v=y:(v+=String.fromCharCode(0),v+=y),y=u+b}M(k);return v},toWireType:function(k,q){"string"!==typeof q&&W("Cannot pass non-string to C++ string type "+
-c);var r=g(q),v=R(4+r+b);x()[v>>2]=r>>l;f(q,v+4,r+b);null!==k&&k.push(M,v);return v},argPackAdvance:8,readValueFromPointer:Hc,Cb:function(k){M(k)}})},N:function(a,b,c,d,f,g){Fc[a]={name:V(b),Nc:bd(c,d),Oc:bd(f,g),hc:[]}},p:function(a,b,c,d,f,g,h,l,k,q){Fc[a].hc.push({xc:V(b),Cc:c,Ac:bd(d,f),Bc:g,Vc:h,Uc:bd(l,k),Wc:q})},ca:function(a,b){b=V(b);U(a,{md:!0,name:b,argPackAdvance:0,fromWireType:function(){},toWireType:function(){}})},T:function(a,b){if(a==b)postMessage({cmd:"processQueuedMainThreadWork"});
-else if(G)postMessage({targetThread:a,cmd:"processThreadQueue"});else{a=(a=L.Ab[a])&&a.worker;if(!a)return;a.postMessage({cmd:"processThreadQueue"})}return 1},w:Uc,$:function(a){if(0===a)return Vc(id());var b=hd[a];a=void 0===b?V(a):b;return Vc(id()[a])},I:function(a){4<a&&(X[a].ac+=1)},U:function(a,b,c,d){a||W("Cannot use deleted val. handle = "+a);a=X[a].value;var f=kd[b];if(!f){f="";for(var g=0;g<b;++g)f+=(0!==g?", ":"")+"arg"+g;var h="return function emval_allocator_"+b+"(constructor, argTypes, args) {\n";
-for(g=0;g<b;++g)h+="var argType"+g+" = requireRegisteredType(Module['HEAP32'][(argTypes >>> 2) + "+g+'], "parameter '+g+'");\nvar arg'+g+" = argType"+g+".readValueFromPointer(args);\nargs += argType"+g+"['argPackAdvance'];\n";f=(new Function("requireRegisteredType","Module","__emval_register",h+("var obj = new constructor("+f+");\nreturn __emval_register(obj);\n}\n")))(jd,z,Vc);kd[b]=f}return f(a,c,d)},k:function(){J()},u:function(a,b,c){qd.length=0;var d;for(c>>=2;d=t()[b++];)(d=105>d)&&c&1&&c++,
-qd.push(d?la()[c++>>1]:w()[c]),++c;return ob[a].apply(null,qd)},X:ld,A:function(){},g:md,h:ub,e:Ab,r:function(){return sb|0},V:function(){return rb|0},i:function(a,b){Z(a,b||1);throw"longjmp";},P:function(a,b,c){t().copyWithin(a,b,b+c)},fa:function(){return navigator.hardwareConcurrency},Q:function(a,b,c){pd.length=b;c>>=3;for(var d=0;d<b;d++)pd[d]=la()[c+d];return(0>a?ob[-a-1]:Ld[a]).apply(null,pd)},s:function(a){a>>>=0;var b=t().length;if(a<=b||2147483648<a)return!1;for(var c=1;4>=c;c*=2){var d=
-b*(1+.2/c);d=Math.min(d,a+100663296);d=Math.max(16777216,a,d);0<d%65536&&(d+=65536-d%65536);a:{try{m.grow(Math.min(2147483648,d)-n.byteLength+65535>>>16);p(m.buffer);var f=1;break a}catch(g){}f=void 0}if(f)return!0}return!1},R:function(a,b,c){return sd(a)?td(a,b,c):vd(a,b,c)},f:function(){},S:function(a,b){var c={};b>>=2;c.alpha=!!w()[b];c.depth=!!w()[b+1];c.stencil=!!w()[b+2];c.antialias=!!w()[b+3];c.premultipliedAlpha=!!w()[b+4];c.preserveDrawingBuffer=!!w()[b+5];var d=w()[b+6];c.powerPreference=
-Bd[d];c.failIfMajorPerformanceCaveat=!!w()[b+7];c.Jc=w()[b+8];c.od=w()[b+9];c.ec=w()[b+10];c.wc=w()[b+11];c.rd=w()[b+12];c.td=w()[b+13];(a=sd(a))?c.wc?c=-1:(a=a.getContext("webgl",c))?(b=R(8),w()[b+4>>2]=qb|0,d={ld:b,attributes:c,version:c.Jc,Ob:a},a.canvas&&(a.canvas.Pb=d),("undefined"===typeof c.ec||c.ec)&&zd(d),c=b):c=0:c=-4;return c},E:Cd,Y:Dd,L:Ed,C:Fd,b:function(){return Da|0},O:function(){L.Gc()},z:Md,M:Nd,y:Od,t:Pd,v:Qd,l:Rd,c:Sd,memory:m||z.wasmMemory,W:function(a){var b=L.Ub.pop();a&&b()},
-B:Bb,H:function(a,b,c,d){if("undefined"===typeof SharedArrayBuffer)return K("Current environment does not support SharedArrayBuffer, pthreads are not available!"),6;if(!a)return K("pthread_create called with a null thread pointer!"),28;var f=[];if(G&&0===f.length)return Td(687865856,a,b,c,d);var g=0,h=0,l=0,k=0;if(b){var q=w()[b>>2];q+=81920;g=w()[b+8>>2];h=0!==w()[b+12>>2];if(0===w()[b+16>>2]){var r=w()[b+20>>2],v=w()[b+24>>2];l=b+20;k=b+24;var y=L.Wb?L.Wb:qb|0;if(l||k)if(y)if(w()[y+12>>2]!==y)K("pthread_getschedparam attempted on thread "+
-y+", which does not point to a valid thread, or does not exist anymore!");else{var B=Atomics.load(x(),y+108+20>>2);y=Atomics.load(x(),y+108+24>>2);l&&(w()[l>>2]=B);k&&(w()[k>>2]=y)}else K("pthread_getschedparam called with a null thread pointer!");l=w()[b+20>>2];k=w()[b+24>>2];w()[b+20>>2]=r;w()[b+24>>2]=v}else l=w()[b+20>>2],k=w()[b+24>>2]}else q=2097152;(b=0==g)?g=Ud(16,q):(g-=q,assert(0<g));r=R(232);for(v=0;58>v;++v)x()[(r>>2)+v]=0;w()[a>>2]=r;w()[r+12>>2]=r;a=r+156;w()[a>>2]=a;c={Ib:g,Lb:q,Vb:b,
-rc:l,sc:k,detached:h,Xc:c,Kb:r,Mc:qb|0,Mb:d,$c:f};G?(c.ed="spawnThread",postMessage(c,f)):zb(c);return 0},da:function(a,b){return Id(a,b)},d:Hd,q:function(a){a=+a;return 0<=a?+bb(a+.5):+ab(a-.5)},m:function(a){a=+a;return 0<=a?+bb(a+.5):+ab(a-.5)},a:function(a){Da=a|0},table:Fa,ea:function(a){var b=Date.now()/1E3|0;a&&(w()[a>>2]=b);return b}};
-(function(){function a(f,g){z.asm=f.exports;Ga=g;if(!G){var h=L.xb.length;L.xb.forEach(function(l){L.lc(l,function(){if(!--h&&(db--,z.monitorRunDependencies&&z.monitorRunDependencies(db),0==db&&(null!==eb&&(clearInterval(eb),eb=null),fb))){var k=fb;fb=null;k()}})})}}function b(f){a(f.instance,f.module)}function c(f){return kb().then(function(g){return WebAssembly.instantiate(g,d)}).then(f,function(g){K("failed to asynchronously prepare wasm: "+g);J(g)})}var d={a:Vd};G||(assert(!G,"addRunDependency cannot be used in a pthread worker"),
-db++,z.monitorRunDependencies&&z.monitorRunDependencies(db));if(z.instantiateWasm)try{return z.instantiateWasm(d,a)}catch(f){return K("Module.instantiateWasm callback failed with error: "+f),!1}(function(){if(Ea||"function"!==typeof WebAssembly.instantiateStreaming||ib()||gb("file://")||"function"!==typeof fetch)return c(b);fetch(hb,{credentials:"same-origin"}).then(function(f){return WebAssembly.instantiateStreaming(f,d).then(b,function(g){K("wasm streaming compile failed: "+g);K("falling back to ArrayBuffer instantiation");
-return c(b)})})})();return{}})();var pb=z.___wasm_call_ctors=function(){return(pb=z.___wasm_call_ctors=z.asm.ha).apply(null,arguments)},R=z._malloc=function(){return(R=z._malloc=z.asm.ia).apply(null,arguments)},M=z._free=function(){return(M=z._free=z.asm.ja).apply(null,arguments)},ed=z.___getTypeName=function(){return(ed=z.___getTypeName=z.asm.ka).apply(null,arguments)};
-z.___embind_register_native_and_builtin_types=function(){return(z.___embind_register_native_and_builtin_types=z.asm.la).apply(null,arguments)};var Gd=z._emscripten_get_global_libc=function(){return(Gd=z._emscripten_get_global_libc=z.asm.ma).apply(null,arguments)},Cc=z.___errno_location=function(){return(Cc=z.___errno_location=z.asm.na).apply(null,arguments)};z.___em_js__initPthreadsJS=function(){return(z.___em_js__initPthreadsJS=z.asm.oa).apply(null,arguments)};
-var Z=z._setThrew=function(){return(Z=z._setThrew=z.asm.pa).apply(null,arguments)},Y=z.stackSave=function(){return(Y=z.stackSave=z.asm.qa).apply(null,arguments)},N=z.stackRestore=function(){return(N=z.stackRestore=z.asm.ra).apply(null,arguments)},nd=z.stackAlloc=function(){return(nd=z.stackAlloc=z.asm.sa).apply(null,arguments)},Ud=z._memalign=function(){return(Ud=z._memalign=z.asm.ta).apply(null,arguments)};
-z._emscripten_main_browser_thread_id=function(){return(z._emscripten_main_browser_thread_id=z.asm.ua).apply(null,arguments)};var xb=z.___pthread_tsd_run_dtors=function(){return(xb=z.___pthread_tsd_run_dtors=z.asm.va).apply(null,arguments)},yb=z._emscripten_main_thread_process_queued_calls=function(){return(yb=z._emscripten_main_thread_process_queued_calls=z.asm.wa).apply(null,arguments)};
-z._emscripten_current_thread_process_queued_calls=function(){return(z._emscripten_current_thread_process_queued_calls=z.asm.xa).apply(null,arguments)};var wb=z._emscripten_register_main_browser_thread_id=function(){return(wb=z._emscripten_register_main_browser_thread_id=z.asm.ya).apply(null,arguments)},nb=z._do_emscripten_dispatch_to_thread=function(){return(nb=z._do_emscripten_dispatch_to_thread=z.asm.za).apply(null,arguments)};
-z._emscripten_async_run_in_main_thread=function(){return(z._emscripten_async_run_in_main_thread=z.asm.Aa).apply(null,arguments)};z._emscripten_sync_run_in_main_thread=function(){return(z._emscripten_sync_run_in_main_thread=z.asm.Ba).apply(null,arguments)};z._emscripten_sync_run_in_main_thread_0=function(){return(z._emscripten_sync_run_in_main_thread_0=z.asm.Ca).apply(null,arguments)};
-z._emscripten_sync_run_in_main_thread_1=function(){return(z._emscripten_sync_run_in_main_thread_1=z.asm.Da).apply(null,arguments)};z._emscripten_sync_run_in_main_thread_2=function(){return(z._emscripten_sync_run_in_main_thread_2=z.asm.Ea).apply(null,arguments)};z._emscripten_sync_run_in_main_thread_xprintf_varargs=function(){return(z._emscripten_sync_run_in_main_thread_xprintf_varargs=z.asm.Fa).apply(null,arguments)};
-z._emscripten_sync_run_in_main_thread_3=function(){return(z._emscripten_sync_run_in_main_thread_3=z.asm.Ga).apply(null,arguments)};var Td=z._emscripten_sync_run_in_main_thread_4=function(){return(Td=z._emscripten_sync_run_in_main_thread_4=z.asm.Ha).apply(null,arguments)};z._emscripten_sync_run_in_main_thread_5=function(){return(z._emscripten_sync_run_in_main_thread_5=z.asm.Ia).apply(null,arguments)};
-z._emscripten_sync_run_in_main_thread_6=function(){return(z._emscripten_sync_run_in_main_thread_6=z.asm.Ja).apply(null,arguments)};z._emscripten_sync_run_in_main_thread_7=function(){return(z._emscripten_sync_run_in_main_thread_7=z.asm.Ka).apply(null,arguments)};
-var od=z._emscripten_run_in_main_runtime_thread_js=function(){return(od=z._emscripten_run_in_main_runtime_thread_js=z.asm.La).apply(null,arguments)},ud=z.__emscripten_call_on_thread=function(){return(ud=z.__emscripten_call_on_thread=z.asm.Ma).apply(null,arguments)};z._emscripten_tls_init=function(){return(z._emscripten_tls_init=z.asm.Na).apply(null,arguments)};
-var Cb=z.dynCall_vi=function(){return(Cb=z.dynCall_vi=z.asm.Oa).apply(null,arguments)},Wd=z.dynCall_vii=function(){return(Wd=z.dynCall_vii=z.asm.Pa).apply(null,arguments)};z.dynCall_viii=function(){return(z.dynCall_viii=z.asm.Qa).apply(null,arguments)};var Xd=z.dynCall_viiii=function(){return(Xd=z.dynCall_viiii=z.asm.Ra).apply(null,arguments)};z.dynCall_viiiiiiiiii=function(){return(z.dynCall_viiiiiiiiii=z.asm.Sa).apply(null,arguments)};
-var Yd=z.dynCall_iii=function(){return(Yd=z.dynCall_iii=z.asm.Ta).apply(null,arguments)},Zd=z.dynCall_iiii=function(){return(Zd=z.dynCall_iiii=z.asm.Ua).apply(null,arguments)},$d=z.dynCall_iiiii=function(){return($d=z.dynCall_iiiii=z.asm.Va).apply(null,arguments)},ae=z.dynCall_iiiiiiiii=function(){return(ae=z.dynCall_iiiiiiiii=z.asm.Wa).apply(null,arguments)};z.dynCall_i=function(){return(z.dynCall_i=z.asm.Xa).apply(null,arguments)};
-z.dynCall_iiiiii=function(){return(z.dynCall_iiiiii=z.asm.Ya).apply(null,arguments)};z.dynCall_viiiii=function(){return(z.dynCall_viiiii=z.asm.Za).apply(null,arguments)};z.dynCall_iiiiiii=function(){return(z.dynCall_iiiiiii=z.asm._a).apply(null,arguments)};z.dynCall_viiiiii=function(){return(z.dynCall_viiiiii=z.asm.$a).apply(null,arguments)};z.dynCall_viiiiiii=function(){return(z.dynCall_viiiiiii=z.asm.ab).apply(null,arguments)};
-z.dynCall_viiiiiiiiiii=function(){return(z.dynCall_viiiiiiiiiii=z.asm.bb).apply(null,arguments)};z.dynCall_ii=function(){return(z.dynCall_ii=z.asm.cb).apply(null,arguments)};z.dynCall_v=function(){return(z.dynCall_v=z.asm.db).apply(null,arguments)};z.dynCall_iiiiiiii=function(){return(z.dynCall_iiiiiiii=z.asm.eb).apply(null,arguments)};z.dynCall_iiiiiiiiii=function(){return(z.dynCall_iiiiiiiiii=z.asm.fb).apply(null,arguments)};
-z.dynCall_iiiiiiiiiiii=function(){return(z.dynCall_iiiiiiiiiiii=z.asm.gb).apply(null,arguments)};z.dynCall_viiiiiiii=function(){return(z.dynCall_viiiiiiii=z.asm.hb).apply(null,arguments)};z.dynCall_jiiiiiiiii=function(){return(z.dynCall_jiiiiiiiii=z.asm.ib).apply(null,arguments)};z.dynCall_jiji=function(){return(z.dynCall_jiji=z.asm.jb).apply(null,arguments)};z.dynCall_iidiiii=function(){return(z.dynCall_iidiiii=z.asm.kb).apply(null,arguments)};
-z.dynCall_viiiiiiiiiiiii=function(){return(z.dynCall_viiiiiiiiiiiii=z.asm.lb).apply(null,arguments)};z.dynCall_jiiiiiiii=function(){return(z.dynCall_jiiiiiiii=z.asm.mb).apply(null,arguments)};z.dynCall_ff=function(){return(z.dynCall_ff=z.asm.nb).apply(null,arguments)};z.dynCall_jiiiiii=function(){return(z.dynCall_jiiiiii=z.asm.ob).apply(null,arguments)};z.dynCall_jiiiii=function(){return(z.dynCall_jiiiii=z.asm.pb).apply(null,arguments)};
-z.dynCall_iiijii=function(){return(z.dynCall_iiijii=z.asm.qb).apply(null,arguments)};function Qd(a,b){var c=Y();try{Cb(a,b)}catch(d){N(c);if(d!==d+0&&"longjmp"!==d)throw d;Z(1,0)}}function Sd(a,b,c,d,f){var g=Y();try{Xd(a,b,c,d,f)}catch(h){N(g);if(h!==h+0&&"longjmp"!==h)throw h;Z(1,0)}}function Rd(a,b,c){var d=Y();try{Wd(a,b,c)}catch(f){N(d);if(f!==f+0&&"longjmp"!==f)throw f;Z(1,0)}}
-function Pd(a,b,c,d,f,g,h,l,k){var q=Y();try{return ae(a,b,c,d,f,g,h,l,k)}catch(r){N(q);if(r!==r+0&&"longjmp"!==r)throw r;Z(1,0)}}function Md(a,b,c){var d=Y();try{return Yd(a,b,c)}catch(f){N(d);if(f!==f+0&&"longjmp"!==f)throw f;Z(1,0)}}function Od(a,b,c,d,f){var g=Y();try{return $d(a,b,c,d,f)}catch(h){N(g);if(h!==h+0&&"longjmp"!==h)throw h;Z(1,0)}}function Nd(a,b,c,d){var f=Y();try{return Zd(a,b,c,d)}catch(g){N(f);if(g!==g+0&&"longjmp"!==g)throw g;Z(1,0)}}z.PThread=L;z.PThread=L;z._pthread_self=Hd;
-z.wasmMemory=m;z.ExitStatus=ya;var be;function ya(a){this.name="ExitStatus";this.message="Program terminated with exit("+a+")";this.status=a}fb=function ce(){be||de();be||(fb=ce)};
-function de(){function a(){if(!be&&(be=!0,z.calledRun=!0,!Ha)){z.noFSInit||tc||(tc=!0,sc(),z.stdin=z.stdin,z.stdout=z.stdout,z.stderr=z.stderr,z.stdin?vc("stdin",z.stdin):oc("/dev/tty","/dev/stdin"),z.stdout?vc("stdout",null,z.stdout):oc("/dev/tty","/dev/stdout"),z.stderr?vc("stderr",null,z.stderr):oc("/dev/tty1","/dev/stderr"),pc("/dev/stdin","r"),pc("/dev/stdout","w"),pc("/dev/stderr","w"));Ua(Wa);G||(Xb=!1,Ua(Xa));na(z);if(z.onRuntimeInitialized)z.onRuntimeInitialized();if(!G){if(z.postRun)for("function"==
-typeof z.postRun&&(z.postRun=[z.postRun]);z.postRun.length;){var b=z.postRun.shift();Ya.unshift(b)}Ua(Ya)}}}if(!(0<db)){if(!G){if(z.preRun)for("function"==typeof z.preRun&&(z.preRun=[z.preRun]);z.preRun.length;)Za();Ua(Va)}0<db||(z.setStatus?(z.setStatus("Running..."),setTimeout(function(){setTimeout(function(){z.setStatus("")},1);a()},1)):a())}}z.run=de;if(z.preInit)for("function"==typeof z.preInit&&(z.preInit=[z.preInit]);0<z.preInit.length;)z.preInit.pop()();G||(noExitRuntime=!0);
-G?(z.___embind_register_native_and_builtin_types(),na(z)):de();
+              ) {
+                var b = z.postRun.shift();
+                Na.unshift(b);
+              }
+            Za(Na);
+          }
+        }
+      }
+      if (!(0 < K)) {
+        if (!D) {
+          if (z.preRun)
+            for (
+              'function' == typeof z.preRun && (z.preRun = [z.preRun]);
+              z.preRun.length;
 
+            )
+              Oa();
+          Za(Ka);
+        }
+        0 < K ||
+          (z.setStatus
+            ? (z.setStatus('Running...'),
+              setTimeout(function () {
+                setTimeout(function () {
+                  z.setStatus('');
+                }, 1);
+                a();
+              }, 1))
+            : a());
+      }
+    }
+    z.run = Kd;
+    if (z.preInit)
+      for (
+        'function' == typeof z.preInit && (z.preInit = [z.preInit]);
+        0 < z.preInit.length;
 
-  return avif_enc_mt.ready
-}
-);
+      )
+        z.preInit.pop()();
+    D || (noExitRuntime = !0);
+    D ? L.yc() : Kd();
+
+    return avif_enc_mt.ready;
+  };
 })();
-if (typeof exports === 'object' && typeof module === 'object')
-      module.exports = avif_enc_mt;
-    else if (typeof define === 'function' && define['amd'])
-      define([], function() { return avif_enc_mt; });
-    else if (typeof exports === 'object')
-      exports["avif_enc_mt"] = avif_enc_mt;
-    
+export default avif_enc_mt;

@@ -1,7 +1,6 @@
 {
   "name": "hqx",
   "scripts": {
-    "build:image": "docker build -t squoosh-hqx - < Dockerfile",
-    "build": "docker run --rm -v $(pwd):/src squoosh-hqx ./build.sh"
+    "build": "RUST_IMG=rust:1.40 ../build-rust.sh"
   }
 }
