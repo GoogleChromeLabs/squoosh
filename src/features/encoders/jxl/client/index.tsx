@@ -27,6 +27,7 @@ interface State {
   edgePreservingFilter: number;
   lossless: boolean;
   slightLoss: boolean;
+  autoEdgePreservingFilter: boolean;
 }
 
 const maxSpeed = 7;
@@ -48,9 +49,10 @@ export class Options extends Component<Props, State> {
       effort: maxSpeed - options.speed,
       quality: options.quality,
       progressive: options.progressive,
-      edgePreservingFilter: options.epf,
+      edgePreservingFilter: options.epf === -1 ? 2 : options.epf,
       lossless: options.quality === 100,
       slightLoss: options.lossyPalette,
+      autoEdgePreservingFilter: options.epf === -1,
     };
   }
 
@@ -86,7 +88,9 @@ export class Options extends Component<Props, State> {
           speed: maxSpeed - optionState.effort,
           quality: optionState.lossless ? 100 : optionState.quality,
           progressive: optionState.progressive,
-          epf: optionState.edgePreservingFilter,
+          epf: optionState.autoEdgePreservingFilter
+            ? -1
+            : optionState.edgePreservingFilter,
           nearLossless: 0,
           lossyPalette: optionState.lossless ? optionState.slightLoss : false,
         };
@@ -112,6 +116,7 @@ export class Options extends Component<Props, State> {
       edgePreservingFilter,
       lossless,
       slightLoss,
+      autoEdgePreservingFilter,
     }: State,
   ) {
     // I'm rendering both lossy and lossless forms, as it becomes much easier when
@@ -152,16 +157,34 @@ export class Options extends Component<Props, State> {
                   Quality:
                 </Range>
               </div>
-              <div class={style.optionOneCell}>
-                <Range
-                  min="0"
-                  max="3"
-                  value={edgePreservingFilter}
-                  onInput={this._inputChange('edgePreservingFilter', 'number')}
-                >
-                  Edge preserving filter:
-                </Range>
-              </div>
+              <label class={style.optionInputFirst}>
+                <Checkbox
+                  name="autoEdgeFilter"
+                  checked={autoEdgePreservingFilter}
+                  onChange={this._inputChange(
+                    'autoEdgePreservingFilter',
+                    'boolean',
+                  )}
+                />
+                Auto edge filter
+              </label>
+              <Expander>
+                {!autoEdgePreservingFilter && (
+                  <div class={style.optionOneCell}>
+                    <Range
+                      min="0"
+                      max="3"
+                      value={edgePreservingFilter}
+                      onInput={this._inputChange(
+                        'edgePreservingFilter',
+                        'number',
+                      )}
+                    >
+                      Edge preserving filter:
+                    </Range>
+                  </div>
+                )}
+              </Expander>
             </div>
           )}
         </Expander>
