@@ -13,7 +13,7 @@
 import type { EncodeOptions } from 'codecs/wp2/enc/wp2_enc';
 import { UVMode } from 'codecs/wp2/enc/wp2_enc';
 
-export { EncodeOptions };
+export { EncodeOptions, UVMode };
 
 export const label = 'WebP v2 (unstable)';
 export const mimeType = 'image/webp2';

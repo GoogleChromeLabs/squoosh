@@ -1,4 +1,4 @@
-import { EncodeOptions } from '../shared/meta';
+import { EncodeOptions, UVMode } from '../shared/meta';
 import type WorkerBridge from 'client/lazy-app/worker-bridge';
 import { h, Component } from 'preact';
 import {
@@ -8,6 +8,7 @@ import {
 } from 'client/lazy-app/util';
 import * as style from 'client/lazy-app/Compress/Options/style.css';
 import Range from 'client/lazy-app/Compress/Options/Range';
+import Select from 'client/lazy-app/Compress/Options/Select';
 
 export const encode = (
   signal: AbortSignal,
@@ -98,17 +99,19 @@ export class Options extends Component<Props, State> {
     return this._inputChangeCallbacks.get(prop)!;
   };
 
-  render({ options }: Props) {
+  render(
+    {}: Props,
+    { effort, alphaQuality, passes, quality, sns, uvMode }: State,
+  ) {
     return (
       <form class={style.optionsSection} onSubmit={preventDefault}>
         <div class={style.optionOneCell}>
           <Range
-            name="quality"
             min="0"
             max="100"
             step="1"
-            value={options.quality}
-            onInput={this.onChange}
+            value={quality}
+            onInput={this._inputChange('quality', 'number')}
           >
             Quality:
           </Range>
@@ -119,22 +122,10 @@ export class Options extends Component<Props, State> {
             min="0"
             max="100"
             step="1"
-            value={options.alpha_quality}
-            onInput={this.onChange}
+            value={alphaQuality}
+            onInput={this._inputChange('alphaQuality', 'number')}
           >
             Alpha Quality:
-          </Range>
-        </div>
-        <div class={style.optionOneCell}>
-          <Range
-            name="speed"
-            min="0"
-            max="9"
-            step="1"
-            value={options.speed}
-            onInput={this.onChange}
-          >
-            Speed:
           </Range>
         </div>
         <div class={style.optionOneCell}>
@@ -143,22 +134,44 @@ export class Options extends Component<Props, State> {
             min="1"
             max="10"
             step="1"
-            value={options.pass}
-            onInput={this.onChange}
+            value={passes}
+            onInput={this._inputChange('passes', 'number')}
           >
-            Pass:
+            Passes:
           </Range>
         </div>
         <div class={style.optionOneCell}>
           <Range
-            name="sns"
             min="0"
             max="100"
             step="1"
-            value={options.sns}
-            onInput={this.onChange}
+            value={sns}
+            onInput={this._inputChange('sns', 'number')}
           >
             Spatial noise shaping:
+          </Range>
+        </div>
+        <label class={style.optionTextFirst}>
+          Subsample chroma:
+          <Select
+            value={uvMode}
+            onInput={this._inputChange('uvMode', 'number')}
+          >
+            <option value={UVMode.UVModeAuto}>Auto</option>
+            <option value={UVMode.UVModeAdapt}>Vary</option>
+            <option value={UVMode.UVMode420}>Half</option>
+            <option value={UVMode.UVMode444}>Off</option>
+          </Select>
+        </label>
+        <div class={style.optionOneCell}>
+          <Range
+            min="0"
+            max="9"
+            step="1"
+            value={effort}
+            onInput={this._inputChange('effort', 'number')}
+          >
+            Effort:
           </Range>
         </div>
       </form>
