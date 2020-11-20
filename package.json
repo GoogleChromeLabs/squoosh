@@ -49,9 +49,9 @@
     }
   },
   "lint-staged": {
-    "*.{js,css,json,md,ts,tsx}": [
-      "prettier --write"
-    ]
+    "*.{js,css,json,md,ts,tsx}": "prettier --write",
+    "*.{c,h,cpp,hpp}": "clang-format -i",
+    "*.rs": "rustfmt"
   },
   "dependencies": {
     "wasm-feature-detect": "^1.2.9"

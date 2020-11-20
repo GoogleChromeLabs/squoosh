@@ -1,4 +1,4 @@
-use crossbeam_channel::{Sender, Receiver, bounded};
+use crossbeam_channel::{bounded, Receiver, Sender};
 use once_cell::sync::OnceCell;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsValue;
@@ -35,7 +35,8 @@ extern "C" {
 //    shared memory and blocks the current thread until they're all grabbed.
 // 4) Provide a `worker_initializer` that is expected to be invoked from various workers,
 //    reads one `threadPtr` from the shared channel and starts running it.
-static CHANNEL: OnceCell<(Sender<rayon::ThreadBuilder>, Receiver<rayon::ThreadBuilder>)> = OnceCell::new();
+static CHANNEL: OnceCell<(Sender<rayon::ThreadBuilder>, Receiver<rayon::ThreadBuilder>)> =
+    OnceCell::new();
 
 #[wasm_bindgen]
 pub fn worker_initializer(num: usize) -> JsValue {
