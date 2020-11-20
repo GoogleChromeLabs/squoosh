@@ -1,14 +1,13 @@
 import { EncodeOptions, UVMode } from '../shared/meta';
+import { defaultOptions } from '../shared/meta';
 import type WorkerBridge from 'client/lazy-app/worker-bridge';
-import { h, Component } from 'preact';
-import {
-  inputFieldValueAsNumber,
-  preventDefault,
-  shallowEqual,
-} from 'client/lazy-app/util';
+import { h, Component, Fragment } from 'preact';
+import { preventDefault, shallowEqual } from 'client/lazy-app/util';
 import * as style from 'client/lazy-app/Compress/Options/style.css';
 import Range from 'client/lazy-app/Compress/Options/Range';
 import Select from 'client/lazy-app/Compress/Options/Select';
+import Checkbox from 'client/lazy-app/Compress/Options/Checkbox';
+import Expander from 'client/lazy-app/Compress/Options/Expander';
 
 export const encode = (
   signal: AbortSignal,
@@ -30,6 +29,8 @@ interface State {
   passes: number;
   sns: number;
   uvMode: number;
+  lossless: boolean;
+  slightLoss: number;
 }
 
 export class Options extends Component<Props, State> {
@@ -43,17 +44,33 @@ export class Options extends Component<Props, State> {
 
     const { options } = props;
 
-    // Create default form state from options
-    return {
+    const modifyState: Partial<State> = {
       options,
       effort: options.speed,
-      quality: options.quality,
       alphaQuality: options.alpha_quality,
       passes: options.pass,
       sns: options.sns,
       uvMode: options.uv_mode,
     };
+
+    // If quality is > 95, it's lossless with slight loss
+    if (options.quality <= 95) {
+      modifyState.quality = options.quality;
+      modifyState.lossless = false;
+    } else {
+      modifyState.lossless = true;
+      modifyState.slightLoss = 100 - options.quality;
+    }
+
+    return modifyState;
   }
+
+  // Other state is set in getDerivedStateFromProps
+  state: State = {
+    lossless: false,
+    slightLoss: 0,
+    quality: defaultOptions.quality,
+  } as State;
 
   private _inputChangeCallbacks = new Map<string, (event: Event) => void>();
 
@@ -80,7 +97,9 @@ export class Options extends Component<Props, State> {
 
         const newOptions: EncodeOptions = {
           speed: optionState.effort,
-          quality: optionState.quality,
+          quality: optionState.lossless
+            ? 100 - optionState.slightLoss
+            : optionState.quality,
           alpha_quality: optionState.alphaQuality,
           pass: optionState.passes,
           sns: optionState.sns,
@@ -101,68 +120,106 @@ export class Options extends Component<Props, State> {
 
   render(
     {}: Props,
-    { effort, alphaQuality, passes, quality, sns, uvMode }: State,
+    {
+      effort,
+      alphaQuality,
+      passes,
+      quality,
+      sns,
+      uvMode,
+      lossless,
+      slightLoss,
+    }: State,
   ) {
     return (
       <form class={style.optionsSection} onSubmit={preventDefault}>
-        <div class={style.optionOneCell}>
-          <Range
-            min="0"
-            max="100"
-            step="1"
-            value={quality}
-            onInput={this._inputChange('quality', 'number')}
-          >
-            Quality:
-          </Range>
-        </div>
-        <div class={style.optionOneCell}>
-          <Range
-            name="alpha_quality"
-            min="0"
-            max="100"
-            step="1"
-            value={alphaQuality}
-            onInput={this._inputChange('alphaQuality', 'number')}
-          >
-            Alpha Quality:
-          </Range>
-        </div>
-        <div class={style.optionOneCell}>
-          <Range
-            name="pass"
-            min="1"
-            max="10"
-            step="1"
-            value={passes}
-            onInput={this._inputChange('passes', 'number')}
-          >
-            Passes:
-          </Range>
-        </div>
-        <div class={style.optionOneCell}>
-          <Range
-            min="0"
-            max="100"
-            step="1"
-            value={sns}
-            onInput={this._inputChange('sns', 'number')}
-          >
-            Spatial noise shaping:
-          </Range>
-        </div>
-        <label class={style.optionTextFirst}>
-          Subsample chroma:
-          <Select
-            value={uvMode}
-            onInput={this._inputChange('uvMode', 'number')}
-          >
-            <option value={UVMode.UVModeAuto}>Auto</option>
-            <option value={UVMode.UVModeAdapt}>Vary</option>
-            <option value={UVMode.UVMode420}>Half</option>
-            <option value={UVMode.UVMode444}>Off</option>
-          </Select>
+        <label class={style.optionInputFirst}>
+          <Checkbox
+            name="lossless"
+            checked={lossless}
+            onChange={this._inputChange('lossless', 'boolean')}
+          />
+          Lossless
         </label>
+        <Expander>
+          {lossless && (
+            <div class={style.optionOneCell}>
+              <Range
+                min="0"
+                max="5"
+                step="0.1"
+                value={slightLoss}
+                onInput={this._inputChange('slightLoss', 'number')}
+              >
+                Slight loss:
+              </Range>
+            </div>
+          )}
+        </Expander>
+        <Expander>
+          {!lossless && (
+            <div>
+              <div class={style.optionOneCell}>
+                <Range
+                  min="0"
+                  max="95"
+                  step="0.1"
+                  value={quality}
+                  onInput={this._inputChange('quality', 'number')}
+                >
+                  Quality:
+                </Range>
+              </div>
+              <div class={style.optionOneCell}>
+                <Range
+                  name="alpha_quality"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value={alphaQuality}
+                  onInput={this._inputChange('alphaQuality', 'number')}
+                >
+                  Alpha Quality:
+                </Range>
+              </div>
+              <div class={style.optionOneCell}>
+                <Range
+                  name="pass"
+                  min="1"
+                  max="10"
+                  step="1"
+                  value={passes}
+                  onInput={this._inputChange('passes', 'number')}
+                >
+                  Passes:
+                </Range>
+              </div>
+              <div class={style.optionOneCell}>
+                <Range
+                  min="0"
+                  max="100"
+                  step="1"
+                  value={sns}
+                  onInput={this._inputChange('sns', 'number')}
+                >
+                  Spatial noise shaping:
+                </Range>
+              </div>
+              <label class={style.optionTextFirst}>
+                Subsample chroma:
+                <Select
+                  value={uvMode}
+                  onInput={this._inputChange('uvMode', 'number')}
+                >
+                  <option value={UVMode.UVModeAuto}>Auto</option>
+                  <option value={UVMode.UVModeAdapt}>Vary</option>
+                  <option value={UVMode.UVMode420}>Half</option>
+                  <option value={UVMode.UVMode444}>Off</option>
+                </Select>
+              </label>
+            </div>
+          )}
+        </Expander>
         <div class={style.optionOneCell}>
           <Range
             min="0"

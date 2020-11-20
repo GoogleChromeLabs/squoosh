@@ -576,7 +576,7 @@ var wp2_enc = (function () {
       },
     });
     var ob = {
-      p: function (a, b, c, d) {
+      t: function (a, b, c, d) {
         A(
           'Assertion failed: ' +
             C(a) +
@@ -1000,7 +1000,7 @@ var wp2_enc = (function () {
           },
         });
       },
-      q: function (a, b, c, d, e, g) {
+      p: function (a, b, c, d, e, g) {
         Fa[a] = { name: U(b), da: Y(c, d), ea: Y(e, g), U: [] };
       },
       e: function (a, b, c, d, e, g, m, h, k, l) {
@@ -1034,7 +1034,7 @@ var wp2_enc = (function () {
       m: function (a) {
         4 < a && (X[a].T += 1);
       },
-      t: function (a, b, c, d) {
+      q: function (a, b, c, d) {
         a || W('Cannot use deleted val. handle = ' + a);
         a = X[a].value;
         var e = ib[b];
