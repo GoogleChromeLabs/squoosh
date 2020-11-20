@@ -1,7 +1,6 @@
 #include <emscripten/bind.h>
 #include <emscripten/threading.h>
 #include <emscripten/val.h>
-#include <emscripten/threading.h>
 #include "avif/avif.h"
 
 using namespace emscripten;
