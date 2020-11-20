@@ -14,6 +14,9 @@ struct WP2Options {
   int pass;
   int uv_mode;
   float sns;
+  int csp_type;
+  int error_diffusion;
+  bool use_random_matrix;
 };
 
 val encode(std::string image_in, int image_width, int image_height, WP2Options options) {
@@ -24,7 +27,10 @@ val encode(std::string image_in, int image_width, int image_height, WP2Options o
   config.speed = options.speed;
   config.pass = options.pass;
   config.uv_mode = static_cast<WP2::EncoderConfig::UVMode>(options.uv_mode);
+  config.csp_type = static_cast<WP2::Csp>(options.csp_type);
   config.sns = options.sns;
+  config.error_diffusion = options.error_diffusion;
+  config.use_random_matrix = options.use_random_matrix;
 
   uint8_t* image_buffer = (uint8_t*)image_in.c_str();
   WP2::ArgbBuffer src = WP2::ArgbBuffer();
@@ -51,6 +57,9 @@ EMSCRIPTEN_BINDINGS(my_module) {
       .field("speed", &WP2Options::speed)
       .field("pass", &WP2Options::pass)
       .field("uv_mode", &WP2Options::uv_mode)
+      .field("csp_type", &WP2Options::csp_type)
+      .field("error_diffusion", &WP2Options::error_diffusion)
+      .field("use_random_matrix", &WP2Options::use_random_matrix)
       .field("sns", &WP2Options::sns);
 
   function("encode", &encode);
