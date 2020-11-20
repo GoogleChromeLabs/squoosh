@@ -43,6 +43,7 @@ val encode(std::string image_in, int image_width, int image_height, WP2Options o
   }
 
   WP2::MemoryWriter memory_writer;
+  // In WebP2, thread_level is number of *extra* threads to use (0 for no multithreading).
   config.thread_level = emscripten_num_logical_cores() - 1;
   status = WP2::Encode(src, &memory_writer, config);
   if (status != WP2_STATUS_OK) {
