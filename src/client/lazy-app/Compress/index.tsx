@@ -649,6 +649,7 @@ export default class Compress extends Component<Props, State> {
         });
       } catch (err) {
         if (err.name === 'AbortError') return;
+        this.setState({ loading: false });
         this.props.showSnack(`Preprocessing error: ${err}`);
         throw err;
       }
@@ -772,6 +773,12 @@ export default class Compress extends Component<Props, State> {
         this.activeSideJobs[sideIndex] = undefined;
       } catch (err) {
         if (err.name === 'AbortError') return;
+        this.setState((currentState) => {
+          const sides = cleanMerge(currentState.sides, sideIndex, {
+            loading: false,
+          });
+          return { sides };
+        });
         this.props.showSnack(`Processing error: ${err}`);
         throw err;
       }

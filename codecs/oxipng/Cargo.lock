@@ -247,18 +247,18 @@ checksum = "4d58d1b70b004888f764dfbf6a26a3b0342a1632d33968e4a179d8011c760614"
 
 [[package]]
 name = "libdeflate-sys"
-version = "0.5.0"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "21e39efa87b84db3e13ff4e2dfac1e57220abcbd7fe8ec44d238f7f4f787cc1f"
+checksum = "2f5b1582a0ebf8c55a46166c04d7c66f6bb17add3a6cbf69a082ac2219f31671"
 dependencies = [
  "cc",
 ]
 
 [[package]]
 name = "libdeflater"
-version = "0.5.0"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4810980d791f26d470e2d7d91a3d4d22aa3a4b709fb7e9c5e43ee54f83a01f2"
+checksum = "93edd93a53970951da84ef733a8b6e30189a8f8a9e19610f69e4cc5bb1f4d654"
 dependencies = [
  "libdeflate-sys",
 ]
@@ -359,9 +359,9 @@ checksum = "13bd41f508810a131401606d54ac32a467c97172d74ba7662562ebba5ad07fa0"
 
 [[package]]
 name = "oxipng"
-version = "4.0.0"
+version = "4.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea40b366cecfce76ee3b082e7e6567b82cdef75644a22442ca8584bc666ff4eb"
+checksum = "9fefb26bde273c3db896a313151301a69e698a7495ee577fe2168ed7065c29c4"
 dependencies = [
  "bit-vec",
  "byteorder",

@@ -315,9 +315,9 @@ export class Options extends Component<Props, State> {
                       value={subsample}
                       onChange={this._inputChange('subsample', 'number')}
                     >
-                      <option value="1">4:2:0</option>
+                      <option value="1">Half</option>
                       {/*<option value="2">4:2:2</option>*/}
-                      <option value="3">4:4:4</option>
+                      <option value="3">Off</option>
                     </Select>
                   </label>
                 )}
