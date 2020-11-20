@@ -64,12 +64,12 @@ export class Options extends Component<Props, State> {
     };
 
     // If quality is > 95, it's lossless with slight loss
-    if (options.quality <= 95) {
-      modifyState.quality = options.quality;
-      modifyState.lossless = false;
-    } else {
+    if (options.quality > 95) {
       modifyState.lossless = true;
       modifyState.slightLoss = 100 - options.quality;
+    } else {
+      modifyState.quality = options.quality;
+      modifyState.lossless = false;
     }
 
     return modifyState;
