@@ -14,9 +14,9 @@ val decode(std::string image_in) {
   if (status != WP2_STATUS_OK) {
     return val::null();
   }
-  return ImageData.new_(
-      Uint8ClampedArray.new_(typed_memory_view(buffer.stride * buffer.height, buffer.GetRow8(0))),
-      buffer.width, buffer.height);
+  return ImageData.new_(Uint8ClampedArray.new_(typed_memory_view(buffer.stride() * buffer.height(),
+                                                                 buffer.GetRow8(0))),
+                        buffer.width(), buffer.height());
 }
 
 EMSCRIPTEN_BINDINGS(my_module) {
