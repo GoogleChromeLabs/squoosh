@@ -1,4 +1,4 @@
-CODEC_URL = https://github.com/RReverser/libwebp/archive/emscripten-simd.tar.gz
+CODEC_URL = https://github.com/webmproject/libwebp/archive/36c81ff6a940f45b492e137b27eae7ff268c3cd8.tar.gz
 CODEC_DIR = node_modules/libwebp
 CODEC_BUILD_ROOT := $(CODEC_DIR)/build
 CODEC_BASELINE_BUILD_DIR := $(CODEC_BUILD_ROOT)/baseline
