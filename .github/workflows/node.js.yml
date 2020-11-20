@@ -1,0 +1,22 @@
+name: Node.js CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+    - uses: actions/checkout@v2
+    - id: nvmrc
+      uses: browniebroke/read-nvmrc-action@v1
+    - uses: actions/setup-node@v1
+      with:
+        node-version: '${{ steps.nvmrc.outputs.node_version }}'
+    - run: npm ci
+    - run: npm run build
