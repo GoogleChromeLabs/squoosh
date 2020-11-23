@@ -115,11 +115,7 @@ export default class App extends Component<Props, State> {
 
     return (
       <div class={style.app}>
-        <file-drop
-          accept="image/*"
-          onfiledrop={this.onFileDrop}
-          class={style.drop}
-        >
+        <file-drop onfiledrop={this.onFileDrop} class={style.drop}>
           {showSpinner ? (
             <loading-spinner class={style.appLoader} />
           ) : isEditorOpen ? (
