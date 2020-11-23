@@ -2,7 +2,6 @@ import { h, Component } from 'preact';
 
 import { linkRef } from 'shared/initial-app/util';
 import '../custom-els/loading-spinner';
-
 import logo from 'url:./imgs/logo.svg';
 import largePhoto from 'url:./imgs/demos/demo-large-photo.jpg';
 import artwork from 'url:./imgs/demos/demo-artwork.jpg';
@@ -43,6 +42,17 @@ const demos = [
 ];
 
 const installButtonSource = 'introInstallButton-Purple';
+const supportsClipboardAPI =
+  !__PRERENDER__ && navigator.clipboard && navigator.clipboard.read;
+
+async function getImageClipboardItem(
+  items: ClipboardItem[],
+): Promise<undefined | Blob> {
+  for (const item of items) {
+    const type = item.types.find((type) => type.startsWith('image/'));
+    if (type) return item.getType(type);
+  }
+}
 
 interface Props {
   onFile?: (file: File) => void;
@@ -58,10 +68,7 @@ export default class Intro extends Component<Props, State> {
   private fileInput?: HTMLInputElement;
   private installingViaButton = false;
 
-  constructor() {
-    super();
-
-    if (__PRERENDER__) return;
+  componentDidMount() {
     // Listen for beforeinstallprompt events, indicating Squoosh is installable.
     window.addEventListener(
       'beforeinstallprompt',
@@ -72,15 +79,19 @@ export default class Intro extends Component<Props, State> {
     window.addEventListener('appinstalled', this.onAppInstalled);
   }
 
-  private resetFileInput = () => {
-    this.fileInput!.value = '';
-  };
+  componentWillUnmount() {
+    window.removeEventListener(
+      'beforeinstallprompt',
+      this.onBeforeInstallPromptEvent,
+    );
+    window.removeEventListener('appinstalled', this.onAppInstalled);
+  }
 
   private onFileChange = (event: Event): void => {
     const fileInput = event.target as HTMLInputElement;
     const file = fileInput.files && fileInput.files[0];
     if (!file) return;
-    this.resetFileInput();
+    this.fileInput!.value = '';
     this.props.onFile!(file);
   };
 
@@ -94,10 +105,8 @@ export default class Intro extends Component<Props, State> {
       const demo = demos[index];
       const blob = await fetch(demo.url).then((r) => r.blob());
 
-      // Firefox doesn't like content types like 'image/png; charset=UTF-8', which Webpack's dev
-      // server returns. https://bugzilla.mozilla.org/show_bug.cgi?id=1497925.
-      const type = /[^;]*/.exec(blob.type)![0];
-      const file = new File([blob], demo.filename, { type });
+      // TODO: test this is ok on both netlify and dev server in Firefox
+      const file = new File([blob], demo.filename, { type: blob.type });
       this.props.onFile!(file);
     } catch (err) {
       this.setState({ fetchingDemoIndex: undefined });
@@ -154,9 +163,7 @@ export default class Intro extends Component<Props, State> {
     this.setState({ beforeInstallEvent: undefined });
 
     // Don't log analytics if page is not visible
-    if (document.hidden) {
-      return;
-    }
+    if (document.hidden) return;
 
     // Try to get the install, if it's not set, use 'browser'
     const source = this.installingViaButton ? installButtonSource : 'browser';
@@ -166,89 +173,65 @@ export default class Intro extends Component<Props, State> {
     this.installingViaButton = false;
   };
 
+  private onPasteClick = async () => {
+    let clipboardItems: ClipboardItem[];
+
+    try {
+      clipboardItems = await navigator.clipboard.read();
+    } catch (err) {
+      this.props.showSnack!(`Cannot access clipboard`);
+      return;
+    }
+
+    const blob = await getImageClipboardItem(clipboardItems);
+
+    if (!blob) {
+      this.props.showSnack!(`No image found`);
+      return;
+    }
+
+    console.log(blob);
+
+    this.props.onFile!(new File([blob], 'image.unknown'));
+  };
+
   render({}: Props, { fetchingDemoIndex, beforeInstallEvent }: State) {
     return (
       <div class={style.intro}>
-        <div>
-          <div class={style.logoSizer}>
-            <div class={style.logoContainer}>
-              <img
-                src={logo}
-                class={style.logo}
-                alt="Squoosh"
-                decoding="async"
-              />
+        <input
+          class={style.hide}
+          ref={linkRef(this, 'fileInput')}
+          type="file"
+          onChange={this.onFileChange}
+        />
+        {beforeInstallEvent && (
+          <button onClick={this.onInstallClick}>Install</button>
+        )}
+        <div class={style.main}>
+          <div class={style.logo}>Logo Placeholder</div>
+          <div class={style.loadImg}>
+            <div
+              class={style.loadImgContent}
+              style={{ visibility: __PRERENDER__ ? 'hidden' : '' }}
+            >
+              <button class={style.loadBtn}>
+                <svg viewBox="0 0 24 24" class={style.loadIcon}>
+                  <path d="M19 7v3h-2V7h-3V5h3V2h2v3h3v2h-3zm-3 4V8h-3V5H5a2 2 0 00-2 2v12c0 1.1.9 2 2 2h12a2 2 0 002-2v-8h-3zM5 19l3-4 2 3 3-4 4 5H5z" />
+                </svg>
+              </button>
+              <div>
+                Drop OR{' '}
+                {supportsClipboardAPI ? (
+                  <button class={style.pasteBtn} onClick={this.onPasteClick}>
+                    Paste
+                  </button>
+                ) : (
+                  'Paste'
+                )}
+              </div>
             </div>
           </div>
-          <p class={style.openImageGuide}>
-            Drag &amp; drop or{' '}
-            <button class={style.selectButton} onClick={this.onButtonClick}>
-              select an image
-            </button>
-            <input
-              class={style.hide}
-              ref={linkRef(this, 'fileInput')}
-              type="file"
-              onChange={this.onFileChange}
-            />
-          </p>
-          <p>Or try one of these:</p>
-          <ul class={style.demos}>
-            {demos.map((demo, i) => (
-              <li key={demo.url} class={style.demoItem}>
-                <button
-                  class={style.demoButton}
-                  onClick={this.onDemoClick.bind(this, i)}
-                >
-                  <div class={style.demo}>
-                    <div class={style.demoImgContainer}>
-                      <div class={style.demoImgAspect}>
-                        <img
-                          class={style.demoIcon}
-                          src={demo.iconUrl}
-                          alt=""
-                          decoding="async"
-                        />
-                        {fetchingDemoIndex === i && (
-                          <div class={style.demoLoading}>
-                            <loading-spinner class={style.demoLoadingSpinner} />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div class={style.demoDescription}>{demo.description}</div>
-                  </div>
-                </button>
-              </li>
-            ))}
-          </ul>
         </div>
-        {beforeInstallEvent && (
-          <button
-            type="button"
-            class={style.installButton}
-            onClick={this.onInstallClick}
-          >
-            Install
-          </button>
-        )}
-        <ul class={style.relatedLinks}>
-          <li>
-            <a href="https://github.com/GoogleChromeLabs/squoosh/">
-              View the code
-            </a>
-          </li>
-          <li>
-            <a href="https://github.com/GoogleChromeLabs/squoosh/issues">
-              Report a bug
-            </a>
-          </li>
-          <li>
-            <a href="https://github.com/GoogleChromeLabs/squoosh/blob/dev/README.md#privacy">
-              Privacy
-            </a>
-          </li>
-        </ul>
       </div>
     );
   }
