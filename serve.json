@@ -9,5 +9,6 @@
         }
       ]
     }
-  ]
+  ],
+  "redirects": [{ "source": "/editor", "destination": "/" }]
 }
