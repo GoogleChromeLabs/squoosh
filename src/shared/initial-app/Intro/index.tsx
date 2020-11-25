@@ -242,7 +242,7 @@ export default class Intro extends Component<Props, State> {
               src={logoWithText}
               alt="Squoosh"
               width="539"
-              height="62"
+              height="162"
             />
           </h1>
           <div class={style.loadImg}>
