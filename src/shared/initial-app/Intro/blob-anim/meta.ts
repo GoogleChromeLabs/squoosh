@@ -39,5 +39,3 @@ export const startBlobs: BlobPoint[][] = [
     [-1.141, -0.335, -0.951, -0.573, -0.761, -0.811],
   ],
 ];
-
-export const blobColor = 'rgba(255, 0, 102, 0.3)';

@@ -21,6 +21,8 @@
   grid-template-rows: max-content max-content;
   justify-items: center;
   position: relative;
+  --blob-pink: var(--hot-pink);
+  --center-blob-opacity: 0.3;
 }
 
 .logo-container {
@@ -44,6 +46,11 @@
   composes: abs-fill from '../util.css';
   width: 100%;
   height: 100%;
+  fill: var(--blob-pink);
+
+  & path {
+    opacity: var(--center-blob-opacity);
+  }
 }
 
 .load-img-content {

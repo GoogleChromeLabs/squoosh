@@ -1,5 +1,5 @@
 import * as style from '../style.css';
-import { startBlobs, blobColor } from './meta';
+import { startBlobs } from './meta';
 
 /**
  * Control point x,y - point x,y - control point x,y
@@ -142,12 +142,16 @@ class CentralBlobs {
     x: number,
     y: number,
     radius: number,
+    color: string,
+    opacity: number,
   ) {
     ctx.save();
     ctx.translate(x, y);
     ctx.scale(radius, radius);
     this.rotatePos = (this.rotatePos + timeDelta / rotationTime) % 1;
     ctx.rotate(Math.PI * 2 * this.rotatePos);
+    ctx.globalAlpha = opacity;
+    ctx.fillStyle = color;
 
     for (const blob of this.blobs) {
       const points = blob.frame(timeDelta);
@@ -211,8 +215,9 @@ export function startBlobAnim(canvas: HTMLCanvasElement) {
     canvas.width = canvasBounds.width * devicePixelRatio;
     canvas.height = canvasBounds.height * devicePixelRatio;
     const loadImgBounds = loadImgEl.getBoundingClientRect();
+    const computedStyles = getComputedStyle(canvas);
+    const blobPink = computedStyles.getPropertyValue('--blob-pink');
 
-    ctx.fillStyle = blobColor;
     ctx.scale(devicePixelRatio, devicePixelRatio);
 
     centralBlobs.draw(
@@ -221,6 +226,8 @@ export function startBlobAnim(canvas: HTMLCanvasElement) {
       loadImgBounds.left - canvasBounds.left + loadImgBounds.width / 2,
       loadImgBounds.top - canvasBounds.top + loadImgBounds.height / 2,
       loadImgBounds.height / 2 / (1 + maxRandomDistance),
+      blobPink,
+      Number(computedStyles.getPropertyValue('--center-blob-opacity')),
     );
   }
 
