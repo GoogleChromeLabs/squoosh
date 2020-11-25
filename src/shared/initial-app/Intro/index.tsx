@@ -10,6 +10,7 @@ import largePhotoIcon from 'url:./imgs/demos/icon-demo-large-photo.jpg';
 import artworkIcon from 'url:./imgs/demos/icon-demo-artwork.jpg';
 import deviceScreenIcon from 'url:./imgs/demos/icon-demo-device-screen.jpg';
 import logoIcon from 'url:./imgs/demos/icon-demo-logo.png';
+import logoWithText from 'url:./imgs/logo-with-text.svg';
 import * as style from './style.css';
 import type SnackBarElement from 'shared/initial-app/custom-els/snack-bar';
 import 'shared/initial-app/custom-els/snack-bar';
@@ -41,6 +42,7 @@ const demos = [
   },
 ];
 
+const blobAnimImport = import('./blob-anim');
 const installButtonSource = 'introInstallButton-Purple';
 const supportsClipboardAPI =
   !__PRERENDER__ && navigator.clipboard && navigator.clipboard.read;
@@ -66,6 +68,7 @@ interface State {
 export default class Intro extends Component<Props, State> {
   state: State = {};
   private fileInput?: HTMLInputElement;
+  private blobCanvas?: HTMLCanvasElement;
   private installingViaButton = false;
 
   componentDidMount() {
@@ -77,6 +80,8 @@ export default class Intro extends Component<Props, State> {
 
     // Listen for the appinstalled event, indicating Squoosh has been installed.
     window.addEventListener('appinstalled', this.onAppInstalled);
+
+    blobAnimImport.then((module) => module.startBlobAnim(this.blobCanvas!));
   }
 
   componentWillUnmount() {
@@ -95,7 +100,7 @@ export default class Intro extends Component<Props, State> {
     this.props.onFile!(file);
   };
 
-  private onButtonClick = () => {
+  private onOpenClick = () => {
     this.fileInput!.click();
   };
 
@@ -179,18 +184,16 @@ export default class Intro extends Component<Props, State> {
     try {
       clipboardItems = await navigator.clipboard.read();
     } catch (err) {
-      this.props.showSnack!(`Cannot access clipboard`);
+      this.props.showSnack!(`No permission to access clipboard`);
       return;
     }
 
     const blob = await getImageClipboardItem(clipboardItems);
 
     if (!blob) {
-      this.props.showSnack!(`No image found`);
+      this.props.showSnack!(`No image found in the clipboard`);
       return;
     }
-
-    console.log(blob);
 
     this.props.onFile!(new File([blob], 'image.unknown'));
   };
@@ -208,13 +211,27 @@ export default class Intro extends Component<Props, State> {
           <button onClick={this.onInstallClick}>Install</button>
         )}
         <div class={style.main}>
-          <div class={style.logo}>Logo Placeholder</div>
+          {!__PRERENDER__ && (
+            <canvas
+              ref={linkRef(this, 'blobCanvas')}
+              class={style.blobCanvas}
+            />
+          )}
+          <h1 class={style.logoContainer}>
+            <img
+              class={style.logo}
+              src={logoWithText}
+              alt="Squoosh"
+              width="539"
+              height="62"
+            />
+          </h1>
           <div class={style.loadImg}>
             <div
               class={style.loadImgContent}
               style={{ visibility: __PRERENDER__ ? 'hidden' : '' }}
             >
-              <button class={style.loadBtn}>
+              <button class={style.loadBtn} onClick={this.onOpenClick}>
                 <svg viewBox="0 0 24 24" class={style.loadIcon}>
                   <path d="M19 7v3h-2V7h-3V5h3V2h2v3h3v2h-3zm-3 4V8h-3V5H5a2 2 0 00-2 2v12c0 1.1.9 2 2 2h12a2 2 0 002-2v-8h-3zM5 19l3-4 2 3 3-4 4 5H5z" />
                 </svg>

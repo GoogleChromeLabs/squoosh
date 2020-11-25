@@ -5,34 +5,43 @@
   overscroll-behavior: contain;
 }
 
+.blob-canvas {
+  composes: abs-fill from '../util.css';
+  width: 100%;
+  height: 100%;
+}
+
 .hide {
   display: none;
 }
 
 .main {
-  min-height: 50vh;
+  min-height: 70vh;
   display: grid;
   grid-template-rows: max-content max-content;
   justify-items: center;
-  align-content: center;
+  position: relative;
+}
+
+.logo-container {
+  margin: 8rem 0 -1.2rem;
 }
 
 .logo {
-  font-weight: bold;
-  font-size: 3rem;
-  margin: 4rem 0;
+  transform: translate(-1%, 0);
+  width: 189px;
+  height: auto;
 }
 
 .load-img {
-  background: var(--pink);
+  position: relative;
   color: var(--white);
   font-style: italic;
   font-size: 1.2rem;
-  --size: 23rem;
-  border-radius: var(--size);
 }
 
 .load-img-content {
+  --size: 36rem;
   width: var(--size);
   height: var(--size);
   display: grid;
