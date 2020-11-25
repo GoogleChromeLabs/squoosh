@@ -14,6 +14,7 @@ import logoWithText from 'url:./imgs/logo-with-text.svg';
 import * as style from './style.css';
 import type SnackBarElement from 'shared/initial-app/custom-els/snack-bar';
 import 'shared/initial-app/custom-els/snack-bar';
+import { blobColor, startBlobs } from './blob-anim/meta';
 
 const demos = [
   {
@@ -42,7 +43,10 @@ const demos = [
   },
 ];
 
-const blobAnimImport = import('./blob-anim');
+const blobAnimImport =
+  !__PRERENDER__ && matchMedia('(prefers-reduced-motion: reduce)').matches
+    ? undefined
+    : import('./blob-anim');
 const installButtonSource = 'introInstallButton-Purple';
 const supportsClipboardAPI =
   !__PRERENDER__ && navigator.clipboard && navigator.clipboard.read;
@@ -63,10 +67,13 @@ interface Props {
 interface State {
   fetchingDemoIndex?: number;
   beforeInstallEvent?: BeforeInstallPromptEvent;
+  showBlobSVG: boolean;
 }
 
 export default class Intro extends Component<Props, State> {
-  state: State = {};
+  state: State = {
+    showBlobSVG: true,
+  };
   private fileInput?: HTMLInputElement;
   private blobCanvas?: HTMLCanvasElement;
   private installingViaButton = false;
@@ -81,7 +88,16 @@ export default class Intro extends Component<Props, State> {
     // Listen for the appinstalled event, indicating Squoosh has been installed.
     window.addEventListener('appinstalled', this.onAppInstalled);
 
-    blobAnimImport.then((module) => module.startBlobAnim(this.blobCanvas!));
+    if (blobAnimImport) {
+      blobAnimImport.then((module) => {
+        this.setState(
+          {
+            showBlobSVG: false,
+          },
+          () => module.startBlobAnim(this.blobCanvas!),
+        );
+      });
+    }
   }
 
   componentWillUnmount() {
@@ -198,7 +214,10 @@ export default class Intro extends Component<Props, State> {
     this.props.onFile!(new File([blob], 'image.unknown'));
   };
 
-  render({}: Props, { fetchingDemoIndex, beforeInstallEvent }: State) {
+  render(
+    {}: Props,
+    { fetchingDemoIndex, beforeInstallEvent, showBlobSVG }: State,
+  ) {
     return (
       <div class={style.intro}>
         <input
@@ -227,6 +246,31 @@ export default class Intro extends Component<Props, State> {
             />
           </h1>
           <div class={style.loadImg}>
+            {showBlobSVG && (
+              <svg
+                class={style.blobSvg}
+                style={{ fill: blobColor }}
+                viewBox="-1.25 -1.25 2.5 2.5"
+              >
+                {startBlobs.map((points) => (
+                  <path
+                    d={points
+                      .map((point, i) => {
+                        const nextI = i === points.length - 1 ? 0 : i + 1;
+                        let d = '';
+                        if (i === 0) {
+                          d += `M${point[2]} ${point[3]}`;
+                        }
+                        return (
+                          d +
+                          `C${point[4]} ${point[5]} ${points[nextI][0]} ${points[nextI][1]} ${points[nextI][2]} ${points[nextI][3]}`
+                        );
+                      })
+                      .join('')}
+                  />
+                ))}
+              </svg>
+            )}
             <div
               class={style.loadImgContent}
               style={{ visibility: __PRERENDER__ ? 'hidden' : '' }}

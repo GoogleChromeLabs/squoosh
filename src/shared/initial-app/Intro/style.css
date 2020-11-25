@@ -24,7 +24,7 @@
 }
 
 .logo-container {
-  margin: 8rem 0 -1.2rem;
+  margin: 8rem 0 1rem;
 }
 
 .logo {
@@ -40,7 +40,14 @@
   font-size: 1.2rem;
 }
 
+.blob-svg {
+  composes: abs-fill from '../util.css';
+  width: 100%;
+  height: 100%;
+}
+
 .load-img-content {
+  position: relative;
   --size: 36rem;
   width: var(--size);
   height: var(--size);
