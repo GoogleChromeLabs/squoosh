@@ -193,12 +193,35 @@ export function startBlobAnim(canvas: HTMLCanvasElement) {
     hasFocus = false;
   };
 
+  new ResizeObserver(() => {
+    // Redraw for new canvas size
+    if (!animating) drawFrame(0);
+  }).observe(canvas);
+
   addEventListener('focus', focusListener);
   addEventListener('blur', blurListener);
 
   function destruct() {
     removeEventListener('focus', focusListener);
     removeEventListener('blur', blurListener);
+  }
+
+  function drawFrame(delta: number) {
+    const canvasBounds = canvas.getBoundingClientRect();
+    canvas.width = canvasBounds.width * devicePixelRatio;
+    canvas.height = canvasBounds.height * devicePixelRatio;
+    const loadImgBounds = loadImgEl.getBoundingClientRect();
+
+    ctx.fillStyle = blobColor;
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+
+    centralBlobs.draw(
+      ctx,
+      delta,
+      loadImgBounds.left - canvasBounds.left + loadImgBounds.width / 2,
+      loadImgBounds.top - canvasBounds.top + loadImgBounds.height / 2,
+      loadImgBounds.height / 2 / (1 + maxRandomDistance),
+    );
   }
 
   function frame(time: number) {
@@ -223,21 +246,7 @@ export function startBlobAnim(canvas: HTMLCanvasElement) {
     const delta = (time - lastTime) * deltaMultiplier;
     lastTime = time;
 
-    const canvasBounds = canvas.getBoundingClientRect();
-    canvas.width = canvasBounds.width * devicePixelRatio;
-    canvas.height = canvasBounds.height * devicePixelRatio;
-    const loadImgBounds = loadImgEl.getBoundingClientRect();
-
-    ctx.fillStyle = blobColor;
-    ctx.scale(devicePixelRatio, devicePixelRatio);
-
-    centralBlobs.draw(
-      ctx,
-      delta,
-      loadImgBounds.left - canvasBounds.left + loadImgBounds.width / 2,
-      loadImgBounds.top - canvasBounds.top + loadImgBounds.height / 2,
-      loadImgBounds.height / 2 / (1 + maxRandomDistance),
-    );
+    drawFrame(delta);
 
     requestAnimationFrame(frame);
   }
