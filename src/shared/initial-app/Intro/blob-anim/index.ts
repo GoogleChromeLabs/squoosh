@@ -204,6 +204,7 @@ interface BackgroundBlob {
   velocity: number;
   spinTime: number;
   alpha: number;
+  alphaMultiplier: number;
   rotatePos: number;
   radius: number;
   x: number;
@@ -230,6 +231,7 @@ class BackgroundBlobs {
           alpha:
             Math.random() ** 3 * (bgBlobsMaxAlpha - bgBlobsMinAlpha) +
             bgBlobsMinAlpha,
+          alphaMultiplier: 1,
           spinTime:
             Math.random() * (bgBlobsMaxSpinTime - bgBlobsMinSpinTime) +
             bgBlobsMinSpinTime,
@@ -249,6 +251,7 @@ class BackgroundBlobs {
     bounds: DOMRect,
     targetX: number,
     targetY: number,
+    targetRadius: number,
   ) {
     if (this.overallAlphaPos !== 1) {
       this.overallAlphaPos = Math.min(
@@ -258,14 +261,13 @@ class BackgroundBlobs {
     }
     for (const bgBlob of this.bgBlobs) {
       bgBlob.blob.advance(timeDelta);
-      const dist = Math.hypot(bgBlob.x - targetX, bgBlob.y - targetY);
+      let dist = Math.hypot(bgBlob.x - targetX, bgBlob.y - targetY);
       bgBlob.rotatePos = (bgBlob.rotatePos + timeDelta / bgBlob.spinTime) % 1;
       const shiftDist = bgBlob.velocity * timeDelta;
 
       if (dist < 10) {
         // Move the circle out to a random edge
-        const tlbr = Math.floor(Math.random() * 4);
-        switch (tlbr) {
+        switch (Math.floor(Math.random() * 4)) {
           case 0: // top
             bgBlob.x = Math.random() * bounds.width;
             bgBlob.y = -(bgBlob.radius * (1 + maxPointDistance));
@@ -284,12 +286,13 @@ class BackgroundBlobs {
             break;
         }
       }
-
+      dist = Math.hypot(bgBlob.x - targetX, bgBlob.y - targetY);
       const direction = Math.atan2(targetX - bgBlob.x, targetY - bgBlob.y);
       const xShift = Math.sin(direction) * shiftDist;
       const yShift = Math.cos(direction) * shiftDist;
       bgBlob.x += xShift;
       bgBlob.y += yShift;
+      bgBlob.alphaMultiplier = Math.min(dist / targetRadius, 1);
     }
   }
 
@@ -298,7 +301,7 @@ class BackgroundBlobs {
 
     for (const bgBlob of this.bgBlobs) {
       ctx.save();
-      ctx.globalAlpha = bgBlob.alpha * overallAlpha;
+      ctx.globalAlpha = bgBlob.alpha * bgBlob.alphaMultiplier * overallAlpha;
       ctx.translate(bgBlob.x, bgBlob.y);
       ctx.scale(bgBlob.radius, bgBlob.radius);
       ctx.rotate(Math.PI * 2 * bgBlob.rotatePos);
@@ -352,6 +355,7 @@ export function startBlobAnim(canvas: HTMLCanvasElement) {
       loadImgBounds.left - canvasBounds.left + loadImgBounds.width / 2;
     const loadImgCenterY =
       loadImgBounds.top - canvasBounds.top + loadImgBounds.height / 2;
+    const loadImgRadius = loadImgBounds.height / 2 / (1 + maxPointDistance);
 
     ctx.scale(devicePixelRatio, devicePixelRatio);
 
@@ -361,6 +365,7 @@ export function startBlobAnim(canvas: HTMLCanvasElement) {
       canvasBounds,
       loadImgCenterX,
       loadImgCenterY,
+      loadImgRadius,
     );
     centralBlobs.advance(delta);
 
@@ -370,13 +375,7 @@ export function startBlobAnim(canvas: HTMLCanvasElement) {
     ctx.fillStyle = blobPink;
 
     backgroundBlobs.draw(ctx);
-
-    centralBlobs.draw(
-      ctx,
-      loadImgCenterX,
-      loadImgCenterY,
-      loadImgBounds.height / 2 / (1 + maxPointDistance),
-    );
+    centralBlobs.draw(ctx, loadImgCenterX, loadImgCenterY, loadImgRadius);
   }
 
   function frame(time: number) {
