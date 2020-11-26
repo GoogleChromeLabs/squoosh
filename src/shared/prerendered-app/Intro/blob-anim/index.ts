@@ -225,16 +225,12 @@ class BackgroundBlobs {
             minDuration: 2000,
             maxDuration: 5000,
           }),
-          velocity:
-            Math.random() * (bgBlobsMaxVelocity - bgBlobsMinVelocity) +
-            bgBlobsMinVelocity,
+          velocity: rand(bgBlobsMinVelocity, bgBlobsMaxVelocity),
           alpha:
             Math.random() ** 3 * (bgBlobsMaxAlpha - bgBlobsMinAlpha) +
             bgBlobsMinAlpha,
           alphaMultiplier: 1,
-          spinTime:
-            Math.random() * (bgBlobsMaxSpinTime - bgBlobsMinSpinTime) +
-            bgBlobsMinSpinTime,
+          spinTime: rand(bgBlobsMinSpinTime, bgBlobsMaxSpinTime),
           rotatePos: 0,
           radius:
             Math.random() ** 3 * (bgBlobsMaxRadius - bgBlobsMinRadius) +

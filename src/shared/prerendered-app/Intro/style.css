@@ -131,13 +131,13 @@
   gap: 4rem;
 }
 
-.footer-link,
-.footer-link-with-logo {
+.footer-link {
   text-decoration: none;
   color: inherit;
 }
 
 .footer-link-with-logo {
+  composes: footer-link;
   display: grid;
   grid-template-columns: 1.8em max-content;
   align-items: center;
@@ -166,4 +166,60 @@
   padding: 0.5em 1em;
   font-size: 1.6rem;
   animation: fade-in 600ms ease-in-out;
+}
+
+.demo-title {
+  color: var(--white);
+  margin: 0;
+  font-size: 2rem;
+  text-align: center;
+}
+
+.demos {
+  display: grid;
+  gap: 6rem;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  justify-items: center;
+  justify-content: center;
+  padding: 0;
+  width: max-content;
+  margin: 3rem auto;
+
+  & > li {
+    display: block;
+  }
+}
+
+.demo-size {
+  background: var(--dim-blue);
+  border-radius: 1000px;
+  color: var(--white);
+  width: max-content;
+  padding: 0.5rem 1.2rem;
+  margin: 0.7rem auto 0;
+}
+
+.demo-icon-container {
+  --size: 100px;
+  border-radius: var(--size);
+  position: relative;
+  overflow: hidden;
+}
+.demo-icon {
+  width: var(--size);
+  height: var(--size);
+  display: block;
+}
+.demo-loader {
+  composes: abs-fill from global;
+  background: rgba(0, 0, 0, 0.5);
+  display: grid;
+  justify-content: center;
+  align-content: center;
+  animation: fade-in 600ms ease-in-out;
+
+  & > loading-spinner {
+    --color: var(--white);
+  }
 }

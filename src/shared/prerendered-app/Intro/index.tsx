@@ -19,25 +19,29 @@ import { startBlobs } from './blob-anim/meta';
 
 const demos = [
   {
-    description: 'Large photo (2.8mb)',
+    description: 'Large photo',
+    size: '2.8mb',
     filename: 'photo.jpg',
     url: largePhoto,
     iconUrl: largePhotoIcon,
   },
   {
-    description: 'Artwork (2.9mb)',
+    description: 'Artwork',
+    size: '2.9mb',
     filename: 'art.jpg',
     url: artwork,
     iconUrl: artworkIcon,
   },
   {
-    description: 'Device screen (1.6mb)',
+    description: 'Device screen',
+    size: '1.6mb',
     filename: 'pixel3.png',
     url: deviceScreen,
     iconUrl: deviceScreenIcon,
   },
   {
-    description: 'SVG icon (13k)',
+    description: 'SVG icon',
+    size: '13k',
     filename: 'squoosh.svg',
     url: logo,
     iconUrl: logoIcon,
@@ -298,7 +302,37 @@ export default class Intro extends Component<Props, State> {
               class={style.mainWave}
             />
           </svg>
-          <div class={style.contentPadding}>Hello</div>
+          <div class={style.contentPadding}>
+            <p class={style.demoTitle}>
+              Or <strong>try one</strong> of these:
+            </p>
+            <ul class={style.demos}>
+              {demos.map((demo, i) => (
+                <li>
+                  <button
+                    class="unbutton"
+                    onClick={(event) => this.onDemoClick(i, event)}
+                  >
+                    <div>
+                      <div class={style.demoIconContainer}>
+                        <img
+                          class={style.demoIcon}
+                          src={demo.iconUrl}
+                          alt={demo.description}
+                        />
+                        {fetchingDemoIndex === i && (
+                          <div class={style.demoLoader}>
+                            <loading-spinner />
+                          </div>
+                        )}
+                      </div>
+                      <div class={style.demoSize}>{demo.size}</div>
+                    </div>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
         <div class={style.footer}>
           <svg viewBox="0 0 1920 79" class={style.topWave}>

@@ -2,13 +2,13 @@ html {
   --pink: #ff3385;
   --hot-pink: #ff0066;
   --white: #fff;
+  --dim-blue: #0a7bcc;
   --deep-blue: #09f;
   --light-blue: #76c8ff;
   --light-gray: #eaeaea;
   --dark-text: #343a3e;
 
-  /*
-  Old stuff:
+  /* Old stuff: */
   --gray-dark: rgba(0, 0, 0, 0.8);
 
   --button-fg-color: 95, 180, 228;
@@ -16,5 +16,4 @@ html {
 
   --negative: rgb(207, 113, 127);
   --positive: rgb(149, 212, 159);
-  */
 }
