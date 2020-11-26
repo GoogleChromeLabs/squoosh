@@ -323,6 +323,10 @@ export function startBlobAnim(canvas: HTMLCanvasElement) {
   let deltaMultiplier = hasFocus ? 1 : 0;
   let animating = true;
 
+  const visibilityListener = () => {
+    // 'Pause time' while page is hidden
+    if (document.visibilityState === 'visible') lastTime = performance.now();
+  };
   const focusListener = () => {
     hasFocus = true;
     if (!animating) startAnim();
@@ -338,10 +342,12 @@ export function startBlobAnim(canvas: HTMLCanvasElement) {
 
   addEventListener('focus', focusListener);
   addEventListener('blur', blurListener);
+  document.addEventListener('visibilitychange', visibilityListener);
 
   function destruct() {
     removeEventListener('focus', focusListener);
     removeEventListener('blur', blurListener);
+    document.removeEventListener('visibilitychange', visibilityListener);
   }
 
   function drawFrame(delta: number) {
