@@ -319,8 +319,8 @@ export function startBlobAnim(canvas: HTMLCanvasElement) {
   const centralBlobs = new CentralBlobs();
   let backgroundBlobs: BackgroundBlobs;
   const loadImgEl = document.querySelector('.' + style.loadImg)!;
-  let deltaMultiplier = 1;
-  let hasFocus = true;
+  let hasFocus = document.hasFocus();
+  let deltaMultiplier = hasFocus ? 1 : 0;
   let animating = true;
 
   const focusListener = () => {
