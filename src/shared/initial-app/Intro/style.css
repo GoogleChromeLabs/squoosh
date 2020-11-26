@@ -22,7 +22,7 @@
   justify-items: center;
   position: relative;
   --blob-pink: var(--hot-pink);
-  --center-blob-opacity: 0.3;
+  --center-blob-opacity: 0.6;
 }
 
 .logo-container {
