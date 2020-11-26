@@ -148,3 +148,22 @@
     height: auto;
   }
 }
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.install-btn {
+  composes: unbutton from global;
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: var(--deep-blue);
+  border-radius: 0.4em;
+  color: var(--white);
+  padding: 0.5em 1em;
+  font-size: 1.6rem;
+  animation: fade-in 600ms ease-in-out;
+}

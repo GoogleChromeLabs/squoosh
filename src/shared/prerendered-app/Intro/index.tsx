@@ -227,9 +227,6 @@ export default class Intro extends Component<Props, State> {
           type="file"
           onChange={this.onFileChange}
         />
-        {beforeInstallEvent && (
-          <button onClick={this.onInstallClick}>Install</button>
-        )}
         <div class={style.main}>
           {!__PRERENDER__ && (
             <canvas
@@ -328,6 +325,11 @@ export default class Intro extends Component<Props, State> {
             </footer>
           </div>
         </div>
+        {beforeInstallEvent && (
+          <button class={style.installBtn} onClick={this.onInstallClick}>
+            Install
+          </button>
+        )}
       </div>
     );
   }
