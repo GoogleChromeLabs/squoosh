@@ -8,7 +8,7 @@ import {
   CopyAcrossIcon,
   CopyAcrossIconProps,
 } from 'client/lazy-app/icons';
-import 'shared/initial-app/custom-els/loading-spinner';
+import 'shared/custom-els/loading-spinner';
 import { SourceImage } from '../';
 
 interface Props {

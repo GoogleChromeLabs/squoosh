@@ -1,4 +1,4 @@
-import type SnackBarElement from 'shared/initial-app/custom-els/snack-bar';
+import type SnackBarElement from 'shared/custom-els/snack-bar';
 
 import { get, set } from 'idb-keyval';
 

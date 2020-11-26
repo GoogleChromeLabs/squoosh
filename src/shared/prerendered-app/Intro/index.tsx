@@ -1,7 +1,7 @@
 import { h, Component } from 'preact';
 
-import { linkRef } from 'shared/initial-app/util';
-import '../custom-els/loading-spinner';
+import { linkRef } from 'shared/prerendered-app/util';
+import '../../custom-els/loading-spinner';
 import logo from 'url:./imgs/logo.svg';
 import githubLogo from 'url:./imgs/github-logo.svg';
 import largePhoto from 'url:./imgs/demos/demo-large-photo.jpg';
@@ -13,8 +13,8 @@ import deviceScreenIcon from 'url:./imgs/demos/icon-demo-device-screen.jpg';
 import logoIcon from 'url:./imgs/demos/icon-demo-logo.png';
 import logoWithText from 'url:./imgs/logo-with-text.svg';
 import * as style from './style.css';
-import type SnackBarElement from 'shared/initial-app/custom-els/snack-bar';
-import 'shared/initial-app/custom-els/snack-bar';
+import type SnackBarElement from 'shared/custom-els/snack-bar';
+import 'shared/custom-els/snack-bar';
 import { startBlobs } from './blob-anim/meta';
 
 const demos = [
