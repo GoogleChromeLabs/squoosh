@@ -3,6 +3,7 @@ import { h, Component } from 'preact';
 import { linkRef } from 'shared/initial-app/util';
 import '../custom-els/loading-spinner';
 import logo from 'url:./imgs/logo.svg';
+import githubLogo from 'url:./imgs/github-logo.svg';
 import largePhoto from 'url:./imgs/demos/demo-large-photo.jpg';
 import artwork from 'url:./imgs/demos/demo-artwork.jpg';
 import deviceScreen from 'url:./imgs/demos/demo-device-screen.png';
@@ -287,6 +288,44 @@ export default class Intro extends Component<Props, State> {
                 )}
               </div>
             </div>
+          </div>
+        </div>
+        <div class={style.demosContainer}>
+          <svg viewBox="0 0 1920 140" class={style.topWave}>
+            <path
+              d="M1920 0l-107 28c-106 29-320 85-533 93-213 7-427-36-640-50s-427 0-533 7L0 85v171h1920z"
+              class={style.subWave}
+            />
+            <path
+              d="M0 129l64-26c64-27 192-81 320-75 128 5 256 69 384 64 128-6 256-80 384-91s256 43 384 70c128 26 256 26 320 26h64v96H0z"
+              class={style.mainWave}
+            />
+          </svg>
+          <div class={style.contentPadding}>Hello</div>
+        </div>
+        <div class={style.footer}>
+          <svg viewBox="0 0 1920 79" class={style.topWave}>
+            <path
+              d="M0 59l64-11c64-11 192-34 320-43s256-5 384 4 256 23 384 34 256 21 384 14 256-30 320-41l64-11v94H0z"
+              class={style.footerWave}
+            />
+          </svg>
+          <div class={style.contentPadding}>
+            <footer class={style.footerItems}>
+              <a
+                class={style.footerLink}
+                href="https://github.com/GoogleChromeLabs/squoosh/blob/dev/README.md#privacy"
+              >
+                Privacy
+              </a>
+              <a
+                class={style.footerLinkWithLogo}
+                href="https://github.com/GoogleChromeLabs/squoosh"
+              >
+                <img src={githubLogo} alt="" width="10" height="10" />
+                Source on Github
+              </a>
+            </footer>
           </div>
         </div>
       </div>
