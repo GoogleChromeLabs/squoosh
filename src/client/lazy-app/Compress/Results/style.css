@@ -124,7 +124,7 @@
 .copy-to-other {
   grid-row: 1;
   grid-column: copy-button;
-  composes: unbutton from '../../../../shared/prerendered-app/util.css';
+  composes: unbutton from global;
   composes: download;
 
   background: #656565;

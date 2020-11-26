@@ -1,5 +1,5 @@
 .intro {
-  composes: abs-fill from '../util.css';
+  composes: abs-fill from global;
   -webkit-overflow-scrolling: touch;
   overflow: auto;
   overscroll-behavior: contain;
@@ -10,7 +10,7 @@
 }
 
 .blob-canvas {
-  composes: abs-fill from '../util.css';
+  composes: abs-fill from global;
   width: 100%;
   height: 100%;
 }
@@ -47,7 +47,7 @@
 }
 
 .blob-svg {
-  composes: abs-fill from '../util.css';
+  composes: abs-fill from global;
   width: 100%;
   height: 100%;
   fill: var(--blob-pink);
@@ -70,7 +70,7 @@
 }
 
 .load-btn {
-  composes: unbutton from '../util.css';
+  composes: unbutton from global;
 }
 
 .load-icon {
@@ -82,7 +82,7 @@
 }
 
 .paste-btn {
-  composes: unbutton from '../util.css';
+  composes: unbutton from global;
   text-decoration: underline;
   font: inherit;
   color: inherit;
