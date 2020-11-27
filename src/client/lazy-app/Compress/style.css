@@ -73,3 +73,24 @@
 :focus .expand-icon {
   fill: #34b9eb;
 }
+
+.back {
+  composes: unbutton from global;
+  position: absolute;
+  top: var(--dist);
+  left: var(--dist);
+  --dist: 14px;
+
+  & > svg {
+    width: 58px;
+  }
+}
+
+.back-blob {
+  fill: var(--hot-pink);
+  opacity: 0.77;
+}
+
+.back-x {
+  fill: var(--white);
+}
