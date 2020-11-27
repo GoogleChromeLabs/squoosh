@@ -20,7 +20,7 @@
 }
 
 .main {
-  min-height: 70vh;
+  min-height: 688px;
   display: grid;
   grid-template-rows: max-content max-content;
   justify-items: center;
@@ -30,7 +30,7 @@
 }
 
 .logo-container {
-  margin: 8rem 0 1rem;
+  margin: 5rem 0 1rem;
 }
 
 .logo {
