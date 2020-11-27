@@ -20,13 +20,17 @@
 }
 
 .main {
-  min-height: 688px;
+  min-height: 541px;
   display: grid;
   grid-template-rows: max-content max-content;
   justify-items: center;
   position: relative;
   --blob-pink: var(--hot-pink);
   --center-blob-opacity: 0.3;
+
+  @media (min-width: 600px) {
+    min-height: 688px;
+  }
 }
 
 .logo-container {
@@ -59,7 +63,7 @@
 
 .load-img-content {
   position: relative;
-  --size: 36rem;
+  --size: 29rem;
   max-width: var(--size);
   height: var(--size);
   display: grid;
@@ -67,6 +71,10 @@
   justify-items: center;
   align-content: center;
   gap: 0.7rem;
+
+  @media (min-width: 600px) {
+    --size: 36rem;
+  }
 }
 
 .load-btn {
@@ -224,5 +232,11 @@
 
   & > loading-spinner {
     --color: var(--white);
+  }
+}
+
+.drop-text {
+  @media (max-width: 599px) {
+    display: none;
   }
 }

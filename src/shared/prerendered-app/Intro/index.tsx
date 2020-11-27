@@ -279,7 +279,7 @@ export default class Intro extends Component<Props, State> {
                 </svg>
               </button>
               <div>
-                Drop OR{' '}
+                <span class={style.dropText}>Drop </span>OR{' '}
                 {supportsClipboardAPI ? (
                   <button class={style.pasteBtn} onClick={this.onPasteClick}>
                     Paste
