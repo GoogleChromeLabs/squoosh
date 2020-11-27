@@ -2,12 +2,11 @@ two-up {
   display: grid;
   position: relative;
   --split-point: 0;
-  --accent-color: #777;
-  --track-color: var(--accent-color);
-  --thumb-background: #fff;
+  --track-color: rgb(0 0 0 / 0.6);
+  --thumb-background: var(--black);
   --thumb-color: var(--accent-color);
   --thumb-size: 62px;
-  --bar-size: 6px;
+  --bar-size: 9px;
   --bar-touch-size: 30px;
 }
 
@@ -37,8 +36,6 @@ two-up[legacy-clip-compat] > :not(.two-up-handle) {
   height: 100%;
   width: var(--bar-size);
   margin: 0 auto;
-  box-shadow: inset calc(var(--bar-size) / 2) 0 0 rgba(0, 0, 0, 0.1),
-    0 1px 4px rgba(0, 0, 0, 0.4);
   background: var(--track-color);
 }
 
@@ -47,14 +44,11 @@ two-up[legacy-clip-compat] > :not(.two-up-handle) {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform-origin: 50% 50%;
   transform: translate(-50%, -50%);
   width: var(--thumb-size);
   height: calc(var(--thumb-size) * 0.9);
   background: var(--thumb-background);
-  border: 1px solid rgba(0, 0, 0, 0.2);
   border-radius: var(--thumb-size);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
   color: var(--thumb-color);
   box-sizing: border-box;
   padding: 0 calc(var(--thumb-size) * 0.24);
@@ -62,6 +56,14 @@ two-up[legacy-clip-compat] > :not(.two-up-handle) {
 
 .scrubber svg {
   flex: 1;
+}
+
+.arrow-left {
+  fill: var(--pink);
+}
+
+.arrow-right {
+  fill: var(--blue);
 }
 
 two-up[orientation='vertical'] .two-up-handle {

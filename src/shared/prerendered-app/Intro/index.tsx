@@ -46,7 +46,7 @@ const demos = [
     url: logo,
     iconUrl: logoIcon,
   },
-];
+] as const;
 
 const blobAnimImport =
   !__PRERENDER__ && matchMedia('(prefers-reduced-motion: reduce)').matches
