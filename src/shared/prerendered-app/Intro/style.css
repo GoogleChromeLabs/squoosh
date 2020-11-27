@@ -177,14 +177,18 @@
 
 .demos {
   display: grid;
-  gap: 6rem;
-  grid-auto-columns: 1fr;
-  grid-auto-flow: column;
+  gap: 3rem;
   justify-items: center;
   justify-content: center;
   padding: 0;
-  width: max-content;
   margin: 3rem auto;
+  --demo-size: 80px;
+  grid-template-columns: repeat(auto-fit, var(--demo-size));
+
+  @media (min-width: 740px) {
+    --demo-size: 100px;
+    gap: 6rem;
+  }
 
   & > li {
     display: block;
@@ -201,14 +205,13 @@
 }
 
 .demo-icon-container {
-  --size: 100px;
-  border-radius: var(--size);
+  border-radius: var(--demo-size);
   position: relative;
   overflow: hidden;
 }
 .demo-icon {
-  width: var(--size);
-  height: var(--size);
+  width: var(--demo-size);
+  height: var(--demo-size);
   display: block;
 }
 .demo-loader {
