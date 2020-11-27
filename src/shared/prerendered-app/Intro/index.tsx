@@ -103,6 +103,16 @@ export default class Intro extends Component<Props, State> {
         );
       });
     }
+
+    // TODO: remove this
+    const demo = demos[3];
+    fetch(demo.url)
+      .then((r) => r.blob())
+      .then((blob) =>
+        this.props.onFile!(
+          new File([blob], demo.filename, { type: blob.type }),
+        ),
+      );
   }
 
   componentWillUnmount() {
