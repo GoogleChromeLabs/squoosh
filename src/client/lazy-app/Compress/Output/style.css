@@ -150,10 +150,24 @@
 }
 
 .back {
+  composes: unbutton from global;
   position: absolute;
-  top: 0;
-  left: 0;
-  padding: 9px;
+  top: var(--dist);
+  left: var(--dist);
+  --dist: 14px;
+
+  & > svg {
+    width: 70px;
+  }
+}
+
+.back-blob {
+  fill: var(--hot-pink);
+  opacity: 0.77;
+}
+
+.back-x {
+  fill: var(--white);
 }
 
 .buttons-no-wrap {
