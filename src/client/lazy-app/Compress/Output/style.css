@@ -149,27 +149,6 @@
   border-bottom: 1px dashed #999;
 }
 
-.back {
-  composes: unbutton from global;
-  position: absolute;
-  top: var(--dist);
-  left: var(--dist);
-  --dist: 14px;
-
-  & > svg {
-    width: 58px;
-  }
-}
-
-.back-blob {
-  fill: var(--hot-pink);
-  opacity: 0.77;
-}
-
-.back-x {
-  fill: var(--white);
-}
-
 .buttons-no-wrap {
   display: flex;
   pointer-events: none;
