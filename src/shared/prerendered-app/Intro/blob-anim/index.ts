@@ -82,7 +82,7 @@ class CircleBlob {
   private animStates: CircleBlobPointState[];
   private minDuration: number;
   private maxDuration: number;
-  public points: BlobPoint[];
+  private points: BlobPoint[];
 
   constructor(
     basePoints: BlobPoint[],
@@ -154,24 +154,6 @@ class CentralBlobs {
     { length: 4 },
     (_, i) => new CircleBlob(sevenPointCircle, { startPoints: startBlobs[i] }),
   );
-
-  constructor() {
-    console.log(
-      `WARNING: There's a debug key listener here that must be removed before going live - also change CircleBlob.points to private`,
-    );
-    addEventListener('keyup', (event) => {
-      if (event.key !== 'b') return;
-      console.log(
-        JSON.stringify(
-          this.blobs.map((blob) =>
-            blob.points.map((points) =>
-              points.map((point) => Number(point.toFixed(3))),
-            ),
-          ),
-        ),
-      );
-    });
-  }
 
   advance(timeDelta: number) {
     this.rotatePos =

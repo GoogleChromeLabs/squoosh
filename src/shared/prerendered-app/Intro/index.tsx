@@ -130,8 +130,6 @@ export default class Intro extends Component<Props, State> {
       this.setState({ fetchingDemoIndex: index });
       const demo = demos[index];
       const blob = await fetch(demo.url).then((r) => r.blob());
-
-      // TODO: test this is ok on both netlify and dev server in Firefox
       const file = new File([blob], demo.filename, { type: blob.type });
       this.props.onFile!(file);
     } catch (err) {
