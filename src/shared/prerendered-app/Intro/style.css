@@ -65,6 +65,7 @@
   position: relative;
   --size: 29rem;
   max-width: var(--size);
+  width: 100vw;
   height: var(--size);
   display: grid;
   grid-template-rows: max-content max-content;

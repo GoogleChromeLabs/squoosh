@@ -247,7 +247,11 @@ export default class Intro extends Component<Props, State> {
           </h1>
           <div class={style.loadImg}>
             {showBlobSVG && (
-              <svg class={style.blobSvg} viewBox="-1.25 -1.25 2.5 2.5">
+              <svg
+                class={style.blobSvg}
+                viewBox="-1.25 -1.25 2.5 2.5"
+                preserveAspectRatio="xMidYMid slice"
+              >
                 {startBlobs.map((points) => (
                   <path
                     d={points
