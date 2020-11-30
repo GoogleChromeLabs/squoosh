@@ -12,6 +12,7 @@ import {
   RemoveIcon,
   ToggleBackgroundActiveIcon,
   RotateIcon,
+  MoreIcon,
 } from '../../icons';
 import { twoUpHandle } from './custom-els/TwoUp/styles.css';
 import type { PreprocessorState } from '../../feature-meta';
@@ -34,6 +35,7 @@ interface State {
   scale: number;
   editingScale: boolean;
   altBackground: boolean;
+  menuOpen: boolean;
 }
 
 const scaleToOpts: ScaleToOpts = {
@@ -48,6 +50,7 @@ export default class Output extends Component<Props, State> {
     scale: 1,
     editingScale: false,
     altBackground: false,
+    menuOpen: false,
   };
   canvasLeft?: HTMLCanvasElement;
   canvasRight?: HTMLCanvasElement;
@@ -160,6 +163,10 @@ export default class Output extends Component<Props, State> {
     this.pinchZoomLeft.scaleTo(this.state.scale / 1.25, scaleToOpts);
   };
 
+  private toggleMenu = () => {
+    this.setState(({ menuOpen }) => ({ menuOpen: !menuOpen }));
+  };
+
   private onRotateClick = () => {
     const { preprocessorState: inputProcessorState } = this.props;
     if (!inputProcessorState) return;
@@ -254,7 +261,7 @@ export default class Output extends Component<Props, State> {
 
   render(
     { mobileView, leftImgContain, rightImgContain, source }: Props,
-    { scale, editingScale, altBackground }: State,
+    { scale, editingScale, altBackground, menuOpen }: State,
   ) {
     const leftDraw = this.leftDrawable();
     const rightDraw = this.rightDrawable();
@@ -341,26 +348,34 @@ export default class Output extends Component<Props, State> {
             <button class={style.button} onClick={this.zoomIn}>
               <AddIcon />
             </button>
-          </div>
-          <div class={style.buttonsNoWrap}>
             <button
-              class={style.button}
-              onClick={this.onRotateClick}
-              title="Rotate image"
+              class={`${style.button} ${style.moreButton} ${
+                menuOpen ? style.open : ''
+              }`}
+              onClick={this.toggleMenu}
             >
-              <RotateIcon />
+              <MoreIcon />
             </button>
-            <button
-              class={`${style.button} ${altBackground ? style.active : ''}`}
-              onClick={this.toggleBackground}
-              title="Change canvas color"
-            >
-              {altBackground ? (
-                <ToggleBackgroundActiveIcon />
-              ) : (
-                <ToggleBackgroundIcon />
-              )}
-            </button>
+            <aside class={`${style.menu} ${menuOpen ? style.open : ''}`}>
+              <button
+                class={style.button}
+                onClick={this.onRotateClick}
+                title="Rotate image"
+              >
+                <RotateIcon />
+              </button>
+              <button
+                class={`${style.button} ${altBackground ? style.active : ''}`}
+                onClick={this.toggleBackground}
+                title="Change canvas color"
+              >
+                {altBackground ? (
+                  <ToggleBackgroundActiveIcon />
+                ) : (
+                  <ToggleBackgroundIcon />
+                )}
+              </button>
+            </aside>
           </div>
         </div>
       </div>

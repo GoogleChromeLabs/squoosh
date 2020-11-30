@@ -37,6 +37,14 @@ export const RotateIcon = (props: preact.JSX.HTMLAttributes) => (
   </Icon>
 );
 
+export const MoreIcon = (props: preact.JSX.HTMLAttributes) => (
+  <Icon {...props}>
+    <circle cx="12" cy="6" r="2" fill="#fff" />
+    <circle cx="12" cy="12" r="2" fill="#fff" />
+    <circle cx="12" cy="18" r="2" fill="#fff" />
+  </Icon>
+);
+
 export const AddIcon = (props: preact.JSX.HTMLAttributes) => (
   <Icon {...props}>
     <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
