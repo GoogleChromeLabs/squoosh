@@ -5,6 +5,7 @@ import 'add-css:./style.css';
 import { cleanSet, cleanMerge } from '../../util/clean-modify';
 
 import type { SourceImage, OutputType } from '..';
+import type SnackBarElement from 'shared/initial-app/custom-els/snack-bar';
 import {
   EncoderOptions,
   EncoderState,
@@ -21,6 +22,7 @@ import { Options as ResizeOptionsComponent } from 'features/processors/resize/cl
 import { generateCliInvocation } from '../../util/cli-invocation-generator';
 
 interface Props {
+  showSnack: SnackBarElement['showSnackbar'];
   mobileView: boolean;
   source?: SourceImage;
   encoderState?: EncoderState;
@@ -111,8 +113,7 @@ export default class Options extends Component<Props, State> {
       );
       navigator.clipboard.writeText(cliInvocation);
     } catch (e) {
-      // Show toast
-      console.error(e);
+      this.props.showSnack(e);
     }
   };
 
