@@ -11,7 +11,7 @@ thread_local const val Uint8Array = val::global("Uint8Array");
 struct WP2Options {
   float quality;
   float alpha_quality;
-  int speed;
+  int effort;
   int pass;
   int uv_mode;
   float sns;
@@ -25,7 +25,7 @@ val encode(std::string image_in, int image_width, int image_height, WP2Options o
 
   config.quality = options.quality;
   config.alpha_quality = options.alpha_quality;
-  config.speed = options.speed;
+  config.effort = options.effort;
   config.pass = options.pass;
   config.uv_mode = static_cast<WP2::EncoderConfig::UVMode>(options.uv_mode);
   config.csp_type = static_cast<WP2::Csp>(options.csp_type);
@@ -57,7 +57,7 @@ EMSCRIPTEN_BINDINGS(my_module) {
   value_object<WP2Options>("WP2Options")
       .field("quality", &WP2Options::quality)
       .field("alpha_quality", &WP2Options::alpha_quality)
-      .field("speed", &WP2Options::speed)
+      .field("effort", &WP2Options::effort)
       .field("pass", &WP2Options::pass)
       .field("uv_mode", &WP2Options::uv_mode)
       .field("csp_type", &WP2Options::csp_type)

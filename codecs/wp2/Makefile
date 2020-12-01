@@ -1,4 +1,4 @@
-CODEC_URL = https://chromium.googlesource.com/codecs/libwebp2/+archive/94de1c5c6d04cbadfea873a353f0aee3fbe02e84.tar.gz
+CODEC_URL = https://chromium.googlesource.com/codecs/libwebp2/+archive/7c0dceb507efdec47f9d219e0b8be91092db8b48.tar.gz
 CODEC_DIR = node_modules/wp2
 CODEC_BUILD_ROOT := $(CODEC_DIR)/build
 CODEC_BASELINE_BUILD_DIR := $(CODEC_BUILD_ROOT)/baseline

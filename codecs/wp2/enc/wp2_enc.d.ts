@@ -1,7 +1,7 @@
 export interface EncodeOptions {
   quality: number;
   alpha_quality: number;
-  speed: number;
+  effort: number;
   pass: number;
   sns: number;
   uv_mode: UVMode;
