@@ -52,7 +52,7 @@ export class Options extends Component<Props, State> {
 
     const modifyState: Partial<State> = {
       options,
-      effort: options.speed,
+      effort: options.effort,
       alphaQuality: options.alpha_quality,
       passes: options.pass,
       sns: options.sns,
@@ -107,7 +107,7 @@ export class Options extends Component<Props, State> {
         };
 
         const newOptions: EncodeOptions = {
-          speed: optionState.effort,
+          effort: optionState.effort,
           quality: optionState.lossless
             ? 100 - optionState.slightLoss
             : optionState.quality,

@@ -21,7 +21,7 @@ export const extension = 'wp2';
 export const defaultOptions: EncodeOptions = {
   quality: 75,
   alpha_quality: 75,
-  speed: 5,
+  effort: 5,
   pass: 1,
   sns: 50,
   uv_mode: UVMode.UVModeAuto,
