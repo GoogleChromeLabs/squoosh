@@ -1,8 +1,6 @@
 use oxipng::AlphaOptim;
 use wasm_bindgen::prelude::*;
 
-mod malloc_shim;
-
 #[cfg(feature = "parallel")]
 pub mod parallel;
 
