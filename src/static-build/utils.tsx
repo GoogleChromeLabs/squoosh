@@ -56,3 +56,16 @@ export function escapeStyleScriptContent(str: string): string {
     .replace(/<style/g, '<\\style')
     .replace(/<\/style/g, '<\\/style');
 }
+
+/**
+ * Removes empty lines from start and end, and removes the initial indent from
+ * each line.
+ */
+export function normalizeIndent(str: string): string {
+  // trim empty lines from start & end
+  str = str.replace(/^\s?\n|\n\s?$/g, '');
+
+  const lines = str.split('\n');
+  const indentLen = /^\s*/.exec(lines[0])![0].length;
+  return lines.map((l) => l.slice(indentLen)).join('\n');
+}

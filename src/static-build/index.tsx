@@ -12,10 +12,26 @@
  */
 import { h } from 'preact';
 
-import { renderPage, writeFiles } from './utils';
+import { normalizeIndent, renderPage, writeFiles } from './utils';
 import IndexPage from './pages/index';
 import iconLargeMaskable from 'url:static-build/assets/icon-large-maskable.png';
 import iconLarge from 'url:static-build/assets/icon-large.png';
+
+// Set by Netlify
+const branch = process.env.BRANCH;
+
+const branchOriginTrialIds = new Map([
+  [
+    'dev',
+    'As3b1fXjclhF8ZgvUkIqOo3r1/Jqvx0mNuT6Ilgb7SdpeJnV8lUdYr7i+OKgCmcVTWkqjkF23LJ+xZ111VYMEQIAAABheyJvcmlnaW4iOiJodHRwczovL2Rldi0tc3F1b29zaC5uZXRsaWZ5LmFwcDo0NDMiLCJmZWF0dXJlIjoiV2ViQXNzZW1ibHlTaW1kIiwiZXhwaXJ5IjoxNjA5NDI4Nzk4fQ==',
+  ],
+  [
+    'live',
+    'AgoKiDqjr0GVPtrwV/vuVlrrSvbDa5Yb99s+q66ly816DrrAQ8Cdas33NgDtmhxM4BtDP9PEdyuxHPyTQHD5ZAcAAABUeyJvcmlnaW4iOiJodHRwczovL3NxdW9vc2guYXBwOjQ0MyIsImZlYXR1cmUiOiJXZWJBc3NlbWJseVNpbWQiLCJleHBpcnkiOjE2MDg2NzI5OTR9',
+  ],
+]);
+
+const originTrialId = branchOriginTrialIds.get(branch || '');
 
 interface Output {
   [outputPath: string]: string;
@@ -57,6 +73,27 @@ const toOutput: Output = {
       },
     },
   }),
+  _headers: normalizeIndent(`
+    /*
+      Cache-Control: no-cache
+
+    /c/*
+      Cache-Control: max-age=31536000
+
+    # COOP+COEP for WebAssembly threads.
+    /*
+      Cross-Origin-Embedder-Policy: require-corp
+      Cross-Origin-Opener-Policy: same-origin
+
+    # Origin trial for WebAssembly SIMD.
+    ${
+      originTrialId
+        ? `  Origin-Trial: ${originTrialId}`
+        : `# Cannot find origin trial ID. process.env.BRANCH is: ${JSON.stringify(
+            branch,
+          )}`
+    }
+  `),
 };
 
 writeFiles(toOutput);
