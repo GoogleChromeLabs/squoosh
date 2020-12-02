@@ -85,3 +85,5 @@ $(CODEC_DIR)/CMakeLists.txt:
 clean:
 	$(RM) $(OUT_JS) $(OUT_WASM) $(OUT_WORKER)
 	$(MAKE) -C $(CODEC_BUILD_DIR) clean
+	$(MAKE) -C $(CODEC_MT_BUILD_DIR) clean
+	$(MAKE) -C $(CODEC_MT_SIMD_BUILD_DIR) clean
