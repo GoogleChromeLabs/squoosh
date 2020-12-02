@@ -3,6 +3,7 @@
 
 #include "lib/jxl/enc_file.h"
 #include "lib/jxl/external_image.h"
+#include "lib/jxl/base/thread_pool_internal.h"
 
 using namespace emscripten;
 
@@ -25,6 +26,11 @@ val encode(std::string image, int width, int height, JXLOptions options) {
   jxl::CodecInOut io;
   jxl::PaddedBytes bytes;
   jxl::ImageBundle* main = &io.Main();
+  jxl::ThreadPoolInternal *pool_ptr = nullptr;
+#ifdef __EMSCRIPTEN_PTHREADS__
+  jxl::ThreadPoolInternal pool;
+  pool_ptr = &pool;
+#endif
 
   cparams.epf = options.epf;
   cparams.speed_tier = static_cast<jxl::SpeedTier>(options.speed);
@@ -97,14 +103,14 @@ val encode(std::string image, int width, int height, JXLOptions options) {
       jxl::Span<const uint8_t>(reinterpret_cast<const uint8_t*>(image.data()), image.size()), width,
       height, jxl::ColorEncoding::SRGB(/*is_gray=*/false), /*has_alpha=*/true,
       /*alpha_is_premultiplied=*/false, /*bits_per_alpha=*/8, /*bits_per_sample=*/8,
-      /*big_endian=*/false, /*flipped_y=*/false, /*pool=*/nullptr, main);
+      /*big_endian=*/false, /*flipped_y=*/false, pool_ptr, main);
 
   if (!result) {
     return val::null();
   }
 
   auto js_result = val::null();
-  if (EncodeFile(cparams, &io, &passes_enc_state, &bytes)) {
+  if (EncodeFile(cparams, &io, &passes_enc_state, &bytes, /*aux=*/nullptr, pool_ptr)) {
     js_result = Uint8Array.new_(typed_memory_view(bytes.size(), bytes.data()));
   }
 
