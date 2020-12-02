@@ -16,12 +16,15 @@ all: $(OUT_JS)
 # Define dependencies for all variations of build artifacts.
 $(filter enc/%,$(OUT_JS)): enc/jxl_enc.cpp
 $(filter dec/%,$(OUT_JS)): dec/jxl_dec.cpp
+
 # For single-threaded build, we compile with threads enabled, but then just don't use them nor link them in.
 enc/jxl_enc.js enc/jxl_enc_mt.js dec/jxl_dec.js: CODEC_BUILD_DIR:=$(CODEC_MT_BUILD_DIR)
+enc/jxl_enc_mt_simd.js: CODEC_BUILD_DIR:=$(CODEC_MT_SIMD_BUILD_DIR)
+
 enc/jxl_enc.js dec/jxl_dec.js: $(CODEC_MT_BUILD_DIR)/lib/libjxl.a
 enc/jxl_enc_mt.js: $(CODEC_MT_BUILD_DIR)/lib/libjxl.a $(CODEC_MT_BUILD_DIR)/lib/libjxl_threads.a
-enc/jxl_enc_mt_simd.js: CODEC_BUILD_DIR:=$(CODEC_MT_SIMD_BUILD_DIR)
 enc/jxl_enc_mt_simd.js: $(CODEC_MT_SIMD_BUILD_DIR)/lib/libjxl.a $(CODEC_MT_SIMD_BUILD_DIR)/lib/libjxl_threads.a
+
 # Compile multithreaded wrappers with -pthread.
 enc/jxl_enc_mt.js enc/jxl_enc_mt_simd.js: CXXFLAGS+=-pthread
 
