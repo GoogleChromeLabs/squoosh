@@ -12,10 +12,11 @@
  */
 import { h } from 'preact';
 
-import { normalizeIndent, renderPage, writeFiles } from './utils';
+import { renderPage, writeFiles } from './utils';
 import IndexPage from './pages/index';
 import iconLargeMaskable from 'url:static-build/assets/icon-large-maskable.png';
 import iconLarge from 'url:static-build/assets/icon-large.png';
+import dedent from 'dedent';
 
 // Set by Netlify
 const branch = process.env.BRANCH;
@@ -73,7 +74,7 @@ const toOutput: Output = {
       },
     },
   }),
-  _headers: normalizeIndent(`
+  _headers: dedent`
     /*
       Cache-Control: no-cache
 
@@ -93,7 +94,7 @@ const toOutput: Output = {
             branch,
           )}`
     }
-  `),
+  `,
 };
 
 writeFiles(toOutput);
