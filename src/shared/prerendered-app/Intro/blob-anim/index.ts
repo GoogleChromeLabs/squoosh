@@ -316,7 +316,6 @@ export function startBlobAnim(canvas: HTMLCanvasElement) {
   let hasFocus = document.hasFocus();
   let deltaMultiplier = hasFocus ? 1 : 0;
   let animating = true;
-  let canvasBounds = canvas.getBoundingClientRect();
 
   const visibilityListener = () => {
     // 'Pause time' while page is hidden
@@ -330,8 +329,7 @@ export function startBlobAnim(canvas: HTMLCanvasElement) {
     hasFocus = false;
   };
 
-  new ResizeObserver((items) => {
-    canvasBounds = items[0].contentRect;
+  new ResizeObserver(() => {
     // Redraw for new canvas size
     if (!animating) drawFrame(0);
   }).observe(canvas);
@@ -347,6 +345,7 @@ export function startBlobAnim(canvas: HTMLCanvasElement) {
   }
 
   function drawFrame(delta: number) {
+    const canvasBounds = canvas.getBoundingClientRect();
     canvas.width = canvasBounds.width * devicePixelRatio;
     canvas.height = canvasBounds.height * devicePixelRatio;
     const loadImgBounds = loadImgEl.getBoundingClientRect();
