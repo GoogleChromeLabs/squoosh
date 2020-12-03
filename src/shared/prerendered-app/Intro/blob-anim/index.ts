@@ -177,7 +177,7 @@ class CentralBlobs {
 
 const bgBlobsMinRadius = 7;
 const bgBlobsMaxRadius = 60;
-const bgBlobsMinAlpha = 0.1;
+const bgBlobsMinAlpha = 0.2;
 const bgBlobsMaxAlpha = 0.8;
 const bgBlobsPerPx = 0.000025;
 const bgBlobsMinSpinTime = 20000;
