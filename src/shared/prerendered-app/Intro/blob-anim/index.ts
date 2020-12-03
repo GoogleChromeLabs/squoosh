@@ -182,10 +182,10 @@ const bgBlobsMaxAlpha = 0.8;
 const bgBlobsPerPx = 0.000025;
 const bgBlobsMinSpinTime = 20000;
 const bgBlobsMaxSpinTime = 60000;
-const bgBlobsMinVelocity = 0.005;
-const bgBlobsMaxVelocity = 0.02;
-const gravityVelocityMultiplier = 3.5;
-const gravityStartDistance = 600;
+const bgBlobsMinVelocity = 0.0015;
+const bgBlobsMaxVelocity = 0.007;
+const gravityVelocityMultiplier = 15;
+const gravityStartDistance = 300;
 
 interface BackgroundBlob {
   blob: CircleBlob;
