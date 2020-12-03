@@ -14,9 +14,10 @@
 
 declare const __PRERENDER__: boolean;
 
-interface ResizeObserverCallback {
-  (entries: ResizeObserverEntry[], observer: ResizeObserver): void;
-}
+type ResizeObserverCallback = (
+  entries: ResizeObserverEntry[],
+  observer: ResizeObserver,
+) => void;
 
 interface ResizeObserverEntry {
   readonly target: Element;

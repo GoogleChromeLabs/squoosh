@@ -27,6 +27,10 @@ function easeInOutQuad(x: number): number {
   return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
 }
 
+function easeInExpo(x: number): number {
+  return x === 0 ? 0 : Math.pow(2, 10 * x - 10);
+}
+
 const rand = (min: number, max: number) => Math.random() * (max - min) + min;
 
 interface CircleBlobPointState {
@@ -175,11 +179,13 @@ const bgBlobsMinRadius = 20;
 const bgBlobsMaxRadius = 60;
 const bgBlobsMinAlpha = 0.1;
 const bgBlobsMaxAlpha = 0.8;
-const bgBlobsGridSize = 200;
+const bgBlobsPerPx = 0.000025;
 const bgBlobsMinSpinTime = 20000;
 const bgBlobsMaxSpinTime = 60000;
 const bgBlobsMinVelocity = 0.005;
 const bgBlobsMaxVelocity = 0.02;
+const gravityVelocityMultiplier = 3.5;
+const gravityStartDistance = 600;
 
 interface BackgroundBlob {
   blob: CircleBlob;
@@ -200,28 +206,31 @@ class BackgroundBlobs {
   private overallAlphaPos = 0;
 
   constructor(bounds: DOMRect) {
-    for (let x = 0; x < bounds.width; x += bgBlobsGridSize) {
-      for (let y = 0; y < bounds.height; y += bgBlobsGridSize) {
-        this.bgBlobs.push({
-          blob: new CircleBlob(sevenPointCircle, {
-            minDuration: 2000,
-            maxDuration: 5000,
-          }),
-          velocity: rand(bgBlobsMinVelocity, bgBlobsMaxVelocity),
-          alpha:
-            Math.random() ** 3 * (bgBlobsMaxAlpha - bgBlobsMinAlpha) +
-            bgBlobsMinAlpha,
-          alphaMultiplier: 1,
-          spinTime: rand(bgBlobsMinSpinTime, bgBlobsMaxSpinTime),
-          rotatePos: 0,
-          radius:
-            Math.random() ** 3 * (bgBlobsMaxRadius - bgBlobsMinRadius) +
-            bgBlobsMinRadius,
-          x: Math.random() * bgBlobsGridSize + x,
-          y: Math.random() * bgBlobsGridSize + y,
-        });
-      }
-    }
+    const blobs = Math.round(bounds.width * bounds.height * bgBlobsPerPx);
+    this.bgBlobs = Array.from({ length: blobs }, () => {
+      const radiusPos = easeInExpo(Math.random());
+
+      return {
+        blob: new CircleBlob(sevenPointCircle, {
+          minDuration: 2000,
+          maxDuration: 5000,
+        }),
+        // Velocity is based on the size
+        velocity:
+          (1 - radiusPos) * (bgBlobsMaxVelocity - bgBlobsMinVelocity) +
+          bgBlobsMinVelocity,
+        alpha:
+          Math.random() ** 3 * (bgBlobsMaxAlpha - bgBlobsMinAlpha) +
+          bgBlobsMinAlpha,
+        alphaMultiplier: 1,
+        spinTime: rand(bgBlobsMinSpinTime, bgBlobsMaxSpinTime),
+        rotatePos: 0,
+        radius:
+          radiusPos * (bgBlobsMaxRadius - bgBlobsMinRadius) + bgBlobsMinRadius,
+        x: Math.random() * bounds.width,
+        y: Math.random() * bounds.height,
+      };
+    });
   }
 
   advance(
@@ -241,7 +250,6 @@ class BackgroundBlobs {
       bgBlob.blob.advance(timeDelta);
       let dist = Math.hypot(bgBlob.x - targetX, bgBlob.y - targetY);
       bgBlob.rotatePos = (bgBlob.rotatePos + timeDelta / bgBlob.spinTime) % 1;
-      const shiftDist = bgBlob.velocity * timeDelta;
 
       if (dist < 10) {
         // Move the circle out to a random edge
@@ -265,6 +273,14 @@ class BackgroundBlobs {
         }
       }
       dist = Math.hypot(bgBlob.x - targetX, bgBlob.y - targetY);
+      const velocity =
+        dist > gravityStartDistance
+          ? bgBlob.velocity
+          : ((1 - dist / gravityStartDistance) *
+              (gravityVelocityMultiplier - 1) +
+              1) *
+            bgBlob.velocity;
+      const shiftDist = velocity * timeDelta;
       const direction = Math.atan2(targetX - bgBlob.x, targetY - bgBlob.y);
       const xShift = Math.sin(direction) * shiftDist;
       const yShift = Math.cos(direction) * shiftDist;
@@ -300,6 +316,7 @@ export function startBlobAnim(canvas: HTMLCanvasElement) {
   let hasFocus = document.hasFocus();
   let deltaMultiplier = hasFocus ? 1 : 0;
   let animating = true;
+  let canvasBounds = canvas.getBoundingClientRect();
 
   const visibilityListener = () => {
     // 'Pause time' while page is hidden
@@ -313,7 +330,8 @@ export function startBlobAnim(canvas: HTMLCanvasElement) {
     hasFocus = false;
   };
 
-  new ResizeObserver(() => {
+  new ResizeObserver((items) => {
+    canvasBounds = items[0].contentRect;
     // Redraw for new canvas size
     if (!animating) drawFrame(0);
   }).observe(canvas);
@@ -329,7 +347,6 @@ export function startBlobAnim(canvas: HTMLCanvasElement) {
   }
 
   function drawFrame(delta: number) {
-    const canvasBounds = canvas.getBoundingClientRect();
     canvas.width = canvasBounds.width * devicePixelRatio;
     canvas.height = canvasBounds.height * devicePixelRatio;
     const loadImgBounds = loadImgEl.getBoundingClientRect();
