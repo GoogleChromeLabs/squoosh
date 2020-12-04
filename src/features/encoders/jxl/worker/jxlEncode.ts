@@ -10,24 +10,56 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import jxlEncoder, { JXLModule } from 'codecs/jxl/enc/jxl_enc';
-import wasmUrl from 'url:codecs/jxl/enc/jxl_enc.wasm';
-import { initEmscriptenModule } from 'features/worker-utils';
+import type { JXLModule } from 'codecs/jxl/enc/jxl_enc';
 import type { EncodeOptions } from '../shared/meta';
 
+import { initEmscriptenModule } from 'features/worker-utils';
+import { threads, simd } from 'wasm-feature-detect';
+
+import wasmUrl from 'url:codecs/jxl/enc/jxl_enc.wasm';
+
+import wasmUrlWithMT from 'url:codecs/jxl/enc/jxl_enc_mt.wasm';
+import workerUrl from 'omt:codecs/jxl/enc/jxl_enc_mt.worker.js';
+
+import wasmUrlWithMTAndSIMD from 'url:codecs/jxl/enc/jxl_enc_mt_simd.wasm';
+import workerUrlWithSIMD from 'omt:codecs/jxl/enc/jxl_enc_mt_simd.worker.js';
+
 let emscriptenModule: Promise<JXLModule>;
+
+async function init() {
+  if (await threads()) {
+    if (await simd()) {
+      const jxlEncoder = await import('codecs/jxl/enc/jxl_enc_mt_simd');
+      return initEmscriptenModule(
+        jxlEncoder.default,
+        wasmUrlWithMTAndSIMD,
+        workerUrlWithSIMD,
+      );
+    }
+    const jxlEncoder = await import('codecs/jxl/enc/jxl_enc_mt');
+    return initEmscriptenModule(
+      jxlEncoder.default,
+      wasmUrlWithMT,
+      workerUrl,
+    );
+  }
+  const jxlEncoder = await import('codecs/jxl/enc/jxl_enc');
+  return initEmscriptenModule(
+    jxlEncoder.default,
+    wasmUrl,
+  );
+}
 
 export default async function encode(
   data: ImageData,
   options: EncodeOptions,
 ): Promise<ArrayBuffer> {
-  if (!emscriptenModule) {
-    emscriptenModule = initEmscriptenModule(jxlEncoder, wasmUrl);
-  }
+  if (!emscriptenModule) emscriptenModule = init();
 
   const module = await emscriptenModule;
   const result = module.encode(data.data, data.width, data.height, options);
+
   if (!result) throw new Error('Encoding error.');
-  // wasm can’t run on SharedArrayBuffers, so we hard-cast to ArrayBuffer.
-  return result.buffer as ArrayBuffer;
+
+  return result.buffer;
 }
