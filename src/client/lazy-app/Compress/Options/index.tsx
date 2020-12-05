@@ -19,13 +19,14 @@ import { Options as QuantOptionsComponent } from 'features/processors/quantize/c
 import { Options as ResizeOptionsComponent } from 'features/processors/resize/client';
 
 interface Props {
+  index: 0 | 1;
   mobileView: boolean;
   source?: SourceImage;
   encoderState?: EncoderState;
   processorState: ProcessorState;
-  onEncoderTypeChange(newType: OutputType): void;
-  onEncoderOptionsChange(newOptions: EncoderOptions): void;
-  onProcessorOptionsChange(newOptions: ProcessorState): void;
+  onEncoderTypeChange(index: 0 | 1, newType: OutputType): void;
+  onEncoderOptionsChange(index: 0 | 1, newOptions: EncoderOptions): void;
+  onProcessorOptionsChange(index: 0 | 1, newOptions: ProcessorState): void;
 }
 
 interface State {
@@ -73,7 +74,7 @@ export default class Options extends Component<Props, State> {
     // The select element only has values matching encoder types,
     // so 'as' is safe here.
     const type = el.value as OutputType;
-    this.props.onEncoderTypeChange(type);
+    this.props.onEncoderTypeChange(this.props.index, type);
   };
 
   private onProcessorEnabledChange = (event: Event) => {
@@ -81,24 +82,31 @@ export default class Options extends Component<Props, State> {
     const processor = el.name.split('.')[0] as keyof ProcessorState;
 
     this.props.onProcessorOptionsChange(
+      this.props.index,
       cleanSet(this.props.processorState, `${processor}.enabled`, el.checked),
     );
   };
 
   private onQuantizerOptionsChange = (opts: ProcessorOptions['quantize']) => {
     this.props.onProcessorOptionsChange(
+      this.props.index,
       cleanMerge(this.props.processorState, 'quantize', opts),
     );
   };
 
   private onResizeOptionsChange = (opts: ProcessorOptions['resize']) => {
     this.props.onProcessorOptionsChange(
+      this.props.index,
       cleanMerge(this.props.processorState, 'resize', opts),
     );
   };
 
+  private onEncoderOptionsChange = (newOptions: EncoderOptions) => {
+    this.props.onEncoderOptionsChange(this.props.index, newOptions);
+  };
+
   render(
-    { source, encoderState, processorState, onEncoderOptionsChange }: Props,
+    { source, encoderState, processorState }: Props,
     { supportedEncoderMap }: State,
   ) {
     const encoder = encoderState && encoderMap[encoderState.type];
@@ -180,7 +188,7 @@ export default class Options extends Component<Props, State> {
                 // the correct type, but typescript isn't smart enough.
                 encoderState!.options as any
               }
-              onChange={onEncoderOptionsChange}
+              onChange={this.onEncoderOptionsChange}
             />
           )}
         </Expander>

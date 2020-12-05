@@ -319,7 +319,7 @@ export default class Compress extends Component<Props, State> {
     this.setState({ mobileView: this.widthQuery.matches });
   };
 
-  private onEncoderTypeChange(index: 0 | 1, newType: OutputType): void {
+  private onEncoderTypeChange = (index: 0 | 1, newType: OutputType): void => {
     this.setState({
       sides: cleanSet(
         this.state.sides,
@@ -332,12 +332,12 @@ export default class Compress extends Component<Props, State> {
             },
       ),
     });
-  }
+  };
 
-  private onProcessorOptionsChange(
+  private onProcessorOptionsChange = (
     index: 0 | 1,
     options: ProcessorState,
-  ): void {
+  ): void => {
     this.setState({
       sides: cleanSet(
         this.state.sides,
@@ -345,9 +345,12 @@ export default class Compress extends Component<Props, State> {
         options,
       ),
     });
-  }
+  };
 
-  private onEncoderOptionsChange(index: 0 | 1, options: EncoderOptions): void {
+  private onEncoderOptionsChange = (
+    index: 0 | 1,
+    options: EncoderOptions,
+  ): void => {
     this.setState({
       sides: cleanSet(
         this.state.sides,
@@ -355,7 +358,7 @@ export default class Compress extends Component<Props, State> {
         options,
       ),
     });
-  }
+  };
 
   componentWillReceiveProps(nextProps: Props): void {
     if (nextProps.file !== this.props.file) {
@@ -794,22 +797,14 @@ export default class Compress extends Component<Props, State> {
 
     const options = sides.map((side, index) => (
       <Options
+        index={index as 0 | 1}
         source={source}
         mobileView={mobileView}
         processorState={side.latestSettings.processorState}
         encoderState={side.latestSettings.encoderState}
-        onEncoderTypeChange={this.onEncoderTypeChange.bind(
-          this,
-          index as 0 | 1,
-        )}
-        onEncoderOptionsChange={this.onEncoderOptionsChange.bind(
-          this,
-          index as 0 | 1,
-        )}
-        onProcessorOptionsChange={this.onProcessorOptionsChange.bind(
-          this,
-          index as 0 | 1,
-        )}
+        onEncoderTypeChange={this.onEncoderTypeChange}
+        onEncoderOptionsChange={this.onEncoderOptionsChange}
+        onProcessorOptionsChange={this.onProcessorOptionsChange}
       />
     ));
 
