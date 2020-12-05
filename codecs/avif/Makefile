@@ -9,9 +9,12 @@ export BUILD_DIR = node_modules/build
 export LIBAOM_DIR = node_modules/libaom
 
 OUT_ENC_JS = enc/avif_enc.js
+OUT_NODE_ENC_JS = enc/avif_node_enc.js
 OUT_ENC_MT_JS = enc/avif_enc_mt.js
 OUT_DEC_JS = dec/avif_dec.js
+OUT_NODE_DEC_JS = dec/avif_node_dec.js
 
+OUT_ENC_CPP = enc/avif_enc.cpp
 OUT_ENC_CPP = enc/avif_enc.cpp
 OUT_DEC_CPP = dec/avif_dec.cpp
 
@@ -19,7 +22,7 @@ HELPER_MAKEFLAGS := -f helper.Makefile
 
 .PHONY: all clean
 
-all: $(OUT_ENC_JS) $(OUT_DEC_JS) $(OUT_ENC_MT_JS)
+all: $(OUT_ENC_JS) $(OUT_DEC_JS) $(OUT_ENC_MT_JS) $(OUT_NODE_ENC_JS) $(OUT_NODE_DEC_JS)
 
 $(OUT_ENC_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt
 	$(MAKE) \
@@ -31,6 +34,20 @@ $(OUT_ENC_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLis
 			-DCONFIG_MULTITHREAD=0 \
 			-DCONFIG_AV1_HIGHBITDEPTH=0 \
 		" \
+		ENVIRONMENT="worker" \
+		LIBAVIF_FLAGS="-DAVIF_CODEC_AOM_DECODE=0"
+
+$(OUT_NODE_ENC_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt
+	$(MAKE) \
+		$(HELPER_MAKEFLAGS) \
+		OUT_JS=$@ \
+		OUT_CPP=$< \
+		LIBAOM_FLAGS="\
+			-DCONFIG_AV1_DECODER=0 \
+			-DCONFIG_MULTITHREAD=0 \
+			-DCONFIG_AV1_HIGHBITDEPTH=0 \
+		" \
+		ENVIRONMENT="node" \
 		LIBAVIF_FLAGS="-DAVIF_CODEC_AOM_DECODE=0"
 
 $(OUT_ENC_MT_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt
@@ -42,6 +59,7 @@ $(OUT_ENC_MT_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMake
 			-DCONFIG_AV1_DECODER=0 \
 			-DCONFIG_AV1_HIGHBITDEPTH=0 \
 		" \
+		ENVIRONMENT="worker" \
 		LIBAVIF_FLAGS="-DAVIF_CODEC_AOM_DECODE=0" \
 		OUT_FLAGS="-pthread"
 
@@ -54,6 +72,19 @@ $(OUT_DEC_JS): $(OUT_DEC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLis
 			-DCONFIG_AV1_ENCODER=0 \
 			-DCONFIG_MULTITHREAD=0 \
 		" \
+		ENVIRONMENT="worker" \
+		LIBAVIF_FLAGS="-DAVIF_CODEC_AOM_ENCODE=0"
+
+$(OUT_NODE_DEC_JS):
+	$(MAKE) \
+		$(HELPER_MAKEFLAGS) \
+		OUT_JS=$@ \
+		OUT_CPP=$< \
+		LIBAOM_FLAGS="\
+			-DCONFIG_AV1_ENCODER=0 \
+			-DCONFIG_MULTITHREAD=0 \
+		" \
+		ENVIRONMENT="node" \
 		LIBAVIF_FLAGS="-DAVIF_CODEC_AOM_ENCODE=0"
 
 $(CODEC_PACKAGE):

@@ -1,21 +1,21 @@
-import resolve from "@rollup/plugin-node-resolve";
-import cjs from "@rollup/plugin-commonjs";
-import asset from "./lib/asset-plugin.js";
-import json from "./lib/json-plugin.js";
-import autojson from "./lib/autojson-plugin.js";
-import { getBabelOutputPlugin } from "@rollup/plugin-babel";
-import { builtinModules } from "module";
+import resolve from '@rollup/plugin-node-resolve';
+import cjs from '@rollup/plugin-commonjs';
+import asset from './lib/asset-plugin.js';
+import json from './lib/json-plugin.js';
+import autojson from './lib/autojson-plugin.js';
+import { getBabelOutputPlugin } from '@rollup/plugin-babel';
+import { builtinModules } from 'module';
 
 /** @type {import('rollup').RollupOptions} */
-export default ({
-  input: "src/index.js",
+export default {
+  input: 'src/index.js',
   output: {
-    dir: "build",
-    format: "cjs",
-    assetFileNames: "[name]-[hash][extname]",
+    dir: 'build',
+    format: 'cjs',
+    assetFileNames: '[name]-[hash][extname]',
     // This is needed so the resulting `index.js` can be
     // executed by `npx`.
-    banner: "#!/usr/bin/env node"
+    banner: '#!/usr/bin/env node',
   },
   plugins: [
     resolve(),
@@ -26,20 +26,20 @@ export default ({
     getBabelOutputPlugin({
       babelrc: false,
       configFile: false,
-      minified: true,
+      minified: process.env.DEBUG != '',
       comments: false,
       presets: [
         [
-          "@babel/preset-env",
+          '@babel/preset-env',
           {
             targets: {
-              node: 12
+              node: 12,
             },
-            loose: true
-          }
-        ]
-      ]
-    })
+            loose: true,
+          },
+        ],
+      ],
+    }),
   ],
-  external: builtinModules
-});
+  external: builtinModules,
+};
