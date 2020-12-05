@@ -8,7 +8,8 @@ html {
   --deep-blue: #09f;
   --light-blue: #76c8ff;
   --light-gray: #eaeaea;
-  --dark-text: #343a3e;
+  --dim-text: #343a3e;
+  --dark-text: #142630;
 
   /* Old stuff: */
   --gray-dark: rgba(0, 0, 0, 0.8);

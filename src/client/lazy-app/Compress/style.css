@@ -8,6 +8,8 @@
     'header'
     'opts';
 
+  --options-radius: 7px;
+
   @media (min-width: 600px) {
     grid-template-rows: max-content 1fr;
     grid-template-columns: max-content 1fr max-content;
@@ -37,13 +39,35 @@
   }
 }
 
+.options-1-theme {
+  --header-color: var(--pink);
+  --header-text-color: var(--white);
+  --scroller-radius: var(--options-radius) var(--options-radius) 0 0;
+
+  @media (min-width: 600px) {
+    --scroller-radius: 0 var(--options-radius) var(--options-radius) 0;
+  }
+}
+
+.options-2-theme {
+  --header-color: var(--blue);
+  --header-text-color: var(--dark-text);
+  --scroller-radius: var(--options-radius) var(--options-radius) 0 0;
+
+  @media (min-width: 600px) {
+    --scroller-radius: var(--options-radius) 0 0 var(--options-radius);
+  }
+}
+
 .options-1 {
   composes: options;
+  composes: options-1-theme;
   grid-area: optsLeft;
 }
 
 .options-2 {
   composes: options;
+  composes: options-2-theme;
   grid-area: optsRight;
 }
 

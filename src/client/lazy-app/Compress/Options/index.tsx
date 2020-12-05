@@ -114,7 +114,13 @@ export default class Options extends Component<Props, State> {
       encoder && 'Options' in encoder ? encoder.Options : undefined;
 
     return (
-      <div class={style.optionsScroller}>
+      <div
+        class={
+          style.optionsScroller +
+          ' ' +
+          (encoderState ? '' : style.originalImage)
+        }
+      >
         <Expander>
           {!encoderState ? null : (
             <div>

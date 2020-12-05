@@ -3,15 +3,24 @@
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   --horizontal-padding: 15px;
+  border-radius: var(--scroller-radius);
 }
 
 .options-title {
-  background: rgba(0, 0, 0, 0.9);
+  background-color: var(--header-color);
+  color: var(--header-text-color);
   margin: 0;
   padding: 10px var(--horizontal-padding);
-  font-weight: normal;
+  font-weight: bold;
   font-size: 1.4rem;
   border-bottom: 1px solid #000;
+  transition: all 300ms ease-in-out;
+  transition-property: background-color, color;
+}
+
+.original-image .options-title {
+  background-color: var(--black);
+  color: var(--white);
 }
 
 .option-text-first {

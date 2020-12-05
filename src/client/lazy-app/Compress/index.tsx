@@ -877,18 +877,18 @@ export default class Compress extends Component<Props, State> {
           <div class={style.options}>
             <multi-panel class={style.multiPanel} open-one-only>
               {results[0]}
-              {options[0]}
+              <div class={style.options1Theme}>{options[0]}</div>
               {results[1]}
-              {options[1]}
+              <div class={style.options2Theme}>{options[1]}</div>
             </multi-panel>
           </div>
         ) : (
           [
-            <div class={style.options1} key="options0">
+            <div class={style.options1} key="options1">
               {options[0]}
               {results[0]}
             </div>,
-            <div class={style.options2} key="options1">
+            <div class={style.options2} key="options2">
               {options[1]}
               {results[1]}
             </div>,
