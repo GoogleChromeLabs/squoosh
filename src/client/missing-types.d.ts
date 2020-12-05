@@ -11,7 +11,7 @@
  * limitations under the License.
  */
 /// <reference path="../../missing-types.d.ts" />
-/// <reference path="../shared/initial-app/Intro/missing-types.d.ts" />
+/// <reference path="../shared/prerendered-app/Intro/missing-types.d.ts" />
 
 interface Navigator {
   readonly standalone: boolean;
@@ -25,23 +25,3 @@ declare module 'service-worker:*' {
 }
 
 declare module 'preact/debug' {}
-
-interface ResizeObserverCallback {
-  (entries: ResizeObserverEntry[], observer: ResizeObserver): void;
-}
-
-interface ResizeObserverEntry {
-  readonly target: Element;
-  readonly contentRect: DOMRectReadOnly;
-}
-
-interface ResizeObserver {
-  observe(target: Element): void;
-  unobserve(target: Element): void;
-  disconnect(): void;
-}
-
-declare var ResizeObserver: {
-  prototype: ResizeObserver;
-  new (callback: ResizeObserverCallback): ResizeObserver;
-};
