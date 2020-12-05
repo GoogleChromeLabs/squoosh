@@ -1,5 +1,5 @@
 .output {
-  composes: abs-fill from '../../../../shared/initial-app/util.css';
+  composes: abs-fill from global;
 
   &::before {
     content: '';
@@ -19,12 +19,12 @@
 }
 
 .two-up {
-  composes: abs-fill from '../../../../shared/initial-app/util.css';
+  composes: abs-fill from global;
   --accent-color: var(--button-fg);
 }
 
 .pinch-zoom {
-  composes: abs-fill from '../../../../shared/initial-app/util.css';
+  composes: abs-fill from global;
   outline: none;
   display: flex;
   justify-content: center;

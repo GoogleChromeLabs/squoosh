@@ -29,7 +29,7 @@ const toOutput: Output = {
     display: 'standalone',
     orientation: 'any',
     background_color: '#fff',
-    theme_color: '#f78f21',
+    theme_color: '#ff3385',
     icons: [
       {
         src: iconLarge,

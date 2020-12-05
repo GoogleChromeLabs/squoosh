@@ -18,7 +18,7 @@ import { twoUpHandle } from './custom-els/TwoUp/styles.css';
 import type { PreprocessorState } from '../../feature-meta';
 import { cleanSet } from '../../util/clean-modify';
 import type { SourceImage } from '../../Compress';
-import { linkRef } from 'shared/initial-app/util';
+import { linkRef } from 'shared/prerendered-app/util';
 
 interface Props {
   source?: SourceImage;

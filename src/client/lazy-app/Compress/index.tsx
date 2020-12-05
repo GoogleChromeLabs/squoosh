@@ -30,7 +30,7 @@ import './custom-els/MultiPanel';
 import Results from './Results';
 import WorkerBridge from '../worker-bridge';
 import { resize } from 'features/processors/resize/client';
-import type SnackBarElement from 'shared/initial-app/custom-els/snack-bar';
+import type SnackBarElement from 'shared/custom-els/snack-bar';
 import { CopyAcrossIconProps, ExpandIcon } from '../icons';
 
 export type OutputType = EncoderType | 'identity';

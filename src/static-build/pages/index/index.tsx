@@ -17,7 +17,7 @@ import initialCss from 'initial-css:';
 import { allSrc } from 'client-bundle:client/initial-app';
 import favicon from 'url:static-build/assets/favicon.ico';
 import { escapeStyleScriptContent } from 'static-build/utils';
-import Intro from 'shared/initial-app/Intro';
+import Intro from 'shared/prerendered-app/Intro';
 
 interface Props {}
 
