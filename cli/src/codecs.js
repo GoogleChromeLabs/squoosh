@@ -154,35 +154,38 @@ export const preprocessors = {
       dither: 1.0,
     },
   },
-  // rotate: {
-  //   name: "Rotate",
-  //   description: "Rotate image",
-  //   instantiate: async () => {
-  //     return async (buffer, width, height, { degrees }) => {
-  //       const sameDimensions = degrees == 0 || degrees == 180;
-  //       const size = width * height * 4;
-  //       const { instance } = await WebAssembly.instantiate(
-  //         await fsp.readFile(pathify(rotateWasm))
-  //       );
-  //       const { memory } = instance.exports;
-  //       const pagesNeeded = Math.ceil(
-  //         (size * 2 - memory.buffer.byteLength) / (64 * 1024)
-  //       );
-  //       memory.grow(pagesNeeded);
-  //       const view = new Uint8ClampedArray(memory.buffer);
-  //       view.set(buffer, 8);
-  //       instance.exports.rotate(width, height, degrees);
-  //       return new ImageData(
-  //         new Uint8ClampedArray(view.slice(size + 8, size * 2 + 8)),
-  //         sameDimensions ? width : height,
-  //         sameDimensions ? height : width
-  //       );
-  //     };
-  //   },
-  //   defaultOptions: {
-  //     numRotations: 0
-  //   }
-  // }
+  rotate: {
+    name: 'Rotate',
+    description: 'Rotate image',
+    instantiate: async () => {
+      return async (buffer, width, height, { numRotations }) => {
+        const degrees = (numRotations * 90) % 360;
+        const sameDimensions = degrees == 0 || degrees == 180;
+        const size = width * height * 4;
+        const { instance } = await WebAssembly.instantiate(
+          await fsp.readFile(pathify(rotateWasm)),
+        );
+        const { memory } = instance.exports;
+        const additionalPagesNeeded = Math.ceil(
+          (size * 2 - memory.buffer.byteLength + 8) / (64 * 1024),
+        );
+        if (additionalPagesNeeded > 0) {
+          memory.grow(additionalPagesNeeded);
+        }
+        const view = new Uint8ClampedArray(memory.buffer);
+        view.set(buffer, 8);
+        instance.exports.rotate(width, height, degrees);
+        return new ImageData(
+          new Uint8ClampedArray(view.slice(size + 8, size * 2 + 8)),
+          sameDimensions ? width : height,
+          sameDimensions ? height : width,
+        );
+      };
+    },
+    defaultOptions: {
+      numRotations: 0,
+    },
+  },
 };
 
 export const codecs = {
