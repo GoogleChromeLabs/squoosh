@@ -1,6 +1,6 @@
 {
   "name": "resize",
   "scripts": {
-    "build": "../build-rust.sh rm -rf pkg && wasm-pack build --debug --target web -- --verbose --locked && rm pkg/.gitignore"
+    "build": "../build-rust.sh"
   }
 }

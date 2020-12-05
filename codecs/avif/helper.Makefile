@@ -1,0 +1,77 @@
+# This is a helper Makefile for building LibAVIF + LibAOM with given params.
+#
+# Params that must be supplied by the caller:
+#   $(CODEC_DIR)
+#   $(LIBAOM_DIR)
+#   $(BUILD_DIR)
+#   $(OUT_JS)
+#   $(OUT_CPP)
+#   $(LIBAOM_FLAGS)
+#   $(LIBAVIF_FLAGS)
+
+OUT_BUILD_DIR := $(BUILD_DIR)/$(basename $(OUT_JS))
+
+CODEC_BUILD_DIR := $(OUT_BUILD_DIR)/libavif
+CODEC_OUT := $(CODEC_BUILD_DIR)/libavif.a
+
+LIBAOM_BUILD_DIR := $(OUT_BUILD_DIR)/libaom
+LIBAOM_OUT := $(LIBAOM_BUILD_DIR)/libaom.a
+
+OUT_WASM = $(OUT_JS:.js=.wasm)
+OUT_WORKER=$(OUT_JS:.js=.worker.js)
+
+.PHONY: all clean
+
+all: $(OUT_JS)
+
+$(OUT_JS): $(OUT_CPP) $(LIBAOM_OUT) $(CODEC_OUT)
+	$(CXX) \
+		-I $(CODEC_DIR)/include \
+		$(CXXFLAGS) \
+		$(LDFLAGS) \
+		$(OUT_FLAGS) \
+		--bind \
+		--closure 1 \
+		-s ALLOW_MEMORY_GROWTH=1 \
+		-s MODULARIZE=1 \
+		-s TEXTDECODER=2 \
+		-s ENVIRONMENT='worker' \
+		-s EXPORT_ES6=1 \
+		-s EXPORT_NAME="$(basename $(@F))" \
+		-o $@ \
+		$+
+
+$(CODEC_OUT): $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_OUT)
+	emcmake cmake \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DBUILD_SHARED_LIBS=0 \
+		-DAVIF_CODEC_AOM=1 \
+		-DAOM_LIBRARY=$(LIBAOM_OUT) \
+		-DAOM_INCLUDE_DIR=$(LIBAOM_DIR) \
+		$(LIBAVIF_FLAGS) \
+		-B $(CODEC_BUILD_DIR) \
+		$(CODEC_DIR) && \
+	$(MAKE) -C $(CODEC_BUILD_DIR)
+
+$(LIBAOM_OUT): $(LIBAOM_DIR)/CMakeLists.txt
+	emcmake cmake \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DENABLE_CCACHE=0 \
+		-DAOM_TARGET_CPU=generic \
+		-DENABLE_DOCS=0 \
+		-DENABLE_TESTS=0 \
+		-DENABLE_EXAMPLES=0 \
+		-DENABLE_TOOLS=0 \
+		-DCONFIG_ACCOUNTING=1 \
+		-DCONFIG_INSPECTION=0 \
+		-DCONFIG_RUNTIME_CPU_DETECT=0 \
+		-DCONFIG_WEBM_IO=0 \
+		$(LIBAOM_FLAGS) \
+		-B $(LIBAOM_BUILD_DIR) \
+		$(LIBAOM_DIR) && \
+	$(MAKE) -C $(LIBAOM_BUILD_DIR)
+
+clean:
+	$(RM) $(OUT_JS) $(OUT_WASM) $(OUT_WORKER)
+	$(MAKE) -C $(CODEC_BUILD_DIR) clean
+	$(MAKE) -C $(LIBAOM_BUILD_DIR) clean

@@ -1,76 +1,78 @@
-CODEC_URL = https://github.com/AOMediaCodec/libavif/archive/v0.8.0.tar.gz
-CODEC_DIR = node_modules/libavif
-CODEC_BUILD_DIR := $(CODEC_DIR)/build
-CODEC_OUT := $(CODEC_BUILD_DIR)/libavif.a
+CODEC_URL = https://github.com/AOMediaCodec/libavif/archive/31d7c6d1e32cf467ac24fb8c7a76c4902a4c00db.tar.gz
+CODEC_PACKAGE = node_modules/libavif.tar.gz
 
 LIBAOM_URL = https://aomedia.googlesource.com/aom/+archive/v2.0.0.tar.gz
-LIBAOM_DIR := $(CODEC_DIR)/ext/aom
-LIBAOM_BUILD_DIR := $(LIBAOM_DIR)/build.libavif
-LIBAOM_OUT := $(LIBAOM_BUILD_DIR)/libaom.a
+LIBAOM_PACKAGE = node_modules/libaom.tar.gz
 
-OUT_JS = enc/avif_enc.js dec/avif_dec.js
-OUT_WASM = $(OUT_JS:.js=.wasm)
+export CODEC_DIR = node_modules/libavif
+export BUILD_DIR = node_modules/build
+export LIBAOM_DIR = node_modules/libaom
+
+OUT_ENC_JS = enc/avif_enc.js
+OUT_ENC_MT_JS = enc/avif_enc_mt.js
+OUT_DEC_JS = dec/avif_dec.js
+
+OUT_ENC_CPP = enc/avif_enc.cpp
+OUT_DEC_CPP = dec/avif_dec.cpp
+
+HELPER_MAKEFLAGS := -f helper.Makefile
 
 .PHONY: all clean
 
-all: $(OUT_JS)
+all: $(OUT_ENC_JS) $(OUT_DEC_JS) $(OUT_ENC_MT_JS)
 
-%.js: %.cpp $(LIBAOM_OUT) $(CODEC_OUT)
-	$(CXX) \
-		-I $(CODEC_DIR)/include \
-		${CXXFLAGS} \
-		${LDFLAGS} \
-		--bind \
-		--closure 1 \
-		-s ALLOW_MEMORY_GROWTH=1 \
-		-s MODULARIZE=1 \
-		-s 'EXPORT_NAME="$(basename $(@F))"' \
-		-o $@ \
-		$+
+$(OUT_ENC_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt
+	$(MAKE) \
+		$(HELPER_MAKEFLAGS) \
+		OUT_JS=$@ \
+		OUT_CPP=$< \
+		LIBAOM_FLAGS="\
+			-DCONFIG_AV1_DECODER=0 \
+			-DCONFIG_MULTITHREAD=0 \
+			-DCONFIG_AV1_HIGHBITDEPTH=0 \
+		" \
+		LIBAVIF_FLAGS="-DAVIF_CODEC_AOM_DECODE=0"
 
-$(CODEC_OUT): $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_OUT)
-	mkdir -p $(CODEC_BUILD_DIR)
-	cd $(CODEC_BUILD_DIR) && \
-	emcmake cmake \
-		-DCMAKE_BUILD_TYPE=Release \
-		-DBUILD_SHARED_LIBS=0 \
-		-DAVIF_CODEC_AOM=1 \
-		-DAVIF_LOCAL_AOM=1 \
-		../ && \
-	$(MAKE)
+$(OUT_ENC_MT_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt
+	$(MAKE) \
+		$(HELPER_MAKEFLAGS) \
+		OUT_JS=$@ \
+		OUT_CPP=$< \
+		LIBAOM_FLAGS="\
+			-DCONFIG_AV1_DECODER=0 \
+			-DCONFIG_AV1_HIGHBITDEPTH=0 \
+		" \
+		LIBAVIF_FLAGS="-DAVIF_CODEC_AOM_DECODE=0" \
+		OUT_FLAGS="-pthread"
 
-$(LIBAOM_OUT): $(LIBAOM_DIR)/CMakeLists.txt
-	mkdir -p $(LIBAOM_BUILD_DIR)
-	cd $(LIBAOM_BUILD_DIR) && \
-	emcmake cmake \
-		-DCMAKE_BUILD_TYPE=Release \
-		-DENABLE_CCACHE=0 \
-		-DAOM_TARGET_CPU=generic \
-		-DENABLE_DOCS=0 \
-		-DENABLE_TESTS=0 \
-		-DENABLE_EXAMPLES=0 \
-		-DENABLE_TOOLS=0 \
-		-DCONFIG_ACCOUNTING=1 \
-		-DCONFIG_INSPECTION=0 \
-		-DCONFIG_MULTITHREAD=0 \
-		-DCONFIG_RUNTIME_CPU_DETECT=0 \
-		-DCONFIG_WEBM_IO=0 \
-		../ && \
-	$(MAKE)
+$(OUT_DEC_JS): $(OUT_DEC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt
+	$(MAKE) \
+		$(HELPER_MAKEFLAGS) \
+		OUT_JS=$@ \
+		OUT_CPP=$< \
+		LIBAOM_FLAGS="\
+			-DCONFIG_AV1_ENCODER=0 \
+			-DCONFIG_MULTITHREAD=0 \
+		" \
+		LIBAVIF_FLAGS="-DAVIF_CODEC_AOM_ENCODE=0"
 
-$(CODEC_DIR)/CMakeLists.txt: $(CODEC_DIR)
+$(CODEC_PACKAGE):
+	mkdir -p $(@D)
+	curl -sL $(CODEC_URL) -o $@
 
-$(LIBAOM_DIR)/CMakeLists.txt: $(LIBAOM_DIR)
+$(LIBAOM_PACKAGE):
+	mkdir -p $(@D)
+	curl -sL $(LIBAOM_URL) -o $@
 
-$(CODEC_DIR):
-	mkdir -p $@
-	curl -sL $(CODEC_URL) | tar xz --strip 1 -C $@
+$(CODEC_DIR)/CMakeLists.txt: $(CODEC_PACKAGE)
+	mkdir -p $(@D)
+	tar xzm --strip 1 -C $(@D) -f $(CODEC_PACKAGE)
 
-$(LIBAOM_DIR):
-	mkdir -p $@
-	curl -sL $(LIBAOM_URL) | tar xz -C $@
+$(LIBAOM_DIR)/CMakeLists.txt: $(LIBAOM_PACKAGE)
+	mkdir -p $(@D)
+	tar xzm -C $(@D) -f $(LIBAOM_PACKAGE)
 
 clean:
-	$(RM) $(OUT_JS) $(OUT_WASM)
-	$(MAKE) -C $(CODEC_BUILD_DIR) clean
-	$(MAKE) -C $(LIBAOM_BUILD_DIR) clean
+	$(MAKE) $(HELPER_MAKEFLAGS) OUT_JS=$(OUT_ENC_JS) clean
+	$(MAKE) $(HELPER_MAKEFLAGS) OUT_JS=$(OUT_ENC_MT_JS) clean
+	$(MAKE) $(HELPER_MAKEFLAGS) OUT_JS=$(OUT_DEC_JS) clean

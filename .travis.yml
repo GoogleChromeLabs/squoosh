@@ -1,7 +1,0 @@
-language: node_js
-cache: npm
-script: npm run build
-after_success: npm run sizereport
-os:
-  - linux
-  - windows
