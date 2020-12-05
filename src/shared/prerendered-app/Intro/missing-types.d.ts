@@ -29,3 +29,12 @@ interface BeforeInstallPromptEvent extends Event {
 interface WindowEventMap {
   beforeinstallprompt: BeforeInstallPromptEvent;
 }
+
+interface ClipboardItem {
+  types: string[];
+  getType(type: string): Promise<Blob>;
+}
+
+interface Clipboard {
+  read(): Promise<ClipboardItem[]>;
+}

@@ -1,5 +1,5 @@
-/// <reference path="../../../shared/initial-app/custom-els/snack-bar/missing-types.d.ts" />
-/// <reference path="../../../shared/initial-app/custom-els/loading-spinner/missing-types.d.ts" />
+/// <reference path="../../../shared/custom-els/snack-bar/missing-types.d.ts" />
+/// <reference path="../../../shared/custom-els/loading-spinner/missing-types.d.ts" />
 import type { FileDropElement, FileDropEvent } from 'file-drop-element';
 
 interface FileDropAttributes extends preact.JSX.HTMLAttributes {

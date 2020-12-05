@@ -1,16 +1,16 @@
 import type { FileDropEvent } from 'file-drop-element';
-import type SnackBarElement from 'shared/initial-app/custom-els/snack-bar';
-import type { SnackOptions } from 'shared/initial-app/custom-els/snack-bar';
+import type SnackBarElement from 'shared/custom-els/snack-bar';
+import type { SnackOptions } from 'shared/custom-els/snack-bar';
 
 import { h, Component } from 'preact';
 
-import { linkRef } from 'shared/initial-app/util';
+import { linkRef } from 'shared/prerendered-app/util';
 import * as style from './style.css';
 import 'add-css:./style.css';
 import 'file-drop-element';
-import 'shared/initial-app/custom-els/snack-bar';
-import Intro from 'shared/initial-app/Intro';
-import 'shared/initial-app/custom-els/loading-spinner';
+import 'shared/custom-els/snack-bar';
+import Intro from 'shared/prerendered-app/Intro';
+import 'shared/custom-els/loading-spinner';
 
 const ROUTE_EDITOR = '/editor';
 
