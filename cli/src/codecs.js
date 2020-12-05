@@ -8,10 +8,10 @@ import { instantiateEmscriptenWasm, pathify } from './emscripten-utils.js';
 // import mozDecWasm from 'asset-url:../../codecs/mozjpeg/dec/mozjpeg_dec.wasm';
 
 // WebP
-import webpEnc from '../../codecs/webp/enc/webp_enc.js';
-import webpEncWasm from 'asset-url:../../codecs/webp/enc/webp_enc.wasm';
-import webpDec from '../../codecs/webp/dec/webp_dec.js';
-import webpDecWasm from 'asset-url:../../codecs/webp/dec/webp_dec.wasm';
+import webpEnc from '../../codecs/webp/enc/webp_node_enc.js';
+import webpEncWasm from 'asset-url:../../codecs/webp/enc/webp_node_enc.wasm';
+import webpDec from '../../codecs/webp/dec/webp_node_dec.js';
+import webpDecWasm from 'asset-url:../../codecs/webp/dec/webp_node_dec.wasm';
 
 // AVIF
 import avifEnc from '../../codecs/avif/enc/avif_node_enc.js';
@@ -225,47 +225,47 @@ export const codecs = {
   //     max: 100
   //   }
   // },
-  // webp: {
-  //   name: "WebP",
-  //   extension: "webp",
-  //   detectors: [/^RIFF....WEBPVP8[LX ]/],
-  //   dec: () => instantiateEmscriptenWasm(webpDec, webpDecWasm),
-  //   enc: () => instantiateEmscriptenWasm(webpEnc, webpEncWasm),
-  //   defaultEncoderOptions: {
-  //     quality: 75,
-  //     target_size: 0,
-  //     target_PSNR: 0,
-  //     method: 4,
-  //     sns_strength: 50,
-  //     filter_strength: 60,
-  //     filter_sharpness: 0,
-  //     filter_type: 1,
-  //     partitions: 0,
-  //     segments: 4,
-  //     pass: 1,
-  //     show_compressed: 0,
-  //     preprocessing: 0,
-  //     autofilter: 0,
-  //     partition_limit: 0,
-  //     alpha_compression: 1,
-  //     alpha_filtering: 1,
-  //     alpha_quality: 100,
-  //     lossless: 0,
-  //     exact: 0,
-  //     image_hint: 0,
-  //     emulate_jpeg_size: 0,
-  //     thread_level: 0,
-  //     low_memory: 0,
-  //     near_lossless: 100,
-  //     use_delta_palette: 0,
-  //     use_sharp_yuv: 0
-  //   },
-  //   autoOptimize: {
-  //     option: "quality",
-  //     min: 0,
-  //     max: 100
-  //   }
-  // },
+  webp: {
+    name: 'WebP',
+    extension: 'webp',
+    detectors: [/^RIFF....WEBPVP8[LX ]/],
+    dec: () => instantiateEmscriptenWasm(webpDec, webpDecWasm),
+    enc: () => instantiateEmscriptenWasm(webpEnc, webpEncWasm),
+    defaultEncoderOptions: {
+      quality: 75,
+      target_size: 0,
+      target_PSNR: 0,
+      method: 4,
+      sns_strength: 50,
+      filter_strength: 60,
+      filter_sharpness: 0,
+      filter_type: 1,
+      partitions: 0,
+      segments: 4,
+      pass: 1,
+      show_compressed: 0,
+      preprocessing: 0,
+      autofilter: 0,
+      partition_limit: 0,
+      alpha_compression: 1,
+      alpha_filtering: 1,
+      alpha_quality: 100,
+      lossless: 0,
+      exact: 0,
+      image_hint: 0,
+      emulate_jpeg_size: 0,
+      thread_level: 0,
+      low_memory: 0,
+      near_lossless: 100,
+      use_delta_palette: 0,
+      use_sharp_yuv: 0,
+    },
+    autoOptimize: {
+      option: 'quality',
+      min: 0,
+      max: 100,
+    },
+  },
   avif: {
     name: 'AVIF',
     extension: 'avif',
