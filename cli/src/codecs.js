@@ -28,14 +28,14 @@ import jxlDecWasm from 'asset-url:../../codecs/jxl/dec/jxl_node_dec.wasm';
 // PNG
 import * as pngEncDec from '../../codecs/png/pkg/squoosh_png.js';
 import pngEncDecWasm from 'asset-url:../../codecs/png/pkg/squoosh_png_bg.wasm';
-// const pngEncDecPromise = pngEncDec.default(
-//   fsp.readFile(pathify(pngEncDecWasm))
-// );
+const pngEncDecPromise = pngEncDec.default(
+  fsp.readFile(pathify(pngEncDecWasm)),
+);
 
 // OxiPNG
 import * as oxipng from '../../codecs/oxipng/pkg/squoosh_oxipng.js';
 import oxipngWasm from 'asset-url:../../codecs/oxipng/pkg/squoosh_oxipng_bg.wasm';
-// const oxipngPromise = oxipng.default(fsp.readFile(pathify(oxipngWasm)));
+const oxipngPromise = oxipng.default(fsp.readFile(pathify(oxipngWasm)));
 
 // Resize
 import * as resize from '../../codecs/resize/pkg/squoosh_resize.js';
@@ -299,33 +299,33 @@ export const codecs = {
       max: 100,
     },
   },
-  // oxipng: {
-  //   name: "OxiPNG",
-  //   extension: "png",
-  //   detectors: [/^\x89PNG\x0D\x0A\x1A\x0A/],
-  //   dec: async () => {
-  //     await pngEncDecPromise;
-  //     return { decode: pngEncDec.decode };
-  //   },
-  //   enc: async () => {
-  //     await pngEncDecPromise;
-  //     await oxipngPromise;
-  //     return {
-  //       encode: (buffer, width, height, opts) => {
-  //         const simplePng = new Uint8Array(
-  //           pngEncDec.encode(new Uint8Array(buffer), width, height)
-  //         );
-  //         return new Uint8Array(oxipng.optimise(simplePng, opts.level));
-  //       }
-  //     };
-  //   },
-  //   defaultEncoderOptions: {
-  //     level: 2
-  //   },
-  //   autoOptimize: {
-  //     option: "level",
-  //     min: 6,
-  //     max: 1
-  //   }
-  // }
+  oxipng: {
+    name: 'OxiPNG',
+    extension: 'png',
+    detectors: [/^\x89PNG\x0D\x0A\x1A\x0A/],
+    dec: async () => {
+      await pngEncDecPromise;
+      return { decode: pngEncDec.decode };
+    },
+    enc: async () => {
+      await pngEncDecPromise;
+      await oxipngPromise;
+      return {
+        encode: (buffer, width, height, opts) => {
+          const simplePng = new Uint8Array(
+            pngEncDec.encode(new Uint8Array(buffer), width, height),
+          );
+          return new Uint8Array(oxipng.optimise(simplePng, opts.level));
+        },
+      };
+    },
+    defaultEncoderOptions: {
+      level: 2,
+    },
+    autoOptimize: {
+      option: 'level',
+      min: 6,
+      max: 1,
+    },
+  },
 };
