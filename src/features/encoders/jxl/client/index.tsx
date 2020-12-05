@@ -123,23 +123,23 @@ export class Options extends Component<Props, State> {
     // gathering the data.
     return (
       <form class={style.optionsSection} onSubmit={preventDefault}>
-        <label class={style.optionInputFirst}>
+        <label class={style.optionToggle}>
+          Lossless
           <Checkbox
             name="lossless"
             checked={lossless}
             onChange={this._inputChange('lossless', 'boolean')}
           />
-          Lossless
         </label>
         <Expander>
           {lossless && (
-            <label class={style.optionInputFirst}>
+            <label class={style.optionToggle}>
+              Slight loss
               <Checkbox
                 name="slightLoss"
                 checked={slightLoss}
                 onChange={this._inputChange('slightLoss', 'boolean')}
               />
-              Slight loss
             </label>
           )}
         </Expander>
@@ -157,7 +157,8 @@ export class Options extends Component<Props, State> {
                   Quality:
                 </Range>
               </div>
-              <label class={style.optionInputFirst}>
+              <label class={style.optionToggle}>
+                Auto edge filter
                 <Checkbox
                   name="autoEdgeFilter"
                   checked={autoEdgePreservingFilter}
@@ -166,7 +167,6 @@ export class Options extends Component<Props, State> {
                     'boolean',
                   )}
                 />
-                Auto edge filter
               </label>
               <Expander>
                 {!autoEdgePreservingFilter && (
@@ -188,13 +188,13 @@ export class Options extends Component<Props, State> {
             </div>
           )}
         </Expander>
-        <label class={style.optionInputFirst}>
+        <label class={style.optionToggle}>
+          Progressive rendering
           <Checkbox
             name="progressive"
             checked={progressive}
             onChange={this._inputChange('progressive', 'boolean')}
           />
-          Progressive rendering
         </label>
         <div class={style.optionOneCell}>
           <Range

@@ -209,12 +209,12 @@ export class Options extends Component<Props, State> {
   ) {
     return (
       <form class={style.optionsSection} onSubmit={preventDefault}>
-        <label class={style.optionInputFirst}>
+        <label class={style.optionToggle}>
+          Lossless
           <Checkbox
             checked={lossless}
             onChange={this._inputChange('lossless', 'boolean')}
           />
-          Lossless
         </label>
         <Expander>
           {!lossless && (
@@ -242,22 +242,22 @@ export class Options extends Component<Props, State> {
             </div>
           )}
         </Expander>
-        <label class={style.optionInputFirst}>
+        <label class={style.optionToggle}>
+          Separate alpha quality
           <Checkbox
             checked={separateAlpha}
             onChange={this._inputChange('separateAlpha', 'boolean')}
           />
-          Separate alpha quality
         </label>
         <Expander>
           {separateAlpha && (
             <div>
-              <label class={style.optionInputFirst}>
+              <label class={style.optionToggle}>
+                Lossless alpha
                 <Checkbox
                   checked={losslessAlpha}
                   onChange={this._inputChange('losslessAlpha', 'boolean')}
                 />
-                Lossless alpha
               </label>
               <Expander>
                 {!losslessAlpha && (
@@ -288,23 +288,23 @@ export class Options extends Component<Props, State> {
             </div>
           )}
         </Expander>
-        <label class={style.optionInputFirst}>
+        <label class={style.optionToggle}>
+          Show advanced settings
           <Checkbox
             checked={showAdvanced}
             onChange={linkState(this, 'showAdvanced')}
           />
-          Show advanced settings
         </label>
         <Expander>
           {showAdvanced && (
             <div>
-              {/*<label class={style.optionInputFirst}>
+              {/*<label class={style.optionToggle}>
+                Grayscale
                 <Checkbox
                   data-set-state="grayscale"
                   checked={grayscale}
                   onChange={this._inputChange('grayscale', 'boolean')}
                 />
-                Grayscale
               </label>*/}
               <Expander>
                 {!grayscale && !lossless && (

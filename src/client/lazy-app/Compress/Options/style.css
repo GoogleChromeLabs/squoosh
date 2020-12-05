@@ -31,23 +31,23 @@
   padding: 10px var(--horizontal-padding);
 }
 
+.option-toggle {
+  cursor: pointer;
+  display: grid;
+  align-items: center;
+  grid-template-columns: 1fr auto;
+  grid-gap: 0.7em;
+  padding: 10px var(--horizontal-padding);
+}
+
 .option-one-cell {
   display: grid;
   grid-template-columns: 1fr;
   padding: 10px var(--horizontal-padding);
 }
 
-.option-input-first,
 .section-enabler {
-  cursor: pointer;
-  display: grid;
-  align-items: center;
-  grid-template-columns: auto 1fr;
-  grid-gap: 0.7em;
-  padding: 10px var(--horizontal-padding);
-}
-
-.section-enabler {
+  composes: option-toggle;
   background: var(--dark-gray);
   padding: 15px var(--horizontal-padding);
   border-bottom: 1px solid var(--off-black);

@@ -126,12 +126,12 @@ export default class Options extends Component<Props, State> {
             <div>
               <h3 class={style.optionsTitle}>Edit</h3>
               <label class={style.sectionEnabler}>
+                Resize
                 <Checkbox
                   name="resize.enable"
                   checked={!!processorState.resize.enabled}
                   onChange={this.onProcessorEnabledChange}
                 />
-                Resize
               </label>
               <Expander>
                 {processorState.resize.enabled ? (
@@ -146,12 +146,12 @@ export default class Options extends Component<Props, State> {
               </Expander>
 
               <label class={style.sectionEnabler}>
+                Reduce palette
                 <Checkbox
                   name="quantize.enable"
                   checked={!!processorState.quantize.enabled}
                   onChange={this.onProcessorEnabledChange}
                 />
-                Reduce palette
               </label>
               <Expander>
                 {processorState.quantize.enabled ? (

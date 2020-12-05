@@ -179,7 +179,8 @@ export class Options extends Component<Props, State> {
             Slight loss:
           </Range>
         </div>
-        <label class={style.optionInputFirst}>
+        <label class={style.optionToggle}>
+          Discrete tone image
           {/*
             Although there are 3 different kinds of image hint, webp only
             seems to do something with the 'graph' type, and I don't really
@@ -190,7 +191,6 @@ export class Options extends Component<Props, State> {
             checked={options.image_hint === WebPImageHint.WEBP_HINT_GRAPH}
             onChange={this.onChange}
           />
-          Discrete tone image
         </label>
       </div>
     );
@@ -224,23 +224,23 @@ export class Options extends Component<Props, State> {
             Quality:
           </Range>
         </div>
-        <label class={style.optionInputFirst}>
+        <label class={style.optionToggle}>
+          Show advanced settings
           <Checkbox
             checked={showAdvanced}
             onChange={linkState(this, 'showAdvanced')}
           />
-          Show advanced settings
         </label>
         <Expander>
           {showAdvanced ? (
             <div>
-              <label class={style.optionInputFirst}>
+              <label class={style.optionToggle}>
+                Compress alpha
                 <Checkbox
                   name="alpha_compression"
                   checked={!!options.alpha_compression}
                   onChange={this.onChange}
                 />
-                Compress alpha
               </label>
               <div class={style.optionOneCell}>
                 <Range
@@ -264,13 +264,13 @@ export class Options extends Component<Props, State> {
                   Alpha filter quality:
                 </Range>
               </div>
-              <label class={style.optionInputFirst}>
+              <label class={style.optionToggle}>
+                Auto adjust filter strength
                 <Checkbox
                   name="autofilter"
                   checked={!!options.autofilter}
                   onChange={this.onChange}
                 />
-                Auto adjust filter strength
               </label>
               <Expander>
                 {options.autofilter ? null : (
@@ -287,13 +287,13 @@ export class Options extends Component<Props, State> {
                   </div>
                 )}
               </Expander>
-              <label class={style.optionInputFirst}>
+              <label class={style.optionToggle}>
+                Strong filter
                 <Checkbox
                   name="filter_type"
                   checked={!!options.filter_type}
                   onChange={this.onChange}
                 />
-                Strong filter
               </label>
               <div class={style.optionOneCell}>
                 <Range
@@ -306,13 +306,13 @@ export class Options extends Component<Props, State> {
                   Filter sharpness:
                 </Range>
               </div>
-              <label class={style.optionInputFirst}>
+              <label class={style.optionToggle}>
+                Sharp RGB→YUV conversion
                 <Checkbox
                   name="use_sharp_yuv"
                   checked={!!options.use_sharp_yuv}
                   onChange={this.onChange}
                 />
-                Sharp RGB→YUV conversion
               </label>
               <div class={style.optionOneCell}>
                 <Range
@@ -382,24 +382,24 @@ export class Options extends Component<Props, State> {
     // gathering the data.
     return (
       <form class={style.optionsSection} onSubmit={preventDefault}>
-        <label class={style.optionInputFirst}>
+        <label class={style.optionToggle}>
+          Lossless
           <Checkbox
             name="lossless"
             checked={!!options.lossless}
             onChange={this.onChange}
           />
-          Lossless
         </label>
         {options.lossless
           ? this._losslessSpecificOptions(options)
           : this._lossySpecificOptions(options)}
-        <label class={style.optionInputFirst}>
+        <label class={style.optionToggle}>
+          Preserve transparent data
           <Checkbox
             name="exact"
             checked={!!options.exact}
             onChange={this.onChange}
           />
-          Preserve transparent data
         </label>
       </form>
     );
