@@ -19,11 +19,17 @@ import avifEncWasm from 'asset-url:../../codecs/avif/enc/avif_node_enc.wasm';
 import avifDec from '../../codecs/avif/dec/avif_node_dec.js';
 import avifDecWasm from 'asset-url:../../codecs/avif/dec/avif_node_dec.wasm';
 
-// WJXL
+// JXL
 import jxlEnc from '../../codecs/jxl/enc/jxl_node_enc.js';
 import jxlEncWasm from 'asset-url:../../codecs/jxl/enc/jxl_node_enc.wasm';
 import jxlDec from '../../codecs/jxl/dec/jxl_node_dec.js';
 import jxlDecWasm from 'asset-url:../../codecs/jxl/dec/jxl_node_dec.wasm';
+
+// WP2
+import wp2Enc from '../../codecs/wp2/enc/wp2_node_enc.js';
+import wp2EncWasm from 'asset-url:../../codecs/wp2/enc/wp2_node_enc.wasm';
+import wp2Dec from '../../codecs/wp2/dec/wp2_node_dec.js';
+import wp2DecWasm from 'asset-url:../../codecs/wp2/dec/wp2_node_dec.wasm';
 
 // PNG
 import * as pngEncDec from '../../codecs/png/pkg/squoosh_png.js';
@@ -295,6 +301,29 @@ export const codecs = {
       epf: -1,
       nearLossless: 0,
       lossyPalette: false,
+    },
+    autoOptimize: {
+      option: 'quality',
+      min: 0,
+      max: 100,
+    },
+  },
+  wp2: {
+    name: 'WebP2',
+    extension: 'wp2',
+    detectors: [/^\xF4\xFF\x6F/],
+    dec: () => instantiateEmscriptenWasm(wp2Dec, wp2DecWasm),
+    enc: () => instantiateEmscriptenWasm(wp2Enc, wp2EncWasm),
+    defaultEncoderOptions: {
+      quality: 75,
+      alpha_quality: 75,
+      effort: 5,
+      pass: 1,
+      sns: 50,
+      uv_mode: 0 /*UVMode.UVModeAuto*/,
+      csp_type: 0 /*Csp.kYCoCg*/,
+      error_diffusion: 0,
+      use_random_matrix: false,
     },
     autoOptimize: {
       option: 'quality',
