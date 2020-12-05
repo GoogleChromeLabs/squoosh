@@ -67,6 +67,12 @@ export const ExpandIcon = (props: preact.JSX.HTMLAttributes) => (
   </Icon>
 );
 
+export const Arrow = () => (
+  <svg viewBox="0 -1.95 9.8 9.8">
+    <path d="M8.2.2a1 1 0 011.4 1.4l-4 4a1 1 0 01-1.4 0l-4-4A1 1 0 011.6.2l3.3 3.3L8.2.2z" />
+  </svg>
+);
+
 const copyAcrossRotations = {
   up: 90,
   right: 180,

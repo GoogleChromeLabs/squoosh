@@ -9,12 +9,12 @@
     right: 0;
     bottom: 0;
     background: #000;
-    opacity: 0;
+    opacity: 0.8;
     transition: opacity 500ms ease;
   }
 
   &.alt-background::before {
-    opacity: 0.6;
+    opacity: 0;
   }
 }
 

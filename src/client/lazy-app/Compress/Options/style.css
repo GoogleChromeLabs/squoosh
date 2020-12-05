@@ -13,7 +13,7 @@
   padding: 10px var(--horizontal-padding);
   font-weight: bold;
   font-size: 1.4rem;
-  border-bottom: 1px solid #000;
+  border-bottom: 1px solid var(--off-black);
   transition: all 300ms ease-in-out;
   transition-property: background-color, color;
 }
@@ -48,20 +48,22 @@
 }
 
 .section-enabler {
-  background: rgba(0, 0, 0, 0.8);
+  background: var(--dark-gray);
+  padding: 15px var(--horizontal-padding);
+  border-bottom: 1px solid var(--off-black);
 }
 
 .options-section {
-  background: rgba(0, 0, 0, 0.7);
+  background: var(--off-black);
 }
 
 .text-field {
-  background: #fff;
-  color: #000;
+  background: var(--white);
+  color: var(--black);
   font: inherit;
   border: none;
-  padding: 2px 0 2px 10px;
+  padding: 6px 0 6px 10px;
   width: 100%;
   box-sizing: border-box;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
 }
