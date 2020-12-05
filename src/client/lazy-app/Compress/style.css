@@ -8,8 +8,11 @@
   grid-template-rows: 1fr auto;
 
   @media (min-width: 600px) {
-    grid-template-columns: 1fr auto;
-    grid-template-rows: 100%;
+    grid-template-rows: max-content 1fr;
+    grid-template-columns: max-content 1fr max-content;
+    grid-template-areas:
+      'header header header'
+      'optsLeft viewportOpts optsRight';
   }
 }
 
@@ -34,6 +37,16 @@
   @media (min-width: 860px) {
     max-height: calc(100% - 40px);
   }
+}
+
+.options-1 {
+  composes: options;
+  grid-area: optsLeft;
+}
+
+.options-2 {
+  composes: options;
+  grid-area: optsRight;
 }
 
 .multi-panel {
@@ -76,10 +89,10 @@
 
 .back {
   composes: unbutton from global;
-  position: absolute;
-  top: var(--dist);
-  left: var(--dist);
-  --dist: 14px;
+  position: relative;
+  grid-area: header;
+  margin: 14px;
+  justify-self: start;
 
   & > svg {
     width: 58px;

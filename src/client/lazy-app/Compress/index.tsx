@@ -889,11 +889,11 @@ export default class Compress extends Component<Props, State> {
           </div>
         ) : (
           [
-            <div class={style.options} key="options0">
+            <div class={style.options1} key="options0">
               {options[0]}
               {results[0]}
             </div>,
-            <div class={style.options} key="options1">
+            <div class={style.options2} key="options1">
               {options[1]}
               {results[1]}
             </div>,

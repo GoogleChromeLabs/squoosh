@@ -1,5 +1,5 @@
 .output {
-  composes: abs-fill from global;
+  display: contents;
 
   &::before {
     content: '';
