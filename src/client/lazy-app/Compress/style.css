@@ -25,17 +25,12 @@
   max-width: 400px;
   margin: 0 auto;
   width: calc(100% - 60px);
-  max-height: calc(100% - 104px);
+  max-height: 100%;
   overflow: hidden;
 
   @media (min-width: 600px) {
-    max-height: calc(100% - 75px);
     width: 300px;
     margin: 0;
-  }
-
-  @media (min-width: 860px) {
-    max-height: calc(100% - 40px);
   }
 }
 
