@@ -19,6 +19,12 @@ import avifEncWasm from 'asset-url:../../codecs/avif/enc/avif_node_enc.wasm';
 import avifDec from '../../codecs/avif/dec/avif_node_dec.js';
 import avifDecWasm from 'asset-url:../../codecs/avif/dec/avif_node_dec.wasm';
 
+// WJXL
+import jxlEnc from '../../codecs/jxl/enc/jxl_node_enc.js';
+import jxlEncWasm from 'asset-url:../../codecs/jxl/enc/jxl_node_enc.wasm';
+import jxlDec from '../../codecs/jxl/dec/jxl_node_dec.js';
+import jxlDecWasm from 'asset-url:../../codecs/jxl/dec/jxl_node_dec.wasm';
+
 // PNG
 import * as pngEncDec from '../../codecs/png/pkg/squoosh_png.js';
 import pngEncDecWasm from 'asset-url:../../codecs/png/pkg/squoosh_png_bg.wasm';
@@ -271,6 +277,26 @@ export const codecs = {
       option: 'maxQuantizer',
       min: 0,
       max: 62,
+    },
+  },
+  jxl: {
+    name: 'JPEG-XL',
+    extension: 'jxl',
+    detectors: [/^\xff\x0a/],
+    dec: () => instantiateEmscriptenWasm(jxlDec, jxlDecWasm),
+    enc: () => instantiateEmscriptenWasm(jxlEnc, jxlEncWasm),
+    defaultEncoderOptions: {
+      speed: 4,
+      quality: 75,
+      progressive: false,
+      epf: -1,
+      nearLossless: 0,
+      lossyPalette: false,
+    },
+    autoOptimize: {
+      option: 'quality',
+      min: 0,
+      max: 100,
     },
   },
   // oxipng: {
