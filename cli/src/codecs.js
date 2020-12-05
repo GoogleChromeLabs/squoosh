@@ -40,9 +40,9 @@ import resizeWasm from 'asset-url:../../codecs/resize/pkg/squoosh_resize_bg.wasm
 import rotateWasm from 'asset-url:../../codecs/rotate/rotate.wasm';
 
 // ImageQuant
-import imageQuant from '../../codecs/imagequant/imagequant.js';
-import imageQuantWasm from 'asset-url:../../codecs/imagequant/imagequant.wasm';
-// const imageQuantPromise = instantiateEmscriptenWasm(imageQuant, imageQuantWasm);
+import imageQuant from '../../codecs/imagequant/imagequant_node.js';
+import imageQuantWasm from 'asset-url:../../codecs/imagequant/imagequant_node.wasm';
+const imageQuantPromise = instantiateEmscriptenWasm(imageQuant, imageQuantWasm);
 
 // Our decoders currently rely on a `ImageData` global.
 import ImageData from './image_data.js';
@@ -131,23 +131,23 @@ export const preprocessors = {
   //   }
   // },
   // // TODO: Need to handle SVGs and HQX
-  // quant: {
-  //   name: "ImageQuant",
-  //   description: "Reduce the number of colors used (aka. paletting)",
-  //   instantiate: async () => {
-  //     const imageQuant = await imageQuantPromise;
-  //     return (buffer, width, height, { numColors, dither }) =>
-  //       new ImageData(
-  //         imageQuant.quantize(buffer, width, height, numColors, dither),
-  //         width,
-  //         height
-  //       );
-  //   },
-  //   defaultOptions: {
-  //     numColors: 255,
-  //     dither: 1.0
-  //   }
-  // },
+  quant: {
+    name: 'ImageQuant',
+    description: 'Reduce the number of colors used (aka. paletting)',
+    instantiate: async () => {
+      const imageQuant = await imageQuantPromise;
+      return (buffer, width, height, { numColors, dither }) =>
+        new ImageData(
+          imageQuant.quantize(buffer, width, height, numColors, dither),
+          width,
+          height,
+        );
+    },
+    defaultOptions: {
+      numColors: 255,
+      dither: 1.0,
+    },
+  },
   // rotate: {
   //   name: "Rotate",
   //   description: "Rotate image",

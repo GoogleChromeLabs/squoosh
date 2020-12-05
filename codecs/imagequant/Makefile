@@ -3,13 +3,13 @@ CODEC_DIR := node_modules/libimagequant
 CODEC_OUT_RELATIVE := libimagequant.a
 CODEC_OUT := $(addprefix $(CODEC_DIR)/, $(CODEC_OUT_RELATIVE))
 OUT_JS := imagequant.js
-OUT_WASM := $(OUT_JS:.js=.wasm)
+OUT_NODE_JS := imagequant_node.js
 
 .PHONY: all clean
 
-all: $(OUT_JS)
+all: $(OUT_JS) $(OUT_NODE_JS)
 
-%.js: %.cpp $(CODEC_OUT)
+$(OUT_JS): $(CODEC_OUT)
 	$(CXX) \
 		-I $(CODEC_DIR) \
 		${CXXFLAGS} \
@@ -22,7 +22,24 @@ all: $(OUT_JS)
 		-s ENVIRONMENT='worker' \
 		-s EXPORT_ES6=1 \
 		-o $@ \
-		$+
+		$+ \
+		imagequant.cpp
+
+$(OUT_NODE_JS): $(CODEC_OUT)
+	$(CXX) \
+		-I $(CODEC_DIR) \
+		${CXXFLAGS} \
+		${LDFLAGS} \
+		--bind \
+		--closure 1 \
+		-s ALLOW_MEMORY_GROWTH=1 \
+		-s MODULARIZE=1 \
+		-s TEXTDECODER=2 \
+		-s ENVIRONMENT='node' \
+		-s EXPORT_ES6=1 \
+		-o $@ \
+		$+ \
+		imagequant.cpp
 
 $(CODEC_OUT): $(CODEC_DIR)/config.mk
 	$(MAKE) -C $(CODEC_DIR) $(CODEC_OUT_RELATIVE)
@@ -38,5 +55,5 @@ $(CODEC_DIR):
 	curl -sL $(CODEC_URL) | tar xz --strip 1 -C $@
 
 clean:
-	$(RM) $(OUT_JS) $(OUT_WASM)
+	$(RM) $(OUT_JS) *.wasm
 	$(MAKE) -C $(CODEC_DIR) clean
