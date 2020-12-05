@@ -40,7 +40,7 @@ const oxipngPromise = oxipng.default(fsp.readFile(pathify(oxipngWasm)));
 // Resize
 import * as resize from '../../codecs/resize/pkg/squoosh_resize.js';
 import resizeWasm from 'asset-url:../../codecs/resize/pkg/squoosh_resize_bg.wasm';
-// const resizePromise = resize.default(fsp.readFile(pathify(resizeWasm)));
+const resizePromise = resize.default(fsp.readFile(pathify(resizeWasm)));
 
 // rotate
 import rotateWasm from 'asset-url:../../codecs/rotate/rotate.wasm';
@@ -96,46 +96,46 @@ function resizeWithAspect({
 }
 
 export const preprocessors = {
-  // resize: {
-  //   name: "Resize",
-  //   description: "Resize the image before compressing",
-  //   instantiate: async () => {
-  //     await resizePromise;
-  //     return (
-  //       buffer,
-  //       input_width,
-  //       input_height,
-  //       { width, height, method, premultiply, linearRGB }
-  //     ) => {
-  //       ({ width, height } = resizeWithAspect({
-  //         input_width,
-  //         input_height,
-  //         target_width: width,
-  //         target_height: height
-  //       }));
-  //       return new ImageData(
-  //         resize.resize(
-  //           buffer,
-  //           input_width,
-  //           input_height,
-  //           width,
-  //           height,
-  //           resizeNameToIndex(method),
-  //           premultiply,
-  //           linearRGB
-  //         ),
-  //         width,
-  //         height
-  //       );
-  //     };
-  //   },
-  //   defaultOptions: {
-  //     method: "lanczos3",
-  //     fitMethod: "stretch",
-  //     premultiply: true,
-  //     linearRGB: true
-  //   }
-  // },
+  resize: {
+    name: 'Resize',
+    description: 'Resize the image before compressing',
+    instantiate: async () => {
+      await resizePromise;
+      return (
+        buffer,
+        input_width,
+        input_height,
+        { width, height, method, premultiply, linearRGB },
+      ) => {
+        ({ width, height } = resizeWithAspect({
+          input_width,
+          input_height,
+          target_width: width,
+          target_height: height,
+        }));
+        return new ImageData(
+          resize.resize(
+            buffer,
+            input_width,
+            input_height,
+            width,
+            height,
+            resizeNameToIndex(method),
+            premultiply,
+            linearRGB,
+          ),
+          width,
+          height,
+        );
+      };
+    },
+    defaultOptions: {
+      method: 'lanczos3',
+      fitMethod: 'stretch',
+      premultiply: true,
+      linearRGB: true,
+    },
+  },
   // // TODO: Need to handle SVGs and HQX
   quant: {
     name: 'ImageQuant',
