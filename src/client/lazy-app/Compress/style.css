@@ -3,9 +3,10 @@
   height: 100%;
   contain: strict;
   display: grid;
-  align-items: end;
-  align-content: end;
-  grid-template-rows: 1fr auto;
+  grid-template-rows: max-content 1fr;
+  grid-template-areas:
+    'header'
+    'opts';
 
   @media (min-width: 600px) {
     grid-template-rows: max-content 1fr;
@@ -27,6 +28,8 @@
   width: calc(100% - 60px);
   max-height: 100%;
   overflow: hidden;
+  align-self: end;
+  grid-area: opts;
 
   @media (min-width: 600px) {
     width: 300px;
@@ -86,11 +89,20 @@
   composes: unbutton from global;
   position: relative;
   grid-area: header;
-  margin: 14px;
+  margin: 9px;
   justify-self: start;
+  align-self: start;
 
   & > svg {
-    width: 58px;
+    width: 47px;
+  }
+
+  @media (min-width: 600px) {
+    margin: 14px;
+
+    & > svg {
+      width: 58px;
+    }
   }
 }
 
