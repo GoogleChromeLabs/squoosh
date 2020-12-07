@@ -1,15 +1,10 @@
-import { h, Component, ComponentChildren, ComponentChild } from 'preact';
+import { h, Component, ComponentChildren, Fragment } from 'preact';
 
 import * as style from './style.css';
 import 'add-css:./style.css';
-import FileSize from './FileSize';
-import {
-  DownloadIcon,
-  CopyAcrossIcon,
-  CopyAcrossIconProps,
-} from 'client/lazy-app/icons';
 import 'shared/custom-els/loading-spinner';
 import { SourceImage } from '../';
+import prettyBytes from './pretty-bytes';
 
 interface Props {
   loading: boolean;
@@ -17,20 +12,12 @@ interface Props {
   imageFile?: File;
   downloadUrl?: string;
   children: ComponentChildren;
-  copyDirection: CopyAcrossIconProps['copyDirection'];
-  buttonPosition: keyof typeof buttonPositionClass;
-  onCopyToOtherClick(): void;
+  flipSide: boolean;
 }
 
 interface State {
   showLoadingState: boolean;
 }
-
-const buttonPositionClass = {
-  'stack-right': style.stackRight,
-  'download-right': style.downloadRight,
-  'download-left': style.downloadLeft,
-};
 
 const loadingReactionDelay = 500;
 
@@ -56,11 +43,6 @@ export default class Results extends Component<Props, State> {
     }
   }
 
-  private onCopyToOtherClick = (event: Event) => {
-    event.preventDefault();
-    this.props.onCopyToOtherClick();
-  };
-
   private onDownload = () => {
     // GA can’t do floats. So we round to ints. We're deliberately rounding to nearest kilobyte to
     // avoid cases where exact image sizes leak something interesting about the user.
@@ -76,58 +58,53 @@ export default class Results extends Component<Props, State> {
   };
 
   render(
-    {
-      source,
-      imageFile,
-      downloadUrl,
-      children,
-      copyDirection,
-      buttonPosition,
-    }: Props,
+    { source, imageFile, downloadUrl, children, flipSide }: Props,
     { showLoadingState }: State,
   ) {
+    const prettySize = imageFile && prettyBytes(imageFile.size);
+    let diff;
+    let percent;
+
+    if (source && imageFile) {
+      diff = imageFile.size / source.file.size;
+      const absolutePercent = Math.round(Math.abs(diff) * 100);
+      percent = diff > 1 ? absolutePercent - 100 : 100 - absolutePercent;
+    }
+
     return (
-      <div class={`${style.results} ${buttonPositionClass[buttonPosition]}`}>
-        <div class={style.resultData}>
-          {children ? <div class={style.resultTitle}>{children}</div> : null}
-          {!imageFile || showLoadingState ? (
-            'Working…'
-          ) : (
-            <FileSize
-              blob={imageFile}
-              compareTo={
-                source && imageFile !== source.file ? source.file : undefined
-              }
-            />
-          )}
-        </div>
-
-        <button
-          class={style.copyToOther}
-          title="Copy settings to other side"
-          onClick={this.onCopyToOtherClick}
-        >
-          <CopyAcrossIcon
-            class={style.copyIcon}
-            copyDirection={copyDirection}
-          />
-        </button>
-
-        <div class={style.download}>
-          {downloadUrl && imageFile && (
-            <a
-              class={`${style.downloadLink} ${
-                showLoadingState ? style.downloadLinkDisable : ''
-              }`}
-              href={downloadUrl}
-              download={imageFile.name}
-              title="Download"
-              onClick={this.onDownload}
-            >
-              <DownloadIcon class={style.downloadIcon} />
-            </a>
-          )}
-          {showLoadingState && <loading-spinner class={style.spinner} />}
+      <div class={style.results}>
+        <div class={flipSide ? style.bubbleRight : style.bubbleLeft}>
+          <div class={style.bubbleInner}>
+            <div class={style.sizeInfo}>
+              <div class={style.downloadText}>Download</div>
+              <div class={style.fileSize}>
+                {prettySize && (
+                  <Fragment>
+                    {prettySize.value}{' '}
+                    <span class={style.unit}>{prettySize.unit}</span>
+                  </Fragment>
+                )}
+              </div>
+            </div>
+            <div class={style.percentInfo}>
+              <svg
+                viewBox="0 0 1 2"
+                class={style.bigArrow}
+                preserveAspectRatio="none"
+              >
+                <path d="M1 0v2L0 1z" />
+              </svg>
+              <div class={style.percentOutput}>
+                {diff && diff !== 1 && (
+                  <span class={style.sizeDirection}>
+                    {diff < 1 ? '↓' : '↑'}
+                  </span>
+                )}
+                <span class={style.sizeValue}>{percent || 0}</span>
+                <span class={style.percentChar}>%</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );

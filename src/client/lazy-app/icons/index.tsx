@@ -72,37 +72,3 @@ export const Arrow = () => (
     <path d="M8.2.2a1 1 0 011.4 1.4l-4 4a1 1 0 01-1.4 0l-4-4A1 1 0 011.6.2l3.3 3.3L8.2.2z" />
   </svg>
 );
-
-const copyAcrossRotations = {
-  up: 90,
-  right: 180,
-  down: -90,
-  left: 0,
-};
-
-export interface CopyAcrossIconProps extends preact.JSX.HTMLAttributes {
-  copyDirection: keyof typeof copyAcrossRotations;
-}
-
-export const CopyAcrossIcon = (props: CopyAcrossIconProps) => {
-  const { copyDirection, ...otherProps } = props;
-  const id = 'point-' + copyDirection;
-  const rotation = copyAcrossRotations[copyDirection];
-
-  return (
-    <Icon {...otherProps}>
-      <defs>
-        <clipPath id={id}>
-          <path
-            d="M-12-12v24h24v-24zM4.5 2h-4v3l-5-5 5-5v3h4z"
-            transform={`translate(12 13) rotate(${rotation})`}
-          />
-        </clipPath>
-      </defs>
-      <path
-        clip-path={`url(#${id})`}
-        d="M19 3h-4.2c-.4-1.2-1.5-2-2.8-2s-2.4.8-2.8 2H5a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7 0a1 1 0 0 1 0 2c-.6 0-1-.4-1-1s.4-1 1-1z"
-      />
-    </Icon>
-  );
-};

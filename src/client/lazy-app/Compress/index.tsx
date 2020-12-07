@@ -31,7 +31,7 @@ import Results from './Results';
 import WorkerBridge from '../worker-bridge';
 import { resize } from 'features/processors/resize/client';
 import type SnackBarElement from 'shared/custom-els/snack-bar';
-import { CopyAcrossIconProps, ExpandIcon } from '../icons';
+import { ExpandIcon } from '../icons';
 
 export type OutputType = EncoderType | 'identity';
 
@@ -808,19 +808,13 @@ export default class Compress extends Component<Props, State> {
       />
     ));
 
-    const copyDirections = (mobileView
-      ? ['down', 'up']
-      : ['right', 'left']) as CopyAcrossIconProps['copyDirection'][];
-
     const results = sides.map((side, index) => (
       <Results
         downloadUrl={side.downloadUrl}
         imageFile={side.file}
         source={source}
         loading={loading || side.loading}
-        copyDirection={copyDirections[index]}
-        onCopyToOtherClick={this.onCopyToOtherClick.bind(this, index as 0 | 1)}
-        buttonPosition={mobileView ? 'stack-right' : buttonPositions[index]}
+        flipSide={index === 1}
       >
         {!mobileView
           ? null
