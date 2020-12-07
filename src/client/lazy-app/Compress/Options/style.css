@@ -7,7 +7,7 @@
 }
 
 .options-title {
-  background-color: var(--header-color);
+  background-color: var(--main-theme-color);
   color: var(--header-text-color);
   margin: 0;
   padding: 10px var(--horizontal-padding);

@@ -28,7 +28,7 @@ function getPrescision(value: string): number {
 
 class RangeInputElement extends HTMLElement {
   private _input: HTMLInputElement;
-  private _valueDisplay?: HTMLDivElement;
+  private _valueDisplay?: HTMLSpanElement;
   private _ignoreChange = false;
 
   static get observedAttributes() {
@@ -66,13 +66,13 @@ class RangeInputElement extends HTMLElement {
     this.innerHTML =
       `<div class="${style.thumbWrapper}">` +
       `<div class="${style.thumb}"></div>` +
-      `<div class="${style.valueDisplay}"></div>` +
+      `<div class="${style.valueDisplay}"><svg width="32" height="62"><path d="M27.3 27.3C25 29.6 17 35.8 17 43v3c0 3 2.5 5 3.2 5.8a6 6 0 1 1-8.5 0C12.6 51 15 49 15 46v-3c0-7.2-8-13.4-10.3-15.7A16 16 0 0 1 16 0a16 16 0 0 1 11.3 27.3z"/></svg><span></span></div>` +
       '</div>';
 
     this.insertBefore(this._input, this.firstChild);
     this._valueDisplay = this.querySelector(
-      '.' + style.valueDisplay,
-    ) as HTMLDivElement;
+      '.' + style.valueDisplay + ' > span',
+    ) as HTMLSpanElement;
     // Set inline styles (this is useful when used with frameworks which might clear inline styles)
     this._update();
   }

@@ -40,7 +40,7 @@
 }
 
 .options-1-theme {
-  --header-color: var(--pink);
+  --main-theme-color: var(--pink);
   --header-text-color: var(--white);
   --scroller-radius: var(--options-radius) var(--options-radius) 0 0;
 
@@ -50,7 +50,7 @@
 }
 
 .options-2-theme {
-  --header-color: var(--blue);
+  --main-theme-color: var(--blue);
   --header-text-color: var(--dark-text);
   --scroller-radius: var(--options-radius) var(--options-radius) 0 0;
 

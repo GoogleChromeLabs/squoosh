@@ -23,10 +23,8 @@ range-input::before {
   width: 100%;
   height: 2px;
   border-radius: 1px;
-  box-shadow: 0 -0.5px 0 rgba(0, 0, 0, 0.3),
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.2), 0 0.5px 0 rgba(255, 255, 255, 0.3);
-  background: linear-gradient(#34b9eb, #218ab1) 0 / var(--value-percent, 0%)
-    100% no-repeat #eee;
+  background: linear-gradient(var(--main-theme-color), var(--main-theme-color))
+    0 / var(--value-percent, 0%) 100% no-repeat var(--medium-light-gray);
 }
 
 .input {
@@ -41,14 +39,12 @@ range-input::before {
   pointer-events: none;
   position: absolute;
   bottom: 3px;
-  left: var(--value-percent, 0%);
+  left: 0;
   margin-left: -6px;
-  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><circle cx="5" cy="5" r="1" fill="%235D509E" /></svg>')
-    center no-repeat #34b9eb;
+  background: var(--main-theme-color);
   border-radius: 50%;
   width: 12px;
   height: 12px;
-  box-shadow: 0 0.5px 2px rgba(0, 0, 0, 0.3);
 }
 
 .thumb-wrapper {
@@ -58,21 +54,19 @@ range-input::before {
   bottom: 0;
   height: 0;
   overflow: visible;
+  transform: translate(var(--value-percent, 0%), 0);
 }
 
 .value-display {
-  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="62" fill="none"><path fill="%2334B9EB" d="M27.3 27.3C25 29.6 17 35.8 17 43v3c0 3 2.5 5 3.2 5.8a6 6 0 1 1-8.5 0C12.6 51 15 49 15 46v-3c0-7.2-8-13.4-10.3-15.7A16 16 0 0 1 16 0a16 16 0 0 1 11.3 27.3z"/><circle cx="16" cy="56" r="1" fill="%235D509E"/></svg>')
-    top center no-repeat;
   position: absolute;
   box-sizing: border-box;
-  left: var(--value-percent, 0%);
+  left: 0;
   bottom: 3px;
   width: 32px;
   height: 62px;
   text-align: center;
   padding: 8px 3px 0;
   margin: 0 0 0 -16px;
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
   transform-origin: 50% 90%;
   opacity: 0.0001;
   transform: scale(0.2);
@@ -86,6 +80,19 @@ range-input::before {
   will-change: transform;
   pointer-events: none;
   overflow: hidden;
+
+  > svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    fill: var(--main-theme-color);
+  }
+
+  > span {
+    position: relative;
+  }
 }
 
 .touch-active + .thumb-wrapper .value-display {
