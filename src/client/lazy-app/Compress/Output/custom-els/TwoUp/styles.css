@@ -46,7 +46,7 @@ two-up[legacy-clip-compat] > :not(.two-up-handle) {
   left: 50%;
   transform: translate(-50%, -50%);
   width: var(--thumb-size);
-  height: calc(var(--thumb-size) * 0.9);
+  height: var(--thumb-size);
   background: var(--thumb-background);
   border-radius: var(--thumb-size);
   color: var(--thumb-color);
