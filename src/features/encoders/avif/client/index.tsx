@@ -8,6 +8,7 @@ import Expander from 'client/lazy-app/Compress/Options/Expander';
 import Select from 'client/lazy-app/Compress/Options/Select';
 import Range from 'client/lazy-app/Compress/Options/Range';
 import linkState from 'linkstate';
+import Revealer from 'client/lazy-app/Compress/Options/Revealer';
 
 export const encode = (
   signal: AbortSignal,
@@ -288,12 +289,12 @@ export class Options extends Component<Props, State> {
             </div>
           )}
         </Expander>
-        <label class={style.optionToggle}>
-          Show advanced settings
-          <Checkbox
+        <label class={style.optionReveal}>
+          <Revealer
             checked={showAdvanced}
             onChange={linkState(this, 'showAdvanced')}
           />
+          Advanced settings
         </label>
         <Expander>
           {showAdvanced && (

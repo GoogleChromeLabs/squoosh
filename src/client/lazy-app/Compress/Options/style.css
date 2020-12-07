@@ -27,7 +27,7 @@
   display: grid;
   align-items: center;
   grid-template-columns: 87px 1fr;
-  grid-gap: 0.7em;
+  gap: 0.7em;
   padding: 10px var(--horizontal-padding);
 }
 
@@ -36,8 +36,14 @@
   display: grid;
   align-items: center;
   grid-template-columns: 1fr auto;
-  grid-gap: 0.7em;
+  gap: 0.7em;
   padding: 10px var(--horizontal-padding);
+}
+
+.option-reveal {
+  composes: option-toggle;
+  grid-template-columns: auto 1fr;
+  gap: 1em;
 }
 
 .option-one-cell {
