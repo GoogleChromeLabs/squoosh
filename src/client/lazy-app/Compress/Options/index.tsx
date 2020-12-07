@@ -14,6 +14,7 @@ import {
 } from '../../feature-meta';
 import Expander from './Expander';
 import Checkbox from './Checkbox';
+import Toggle from './Toggle';
 import Select from './Select';
 import { Options as QuantOptionsComponent } from 'features/processors/quantize/client';
 import { Options as ResizeOptionsComponent } from 'features/processors/resize/client';
@@ -127,7 +128,7 @@ export default class Options extends Component<Props, State> {
               <h3 class={style.optionsTitle}>Edit</h3>
               <label class={style.sectionEnabler}>
                 Resize
-                <Checkbox
+                <Toggle
                   name="resize.enable"
                   checked={!!processorState.resize.enabled}
                   onChange={this.onProcessorEnabledChange}
@@ -147,7 +148,7 @@ export default class Options extends Component<Props, State> {
 
               <label class={style.sectionEnabler}>
                 Reduce palette
-                <Checkbox
+                <Toggle
                   name="quantize.enable"
                   checked={!!processorState.quantize.enabled}
                   onChange={this.onProcessorEnabledChange}
