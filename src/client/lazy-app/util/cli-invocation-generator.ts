@@ -16,11 +16,11 @@ import { EncoderState, ProcessorState } from '../feature-meta';
 // Maps our encoder.type values to CLI parameter names
 const typeMap = new Map<string, string>([
   ['avif', '--avif'],
-  // ["jxl", "--jxl"],
+  ["jxl", "--jxl"],
   ['mozJPEG', '--mozjpeg'],
   ['oxiPNG', '--oxipng'],
   ['webP', '--webp'],
-  // ["wp2", "--wp2"]
+  ["wp2", "--wp2"],
 ]);
 
 // Same as JSON.stringify, but with single quotes around the entire value
