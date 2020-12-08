@@ -134,7 +134,6 @@
 }
 
 .download {
-  composes: unbutton from global;
   --size: 63px;
   width: calc(var(--size) + var(--download-overflow-size));
   height: calc(var(--size) + var(--download-overflow-size));
@@ -235,5 +234,17 @@
 
   .big-arrow {
     transform: scaleX(-1);
+  }
+}
+
+.is-original {
+  .big-arrow {
+    fill: transparent;
+  }
+  .percent-output {
+    background: none;
+  }
+  .download-blobs path {
+    fill: var(--black);
   }
 }

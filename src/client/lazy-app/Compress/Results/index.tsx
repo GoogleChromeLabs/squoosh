@@ -63,6 +63,7 @@ export default class Results extends Component<Props, State> {
     { showLoadingState }: State,
   ) {
     const prettySize = imageFile && prettyBytes(imageFile.size);
+    const isOriginal = !source || !imageFile || source.file === imageFile;
     let diff;
     let percent;
 
@@ -73,16 +74,24 @@ export default class Results extends Component<Props, State> {
     }
 
     return (
-      <div class={flipSide ? style.resultsRight : style.resultsLeft}>
+      <div
+        class={
+          (flipSide ? style.resultsRight : style.resultsLeft) +
+          ' ' +
+          (isOriginal ? style.isOriginal : '')
+        }
+      >
         <div class={style.bubble}>
           <div class={style.bubbleInner}>
             <div class={style.sizeInfo}>
               <div class={style.fileSize}>
-                {prettySize && (
+                {prettySize ? (
                   <Fragment>
                     {prettySize.value}{' '}
                     <span class={style.unit}>{prettySize.unit}</span>
                   </Fragment>
+                ) : (
+                  '…'
                 )}
               </div>
             </div>
