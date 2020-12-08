@@ -72,11 +72,10 @@ export default class Results extends Component<Props, State> {
     }
 
     return (
-      <div class={style.results}>
-        <div class={flipSide ? style.bubbleRight : style.bubbleLeft}>
+      <div class={flipSide ? style.resultsRight : style.resultsLeft}>
+        <div class={style.bubble}>
           <div class={style.bubbleInner}>
             <div class={style.sizeInfo}>
-              <div class={style.downloadText}>Download</div>
               <div class={style.fileSize}>
                 {prettySize && (
                   <Fragment>
@@ -106,6 +105,12 @@ export default class Results extends Component<Props, State> {
             </div>
           </div>
         </div>
+        <button class={style.download}>
+          <svg class={style.downloadBlobs} viewBox="0 0 89.6 86.9">
+            <path d="M27.3 72c-8-4-15.6-12.3-16.9-21-1.2-8.7 4-17.8 10.5-26s14.4-15.6 24-16 21.2 6 28.6 16.5c7.4 10.5 10.8 25 6.6 34S64.1 71.8 54 73.6c-10.2 2-18.7 2.3-26.7-1.6z" />
+            <path d="M19.8 24.8c4.3-7.8 13-15 21.8-15.7 8.7-.8 17.5 4.8 25.4 11.8 7.8 6.9 14.8 15.2 14.7 24.9s-7.1 20.7-18 27.6c-10.8 6.8-25.5 9.5-34.2 4.8S18.1 61.6 16.7 51.4c-1.3-10.3-1.3-18.8 3-26.6z" />
+          </svg>
+        </button>
       </div>
     );
   }

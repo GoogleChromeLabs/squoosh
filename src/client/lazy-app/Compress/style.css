@@ -23,15 +23,16 @@
   position: relative;
   color: #fff;
   font-size: 1.2rem;
-  display: flex;
-  flex-flow: column;
   max-width: 400px;
   margin: 0 auto;
   width: calc(100% - 60px);
   max-height: 100%;
   overflow: hidden;
-  align-self: end;
   grid-area: opts;
+  display: grid;
+  grid-template-rows: 1fr max-content;
+  align-content: end;
+  align-self: end;
 
   @media (min-width: 600px) {
     width: 300px;
@@ -41,6 +42,7 @@
 
 .options-1-theme {
   --main-theme-color: var(--pink);
+  --hot-theme-color: var(--hot-pink);
   --header-text-color: var(--white);
   --scroller-radius: var(--options-radius) var(--options-radius) 0 0;
 
@@ -51,6 +53,7 @@
 
 .options-2-theme {
   --main-theme-color: var(--blue);
+  --hot-theme-color: var(--deep-blue);
   --header-text-color: var(--dark-text);
   --scroller-radius: var(--options-radius) var(--options-radius) 0 0;
 

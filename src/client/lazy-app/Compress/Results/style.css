@@ -24,14 +24,11 @@
 }
 
 .results {
-}
-
-.download-text {
-  text-transform: uppercase;
-  color: var(--white);
-  opacity: 0.76;
-  font-size: 1.1rem;
-  margin-bottom: 0.3em;
+  --download-overflow-size: 30px;
+  display: grid;
+  grid-template-columns: [download] auto [bubble] 1fr;
+  align-items: center;
+  margin-bottom: calc(var(--download-overflow-size) / 2);
 }
 
 .file-size {
@@ -40,7 +37,8 @@
 .bubble {
   position: relative;
   width: max-content;
-  margin: 20px 0;
+  grid-row: 1;
+  grid-column: bubble;
 
   &::before {
     content: '';
@@ -59,12 +57,12 @@
 .bubble-inner {
   position: relative;
   --main-padding: 1px;
-  --speech-padding: 3.1rem;
+  --speech-padding: 2.1rem;
   padding: var(--main-padding) var(--main-padding) var(--main-padding)
     var(--speech-padding);
   display: grid;
   grid-template-columns: [size-info] 1fr [percent-info] auto;
-  gap: 1.5rem;
+  gap: 0.9rem;
 }
 
 .unit {
@@ -89,10 +87,10 @@
 
 .big-arrow {
   width: 100%;
-  height: 100%;
   fill: var(--main-theme-color);
   grid-column: arrow;
   grid-row: 1;
+  align-self: stretch;
 }
 
 .percent-output {
@@ -105,8 +103,8 @@
   grid-template-columns: auto auto auto;
   line-height: 1;
   --padding-arrow-side: 0.6rem;
-  --padding-other-side: 1.5rem;
-  padding: 1.1rem var(--padding-other-side);
+  --padding-other-side: 1.1rem;
+  padding: 0.7rem var(--padding-other-side);
   padding-left: var(--padding-arrow-side);
 }
 
@@ -116,34 +114,71 @@
   font-family: sans-serif;
   opacity: 0.76;
   text-shadow: 0 2px rgba(0, 0, 0, 0.3);
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   position: relative;
-  top: 4px;
+  top: 3px;
 }
 
 .size-value {
   font-family: 'Roboto Mono Numbers';
-  font-size: 3.2rem;
+  font-size: 2.6rem;
   text-shadow: 0 2px rgba(0, 0, 0, 0.3);
 }
 
 .percent-char {
   align-self: start;
   position: relative;
-  top: 5px;
+  top: 4px;
   opacity: 0.76;
-  margin-left: 0.3rem;
+  margin-left: 0.2rem;
 }
 
-.bubble-left {
-  composes: bubble;
+.download {
+  composes: unbutton from global;
+  --size: 63px;
+  width: calc(var(--size) + var(--download-overflow-size));
+  height: calc(var(--size) + var(--download-overflow-size));
+  position: relative;
+  grid-row: 1;
+  grid-column: download;
+  margin: calc(var(--download-overflow-size) / -2) 0;
+  margin-right: calc(var(--download-overflow-size) / -3);
 }
 
-.bubble-right {
-  composes: bubble;
+.download-blobs {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  path {
+    fill: var(--hot-theme-color);
+    opacity: 0.7;
+  }
+}
 
-  &::before {
-    transform: scaleX(-1);
+.download-icon {
+}
+
+.results-left {
+  composes: results;
+}
+
+.results-right {
+  composes: results;
+  grid-template-columns: [bubble] 1fr [download] auto;
+
+  .bubble {
+    justify-self: end;
+
+    &::before {
+      transform: scaleX(-1);
+    }
+  }
+
+  .download {
+    margin-left: calc(var(--download-overflow-size) / -3);
+    margin-right: 0;
   }
 
   .bubble-inner {
