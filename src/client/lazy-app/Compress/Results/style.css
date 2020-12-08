@@ -143,6 +143,17 @@
   grid-column: download;
   margin: calc(var(--download-overflow-size) / -2) 0;
   margin-right: calc(var(--download-overflow-size) / -3);
+  display: grid;
+  align-items: center;
+  justify-items: center;
+
+  loading-spinner {
+    grid-area: 1 / 1;
+    position: relative;
+    top: -1px;
+    left: 2px;
+    --color: var(--white);
+  }
 }
 
 .download-blobs {
@@ -158,6 +169,30 @@
 }
 
 .download-icon {
+  grid-area: 1 / 1;
+
+  svg {
+    --size: 27px;
+    width: var(--size);
+    height: var(--size);
+    fill: var(--white);
+    position: relative;
+    top: 2px;
+    left: 2px;
+    animation: action-enter 0.2s;
+  }
+}
+
+.download-disable {
+  composes: download;
+
+  pointer-events: none;
+
+  .download-icon svg {
+    opacity: 0;
+    transform: rotate(90deg);
+    animation: action-leave 0.2s;
+  }
 }
 
 .results-left {
