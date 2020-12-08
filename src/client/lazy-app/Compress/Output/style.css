@@ -20,7 +20,6 @@
 
 .two-up {
   composes: abs-fill from global;
-  --accent-color: var(--button-fg);
 }
 
 .pinch-zoom {

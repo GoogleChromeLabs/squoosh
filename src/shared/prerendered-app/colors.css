@@ -16,11 +16,5 @@ html {
   --dark-text: #142630;
 
   /* Old stuff: */
-  --gray-dark: rgba(0, 0, 0, 0.8);
-
-  --button-fg-color: 95, 180, 228;
   --button-fg: rgb(95, 180, 228);
-
-  --negative: rgb(207, 113, 127);
-  --positive: rgb(149, 212, 159);
 }
