@@ -347,7 +347,7 @@ export const codecs = {
           const simplePng = new Uint8Array(
             pngEncDec.encode(new Uint8Array(buffer), width, height),
           );
-          return new Uint8Array(oxipng.optimise(simplePng, opts.level));
+          return oxipng.optimise(simplePng, opts.level);
         },
       };
     },
