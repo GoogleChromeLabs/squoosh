@@ -5,6 +5,9 @@ authors = ["Surma <surma@surma.dev>"]
 edition = "2018"
 publish = false
 
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ["-O", "--no-validation"]
+
 [lib]
 crate-type = ["cdylib"]
 
