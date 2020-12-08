@@ -1,23 +1,24 @@
-import { Worker, parentPort } from "worker_threads";
-import { TransformStream } from "web-streams-polyfill";
+import { Worker, parentPort } from 'worker_threads';
+import { TransformStream } from 'web-streams-polyfill';
 
 function uuid() {
   return Array.from({ length: 16 }, () =>
-    Math.floor(Math.random() * 256).toString(16)
-  ).join("");
+    Math.floor(Math.random() * 256).toString(16),
+  ).join('');
 }
 
 function jobPromise(worker, msg) {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     const id = uuid();
     worker.postMessage({ msg, id });
-    worker.on("message", function f({ result, id: rid }) {
+    worker.on('message', function f({ result, id: rid }) {
       if (rid !== id) {
         return;
       }
-      worker.off("message", f);
+      worker.off('message', f);
       resolve(result);
     });
+    worker.on('error', (error) => console.error('Worker error: ', error));
   });
 }
 
@@ -47,7 +48,7 @@ export default class WorkerPool {
       }
       const { msg, resolve } = value;
       const worker = await this._nextWorker();
-      jobPromise(worker, msg).then(result => {
+      jobPromise(worker, msg).then((result) => {
         resolve(result);
         // If we are in the process of closing, `workerQueue` is
         // already closed and we can’t requeue the worker.
@@ -86,7 +87,7 @@ export default class WorkerPool {
   }
 
   dispatchJob(msg) {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       const writer = this.jobQueue.writable.getWriter();
       writer.write({ msg, resolve });
       writer.releaseLock();
@@ -94,7 +95,7 @@ export default class WorkerPool {
   }
 
   static useThisThreadAsWorker(cb) {
-    parentPort.on("message", async data => {
+    parentPort.on('message', async (data) => {
       const { msg, id } = data;
       const result = await cb(msg);
       parentPort.postMessage({ result, id });

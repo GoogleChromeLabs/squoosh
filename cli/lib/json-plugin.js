@@ -1,12 +1,12 @@
-import { promises as fsp } from "fs";
+import { promises as fsp } from 'fs';
 
-const prefix = "json:";
+const prefix = 'json:';
 
-const reservedKeys = ["public"];
+const reservedKeys = ['public'];
 
 export default function jsonPlugin() {
   return {
-    name: "json-plugin",
+    name: 'json-plugin',
     async resolveId(id, importer) {
       if (!id.startsWith(prefix)) return;
       const realId = id.slice(prefix.length);
@@ -21,18 +21,18 @@ export default function jsonPlugin() {
     async load(id) {
       if (!id.startsWith(prefix)) return;
       const realId = id.slice(prefix.length);
-      const source = await fsp.readFile(realId, "utf8");
+      const source = await fsp.readFile(realId, 'utf8');
 
-      let code = "";
+      let code = '';
       for (const [key, value] of Object.entries(JSON.parse(source))) {
         if (reservedKeys.includes(key)) {
           continue;
         }
         code += `
-				export const ${key} = ${JSON.stringify(value)};
-			`;
+        export const ${key} = ${JSON.stringify(value)};
+      `;
       }
       return code;
-    }
+    },
   };
 }
