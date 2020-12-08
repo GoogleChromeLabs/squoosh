@@ -11,7 +11,7 @@
     "build": "rollup -c"
   },
   "keywords": [],
-  "author": "Surma <surma@surma.dev>",
+  "author": "Google Chrome Developers <chromium-dev@google.com>",
   "license": "Apache-2.0",
   "dependencies": {
     "web-streams-polyfill": "^3.0.0"
