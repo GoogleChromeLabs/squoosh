@@ -18,7 +18,7 @@ const defaultOpts = {
 };
 
 export default function assetPlugin(opts) {
-  opts = Object.assign({}, defaultOpts, opts);
+  opts = { ...defaultOpts, ...opts };
 
   /** @type {Map<string, Buffer>} */
   let assetIdToSourceBuffer;
