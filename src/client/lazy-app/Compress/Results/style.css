@@ -24,88 +24,164 @@
 }
 
 .results {
-  --download-overflow-size: 30px;
+  --download-overflow-size: 9px;
+  background: rgba(0, 0, 0, 0.67);
+  border-radius: 5px;
   display: grid;
-  grid-template-columns: [download] auto [bubble] 1fr;
-  align-items: center;
-  margin-bottom: calc(var(--download-overflow-size) / 2);
+  grid-template-columns: max-content [bubble] 1fr [download] max-content;
+
+  @media (min-width: 600px) {
+    --download-overflow-size: 30px;
+    background: none;
+    border-radius: none;
+    grid-template-columns: [download] auto [bubble] 1fr;
+    align-items: center;
+    margin-bottom: calc(var(--download-overflow-size) / 2);
+  }
+}
+
+.expand-arrow {
+  fill: var(--white);
+  transform: rotate(180deg);
+  margin: 0 1rem;
+  align-self: center;
+
+  @media (min-width: 600px) {
+    display: none;
+  }
+
+  :focus & {
+    fill: var(--main-theme-color);
+  }
+
+  [content-expanded] & {
+    transform: none;
+  }
+
+  svg {
+    display: block;
+    --size: 15px;
+    width: var(--size);
+    height: var(--size);
+  }
 }
 
 .file-size {
 }
 
 .bubble {
-  position: relative;
-  width: max-content;
-  grid-row: 1;
-  grid-column: bubble;
+  align-self: center;
 
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-image-source: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='186.5' height='280.3' viewBox='0 0 186.5 280.3'%3E%3Cpath fill='rgba(30,31,29,0.69)' d='M181.5 0H16.4a5 5 0 00-5 5v134L0 146.5h11.4v128.8a5 5 0 005 5h165.1a5 5 0 005-5V5a5 5 0 00-5-5z'/%3E%3Cpath fill='rgba(0,0,0,0.23)' d='M16.4 1a4 4 0 00-4 4v134.5l-.5.3-8.6 5.7h9v129.8a4 4 0 004 4h165.2a4 4 0 004-4V5a4 4 0 00-4-4H16.4m0-1h165.1a5 5 0 015 5v270.3a5 5 0 01-5 5H16.4a5 5 0 01-5-5V146.5H0l11.4-7.5V5a5 5 0 015-5z'/%3E%3C/svg%3E");
-    border-image-slice: 12 12 12 17 fill;
-    border-image-width: 12px 12px 12px 17px;
-    border-image-repeat: repeat;
+  @media (min-width: 600px) {
+    position: relative;
+    width: max-content;
+    grid-row: 1;
+    grid-column: bubble;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-image-source: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='186.5' height='280.3' viewBox='0 0 186.5 280.3'%3E%3Cpath fill='rgba(30,31,29,0.69)' d='M181.5 0H16.4a5 5 0 00-5 5v134L0 146.5h11.4v128.8a5 5 0 005 5h165.1a5 5 0 005-5V5a5 5 0 00-5-5z'/%3E%3Cpath fill='rgba(0,0,0,0.23)' d='M16.4 1a4 4 0 00-4 4v134.5l-.5.3-8.6 5.7h9v129.8a4 4 0 004 4h165.2a4 4 0 004-4V5a4 4 0 00-4-4H16.4m0-1h165.1a5 5 0 015 5v270.3a5 5 0 01-5 5H16.4a5 5 0 01-5-5V146.5H0l11.4-7.5V5a5 5 0 015-5z'/%3E%3C/svg%3E");
+      border-image-slice: 12 12 12 17 fill;
+      border-image-width: 12px 12px 12px 17px;
+      border-image-repeat: repeat;
+    }
   }
 }
 
 .bubble-inner {
-  position: relative;
-  --main-padding: 1px;
-  --speech-padding: 2.1rem;
-  padding: var(--main-padding) var(--main-padding) var(--main-padding)
-    var(--speech-padding);
   display: grid;
   grid-template-columns: [size-info] 1fr [percent-info] auto;
-  gap: 0.9rem;
+
+  @media (min-width: 600px) {
+    position: relative;
+    --main-padding: 1px;
+    --speech-padding: 2.1rem;
+    padding: var(--main-padding) var(--main-padding) var(--main-padding)
+      var(--speech-padding);
+    gap: 0.9rem;
+  }
 }
 
 .unit {
   color: var(--main-theme-color);
 }
 
+.type-label {
+  @media (min-width: 600px) {
+    display: none;
+  }
+}
+
 .size-info {
+  background: var(--dark-gray);
+  border-radius: 19px;
   align-self: center;
+  justify-self: start;
   grid-column: size-info;
   grid-row: 1;
+  justify-self: start;
+  padding: 0.6rem 1.2rem;
+  margin: 0.4rem 0;
+
+  @media (min-width: 600px) {
+    border-radius: none;
+    background: none;
+    padding: 0;
+    margin: 0;
+  }
 }
 
 .percent-info {
-  display: grid;
-  --arrow-width: 16px;
-  grid-template-columns: [arrow] var(--arrow-width) [data] auto;
-  grid-column: percent-info;
-  grid-row: 1;
-  --shadow-direction: -1px;
-  filter: drop-shadow(var(--shadow-direction) 0 0 rgba(0, 0, 0, 0.67));
+  align-self: center;
+  margin-left: 1rem;
+  margin-right: 0.3rem;
+
+  @media (min-width: 600px) {
+    margin: 0;
+    display: grid;
+    --arrow-width: 16px;
+    grid-template-columns: [arrow] var(--arrow-width) [data] auto;
+    grid-column: percent-info;
+    grid-row: 1;
+    --shadow-direction: -1px;
+    filter: drop-shadow(var(--shadow-direction) 0 0 rgba(0, 0, 0, 0.67));
+  }
 }
 
 .big-arrow {
-  width: 100%;
-  fill: var(--main-theme-color);
-  grid-column: arrow;
-  grid-row: 1;
-  align-self: stretch;
+  display: none;
+
+  @media (min-width: 600px) {
+    display: block;
+    width: 100%;
+    fill: var(--main-theme-color);
+    grid-column: arrow;
+    grid-row: 1;
+    align-self: stretch;
+  }
 }
 
 .percent-output {
   grid-column: data;
   grid-row: 1;
-  background: var(--main-theme-color);
-  --radius: 4px;
-  border-radius: 0 var(--radius) var(--radius) 0;
   display: grid;
   grid-template-columns: auto auto auto;
   line-height: 1;
-  --padding-arrow-side: 0.6rem;
-  --padding-other-side: 1.1rem;
-  padding: 0.7rem var(--padding-other-side);
-  padding-left: var(--padding-arrow-side);
+
+  @media (min-width: 600px) {
+    background: var(--main-theme-color);
+    --radius: 4px;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    --padding-arrow-side: 0.6rem;
+    --padding-other-side: 1.1rem;
+    padding: 0.7rem var(--padding-other-side);
+    padding-left: var(--padding-arrow-side);
+  }
 }
 
 .size-direction {
@@ -134,7 +210,7 @@
 }
 
 .download {
-  --size: 63px;
+  --size: 59px;
   width: calc(var(--size) + var(--download-overflow-size));
   height: calc(var(--size) + var(--download-overflow-size));
   position: relative;
@@ -145,13 +221,25 @@
   display: grid;
   align-items: center;
   justify-items: center;
+  align-self: center;
+
+  @media (min-width: 600px) {
+    --size: 63px;
+  }
 
   loading-spinner {
     grid-area: 1 / 1;
     position: relative;
-    top: -1px;
-    left: 2px;
     --color: var(--white);
+    --size: 21px;
+    top: 0px;
+    left: 1px;
+
+    @media (min-width: 600px) {
+      top: -1px;
+      left: 2px;
+      --size: 28px;
+    }
   }
 }
 
@@ -171,14 +259,20 @@
   grid-area: 1 / 1;
 
   svg {
-    --size: 27px;
+    --size: 19px;
     width: var(--size);
     height: var(--size);
     fill: var(--white);
     position: relative;
-    top: 2px;
-    left: 2px;
+    top: 3px;
+    left: 1px;
     animation: action-enter 0.2s;
+
+    @media (min-width: 600px) {
+      --size: 27px;
+      top: 2px;
+      left: 2px;
+    }
   }
 }
 
@@ -200,13 +294,18 @@
 
 .results-right {
   composes: results;
-  grid-template-columns: [bubble] 1fr [download] auto;
+
+  @media (min-width: 600px) {
+    grid-template-columns: [bubble] 1fr [download] auto;
+  }
 
   .bubble {
-    justify-self: end;
+    @media (min-width: 600px) {
+      justify-self: end;
 
-    &::before {
-      transform: scaleX(-1);
+      &::before {
+        transform: scaleX(-1);
+      }
     }
   }
 
@@ -216,20 +315,26 @@
   }
 
   .bubble-inner {
-    padding: var(--main-padding) var(--speech-padding) var(--main-padding)
-      var(--main-padding);
-    grid-template-columns: [percent-info] auto [size-info] 1fr;
+    @media (min-width: 600px) {
+      padding: var(--main-padding) var(--speech-padding) var(--main-padding)
+        var(--main-padding);
+      grid-template-columns: [percent-info] auto [size-info] 1fr;
+    }
   }
 
   .percent-info {
-    grid-template-columns: [data] auto [arrow] var(--arrow-width);
-    --shadow-direction: 1px;
+    @media (min-width: 600px) {
+      grid-template-columns: [data] auto [arrow] var(--arrow-width);
+      --shadow-direction: 1px;
+    }
   }
 
   .percent-output {
-    border-radius: var(--radius) 0 0 var(--radius);
-    padding-left: var(--padding-other-side);
-    padding-right: var(--padding-arrow-side);
+    @media (min-width: 600px) {
+      border-radius: var(--radius) 0 0 var(--radius);
+      padding-left: var(--padding-other-side);
+      padding-right: var(--padding-arrow-side);
+    }
   }
 
   .big-arrow {
@@ -246,5 +351,9 @@
   }
   .download-blobs path {
     fill: var(--black);
+  }
+  .unit {
+    color: var(--white);
+    opacity: 0.76;
   }
 }

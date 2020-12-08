@@ -99,19 +99,6 @@
   }
 }
 
-.expand-icon {
-  transform: rotate(180deg);
-  margin-left: -12px;
-}
-
-[content-expanded] .expand-icon {
-  transform: none;
-}
-
-:focus .expand-icon {
-  fill: #34b9eb;
-}
-
 .back {
   composes: unbutton from global;
   position: relative;

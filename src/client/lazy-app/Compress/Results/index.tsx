@@ -1,19 +1,19 @@
-import { h, Component, ComponentChildren, Fragment } from 'preact';
+import { h, Component, Fragment } from 'preact';
 
 import * as style from './style.css';
 import 'add-css:./style.css';
 import 'shared/custom-els/loading-spinner';
 import { SourceImage } from '../';
 import prettyBytes from './pretty-bytes';
-import { DownloadIcon } from 'client/lazy-app/icons';
+import { Arrow, DownloadIcon } from 'client/lazy-app/icons';
 
 interface Props {
   loading: boolean;
   source?: SourceImage;
   imageFile?: File;
   downloadUrl?: string;
-  children: ComponentChildren;
   flipSide: boolean;
+  typeLabel: string;
 }
 
 interface State {
@@ -59,7 +59,7 @@ export default class Results extends Component<Props, State> {
   };
 
   render(
-    { source, imageFile, downloadUrl, children, flipSide }: Props,
+    { source, imageFile, downloadUrl, flipSide, typeLabel }: Props,
     { showLoadingState }: State,
   ) {
     const prettySize = imageFile && prettyBytes(imageFile.size);
@@ -81,6 +81,9 @@ export default class Results extends Component<Props, State> {
           (isOriginal ? style.isOriginal : '')
         }
       >
+        <div class={style.expandArrow}>
+          <Arrow />
+        </div>
         <div class={style.bubble}>
           <div class={style.bubbleInner}>
             <div class={style.sizeInfo}>
@@ -89,6 +92,7 @@ export default class Results extends Component<Props, State> {
                   <Fragment>
                     {prettySize.value}{' '}
                     <span class={style.unit}>{prettySize.unit}</span>
+                    <span class={style.typeLabel}> {typeLabel}</span>
                   </Fragment>
                 ) : (
                   '…'

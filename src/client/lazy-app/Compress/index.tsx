@@ -31,7 +31,7 @@ import Results from './Results';
 import WorkerBridge from '../worker-bridge';
 import { resize } from 'features/processors/resize/client';
 import type SnackBarElement from 'shared/custom-els/snack-bar';
-import { ExpandIcon } from '../icons';
+import { Arrow, ExpandIcon } from '../icons';
 
 export type OutputType = EncoderType | 'identity';
 
@@ -814,19 +814,13 @@ export default class Compress extends Component<Props, State> {
         imageFile={side.file}
         source={source}
         loading={loading || side.loading}
-        flipSide={index === 1}
-      >
-        {!mobileView
-          ? null
-          : [
-              <ExpandIcon class={style.expandIcon} key="expand-icon" />,
-              `${resultTitles[index]} (${
-                side.latestSettings.encoderState
-                  ? encoderMap[side.latestSettings.encoderState.type].meta.label
-                  : 'Original Image'
-              })`,
-            ]}
-      </Results>
+        flipSide={mobileView || index === 1}
+        typeLabel={
+          side.latestSettings.encoderState
+            ? encoderMap[side.latestSettings.encoderState.type].meta.label
+            : 'Original Image'
+        }
+      />
     ));
 
     // For rendering, we ideally want the settings that were used to create the
@@ -870,9 +864,9 @@ export default class Compress extends Component<Props, State> {
         {mobileView ? (
           <div class={style.options}>
             <multi-panel class={style.multiPanel} open-one-only>
-              {results[0]}
+              <div class={style.options1Theme}>{results[0]}</div>
               <div class={style.options1Theme}>{options[0]}</div>
-              {results[1]}
+              <div class={style.options2Theme}>{results[1]}</div>
               <div class={style.options2Theme}>{options[1]}</div>
             </multi-panel>
           </div>
