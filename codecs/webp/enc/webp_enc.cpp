@@ -26,6 +26,9 @@ val encode(std::string img, int width, int height, WebPConfig config) {
     return val::null();
   }
 
+  // Allow quality to go higher than 0.
+  config.qmax = 100;
+
   // Only use use_argb if we really need it, as it's slower.
   pic.use_argb = config.lossless || config.use_sharp_yuv || config.preprocessing > 0;
   pic.width = width;
