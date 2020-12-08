@@ -5,7 +5,7 @@ export default class ImageData {
     // been corrupted.
     // FIXME: This is bad because it’s overhead that we should only need
     // to pay for Rust, not for C++.
-    this.data = new Uint8ClampedArray(data);
+    this.data = data;
     this.width = width;
     this.height = height;
   }
