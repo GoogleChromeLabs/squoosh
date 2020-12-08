@@ -1,9 +1,13 @@
 .options-scroller {
-  overflow-x: hidden;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
   --horizontal-padding: 15px;
   border-radius: var(--scroller-radius);
+
+  /* At smaller widths, the multi-panel handles the scrolling */
+  @media (min-width: 600px) {
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 .options-title {
@@ -16,6 +20,10 @@
   border-bottom: 1px solid var(--off-black);
   transition: all 300ms ease-in-out;
   transition-property: background-color, color;
+
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .original-image .options-title {
