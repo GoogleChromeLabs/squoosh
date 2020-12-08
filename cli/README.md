@@ -2,7 +2,7 @@
 
 Squoosh CLI is an _experimental_ way to run all the codecs you know from the [Squoosh] web app on your command line using WebAssembly. The Squoosh CLI uses a worker pool to parallelize processing images. This way you can apply the same codec to many images at once.
 
-Squoosh CLI is currently not the fastest image compression tool in town and doesn’t aim to be on the thrown. It is, however, fast enough to compress many images sufficiently quick at once.
+Squoosh CLI is currently not the fastest image compression tool in town and doesn’t aim to be on the throne. It is, however, fast enough to compress many images sufficiently quick at once.
 
 ## Installation
 
