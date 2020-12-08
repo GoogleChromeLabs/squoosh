@@ -49,6 +49,7 @@
   grid-area: header;
   align-self: center;
   padding: 9px 66px;
+  position: relative;
 
   /* Allow clicks to fall through to the pinch zoom area */
   pointer-events: none;

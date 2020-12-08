@@ -23,6 +23,7 @@
   transform: translateY(-50%);
   fill: #fff;
   width: 10px;
+  pointer-events: none;
 }
 
 .large {

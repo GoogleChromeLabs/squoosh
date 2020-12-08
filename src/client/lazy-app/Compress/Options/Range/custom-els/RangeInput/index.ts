@@ -1,4 +1,3 @@
-import PointerTracker from 'pointer-tracker';
 import * as style from './style.css';
 import 'add-css:./style.css';
 
@@ -41,15 +40,22 @@ class RangeInputElement extends HTMLElement {
     this._input.type = 'range';
     this._input.className = style.input;
 
-    const tracker = new PointerTracker(this._input, {
-      start: (): boolean => {
-        if (tracker.currentPointers.length !== 0) return false;
-        this._input.classList.add(style.touchActive);
-        return true;
-      },
-      end: () => {
+    let activePointer: number | undefined;
+
+    // Not using pointer-tracker here due to https://bugs.webkit.org/show_bug.cgi?id=219636.
+    this.addEventListener('pointerdown', (event) => {
+      if (activePointer) return;
+      activePointer = event.pointerId;
+      this._input.classList.add(style.touchActive);
+      const pointerUp = (event: PointerEvent) => {
+        if (event.pointerId !== activePointer) return;
+        activePointer = undefined;
         this._input.classList.remove(style.touchActive);
-      },
+        window.removeEventListener('pointerup', pointerUp);
+        window.removeEventListener('pointercancel', pointerUp);
+      };
+      window.addEventListener('pointerup', pointerUp);
+      window.addEventListener('pointercancel', pointerUp);
     });
 
     for (const event of RETARGETED_EVENTS) {
