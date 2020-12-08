@@ -1,6 +1,6 @@
 {
   "name": "oxipng",
   "scripts": {
-    "build": "../build-rust.sh rm -rf pkg && wasm-pack build --target web -- --verbose --locked && rm pkg/.gitignore"
+    "build": "../build-rust.sh"
   }
 }
