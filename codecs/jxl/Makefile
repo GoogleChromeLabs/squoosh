@@ -1,5 +1,5 @@
 CODEC_URL = https://gitlab.com/wg1/jpeg-xl.git
-CODEC_VERSION = v0.1
+CODEC_VERSION = 739e6cd1305fdec5acfa47ad414189b3d3ecb6a4
 CODEC_DIR = node_modules/jxl
 CODEC_BUILD_ROOT := $(CODEC_DIR)/build
 CODEC_MT_BUILD_DIR := $(CODEC_BUILD_ROOT)/mt
@@ -78,9 +78,12 @@ $(CODEC_MT_SIMD_BUILD_DIR)/Makefile: CXXFLAGS+=-msimd128
 	-B $(@D) \
 	$(<D)
 
-$(CODEC_DIR)/CMakeLists.txt:
-	mkdir -p $(@D)
-	git clone $(CODEC_URL) --recursive -j`nproc` --depth 1 --branch $(CODEC_VERSION) $(@D)
+$(CODEC_DIR)/CMakeLists.txt: 
+	$(RM) -r $(@D)
+	git init $(@D)
+	git -C $(@D) fetch $(CODEC_URL) $(CODEC_VERSION) --depth 1
+	git -C $(@D) checkout FETCH_HEAD
+	git -C $(@D) submodule update --init --depth 1 --recursive --jobs `nproc`
 
 clean:
 	$(RM) $(OUT_JS) $(OUT_WASM) $(OUT_WORKER)
