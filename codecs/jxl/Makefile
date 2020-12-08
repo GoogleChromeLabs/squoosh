@@ -12,7 +12,7 @@ OUT_WORKER = $(OUT_JS:.js=.worker.js)
 
 .PHONY: all clean
 
-all: $(OUT_JS) 
+all: $(OUT_JS)
 
 # Define dependencies for all variations of build artifacts.
 $(filter enc/%,$(OUT_JS)): enc/jxl_enc.cpp
