@@ -182,7 +182,7 @@ export const preprocessors = {
         view.set(buffer, 8);
         instance.exports.rotate(width, height, degrees);
         return new ImageData(
-          new Uint8ClampedArray(view.slice(size + 8, size * 2 + 8)),
+          view.slice(size + 8, size * 2 + 8),
           sameDimensions ? width : height,
           sameDimensions ? height : width,
         );
