@@ -70,6 +70,7 @@ interface State {
   loading: boolean;
   error?: string;
   mobileView: boolean;
+  altBackground: boolean;
   preprocessorState: PreprocessorState;
   encodedPreprocessorState?: PreprocessorState;
 }
@@ -294,6 +295,7 @@ export default class Compress extends Component<Props, State> {
       },
     ],
     mobileView: this.widthQuery.matches,
+    altBackground: false,
   };
 
   private readonly encodeCache = new ResultCache();
@@ -317,6 +319,12 @@ export default class Compress extends Component<Props, State> {
 
   private onMobileWidthChange = () => {
     this.setState({ mobileView: this.widthQuery.matches });
+  };
+
+  private toggleBackground = () => {
+    this.setState({
+      altBackground: !this.state.altBackground,
+    });
   };
 
   private onEncoderTypeChange = (index: 0 | 1, newType: OutputType): void => {
@@ -790,7 +798,7 @@ export default class Compress extends Component<Props, State> {
 
   render(
     { onBack }: Props,
-    { loading, sides, source, mobileView, preprocessorState }: State,
+    { loading, sides, source, mobileView, altBackground, preprocessorState }: State,
   ) {
     const [leftSide, rightSide] = sides;
     const [leftImageData, rightImageData] = sides.map((i) => i.data);
@@ -837,7 +845,7 @@ export default class Compress extends Component<Props, State> {
       rightDisplaySettings.processorState.resize.fitMethod === 'contain';
 
     return (
-      <div class={style.compress}>
+      <div class={`${style.compress} ${altBackground ? style.altBackground : ''}`}>
         <Output
           source={source}
           mobileView={mobileView}
@@ -847,6 +855,7 @@ export default class Compress extends Component<Props, State> {
           rightImgContain={rightImgContain}
           preprocessorState={preprocessorState}
           onPreprocessorChange={this.onPreprocessorChange}
+          onToggleBackground={this.toggleBackground}
         />
         <button class={style.back} onClick={onBack}>
           <svg viewBox="0 0 61 53.3">
