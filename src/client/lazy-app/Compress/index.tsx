@@ -33,6 +33,7 @@ import WorkerBridge from '../worker-bridge';
 import { resize } from 'features/processors/resize/client';
 import type SnackBarElement from 'shared/custom-els/snack-bar';
 import Transform from './Transform';
+import { generateCliInvocation } from '../util/cli';
 
 export type OutputType = EncoderType | 'identity';
 
@@ -411,7 +412,7 @@ export default class Compress extends Component<Props, State> {
     this.queueUpdateImage();
   }
 
-  private async onCopyToOtherClick(index: 0 | 1) {
+  private onCopyToOtherClick = async (index: 0 | 1) => {
     const otherIndex = index ? 0 : 1;
     const oldSettings = this.state.sides[otherIndex];
     const newSettings = { ...this.state.sides[index] };
@@ -436,7 +437,7 @@ export default class Compress extends Component<Props, State> {
     this.setState({
       sides: cleanSet(this.state.sides, otherIndex, oldSettings),
     });
-  }
+  };
 
   private onPreprocessorChange = async (
     preprocessorState: PreprocessorState,
@@ -481,6 +482,29 @@ export default class Compress extends Component<Props, State> {
               );
             }) as [Side, Side]),
     }));
+  };
+
+  private onCopyCliClick = async (index: 0 | 1) => {
+    try {
+      const cliInvocation = generateCliInvocation(
+        this.state.sides[index].latestSettings.encoderState!,
+        this.state.sides[index].latestSettings.processorState,
+      );
+      await navigator.clipboard.writeText(cliInvocation);
+      const result = await this.props.showSnack(
+        'CLI command copied to clipboard',
+        {
+          timeout: 8000,
+          actions: ['usage', 'dismiss'],
+        },
+      );
+
+      if (result === 'usage') {
+        open('https://github.com/GoogleChromeLabs/squoosh/tree/dev/cli');
+      }
+    } catch (e) {
+      this.props.showSnack(e);
+    }
   };
 
   /**
@@ -853,7 +877,6 @@ export default class Compress extends Component<Props, State> {
     const options = sides.map((side, index) => (
       <Options
         index={index as 0 | 1}
-        showSnack={showSnack}
         source={source}
         mobileView={mobileView}
         processorState={side.latestSettings.processorState}
@@ -861,6 +884,8 @@ export default class Compress extends Component<Props, State> {
         onEncoderTypeChange={this.onEncoderTypeChange}
         onEncoderOptionsChange={this.onEncoderOptionsChange}
         onProcessorOptionsChange={this.onProcessorOptionsChange}
+        onCopyCliClick={this.onCopyCliClick}
+        onCopyToOtherSideClick={this.onCopyToOtherClick}
       />
     ));
 

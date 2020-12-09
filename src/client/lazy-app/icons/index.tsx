@@ -1,6 +1,6 @@
 import { h } from 'preact';
 
-const Icon = (props: preact.JSX.HTMLAttributes) => (
+const Icon = (props: preact.JSX.HTMLAttributes | preact.JSX.SVGAttributes) => (
   // @ts-ignore - TS bug https://github.com/microsoft/TypeScript/issues/16019
   <svg
     width="24"
@@ -11,9 +11,15 @@ const Icon = (props: preact.JSX.HTMLAttributes) => (
   />
 );
 
+export const CLIIcon = (props: preact.JSX.HTMLAttributes) => (
+  <Icon {...props}>
+    <path d="M1 2.7H23v18.5H1zm5.5 13l3.7-3.7-3.7-3.7m5.5 7.4h5.6" />
+  </Icon>
+);
+
 export const SwapIcon = (props: preact.JSX.HTMLAttributes) => (
   <Icon {...props}>
-    <path d="M9.01 14H2v2h7.01v3L13 15l-3.99-4zm5.98-1v-3H22V8h-7.01V5L11 9z" />
+    <path d="M8.5 8.6v6.8L5.1 12l3.4-3.4M10 5l-7 7 7 7V5zm4 0v14l7-7-7-7z" />
   </Icon>
 );
 
@@ -77,9 +83,9 @@ export const RotateIcon = (props: preact.JSX.HTMLAttributes) => (
 
 export const MoreIcon = (props: preact.JSX.HTMLAttributes) => (
   <Icon {...props}>
-    <circle cx="12" cy="6" r="2" fill="#fff" />
-    <circle cx="12" cy="12" r="2" fill="#fff" />
-    <circle cx="12" cy="18" r="2" fill="#fff" />
+    <circle cx="12" cy="6" r="2" />
+    <circle cx="12" cy="12" r="2" />
+    <circle cx="12" cy="18" r="2" />
   </Icon>
 );
 

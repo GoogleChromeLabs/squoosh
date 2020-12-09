@@ -1,6 +1,8 @@
 .wrap {
-  display: inline;
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-items: center;
 }
 
 .wrap > aside:last-of-type {

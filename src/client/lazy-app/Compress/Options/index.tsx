@@ -5,7 +5,6 @@ import 'add-css:./style.css';
 import { cleanSet, cleanMerge } from '../../util/clean-modify';
 
 import type { SourceImage, OutputType } from '..';
-import type SnackBarElement from 'shared/initial-app/custom-els/snack-bar';
 import {
   EncoderOptions,
   EncoderState,
@@ -14,17 +13,15 @@ import {
   encoderMap,
 } from '../../feature-meta';
 import Expander from './Expander';
-import Checkbox from './Checkbox';
 import Toggle from './Toggle';
 import Select from './Select';
+import Flyout from '../Flyout';
 import { Options as QuantOptionsComponent } from 'features/processors/quantize/client';
 import { Options as ResizeOptionsComponent } from 'features/processors/resize/client';
-
-import { generateCliInvocation } from '../../util/cli-invocation-generator';
+import { CLIIcon, MoreIcon, SwapIcon } from 'client/lazy-app/icons';
 
 interface Props {
   index: 0 | 1;
-  showSnack: SnackBarElement['showSnackbar'];
   mobileView: boolean;
   source?: SourceImage;
   encoderState?: EncoderState;
@@ -32,6 +29,8 @@ interface Props {
   onEncoderTypeChange(index: 0 | 1, newType: OutputType): void;
   onEncoderOptionsChange(index: 0 | 1, newOptions: EncoderOptions): void;
   onProcessorOptionsChange(index: 0 | 1, newOptions: ProcessorState): void;
+  onCopyToOtherSideClick(index: 0 | 1): void;
+  onCopyCliClick(index: 0 | 1): void;
 }
 
 interface State {
@@ -110,20 +109,12 @@ export default class Options extends Component<Props, State> {
     this.props.onEncoderOptionsChange(this.props.index, newOptions);
   };
 
-  private onCreateCLIInvocation = () => {
-    if (!this.props.encoderState) {
-      return;
-    }
+  private onCopyCliClick = () => {
+    this.props.onCopyCliClick(this.props.index);
+  };
 
-    try {
-      const cliInvocation = generateCliInvocation(
-        this.props.encoderState,
-        this.props.processorState,
-      );
-      navigator.clipboard.writeText(cliInvocation);
-    } catch (e) {
-      this.props.showSnack(e);
-    }
+  private onCopyToOtherSideClick = () => {
+    this.props.onCopyToOtherSideClick(this.props.index);
   };
 
   render(
@@ -146,7 +137,31 @@ export default class Options extends Component<Props, State> {
           {!encoderState ? null : (
             <div>
               <h3 class={style.optionsTitle}>
-                <button onClick={this.onCreateCLIInvocation}>CLI</button>Edit
+                Edit
+                <Flyout
+                  direction={['up', 'left']}
+                  anchor="right"
+                  toggle={
+                    <button class={style.titleButton}>
+                      <MoreIcon />
+                    </button>
+                  }
+                >
+                  <button
+                    class={style.menuButton}
+                    onClick={this.onCopyCliClick}
+                  >
+                    <CLIIcon />
+                    Copy npx command
+                  </button>
+                  <button
+                    class={style.menuButton}
+                    onClick={this.onCopyToOtherSideClick}
+                  >
+                    <SwapIcon />
+                    Copy settings to other side
+                  </button>
+                </Flyout>
               </h3>
               <label class={style.sectionEnabler}>
                 Resize

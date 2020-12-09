@@ -176,7 +176,7 @@ input.zoom {
   }
 }
 
-[data-flyout-open] {
+.controls [data-flyout-open] {
   .moreButton {
     background: rgba(82, 82, 82, 0.92);
 
