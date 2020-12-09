@@ -32,6 +32,7 @@ import WorkerBridge from '../worker-bridge';
 import { resize } from 'features/processors/resize/client';
 import type SnackBarElement from 'shared/custom-els/snack-bar';
 import { Arrow, ExpandIcon } from '../icons';
+import Transform from './Transform';
 
 export type OutputType = EncoderType | 'identity';
 
@@ -68,6 +69,8 @@ interface State {
   sides: [Side, Side];
   /** Source image load */
   loading: boolean;
+  /** Showing preprocessor transformations modal */
+  transform: boolean;
   error?: string;
   mobileView: boolean;
   altBackground: boolean;
@@ -126,13 +129,18 @@ async function preprocessImage(
 ): Promise<ImageData> {
   assertSignal(signal);
   let processedData = data;
+  const { rotate, flip, crop } = preprocessorState;
 
-  if (preprocessorState.rotate.rotate !== 0) {
-    processedData = await workerBridge.rotate(
-      signal,
-      processedData,
-      preprocessorState.rotate,
-    );
+  if (rotate.rotate !== 0) {
+    processedData = await workerBridge.rotate(signal, processedData, rotate);
+  }
+
+  if (flip && (flip.horizontal || flip.vertical)) {
+    processedData = await workerBridge.flip(signal, processedData, flip);
+  }
+
+  if (crop && (crop.left || crop.top || crop.right || crop.bottom)) {
+    processedData = await workerBridge.crop(signal, processedData, crop);
   }
 
   return processedData;
@@ -274,6 +282,9 @@ export default class Compress extends Component<Props, State> {
   state: State = {
     source: undefined,
     loading: false,
+    /** @TODO remove this */
+    // transform: true,
+    transform: false,
     preprocessorState: defaultPreprocessorState,
     sides: [
       {
@@ -366,6 +377,20 @@ export default class Compress extends Component<Props, State> {
         options,
       ),
     });
+  };
+
+  private showPreprocessorTransforms = () => {
+    this.setState({ transform: true });
+  };
+
+  private onTransformUpdated = ({
+    preprocessorState,
+  }: { preprocessorState?: PreprocessorState } = {}) => {
+    console.log('onTransformUpdated', preprocessorState);
+    if (preprocessorState) {
+      this.onPreprocessorChange(preprocessorState);
+    }
+    this.setState({ transform: false });
   };
 
   componentWillReceiveProps(nextProps: Props): void {
@@ -798,10 +823,20 @@ export default class Compress extends Component<Props, State> {
 
   render(
     { onBack }: Props,
-    { loading, sides, source, mobileView, altBackground, preprocessorState }: State,
+    {
+      loading,
+      sides,
+      source,
+      mobileView,
+      altBackground,
+      transform,
+      preprocessorState,
+    }: State,
   ) {
     const [leftSide, rightSide] = sides;
     const [leftImageData, rightImageData] = sides.map((i) => i.data);
+
+    transform = (source && source.decoded && transform) || false;
 
     const options = sides.map((side, index) => (
       <Options
@@ -845,8 +880,13 @@ export default class Compress extends Component<Props, State> {
       rightDisplaySettings.processorState.resize.fitMethod === 'contain';
 
     return (
-      <div class={`${style.compress} ${altBackground ? style.altBackground : ''}`}>
+      <div
+        class={`${style.compress} ${transform ? style.transforming : ''} ${
+          altBackground ? style.altBackground : ''
+        }`}
+      >
         <Output
+          hidden={transform}
           source={source}
           mobileView={mobileView}
           leftCompressed={leftImageData}
@@ -855,6 +895,7 @@ export default class Compress extends Component<Props, State> {
           rightImgContain={rightImgContain}
           preprocessorState={preprocessorState}
           onPreprocessorChange={this.onPreprocessorChange}
+          onShowPreprocessorTransforms={this.showPreprocessorTransforms}
           onToggleBackground={this.toggleBackground}
         />
         <button class={style.back} onClick={onBack}>
@@ -890,6 +931,16 @@ export default class Compress extends Component<Props, State> {
               {results[1]}
             </div>,
           ]
+        )}
+
+        {transform && (
+          <Transform
+            mobileView={mobileView}
+            source={source!}
+            preprocessorState={preprocessorState!}
+            onSave={this.onTransformUpdated}
+            onCancel={this.onTransformUpdated}
+          />
         )}
       </div>
     );
