@@ -31,7 +31,6 @@ import Results from './Results';
 import WorkerBridge from '../worker-bridge';
 import { resize } from 'features/processors/resize/client';
 import type SnackBarElement from 'shared/custom-els/snack-bar';
-import { Arrow, ExpandIcon } from '../icons';
 import Transform from './Transform';
 
 export type OutputType = EncoderType | 'identity';
