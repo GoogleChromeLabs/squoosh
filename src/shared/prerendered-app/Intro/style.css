@@ -6,7 +6,7 @@
   display: grid;
   grid-template-rows: 1fr max-content max-content;
   font-size: 1.2rem;
-  color: var(--dark-text);
+  color: var(--dim-text);
 }
 
 .blob-canvas {

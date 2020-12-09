@@ -12,6 +12,7 @@ import Range from 'client/lazy-app/Compress/Options/Range';
 import Checkbox from 'client/lazy-app/Compress/Options/Checkbox';
 import Expander from 'client/lazy-app/Compress/Options/Expander';
 import Select from 'client/lazy-app/Compress/Options/Select';
+import Revealer from 'client/lazy-app/Compress/Options/Revealer';
 
 export function encode(
   signal: AbortSignal,
@@ -116,12 +117,12 @@ export class Options extends Component<Props, State> {
             Quality:
           </Range>
         </div>
-        <label class={style.optionInputFirst}>
-          <Checkbox
+        <label class={style.optionReveal}>
+          <Revealer
             checked={showAdvanced}
             onChange={linkState(this, 'showAdvanced')}
           />
-          Show advanced settings
+          Advanced settings
         </label>
         <Expander>
           {showAdvanced ? (
@@ -141,13 +142,13 @@ export class Options extends Component<Props, State> {
               <Expander>
                 {options.color_space === MozJpegColorSpace.YCbCr ? (
                   <div>
-                    <label class={style.optionInputFirst}>
+                    <label class={style.optionToggle}>
+                      Auto subsample chroma
                       <Checkbox
                         name="auto_subsample"
                         checked={options.auto_subsample}
                         onChange={this.onChange}
                       />
-                      Auto subsample chroma
                     </label>
                     <Expander>
                       {options.auto_subsample ? null : (
@@ -164,13 +165,13 @@ export class Options extends Component<Props, State> {
                         </div>
                       )}
                     </Expander>
-                    <label class={style.optionInputFirst}>
+                    <label class={style.optionToggle}>
+                      Separate chroma quality
                       <Checkbox
                         name="separate_chroma_quality"
                         checked={options.separate_chroma_quality}
                         onChange={this.onChange}
                       />
-                      Separate chroma quality
                     </label>
                     <Expander>
                       {options.separate_chroma_quality ? (
@@ -190,35 +191,35 @@ export class Options extends Component<Props, State> {
                   </div>
                 ) : null}
               </Expander>
-              <label class={style.optionInputFirst}>
+              <label class={style.optionToggle}>
+                Pointless spec compliance
                 <Checkbox
                   name="baseline"
                   checked={options.baseline}
                   onChange={this.onChange}
                 />
-                Pointless spec compliance
               </label>
               <Expander>
                 {options.baseline ? null : (
-                  <label class={style.optionInputFirst}>
+                  <label class={style.optionToggle}>
+                    Progressive rendering
                     <Checkbox
                       name="progressive"
                       checked={options.progressive}
                       onChange={this.onChange}
                     />
-                    Progressive rendering
                   </label>
                 )}
               </Expander>
               <Expander>
                 {options.baseline ? (
-                  <label class={style.optionInputFirst}>
+                  <label class={style.optionToggle}>
+                    Optimize Huffman table
                     <Checkbox
                       name="optimize_coding"
                       checked={options.optimize_coding}
                       onChange={this.onChange}
                     />
-                    Optimize Huffman table
                   </label>
                 ) : null}
               </Expander>
@@ -251,33 +252,33 @@ export class Options extends Component<Props, State> {
                   <option value="8">Peterson et al</option>
                 </Select>
               </label>
-              <label class={style.optionInputFirst}>
+              <label class={style.optionToggle}>
+                Trellis multipass
                 <Checkbox
                   name="trellis_multipass"
                   checked={options.trellis_multipass}
                   onChange={this.onChange}
                 />
-                Trellis multipass
               </label>
               <Expander>
                 {options.trellis_multipass ? (
-                  <label class={style.optionInputFirst}>
+                  <label class={style.optionToggle}>
+                    Optimize zero block runs
                     <Checkbox
                       name="trellis_opt_zero"
                       checked={options.trellis_opt_zero}
                       onChange={this.onChange}
                     />
-                    Optimize zero block runs
                   </label>
                 ) : null}
               </Expander>
-              <label class={style.optionInputFirst}>
+              <label class={style.optionToggle}>
+                Optimize after trellis quantization
                 <Checkbox
                   name="trellis_opt_table"
                   checked={options.trellis_opt_table}
                   onChange={this.onChange}
                 />
-                Optimize after trellis quantization
               </label>
               <div class={style.optionOneCell}>
                 <Range

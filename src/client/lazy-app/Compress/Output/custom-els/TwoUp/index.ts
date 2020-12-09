@@ -73,9 +73,14 @@ export default class TwoUp extends HTMLElement {
   connectedCallback() {
     this._childrenChange();
 
-    this._handle.innerHTML = `<div class="${
-      styles.scrubber
-    }">${`<svg viewBox="0 0 27 20" fill="currentColor">${'<path d="M17 19.2l9.5-9.6L16.9 0zM9.6 0L0 9.6l9.6 9.6z"/>'}</svg>`}</div>`;
+    // prettier-ignore
+    this._handle.innerHTML =
+      `<div class="${styles.scrubber}">${
+        `<svg viewBox="0 0 27 20">${
+          `<path class="${styles.arrowLeft}" d="M9.6 0L0 9.6l9.6 9.6z"/>` +
+          `<path class="${styles.arrowRight}" d="M17 19.2l9.5-9.6L16.9 0z"/>`
+        }</svg>
+      `}</div>`;
 
     if (!this._everConnected) {
       this._resetPosition();

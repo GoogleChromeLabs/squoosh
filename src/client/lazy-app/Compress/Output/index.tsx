@@ -10,7 +10,6 @@ import {
   ToggleBackgroundIcon,
   AddIcon,
   RemoveIcon,
-  BackIcon,
   ToggleBackgroundActiveIcon,
   RotateIcon,
 } from '../../icons';
@@ -28,7 +27,6 @@ interface Props {
   rightCompressed?: ImageData;
   leftImgContain: boolean;
   rightImgContain: boolean;
-  onBack: () => void;
   onPreprocessorChange: (newState: PreprocessorState) => void;
 }
 
@@ -255,7 +253,7 @@ export default class Output extends Component<Props, State> {
   };
 
   render(
-    { mobileView, leftImgContain, rightImgContain, source, onBack }: Props,
+    { mobileView, leftImgContain, rightImgContain, source }: Props,
     { scale, editingScale, altBackground }: State,
   ) {
     const leftDraw = this.leftDrawable();
@@ -313,12 +311,6 @@ export default class Output extends Component<Props, State> {
             />
           </pinch-zoom>
         </two-up>
-
-        <div class={style.back}>
-          <button class={style.button} onClick={onBack}>
-            <BackIcon />
-          </button>
-        </div>
 
         <div class={style.controls}>
           <div class={style.zoomControls}>

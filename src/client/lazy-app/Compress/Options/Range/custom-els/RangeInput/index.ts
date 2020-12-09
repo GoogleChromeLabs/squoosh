@@ -1,4 +1,3 @@
-import PointerTracker from 'pointer-tracker';
 import * as style from './style.css';
 import 'add-css:./style.css';
 
@@ -28,7 +27,7 @@ function getPrescision(value: string): number {
 
 class RangeInputElement extends HTMLElement {
   private _input: HTMLInputElement;
-  private _valueDisplay?: HTMLDivElement;
+  private _valueDisplay?: HTMLSpanElement;
   private _ignoreChange = false;
 
   static get observedAttributes() {
@@ -41,15 +40,22 @@ class RangeInputElement extends HTMLElement {
     this._input.type = 'range';
     this._input.className = style.input;
 
-    const tracker = new PointerTracker(this._input, {
-      start: (): boolean => {
-        if (tracker.currentPointers.length !== 0) return false;
-        this._input.classList.add(style.touchActive);
-        return true;
-      },
-      end: () => {
+    let activePointer: number | undefined;
+
+    // Not using pointer-tracker here due to https://bugs.webkit.org/show_bug.cgi?id=219636.
+    this.addEventListener('pointerdown', (event) => {
+      if (activePointer) return;
+      activePointer = event.pointerId;
+      this._input.classList.add(style.touchActive);
+      const pointerUp = (event: PointerEvent) => {
+        if (event.pointerId !== activePointer) return;
+        activePointer = undefined;
         this._input.classList.remove(style.touchActive);
-      },
+        window.removeEventListener('pointerup', pointerUp);
+        window.removeEventListener('pointercancel', pointerUp);
+      };
+      window.addEventListener('pointerup', pointerUp);
+      window.addEventListener('pointercancel', pointerUp);
     });
 
     for (const event of RETARGETED_EVENTS) {
@@ -66,13 +72,13 @@ class RangeInputElement extends HTMLElement {
     this.innerHTML =
       `<div class="${style.thumbWrapper}">` +
       `<div class="${style.thumb}"></div>` +
-      `<div class="${style.valueDisplay}"></div>` +
+      `<div class="${style.valueDisplay}"><svg width="32" height="62"><path d="M27.3 27.3C25 29.6 17 35.8 17 43v3c0 3 2.5 5 3.2 5.8a6 6 0 1 1-8.5 0C12.6 51 15 49 15 46v-3c0-7.2-8-13.4-10.3-15.7A16 16 0 0 1 16 0a16 16 0 0 1 11.3 27.3z"/></svg><span></span></div>` +
       '</div>';
 
     this.insertBefore(this._input, this.firstChild);
     this._valueDisplay = this.querySelector(
-      '.' + style.valueDisplay,
-    ) as HTMLDivElement;
+      '.' + style.valueDisplay + ' > span',
+    ) as HTMLSpanElement;
     // Set inline styles (this is useful when used with frameworks which might clear inline styles)
     this._update();
   }

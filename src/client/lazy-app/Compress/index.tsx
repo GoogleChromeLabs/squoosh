@@ -31,7 +31,7 @@ import Results from './Results';
 import WorkerBridge from '../worker-bridge';
 import { resize } from 'features/processors/resize/client';
 import type SnackBarElement from 'shared/custom-els/snack-bar';
-import { CopyAcrossIconProps, ExpandIcon } from '../icons';
+import { Arrow, ExpandIcon } from '../icons';
 
 export type OutputType = EncoderType | 'identity';
 
@@ -319,7 +319,7 @@ export default class Compress extends Component<Props, State> {
     this.setState({ mobileView: this.widthQuery.matches });
   };
 
-  private onEncoderTypeChange(index: 0 | 1, newType: OutputType): void {
+  private onEncoderTypeChange = (index: 0 | 1, newType: OutputType): void => {
     this.setState({
       sides: cleanSet(
         this.state.sides,
@@ -332,12 +332,12 @@ export default class Compress extends Component<Props, State> {
             },
       ),
     });
-  }
+  };
 
-  private onProcessorOptionsChange(
+  private onProcessorOptionsChange = (
     index: 0 | 1,
     options: ProcessorState,
-  ): void {
+  ): void => {
     this.setState({
       sides: cleanSet(
         this.state.sides,
@@ -345,9 +345,12 @@ export default class Compress extends Component<Props, State> {
         options,
       ),
     });
-  }
+  };
 
-  private onEncoderOptionsChange(index: 0 | 1, options: EncoderOptions): void {
+  private onEncoderOptionsChange = (
+    index: 0 | 1,
+    options: EncoderOptions,
+  ): void => {
     this.setState({
       sides: cleanSet(
         this.state.sides,
@@ -355,7 +358,7 @@ export default class Compress extends Component<Props, State> {
         options,
       ),
     });
-  }
+  };
 
   componentWillReceiveProps(nextProps: Props): void {
     if (nextProps.file !== this.props.file) {
@@ -794,28 +797,16 @@ export default class Compress extends Component<Props, State> {
 
     const options = sides.map((side, index) => (
       <Options
+        index={index as 0 | 1}
         source={source}
         mobileView={mobileView}
         processorState={side.latestSettings.processorState}
         encoderState={side.latestSettings.encoderState}
-        onEncoderTypeChange={this.onEncoderTypeChange.bind(
-          this,
-          index as 0 | 1,
-        )}
-        onEncoderOptionsChange={this.onEncoderOptionsChange.bind(
-          this,
-          index as 0 | 1,
-        )}
-        onProcessorOptionsChange={this.onProcessorOptionsChange.bind(
-          this,
-          index as 0 | 1,
-        )}
+        onEncoderTypeChange={this.onEncoderTypeChange}
+        onEncoderOptionsChange={this.onEncoderOptionsChange}
+        onProcessorOptionsChange={this.onProcessorOptionsChange}
       />
     ));
-
-    const copyDirections = (mobileView
-      ? ['down', 'up']
-      : ['right', 'left']) as CopyAcrossIconProps['copyDirection'][];
 
     const results = sides.map((side, index) => (
       <Results
@@ -823,21 +814,13 @@ export default class Compress extends Component<Props, State> {
         imageFile={side.file}
         source={source}
         loading={loading || side.loading}
-        copyDirection={copyDirections[index]}
-        onCopyToOtherClick={this.onCopyToOtherClick.bind(this, index as 0 | 1)}
-        buttonPosition={mobileView ? 'stack-right' : buttonPositions[index]}
-      >
-        {!mobileView
-          ? null
-          : [
-              <ExpandIcon class={style.expandIcon} key="expand-icon" />,
-              `${resultTitles[index]} (${
-                side.latestSettings.encoderState
-                  ? encoderMap[side.latestSettings.encoderState.type].meta.label
-                  : 'Original Image'
-              })`,
-            ]}
-      </Results>
+        flipSide={mobileView || index === 1}
+        typeLabel={
+          side.latestSettings.encoderState
+            ? encoderMap[side.latestSettings.encoderState.type].meta.label
+            : 'Original Image'
+        }
+      />
     ));
 
     // For rendering, we ideally want the settings that were used to create the
@@ -862,26 +845,38 @@ export default class Compress extends Component<Props, State> {
           rightCompressed={rightImageData}
           leftImgContain={leftImgContain}
           rightImgContain={rightImgContain}
-          onBack={onBack}
           preprocessorState={preprocessorState}
           onPreprocessorChange={this.onPreprocessorChange}
         />
+        <button class={style.back} onClick={onBack}>
+          <svg viewBox="0 0 61 53.3">
+            <title>Back</title>
+            <path
+              class={style.backBlob}
+              d="M0 25.6c-.5-7.1 4.1-14.5 10-19.1S23.4.1 32.2 0c8.8 0 19 1.6 24.4 8s5.6 17.8 1.7 27a29.7 29.7 0 01-20.5 18c-8.4 1.5-17.3-2.6-24.5-8S.5 32.6.1 25.6z"
+            />
+            <path
+              class={style.backX}
+              d="M41.6 17.1l-2-2.1-8.3 8.2-8.2-8.2-2 2 8.2 8.3-8.3 8.2 2.1 2 8.2-8.1 8.3 8.2 2-2-8.2-8.3z"
+            />
+          </svg>
+        </button>
         {mobileView ? (
           <div class={style.options}>
             <multi-panel class={style.multiPanel} open-one-only>
-              {results[0]}
-              {options[0]}
-              {results[1]}
-              {options[1]}
+              <div class={style.options1Theme}>{results[0]}</div>
+              <div class={style.options1Theme}>{options[0]}</div>
+              <div class={style.options2Theme}>{results[1]}</div>
+              <div class={style.options2Theme}>{options[1]}</div>
             </multi-panel>
           </div>
         ) : (
           [
-            <div class={style.options} key="options0">
+            <div class={style.options1} key="options1">
               {options[0]}
               {results[0]}
             </div>,
-            <div class={style.options} key="options1">
+            <div class={style.options2} key="options2">
               {options[1]}
               {results[1]}
             </div>,

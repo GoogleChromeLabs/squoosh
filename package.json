@@ -38,7 +38,6 @@
     "preact": "^10.5.5",
     "preact-render-to-string": "^5.1.11",
     "prettier": "^2.1.2",
-    "pretty-bytes": "^5.4.1",
     "rollup": "^2.33.1",
     "rollup-plugin-terser": "^7.0.2",
     "serve": "^11.3.2",

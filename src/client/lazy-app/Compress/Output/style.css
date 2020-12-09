@@ -1,5 +1,5 @@
 .output {
-  composes: abs-fill from global;
+  display: contents;
 
   &::before {
     content: '';
@@ -9,18 +9,17 @@
     right: 0;
     bottom: 0;
     background: #000;
-    opacity: 0;
+    opacity: 0.8;
     transition: opacity 500ms ease;
   }
 
   &.alt-background::before {
-    opacity: 0.6;
+    opacity: 0;
   }
 }
 
 .two-up {
   composes: abs-fill from global;
-  --accent-color: var(--button-fg);
 }
 
 .pinch-zoom {
@@ -41,16 +40,15 @@
 }
 
 .controls {
-  position: absolute;
   display: flex;
   justify-content: center;
-  top: 0;
-  left: 0;
-  right: 0;
-  padding: 9px 84px;
   overflow: hidden;
   flex-wrap: wrap;
   contain: content;
+  grid-area: header;
+  align-self: center;
+  padding: 9px 66px;
+  position: relative;
 
   /* Allow clicks to fall through to the pinch zoom area */
   pointer-events: none;
@@ -60,11 +58,9 @@
 
   @media (min-width: 860px) {
     padding: 9px;
-    top: auto;
-    left: 320px;
-    right: 320px;
-    bottom: 0;
     flex-wrap: wrap-reverse;
+    grid-area: viewportOpts;
+    align-self: end;
   }
 }
 
@@ -147,13 +143,6 @@
   margin: 0 3px 0 0;
   color: #888;
   border-bottom: 1px dashed #999;
-}
-
-.back {
-  position: absolute;
-  top: 0;
-  left: 0;
-  padding: 9px;
 }
 
 .buttons-no-wrap {

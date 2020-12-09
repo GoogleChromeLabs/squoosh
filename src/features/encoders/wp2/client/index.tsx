@@ -9,6 +9,7 @@ import Select from 'client/lazy-app/Compress/Options/Select';
 import Checkbox from 'client/lazy-app/Compress/Options/Checkbox';
 import Expander from 'client/lazy-app/Compress/Options/Expander';
 import linkState from 'linkstate';
+import Revealer from 'client/lazy-app/Compress/Options/Revealer';
 
 export const encode = (
   signal: AbortSignal,
@@ -154,12 +155,12 @@ export class Options extends Component<Props, State> {
   ) {
     return (
       <form class={style.optionsSection} onSubmit={preventDefault}>
-        <label class={style.optionInputFirst}>
+        <label class={style.optionToggle}>
+          Lossless
           <Checkbox
             checked={lossless}
             onChange={this._inputChange('lossless', 'boolean')}
           />
-          Lossless
         </label>
         <Expander>
           {lossless && (
@@ -190,12 +191,12 @@ export class Options extends Component<Props, State> {
                   Quality:
                 </Range>
               </div>
-              <label class={style.optionInputFirst}>
+              <label class={style.optionToggle}>
+                Separate alpha quality
                 <Checkbox
                   checked={separateAlpha}
                   onChange={this._inputChange('separateAlpha', 'boolean')}
                 />
-                Separate alpha quality
               </label>
               <Expander>
                 {separateAlpha && (
@@ -212,12 +213,12 @@ export class Options extends Component<Props, State> {
                   </div>
                 )}
               </Expander>
-              <label class={style.optionInputFirst}>
-                <Checkbox
+              <label class={style.optionReveal}>
+                <Revealer
                   checked={showAdvanced}
                   onChange={linkState(this, 'showAdvanced')}
                 />
-                Show advanced settings
+                Advanced settings
               </label>
               <Expander>
                 {showAdvanced && (
@@ -278,7 +279,8 @@ export class Options extends Component<Props, State> {
                         <option value={Csp.kYIQ}>YIQ</option>
                       </Select>
                     </label>
-                    <label class={style.optionInputFirst}>
+                    <label class={style.optionToggle}>
+                      Random matrix
                       <Checkbox
                         checked={useRandomMatrix}
                         onChange={this._inputChange(
@@ -286,7 +288,6 @@ export class Options extends Component<Props, State> {
                           'boolean',
                         )}
                       />
-                      Random matrix
                     </label>
                   </div>
                 )}

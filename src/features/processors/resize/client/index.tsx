@@ -285,33 +285,33 @@ export class Options extends Component<Props, State> {
         </label>
         <Expander>
           {isWorkerOptions(options) ? (
-            <label class={style.optionInputFirst}>
+            <label class={style.optionToggle}>
+              Premultiply alpha channel
               <Checkbox
                 name="premultiply"
                 checked={options.premultiply}
                 onChange={this.onChange}
               />
-              Premultiply alpha channel
             </label>
           ) : null}
           {isWorkerOptions(options) ? (
-            <label class={style.optionInputFirst}>
+            <label class={style.optionToggle}>
+              Linear RGB
               <Checkbox
                 name="linearRGB"
                 checked={options.linearRGB}
                 onChange={this.onChange}
               />
-              Linear RGB
             </label>
           ) : null}
         </Expander>
-        <label class={style.optionInputFirst}>
+        <label class={style.optionToggle}>
+          Maintain aspect ratio
           <Checkbox
             name="maintainAspect"
             checked={maintainAspect}
             onChange={linkState(this, 'maintainAspect')}
           />
-          Maintain aspect ratio
         </label>
         <Expander>
           {maintainAspect ? null : (

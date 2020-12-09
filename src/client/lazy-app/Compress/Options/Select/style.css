@@ -3,10 +3,12 @@
 }
 
 .builtin-select {
-  background: #2f2f2f;
+  background: var(--black);
   border-radius: 4px;
   font: inherit;
-  padding: 4px 25px 4px 10px;
+  padding: 7px 0;
+  padding-right: 25px;
+  padding-left: 10px;
   -webkit-appearance: none;
   -moz-appearance: none;
   border: none;
@@ -21,11 +23,12 @@
   transform: translateY(-50%);
   fill: #fff;
   width: 10px;
+  pointer-events: none;
 }
 
 .large {
   padding: 10px 35px 10px 10px;
-  background: #151515;
+  background: var(--dark-gray);
 
   & .arrow {
     right: 13px;
