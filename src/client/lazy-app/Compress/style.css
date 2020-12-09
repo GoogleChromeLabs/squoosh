@@ -44,6 +44,12 @@
       transform: translateX(100%);
     }
 
+    @media (max-width: 599px) {
+      & > .options {
+        display: none;
+      }
+    }
+
     & > .back {
       display: none;
     }
