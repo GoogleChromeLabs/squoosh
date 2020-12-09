@@ -152,8 +152,6 @@ export default class Transform extends Component<Props, State> {
     newState = cleanSet(newState, 'crop', crop);
     newState = cleanSet(newState, 'flip', flip);
 
-    console.log('u', JSON.parse(JSON.stringify(newState)));
-
     if (onSave) onSave({ preprocessorState: newState });
   };
 
@@ -163,29 +161,6 @@ export default class Transform extends Component<Props, State> {
     else if (onSave)
       onSave({ preprocessorState: this.props.preprocessorState });
   };
-
-  // private fitToViewport = () => {
-  //   const pinchZoom = this.pinchZoom.current;
-  //   const img = this.props.source?.preprocessed;
-  //   if (!img || !pinchZoom) return;
-  //   const scale = Number(Math.min(
-  //     (window.innerWidth - 20) / img.width,
-  //     (window.innerHeight - 20) / img.height
-  //   ).toFixed(2));
-  //   pinchZoom.scaleTo(Number(scale.toFixed(2)), { allowChangeEvent: true });
-  //   this.recenter();
-  // };
-
-  // private recenter = () => {
-  //   const pinchZoom = this.pinchZoom.current;
-  //   const img = this.props.source?.preprocessed;
-  //   if (!img || !pinchZoom) return;
-  //   pinchZoom.setTransform({
-  //     x: (img.width - img.width * pinchZoom.scale) / 2,
-  //     y: (img.height - img.height * pinchZoom.scale) / 2,
-  //     allowChangeEvent: true
-  //   });
-  // };
 
   private zoomIn = () => {
     if (!this.pinchZoom.current) throw Error('Missing pinch-zoom element');
@@ -235,11 +210,23 @@ export default class Transform extends Component<Props, State> {
 
   private onCropPresetChange = (event: Event) => {
     const { value } = event.target as HTMLSelectElement;
-    // @ts-ignore-next
-    const cropPreset = cropPresets[value];
+    const cropPreset = value ? (value as keyof typeof cropPresets) : undefined;
+    const crop = { ...this.state.crop };
+    if (cropPreset) {
+      const preset = cropPresets[cropPreset];
+      const { width, height } = this.props.source.decoded;
+      const w = width - crop.left - crop.right;
+      const h = w / preset.ratio;
+      crop.bottom = height - crop.top - h;
+      if (crop.bottom < 0) {
+        crop.top += crop.bottom;
+        crop.bottom = 0;
+      }
+    }
     this.setState({
+      crop,
       cropPreset,
-      lockAspect: true,
+      lockAspect: !!cropPreset,
     });
   };
 
@@ -318,12 +305,6 @@ export default class Transform extends Component<Props, State> {
     this.setState({ flip: { horizontal, vertical: !vertical } });
   };
 
-  // private update = (event: Event) => {
-  //   const { name, value } = event.target as HTMLInputElement;
-  //   const state = cleanSet(this.state, name, value);
-  //   this.setState(state);
-  // };
-
   private toggleLockAspect = () => {
     this.setState({ lockAspect: !this.state.lockAspect });
   };
@@ -359,17 +340,6 @@ export default class Transform extends Component<Props, State> {
     }
     this.setCrop({ top, right, bottom, left });
   };
-
-  // private onRotateClick = () => {
-  //   const { preprocessorState: inputProcessorState } = this.props;
-  //   if (!inputProcessorState) return;
-  //   const newState = cleanSet(
-  //     inputProcessorState,
-  //     'rotate.rotate',
-  //     (inputProcessorState.rotate.rotate + 90) % 360,
-  //   );
-  //   this.props.onPreprocessorChange(newState);
-  // };
 
   render(
     { mobileView, source }: Props,
@@ -575,12 +545,12 @@ interface BackdropProps {
   height: number;
 }
 
+/** @TODO this could at least use clip-path. It's too expensive this way. */
 class Backdrop extends Component<BackdropProps> {
   shouldComponentUpdate({ width, height }: BackdropProps) {
     return width !== this.props.width || height !== this.props.height;
   }
 
-  /** @TODO this could at least use clip-path */
   render({ width, height }: BackdropProps) {
     const transform =
       `transform-origin: 50% 50%; transform: translate(var(--x), var(--y)) ` +

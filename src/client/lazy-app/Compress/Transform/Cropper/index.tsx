@@ -27,6 +27,7 @@ interface PointerTrack {
   x: number;
   y: number;
   edges: { edge: Edge; value: number }[];
+  aspect: number | undefined;
 }
 
 interface State {
@@ -101,14 +102,22 @@ export default class Cropper extends Component<Props, State> {
       event.stopPropagation();
       event.preventDefault();
 
+      let aspect;
       const edges = edgeAttr.split(/ *, */) as Edge[];
-      // console.log(this.props.lockAspect);
-      if (this.props.lockAspect && edges.length === 1) return;
+      if (this.props.lockAspect) {
+        if (edges.length === 1) return;
+        const { size } = this.props;
+        const oldCrop = this.state.crop;
+        aspect =
+          (size.width - oldCrop.left - oldCrop.right) /
+          (size.height - oldCrop.top - oldCrop.bottom);
+      }
 
       this.pointers.set(event.pointerId, {
         x: event.x,
         y: event.y,
         edges: edges.map((edge) => ({ edge, value: this.state.crop[edge] })),
+        aspect,
       });
       target.setPointerCapture(event.pointerId);
     }
@@ -120,17 +129,14 @@ export default class Cropper extends Component<Props, State> {
     if (down && target.hasPointerCapture(event.pointerId)) {
       const { size } = this.props;
       const oldCrop = this.state.crop;
-      const aspect =
-        (size.width - oldCrop.left - oldCrop.right) /
-        (size.height - oldCrop.top - oldCrop.bottom);
       const scale = this.props.scale || 1;
       let dx = (event.x - down.x) / scale;
       let dy = (event.y - down.y) / scale;
-      // console.log(this.props.lockAspect, aspect);
-      if (this.props.lockAspect) {
+
+      if (down.aspect && down.edges.length === 2) {
         const dir = (dx + dy) / 2;
-        dx = dir * aspect;
-        dy = dir / aspect;
+        dx = dir * down.aspect;
+        dy = dir / down.aspect;
       }
       const crop: Partial<CropBox> = {};
       for (const { edge, value } of down.edges) {
@@ -151,39 +157,64 @@ export default class Cropper extends Component<Props, State> {
         }
         crop[edge] = edgeValue;
       }
+
       // Prevent MOVE from resizing the cropbox:
       if (crop.left && crop.right) {
         if (crop.left < 0) crop.right += crop.left;
         if (crop.right < 0) crop.left += crop.right;
       } else {
         // enforce minimum 1px cropbox width
-        if (crop.left)
-          crop.left = Math.min(
-            crop.left,
-            size.width - oldCrop.right - MIN_SIZE,
-          );
-        if (crop.right)
+        if (crop.left) {
+          if (down.aspect) crop.left = Math.max(0, crop.left);
+          else
+            crop.left = Math.min(
+              crop.left,
+              size.width - oldCrop.right - MIN_SIZE,
+            );
+        }
+        if (crop.right) {
+          if (down.aspect) crop.right = Math.max(0, crop.right);
           crop.right = Math.min(
             crop.right,
             size.width - oldCrop.left - MIN_SIZE,
           );
+        }
+
+        if (
+          down.aspect &&
+          (crop.left ?? oldCrop.left) + (crop.right ?? oldCrop.right) >
+            size.width
+        )
+          return;
       }
       if (crop.top && crop.bottom) {
         if (crop.top < 0) crop.bottom += crop.top;
         if (crop.bottom < 0) crop.top += crop.bottom;
       } else {
         // enforce minimum 1px cropbox height
-        if (crop.top)
+        if (crop.top) {
+          if (down.aspect) crop.top = Math.max(0, crop.top);
           crop.top = Math.min(
             crop.top,
             size.height - oldCrop.bottom - MIN_SIZE,
           );
-        if (crop.bottom)
+        }
+        if (crop.bottom) {
+          if (down.aspect) crop.bottom = Math.max(0, crop.bottom);
           crop.bottom = Math.min(
             crop.bottom,
             size.height - oldCrop.top - MIN_SIZE,
           );
+        }
+
+        if (
+          down.aspect &&
+          (crop.top ?? oldCrop.top) + (crop.bottom ?? oldCrop.bottom) >
+            size.height
+        )
+          return;
       }
+
       this.setCrop(crop);
       event.stopPropagation();
       event.preventDefault();
