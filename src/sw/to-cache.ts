@@ -57,7 +57,7 @@ import rotateWasm from 'url:codecs/rotate/rotate.wasm';
 import quantWasm from 'url:codecs/imagequant/imagequant.wasm';
 import resizeWasm from 'url:codecs/resize/pkg/squoosh_resize_bg.wasm';
 import hqxWasm from 'url:codecs/hqx/pkg/squooshhqx_bg.wasm';
-import mozjpegWasm from 'url:codecs/mozjpeg_enc/mozjpeg_enc.wasm';
+import mozjpegWasm from 'url:codecs/mozjpeg/enc/mozjpeg_enc.wasm';
 
 // Decoders (some are feature detected)
 import * as avifDec from 'entry-data:codecs/avif/dec/avif_dec';
