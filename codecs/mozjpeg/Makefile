@@ -2,14 +2,22 @@ CODEC_URL := https://github.com/mozilla/mozjpeg/archive/v3.3.1.tar.gz
 CODEC_DIR := node_modules/mozjpeg
 CODEC_OUT_RELATIVE := .libs/libjpeg.a rdswitch.o
 CODEC_OUT := $(addprefix $(CODEC_DIR)/, $(CODEC_OUT_RELATIVE))
-OUT_JS := mozjpeg_enc.js
+ENVIRONMENT = worker
+
+OUT_JS := enc/mozjpeg_enc.js enc/mozjpeg_node_enc.js dec/mozjpeg_node_dec.js
 OUT_WASM := $(OUT_JS:.js=.wasm)
 
 .PHONY: all clean
 
 all: $(OUT_JS)
 
-%.js: %.cpp $(CODEC_OUT)
+# Define dependencies for all variations of build artifacts.
+$(filter enc/%,$(OUT_JS)): enc/mozjpeg_enc.cpp
+$(filter dec/%,$(OUT_JS)): dec/mozjpeg_dec.cpp
+
+enc/mozjpeg_node_enc.js dec/mozjpeg_node_dec.js: ENVIRONMENT = node
+
+%.js: $(CODEC_OUT)
 	$(CXX) \
 		-I $(CODEC_DIR) \
 		${CXXFLAGS} \
@@ -19,7 +27,7 @@ all: $(OUT_JS)
 		-s ALLOW_MEMORY_GROWTH=1 \
 		-s MODULARIZE=1 \
 		-s TEXTDECODER=2 \
-		-s ENVIRONMENT='worker' \
+		-s ENVIRONMENT=$(ENVIRONMENT) \
 		-s EXPORT_ES6=1 \
 		-o $@ \
 		$+
