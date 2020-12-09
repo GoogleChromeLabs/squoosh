@@ -83,3 +83,9 @@ export const CLIIcon = () => (
     />
   </svg>
 );
+
+export const SwapIcon = () => (
+  <svg viewBox="0 0 18 14">
+    <path d="M5.5 3.6v6.8L2.1 7l3.4-3.4M7 0L0 7l7 7V0zm4 0v14l7-7-7-7z" />
+  </svg>
+);

@@ -380,7 +380,7 @@ export default class Compress extends Component<Props, State> {
     this.queueUpdateImage();
   }
 
-  private async onCopyToOtherClick(index: 0 | 1) {
+  private onCopyToOtherClick = async (index: 0 | 1) => {
     const otherIndex = index ? 0 : 1;
     const oldSettings = this.state.sides[otherIndex];
     const newSettings = { ...this.state.sides[index] };
@@ -405,7 +405,7 @@ export default class Compress extends Component<Props, State> {
     this.setState({
       sides: cleanSet(this.state.sides, otherIndex, oldSettings),
     });
-  }
+  };
 
   private onPreprocessorChange = async (
     preprocessorState: PreprocessorState,
@@ -830,6 +830,7 @@ export default class Compress extends Component<Props, State> {
         onEncoderOptionsChange={this.onEncoderOptionsChange}
         onProcessorOptionsChange={this.onProcessorOptionsChange}
         onCopyCliClick={this.onCopyCliClick}
+        onCopyToOtherSideClick={this.onCopyToOtherClick}
       />
     ));
 

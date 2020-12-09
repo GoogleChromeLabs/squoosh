@@ -87,6 +87,7 @@
   grid-auto-columns: max-content;
   grid-auto-flow: column;
   display: grid;
+  gap: 0.8rem;
 }
 
 .title-button {
@@ -104,5 +105,13 @@
 
   svg {
     stroke: var(--header-text-color);
+  }
+}
+
+.copy-over-button {
+  composes: title-button;
+
+  svg {
+    fill: var(--header-text-color);
   }
 }
