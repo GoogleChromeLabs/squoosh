@@ -8,6 +8,15 @@
           "value": "no-cache"
         }
       ]
+    },
+    {
+      "source": "**/*.avif",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "image/avif"
+        }
+      ]
     }
   ],
   "redirects": [{ "source": "/editor", "destination": "/" }]
