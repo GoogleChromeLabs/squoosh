@@ -1,4 +1,4 @@
-import { h, Component } from 'preact';
+import { h, Component, Fragment } from 'preact';
 import type PinchZoom from './custom-els/PinchZoom';
 import type { ScaleToOpts } from './custom-els/PinchZoom';
 import './custom-els/PinchZoom';
@@ -262,59 +262,60 @@ export default class Output extends Component<Props, State> {
     const originalImage = source && source.preprocessed;
 
     return (
-      <div
-        class={`${style.output} ${altBackground ? style.altBackground : ''}`}
-      >
-        <two-up
-          legacy-clip-compat
-          class={style.twoUp}
-          orientation={mobileView ? 'vertical' : 'horizontal'}
-          // Event redirecting. See onRetargetableEvent.
-          onTouchStartCapture={this.onRetargetableEvent}
-          onTouchEndCapture={this.onRetargetableEvent}
-          onTouchMoveCapture={this.onRetargetableEvent}
-          onPointerDownCapture={this.onRetargetableEvent}
-          onMouseDownCapture={this.onRetargetableEvent}
-          onWheelCapture={this.onRetargetableEvent}
+      <Fragment>
+        <div
+          class={`${style.output} ${altBackground ? style.altBackground : ''}`}
         >
-          <pinch-zoom
-            class={style.pinchZoom}
-            onChange={this.onPinchZoomLeftChange}
-            ref={linkRef(this, 'pinchZoomLeft')}
+          <two-up
+            legacy-clip-compat
+            class={style.twoUp}
+            orientation={mobileView ? 'vertical' : 'horizontal'}
+            // Event redirecting. See onRetargetableEvent.
+            onTouchStartCapture={this.onRetargetableEvent}
+            onTouchEndCapture={this.onRetargetableEvent}
+            onTouchMoveCapture={this.onRetargetableEvent}
+            onPointerDownCapture={this.onRetargetableEvent}
+            onMouseDownCapture={this.onRetargetableEvent}
+            onWheelCapture={this.onRetargetableEvent}
           >
-            <canvas
-              class={style.pinchTarget}
-              ref={linkRef(this, 'canvasLeft')}
-              width={leftDraw && leftDraw.width}
-              height={leftDraw && leftDraw.height}
-              style={{
-                width: originalImage ? originalImage.width : '',
-                height: originalImage ? originalImage.height : '',
-                objectFit: leftImgContain ? 'contain' : '',
-              }}
-            />
-          </pinch-zoom>
-          <pinch-zoom
-            class={style.pinchZoom}
-            ref={linkRef(this, 'pinchZoomRight')}
-          >
-            <canvas
-              class={style.pinchTarget}
-              ref={linkRef(this, 'canvasRight')}
-              width={rightDraw && rightDraw.width}
-              height={rightDraw && rightDraw.height}
-              style={{
-                width: originalImage ? originalImage.width : '',
-                height: originalImage ? originalImage.height : '',
-                objectFit: rightImgContain ? 'contain' : '',
-              }}
-            />
-          </pinch-zoom>
-        </two-up>
-
+            <pinch-zoom
+              class={style.pinchZoom}
+              onChange={this.onPinchZoomLeftChange}
+              ref={linkRef(this, 'pinchZoomLeft')}
+            >
+              <canvas
+                class={style.pinchTarget}
+                ref={linkRef(this, 'canvasLeft')}
+                width={leftDraw && leftDraw.width}
+                height={leftDraw && leftDraw.height}
+                style={{
+                  width: originalImage ? originalImage.width : '',
+                  height: originalImage ? originalImage.height : '',
+                  objectFit: leftImgContain ? 'contain' : '',
+                }}
+              />
+            </pinch-zoom>
+            <pinch-zoom
+              class={style.pinchZoom}
+              ref={linkRef(this, 'pinchZoomRight')}
+            >
+              <canvas
+                class={style.pinchTarget}
+                ref={linkRef(this, 'canvasRight')}
+                width={rightDraw && rightDraw.width}
+                height={rightDraw && rightDraw.height}
+                style={{
+                  width: originalImage ? originalImage.width : '',
+                  height: originalImage ? originalImage.height : '',
+                  objectFit: rightImgContain ? 'contain' : '',
+                }}
+              />
+            </pinch-zoom>
+          </two-up>
+        </div>
         <div class={style.controls}>
-          <div class={style.zoomControls}>
-            <button class={style.button} onClick={this.zoomOut}>
+          <div class={style.buttonGroup}>
+            <button class={style.firstButton} onClick={this.zoomOut}>
               <RemoveIcon />
             </button>
             {editingScale ? (
@@ -338,23 +339,15 @@ export default class Output extends Component<Props, State> {
                 <span class={style.zoomValue}>{Math.round(scale * 100)}</span>%
               </span>
             )}
-            <button class={style.button} onClick={this.zoomIn}>
+            <button class={style.lastButton} onClick={this.zoomIn}>
               <AddIcon />
             </button>
           </div>
-          <div class={style.buttonsNoWrap}>
-            <button
-              class={style.button}
-              onClick={this.onRotateClick}
-              title="Rotate image"
-            >
+          <div class={style.buttonGroup}>
+            <button class={style.firstButton} onClick={this.onRotateClick}>
               <RotateIcon />
             </button>
-            <button
-              class={`${style.button} ${altBackground ? style.active : ''}`}
-              onClick={this.toggleBackground}
-              title="Change canvas color"
-            >
+            <button class={style.lastButton} onClick={this.toggleBackground}>
               {altBackground ? (
                 <ToggleBackgroundActiveIcon />
               ) : (
@@ -363,7 +356,7 @@ export default class Output extends Component<Props, State> {
             </button>
           </div>
         </div>
-      </div>
+      </Fragment>
     );
   }
 }
