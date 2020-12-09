@@ -37,17 +37,10 @@ async function init() {
       );
     }
     const wp2Encoder = await import('codecs/wp2/enc/wp2_enc_mt');
-    return initEmscriptenModule(
-      wp2Encoder.default,
-      wasmUrlWithMT,
-      workerUrl,
-    );
+    return initEmscriptenModule(wp2Encoder.default, wasmUrlWithMT, workerUrl);
   }
   const wp2Encoder = await import('codecs/wp2/enc/wp2_enc');
-  return initEmscriptenModule(
-    wp2Encoder.default,
-    wasmUrl,
-  );
+  return initEmscriptenModule(wp2Encoder.default, wasmUrl);
 }
 
 export default async function encode(

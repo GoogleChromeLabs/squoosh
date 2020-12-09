@@ -1,6 +1,6 @@
 #include <emscripten/bind.h>
-#include <emscripten/val.h>
 #include <emscripten/threading.h>
+#include <emscripten/val.h>
 #include <cstdio>
 #include "src/wp2/encode.h"
 

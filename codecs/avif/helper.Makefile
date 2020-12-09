@@ -8,6 +8,7 @@
 #   $(OUT_CPP)
 #   $(LIBAOM_FLAGS)
 #   $(LIBAVIF_FLAGS)
+#   $(ENVIRONMENT)
 
 OUT_BUILD_DIR := $(BUILD_DIR)/$(basename $(OUT_JS))
 
@@ -35,7 +36,7 @@ $(OUT_JS): $(OUT_CPP) $(LIBAOM_OUT) $(CODEC_OUT)
 		-s ALLOW_MEMORY_GROWTH=1 \
 		-s MODULARIZE=1 \
 		-s TEXTDECODER=2 \
-		-s ENVIRONMENT='worker' \
+		-s ENVIRONMENT=$(ENVIRONMENT) \
 		-s EXPORT_ES6=1 \
 		-s EXPORT_NAME="$(basename $(@F))" \
 		-o $@ \

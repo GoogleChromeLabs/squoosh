@@ -3,8 +3,9 @@ CODEC_DIR = node_modules/libwebp
 CODEC_BUILD_ROOT := $(CODEC_DIR)/build
 CODEC_BASELINE_BUILD_DIR := $(CODEC_BUILD_ROOT)/baseline
 CODEC_SIMD_BUILD_DIR := $(CODEC_BUILD_ROOT)/simd
+ENVIRONMENT = worker
 
-OUT_JS = enc/webp_enc.js enc/webp_enc_simd.js dec/webp_dec.js
+OUT_JS = enc/webp_enc.js enc/webp_enc_simd.js dec/webp_dec.js enc/webp_node_enc.js dec/webp_node_dec.js
 OUT_WASM := $(OUT_JS:.js=.wasm)
 
 .PHONY: all clean
@@ -14,6 +15,8 @@ all: $(OUT_JS)
 # Define dependencies for all variations of build artifacts.
 $(filter enc/%,$(OUT_JS)): enc/webp_enc.o
 $(filter dec/%,$(OUT_JS)): dec/webp_dec.o
+enc/webp_node_enc.js dec/webp_node_dec.js: ENVIRONMENT = node
+enc/webp_node_enc.js dec/webp_node_dec.js: $(CODEC_BASELINE_BUILD_DIR)/libwebp.a
 enc/webp_enc.js dec/webp_dec.js: $(CODEC_BASELINE_BUILD_DIR)/libwebp.a
 enc/webp_enc_simd.js: $(CODEC_SIMD_BUILD_DIR)/libwebp.a
 
@@ -25,7 +28,7 @@ $(OUT_JS):
 		-s ALLOW_MEMORY_GROWTH=1 \
 		-s MODULARIZE=1 \
 		-s TEXTDECODER=2 \
-		-s ENVIRONMENT='worker' \
+		-s ENVIRONMENT=$(ENVIRONMENT) \
 		-s EXPORT_ES6=1 \
 		-o $@ \
 		$+
