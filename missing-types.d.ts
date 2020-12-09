@@ -12,6 +12,11 @@
  */
 /// <reference path="./emscripten-types.d.ts" />
 
+declare module 'entry-data:*' {
+  export const main: string;
+  export const deps: string[];
+}
+
 declare module 'url:*' {
   const value: string;
   export default value;
