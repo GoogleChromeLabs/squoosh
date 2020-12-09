@@ -24,11 +24,11 @@ const branch = process.env.BRANCH;
 const branchOriginTrialIds = new Map([
   [
     'dev',
-    'Ak9YMaDZyWUUZFbVJng8FM2LWWNeBcWaHTtHzzaTAq044kMlQH5/hsMb/90Ii2I7m/lPx8EpgOIUMWkWeoaKfgIAAABUeyJvcmlnaW4iOiJodHRwczovL3NxdW9vc2guYXBwOjQ0MyIsImZlYXR1cmUiOiJXZWJBc3NlbWJseVNpbWQiLCJleHBpcnkiOjE2MTExNTkwNjZ9',
+    'As3b1fXjclhF8ZgvUkIqOo3r1/Jqvx0mNuT6Ilgb7SdpeJnV8lUdYr7i+OKgCmcVTWkqjkF23LJ+xZ111VYMEQIAAABheyJvcmlnaW4iOiJodHRwczovL2Rldi0tc3F1b29zaC5uZXRsaWZ5LmFwcDo0NDMiLCJmZWF0dXJlIjoiV2ViQXNzZW1ibHlTaW1kIiwiZXhwaXJ5IjoxNjA5NDI4Nzk4fQ==',
   ],
   [
     'live',
-    'AgoKiDqjr0GVPtrwV/vuVlrrSvbDa5Yb99s+q66ly816DrrAQ8Cdas33NgDtmhxM4BtDP9PEdyuxHPyTQHD5ZAcAAABUeyJvcmlnaW4iOiJodHRwczovL3NxdW9vc2guYXBwOjQ0MyIsImZlYXR1cmUiOiJXZWJBc3NlbWJseVNpbWQiLCJleHBpcnkiOjE2MDg2NzI5OTR9',
+    'Ak9YMaDZyWUUZFbVJng8FM2LWWNeBcWaHTtHzzaTAq044kMlQH5/hsMb/90Ii2I7m/lPx8EpgOIUMWkWeoaKfgIAAABUeyJvcmlnaW4iOiJodHRwczovL3NxdW9vc2guYXBwOjQ0MyIsImZlYXR1cmUiOiJXZWJBc3NlbWJseVNpbWQiLCJleHBpcnkiOjE2MTExNTkwNjZ9',
   ],
 ]);
 
