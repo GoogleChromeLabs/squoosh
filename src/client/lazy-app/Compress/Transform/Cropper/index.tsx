@@ -83,10 +83,6 @@ export default class Cropper extends Component<Props, State> {
     ) {
       return;
     }
-    // crop.left = Math.max(0, crop.left) | 0;
-    // crop.top = Math.max(0, crop.top) | 0;
-    // crop.right = Math.max(0, crop.right) | 0;
-    // crop.bottom = Math.max(0, crop.bottom) | 0;
     this.setState({ crop });
     if (this.props.onChange) {
       this.props.onChange(crop);
@@ -261,10 +257,14 @@ export default class Cropper extends Component<Props, State> {
     const y = crop.top;
     const width = size.width - crop.left - crop.right;
     const height = size.height - crop.top - crop.bottom;
-    // const x = crop.left.toFixed(2);
-    // const y = crop.top.toFixed(2);
-    // const width = (size.width - crop.left - crop.right).toFixed(2);
-    // const height = (size.height - crop.top - crop.bottom).toFixed(2);
+
+    const s = (x: number) => x / (scale || 1);
+
+    const clip = `polygon(0 0, 0 100%, 100% 100%, 100% 0, 0 0, ${s(x)}px ${s(
+      y,
+    )}px, ${s(x + width)}px ${s(y)}px, ${s(x + width)}px ${s(
+      y + height,
+    )}px, ${s(x)}px ${s(y + height)}px, ${s(x)}px ${s(y)}px)`;
 
     return (
       <svg
@@ -280,45 +280,11 @@ export default class Cropper extends Component<Props, State> {
         onPointerMove={this.onPointerMove}
         onPointerUp={this.onPointerUp}
       >
-        <defs>
-          {/*
-          <clipPath id="bg">
-            <rect x={x} y={y} width={width} height={height} />
-          </clipPath>
-          */}
-          {/*
-          <filter id="shadow" x="-2" y="-2" width="4" height="4">
-            <feDropShadow
-              dx="0"
-              dy="0.5"
-              stdDeviation="1.5"
-              flood-color="#000"
-            />
-          </filter>
-          <filter id="shadow2" x="-2" y="-2" width="4" height="4">
-            <feDropShadow
-              dx="0"
-              dy="0.25"
-              stdDeviation="0.5"
-              flood-color="rgba(0,0,0,0.5)"
-            />
-          </filter>
-          */}
-        </defs>
         <rect
           class={style.background}
           width={size.width}
           height={size.height}
-          // mask="url(#bg)"
-          // clip-path="url(#bg)"
-          // style={{
-          //   clipPath: `polygon(0 0, 0 100%, 100% 100%, 100% 0, 0 0, ${x}px ${y}px, ${x+width}px ${y}px, ${x+width}px ${y+height}px, ${x}px ${y+height}px, ${x}px ${y}px)`
-          // }}
-          clip-path={`polygon(0 0, 0 100%, 100% 100%, 100% 0, 0 0, ${x}px ${y}px, ${
-            x + width
-          }px ${y}px, ${x + width}px ${y + height}px, ${x}px ${
-            y + height
-          }px, ${x}px ${y}px)`}
+          clip-path={clip}
         />
         <svg x={x} y={y} width={width} height={height}>
           <Freezer>
@@ -328,7 +294,6 @@ export default class Cropper extends Component<Props, State> {
               data-edge="left,right,top,bottom"
               width="100%"
               height="100%"
-              // filter="url(#shadow2)"
             />
 
             <rect class={style.edge} data-edge="top" width="100%" />
@@ -336,71 +301,17 @@ export default class Cropper extends Component<Props, State> {
             <rect class={style.edge} data-edge="left" height="100%" />
             <rect class={style.edge} data-edge="right" height="100%" x="100%" />
 
-            <circle
-              class={style.corner}
-              data-edge="left,top"
-              // filter="url(#shadow)"
-            />
-            <circle
-              class={style.corner}
-              data-edge="right,top"
-              cx="100%"
-              // filter="url(#shadow)"
-            />
+            <circle class={style.corner} data-edge="left,top" />
+            <circle class={style.corner} data-edge="right,top" cx="100%" />
             <circle
               class={style.corner}
               data-edge="right,bottom"
               cx="100%"
               cy="100%"
-              // filter="url(#shadow)"
             />
-            <circle
-              class={style.corner}
-              data-edge="left,bottom"
-              cy="100%"
-              // filter="url(#shadow)"
-            />
+            <circle class={style.corner} data-edge="left,bottom" cy="100%" />
           </Freezer>
         </svg>
-        {/*
-        <rect
-          id="box"
-          class={style.cropbox}
-          data-edge="left,right,top,bottom"
-          x={x}
-          y={y}
-          width={width}
-          height={height}
-        />
-        <rect
-          class={`${style.edge} ${style.top}`}
-          data-edge="top"
-          x={x}
-          y={y}
-          width={width}
-        />
-        <rect
-          class={`${style.edge} ${style.bottom}`}
-          data-edge="bottom"
-          x={x}
-          y={size.height - crop.bottom}
-          width={width}
-        />
-        <rect
-          class={`${style.edge} ${style.left}`}
-          data-edge="left"
-          x={x}
-          y={y}
-          height={height}
-        />
-        <rect
-          class={`${style.edge} ${style.right}`}
-          data-edge="right"
-          x={size.width - crop.right}
-          y={y}
-          height={height}
-        />
-        */}
       </svg>
     );
   }

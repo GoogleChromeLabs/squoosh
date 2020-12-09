@@ -32,6 +32,7 @@
   &[data-direction*='left'] {
     right: 0;
     left: auto;
+    align-items: flex-end;
     &[anchor*='right'] {
       right: 100%;
     }

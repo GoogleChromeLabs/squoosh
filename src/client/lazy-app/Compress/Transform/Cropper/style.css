@@ -35,8 +35,8 @@
 .cropbox {
   fill: none;
   stroke: white;
-  stroke-width: calc(1.5 / var(--scale, 1));
-  stroke-dasharray: calc(5 / var(--scale, 1)), calc(5 / var(--scale, 1));
+  stroke-width: calc(1.5px / var(--scale, 1));
+  stroke-dasharray: calc(5px / var(--scale, 1)), calc(5px / var(--scale, 1));
   stroke-dashoffset: 50%;
   /* Accept pointer input even though this is unpainted transparent */
   pointer-events: all;
@@ -85,8 +85,8 @@
 }
 
 .corner {
-  r: calc(4 / var(--scale, 1));
-  stroke-width: calc(4 / var(--scale, 1));
+  r: calc(4px / var(--scale, 1));
+  stroke-width: calc(4px / var(--scale, 1));
   stroke: rgba(225, 225, 225, 0.01);
   fill: white;
   shape-rendering: geometricprecision;

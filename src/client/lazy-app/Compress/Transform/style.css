@@ -73,7 +73,7 @@
 
 /* @TODO use grid */
 .cancel {
-  fill: rgba(0, 0, 0, 0.4);
+  fill: rgba(0, 0, 0, 0.7);
 
   & > svg:not(.icon) {
     display: block;
@@ -93,7 +93,7 @@
     display: inline-block;
     padding: 4px 10px;
     border-radius: 1rem;
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.7);
     font-size: 80%;
     color: #fff;
   }
@@ -126,6 +126,11 @@
   animation: slideInFromRight 500ms ease-out forwards 1;
   --horizontal-padding: 15px;
   --main-theme-color: var(--blue);
+
+  /* Hide on mobile (for now) */
+  @media (max-width: 599px) {
+    display: none;
+  }
 }
 @keyframes slideInFromRight {
   0% {

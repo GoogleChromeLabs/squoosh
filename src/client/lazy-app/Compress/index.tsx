@@ -11,6 +11,7 @@ import {
   canDecodeImageType,
   abortable,
   assertSignal,
+  shallowEqual,
 } from '../util';
 import {
   PreprocessorState,
@@ -447,25 +448,38 @@ export default class Compress extends Component<Props, State> {
     const newRotate = preprocessorState.rotate.rotate;
     const orientationChanged = oldRotate % 180 !== newRotate % 180;
 
+    const { crop } = preprocessorState;
+    const cropChanged = !shallowEqual(crop, this.state.preprocessorState.crop);
+
     this.setState((state) => ({
       loading: true,
       preprocessorState,
       // Flip resize values if orientation has changed
-      sides: !orientationChanged
-        ? state.sides
-        : (state.sides.map((side) => {
-            const currentResizeSettings =
-              side.latestSettings.processorState.resize;
-            const resizeSettings: Partial<ProcessorState['resize']> = {
-              width: currentResizeSettings.height,
-              height: currentResizeSettings.width,
-            };
-            return cleanMerge(
-              side,
-              'latestSettings.processorState.resize',
-              resizeSettings,
-            );
-          }) as [Side, Side]),
+      sides:
+        !orientationChanged && !cropChanged
+          ? state.sides
+          : (state.sides.map((side) => {
+              const currentResizeSettings =
+                side.latestSettings.processorState.resize;
+              let resizeSettings: Partial<ProcessorState['resize']>;
+              if (cropChanged) {
+                const img = state.source?.decoded;
+                resizeSettings = {
+                  width: img ? img.width - crop.left - crop.right : undefined,
+                  height: img ? img.height - crop.top - crop.bottom : undefined,
+                };
+              } else {
+                resizeSettings = {
+                  width: currentResizeSettings.height,
+                  height: currentResizeSettings.width,
+                };
+              }
+              return cleanMerge(
+                side,
+                'latestSettings.processorState.resize',
+                resizeSettings,
+              );
+            }) as [Side, Side]),
     }));
   };
 
