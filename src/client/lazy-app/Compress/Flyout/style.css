@@ -1,0 +1,70 @@
+.wrap {
+  display: inline;
+  position: relative;
+}
+
+.wrap > aside:last-of-type {
+  display: inline-block;
+  position: absolute;
+  left: 0;
+  top: 100%;
+  z-index: 100;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: column;
+  align-items: flex-start;
+  overflow: visible;
+  outline: none;
+  will-change: transform, opacity;
+  animation: menuOpen 350ms ease forwards 1;
+  --flyout-offset-y: -20px;
+
+  &[hidden] {
+    display: none;
+  }
+
+  /* align to the right edge */
+  &[data-anchor*='right'] {
+    left: 100%;
+  }
+
+  /* open to the left */
+  &[data-direction*='left'] {
+    right: 0;
+    left: auto;
+    &[anchor*='right'] {
+      right: 100%;
+    }
+  }
+
+  /* align to the top edge */
+  &[data-anchor*='top'] {
+    top: 0;
+  }
+
+  /* open to the left */
+  &[data-direction*='up'] {
+    bottom: 100%;
+    top: auto;
+    flex-direction: column-reverse;
+    --flyout-offset-y: 20px;
+    &[data-anchor*='bottom'] {
+      bottom: 0;
+    }
+  }
+
+  /*
+  @media (min-width: 860px) {
+    flex-direction: column-reverse;
+    top: auto;
+    bottom: 100%;
+  }
+  */
+}
+
+@keyframes menuOpen {
+  0% {
+    transform: translateY(var(--flyout-offset-y, 0));
+    opacity: 0;
+  }
+}

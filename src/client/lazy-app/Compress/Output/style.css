@@ -1,20 +1,8 @@
 .output {
   display: contents;
 
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: #000;
-    opacity: 0.8;
-    transition: opacity 500ms ease;
-  }
-
-  &.alt-background::before {
-    opacity: 0;
+  &[hidden] {
+    display: none;
   }
 }
 
@@ -43,15 +31,20 @@
 .controls {
   display: flex;
   justify-content: center;
-  overflow: hidden;
   flex-wrap: wrap;
-  contain: content;
   grid-area: header;
   align-self: center;
   padding: 9px 66px;
+  /* Had to disable containment because of the overflow menu. */
+  /*
+  contain: content;
+  overflow: hidden;
+  */
+  transition: transform 500ms ease;
 
   /* Allow clicks to fall through to the pinch zoom area */
   pointer-events: none;
+
   & > * {
     pointer-events: auto;
   }
@@ -62,17 +55,29 @@
     grid-area: viewportOpts;
     align-self: end;
   }
+
+  &[hidden] {
+    visibility: visible;
+    transform: translateY(-200%);
+
+    @media (min-width: 860px) {
+      transform: translateY(200%);
+    }
+  }
 }
 
 .zoom-controls {
   display: flex;
+  position: relative;
+  z-index: 100;
 
-  & :not(:first-child) {
+  & > :not(:first-child) {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
     margin-left: 0;
   }
-  & :not(:last-child) {
+
+  & > :not(:nth-last-child(2)) {
     margin-right: 0;
     border-right-width: 0;
     border-top-right-radius: 0;
@@ -86,62 +91,69 @@
   align-items: center;
   box-sizing: border-box;
   margin: 4px;
-  background-color: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  border-radius: 5px;
-  line-height: 1;
+  background-color: rgba(29, 29, 29, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.67);
+  border-radius: 6px;
+  line-height: 1.1;
   white-space: nowrap;
-  height: 36px;
+  height: 39px;
   padding: 0 8px;
+  font-size: 1.2rem;
   cursor: pointer;
 
-  @media (min-width: 600px) {
-    height: 48px;
-    padding: 0 16px;
-  }
-
   &:focus {
-    box-shadow: 0 0 0 2px var(--button-fg);
+    /* box-shadow: 0 0 0 2px var(--hot-pink); */
+    box-shadow: 0 0 0 2px #fff;
     outline: none;
     z-index: 1;
   }
 }
 
 .button {
-  color: var(--button-fg);
+  color: #fff;
 
   &:hover {
-    background-color: #eee;
+    background: rgba(50, 50, 50, 0.92);
   }
 
   &.active {
-    background: #34b9eb;
+    background: rgba(72, 72, 72, 0.92);
     color: #fff;
-
-    &:hover {
-      background: #32a3ce;
-    }
   }
 }
 
 .zoom {
-  color: #625e80;
   cursor: text;
-  width: 6em;
+  width: 7rem;
   font: inherit;
   text-align: center;
   justify-content: center;
 
   &:focus {
-    box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.2), 0 0 0 2px var(--button-fg);
+    box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.2), 0 0 0 2px #fff;
   }
+}
+span.zoom {
+  color: #939393;
+  font-size: 0.8rem;
+  line-height: 1.2;
+  font-weight: 100;
+}
+input.zoom {
+  font-size: 1.2rem;
+  letter-spacing: 0.05rem;
+  font-weight: 700;
+  text-indent: 3px;
+  color: #fff;
 }
 
 .zoom-value {
-  position: relative;
-  top: 1px;
   margin: 0 3px 0 0;
-  color: #888;
+  padding: 0 2px;
+  font-size: 1.2rem;
+  letter-spacing: 0.05rem;
+  font-weight: 700;
+  color: #fff;
   border-bottom: 1px dashed #999;
 }
 
@@ -151,5 +163,66 @@
 
   & > * {
     pointer-events: auto;
+  }
+}
+
+/** Three-dot menu */
+.moreButton {
+  padding: 0 4px;
+
+  & > svg {
+    transform-origin: center;
+    transition: transform 200ms ease;
+  }
+}
+
+[data-flyout-open] {
+  .moreButton {
+    background: rgba(82, 82, 82, 0.92);
+
+    & > svg {
+      transform: rotate(180deg);
+    }
+  }
+
+  &:before {
+    content: '';
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(50, 50, 50, 0.4);
+    backdrop-filter: blur(2px) contrast(70%);
+    animation: menuShimFadeIn 350ms ease forwards 1;
+    will-change: opacity;
+    z-index: -1;
+  }
+}
+
+@keyframes menuShimFadeIn {
+  0% {
+    opacity: 0;
+  }
+}
+
+.menu {
+  button {
+    margin: 8px 0;
+    border-radius: 2rem;
+    padding: 0 16px;
+
+    & > svg {
+      position: relative;
+      left: -6px;
+    }
+  }
+
+  h5 {
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    color: #fff;
+    margin: 8px 4px;
+    padding: 10px 0 0;
   }
 }
