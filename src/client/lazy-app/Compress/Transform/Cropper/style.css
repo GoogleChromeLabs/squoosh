@@ -1,0 +1,119 @@
+.cropper {
+  position: absolute;
+  left: calc(-10px / var(--scale, 1));
+  top: calc(-10px / var(--scale, 1));
+  right: calc(-10px / var(--scale, 1));
+  bottom: calc(-10px / var(--scale, 1));
+  shape-rendering: crispedges;
+  overflow: hidden;
+  contain: strict;
+  transform-origin: 0 0;
+  transform: scale(calc(1 / var(--scale))) !important;
+  zoom: var(--scale, 1);
+
+  &.pan {
+    cursor: grabbing;
+    & * {
+      pointer-events: none;
+    }
+  }
+
+  & > svg {
+    margin: -10px;
+    padding: 10px;
+    overflow: visible;
+    contain: strict;
+    /* overflow: visible; */
+  }
+}
+
+.background {
+  pointer-events: none;
+  fill: rgba(0, 0, 0, 0.25);
+}
+
+.cropbox {
+  fill: none;
+  stroke: white;
+  stroke-width: calc(1.5 / var(--scale, 1));
+  stroke-dasharray: calc(5 / var(--scale, 1)), calc(5 / var(--scale, 1));
+  stroke-dashoffset: 50%;
+  /* Accept pointer input even though this is unpainted transparent */
+  pointer-events: all;
+  cursor: move;
+
+  /* animation: ants 1s linear forwards infinite; */
+}
+/*
+@keyframes ants {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -12; }
+}
+*/
+
+.edge {
+  fill: #aaa;
+  opacity: 0;
+  transition: opacity 250ms ease;
+  z-index: 2;
+  pointer-events: all;
+  --edge-width: calc(10px / var(--scale, 1));
+
+  @media (max-width: 779px) {
+    --edge-width: calc(20px / var(--scale, 1));
+    fill: rgba(0, 0, 0, 0.01);
+  }
+
+  &[data-edge='left'],
+  &[data-edge='right'] {
+    cursor: ew-resize;
+    transform: translate(calc(var(--edge-width, 10px) / -2), 0);
+    width: var(--edge-width, 10px);
+  }
+  &[data-edge='top'],
+  &[data-edge='bottom'] {
+    cursor: ns-resize;
+    transform: translate(0, calc(var(--edge-width, 10px) / -2));
+    height: var(--edge-width, 10px);
+  }
+
+  &:hover,
+  &:active {
+    opacity: 0.1;
+    transition: none;
+  }
+}
+
+.corner {
+  r: calc(4 / var(--scale, 1));
+  stroke-width: calc(4 / var(--scale, 1));
+  stroke: rgba(225, 225, 225, 0.01);
+  fill: white;
+  shape-rendering: geometricprecision;
+  pointer-events: all;
+  transition: fill 250ms ease, stroke 250ms ease;
+
+  &:hover,
+  &:active {
+    stroke: rgba(225, 225, 225, 0.5);
+    transition: none;
+  }
+
+  @media (max-width: 779px) {
+    r: calc(10 / var(--scale, 1));
+    stroke-width: calc(2 / var(--scale, 1));
+  }
+
+  &[data-edge='left,top'] {
+    cursor: nw-resize;
+  }
+  &[data-edge='right,top'] {
+    cursor: ne-resize;
+  }
+  &[data-edge='right,bottom'] {
+    cursor: se-resize;
+  }
+  &[data-edge='left,bottom'] {
+    cursor: sw-resize;
+  }
+}

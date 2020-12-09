@@ -34,6 +34,24 @@
   &.alt-background::before {
     opacity: 0;
   }
+
+  /* transformation is modal and we sweep away the comparison UI */
+  &.transforming {
+    & > .options {
+      transform: translateX(-100%);
+    }
+    & > .options + .options {
+      transform: translateX(100%);
+    }
+
+    & > .back {
+      display: none;
+    }
+
+    & > :first-child {
+      display: none;
+    }
+  }
 }
 
 .options {
@@ -49,6 +67,7 @@
   overflow: hidden;
   align-self: end;
   grid-area: opts;
+  transition: transform 500ms ease;
 
   @media (min-width: 600px) {
     width: 300px;
