@@ -178,12 +178,6 @@ export default class Output extends Component<Props, State> {
     // this.hideMenu();
   };
 
-  private zoomTo2x = () => {
-    if (!this.pinchZoomLeft) throw Error('Missing pinch-zoom element');
-    this.pinchZoomLeft.scaleTo(0.5, scaleToOpts);
-    this.recenter();
-  };
-
   private recenter = () => {
     const img = this.props.source?.preprocessed;
     if (!img || !this.pinchZoomLeft) return;
@@ -342,10 +336,7 @@ export default class Output extends Component<Props, State> {
           </two-up>
         </div>
 
-        <div
-          class={style.controls}
-          hidden={hidden}
-        >
+        <div class={style.controls} hidden={hidden}>
           <div class={style.zoomControls}>
             <button class={style.button} onClick={this.zoomOut}>
               <RemoveIcon />
@@ -386,22 +377,20 @@ export default class Output extends Component<Props, State> {
                 </button>
               }
             >
-              <button class={style.button} onClick={onShowPreprocessorTransforms}>
+              <button
+                class={style.button}
+                onClick={onShowPreprocessorTransforms}
+              >
                 <RotateIcon /> Rotate & Transform
               </button>
               <button class={style.button} onClick={this.fitToViewport}>
                 Fit to viewport
               </button>
-              <button class={style.button} onClick={this.zoomTo2x}>
-                Simulate retina
-              </button>
               <button class={style.button} onClick={this.recenter}>
                 Re-center
               </button>
               <button class={style.button} onClick={onToggleBackground}>
-                <ToggleBackgroundIcon />
-                {' '}
-                Change canvas color
+                <ToggleBackgroundIcon /> Change canvas color
               </button>
             </Flyout>
           </div>
