@@ -130,12 +130,12 @@ async function preprocessImage(
   let processedData = data;
   const { rotate, flip, crop } = preprocessorState;
 
-  if (rotate.rotate !== 0) {
-    processedData = await workerBridge.rotate(signal, processedData, rotate);
-  }
-
   if (flip && (flip.horizontal || flip.vertical)) {
     processedData = await workerBridge.flip(signal, processedData, flip);
+  }
+
+  if (rotate.rotate !== 0) {
+    processedData = await workerBridge.rotate(signal, processedData, rotate);
   }
 
   if (crop && (crop.left || crop.top || crop.right || crop.bottom)) {
@@ -385,7 +385,6 @@ export default class Compress extends Component<Props, State> {
   private onTransformUpdated = ({
     preprocessorState,
   }: { preprocessorState?: PreprocessorState } = {}) => {
-    console.log('onTransformUpdated', preprocessorState);
     if (preprocessorState) {
       this.onPreprocessorChange(preprocessorState);
     }
