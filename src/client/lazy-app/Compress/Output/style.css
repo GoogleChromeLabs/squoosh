@@ -64,20 +64,11 @@
   }
 }
 
-.zoom-controls {
+.button-group {
   display: flex;
-
-  & :not(:first-child) {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-    margin-left: 0;
-  }
-  & :not(:last-child) {
-    margin-right: 0;
-    border-right-width: 0;
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-  }
+  position: relative;
+  z-index: 100;
+  margin: 0 3px;
 }
 
 .button,
@@ -85,63 +76,80 @@
   display: flex;
   align-items: center;
   box-sizing: border-box;
-  margin: 4px;
-  background-color: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  border-radius: 5px;
-  line-height: 1;
+  background-color: rgba(29, 29, 29, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.67);
+  border-width: 1px 0 1px 1px;
+  line-height: 1.1;
   white-space: nowrap;
-  height: 36px;
+  height: 39px;
   padding: 0 8px;
+  font-size: 1.2rem;
   cursor: pointer;
 
-  @media (min-width: 600px) {
-    height: 48px;
-    padding: 0 16px;
-  }
-
   &:focus {
-    box-shadow: 0 0 0 2px var(--button-fg);
+    /* box-shadow: 0 0 0 2px var(--hot-pink); */
+    box-shadow: 0 0 0 2px #fff;
     outline: none;
     z-index: 1;
   }
 }
 
 .button {
-  color: var(--button-fg);
+  color: #fff;
 
   &:hover {
-    background-color: #eee;
+    background: rgba(50, 50, 50, 0.92);
   }
 
   &.active {
-    background: #34b9eb;
+    background: rgba(72, 72, 72, 0.92);
     color: #fff;
-
-    &:hover {
-      background: #32a3ce;
-    }
   }
 }
 
+.first-button {
+  composes: button;
+  border-radius: 6px 0 0 6px;
+}
+
+.last-button {
+  composes: button;
+  border-radius: 0 6px 6px 0;
+  border-left-width: 1px;
+}
+
 .zoom {
-  color: #625e80;
   cursor: text;
-  width: 6em;
+  width: 7rem;
   font: inherit;
   text-align: center;
   justify-content: center;
 
   &:focus {
-    box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.2), 0 0 0 2px var(--button-fg);
+    box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.2), 0 0 0 2px #fff;
   }
+}
+span.zoom {
+  color: #939393;
+  font-size: 0.8rem;
+  line-height: 1.2;
+  font-weight: 100;
+}
+input.zoom {
+  font-size: 1.2rem;
+  letter-spacing: 0.05rem;
+  font-weight: 700;
+  text-indent: 3px;
+  color: #fff;
 }
 
 .zoom-value {
-  position: relative;
-  top: 1px;
   margin: 0 3px 0 0;
-  color: #888;
+  padding: 0 2px;
+  font-size: 1.2rem;
+  letter-spacing: 0.05rem;
+  font-weight: 700;
+  color: #fff;
   border-bottom: 1px dashed #999;
 }
 

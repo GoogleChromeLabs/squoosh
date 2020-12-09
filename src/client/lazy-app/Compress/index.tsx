@@ -32,6 +32,7 @@ import WorkerBridge from '../worker-bridge';
 import { resize } from 'features/processors/resize/client';
 import type SnackBarElement from 'shared/custom-els/snack-bar';
 import { Arrow, ExpandIcon } from '../icons';
+import { generateCliInvocation } from '../util/cli';
 
 export type OutputType = EncoderType | 'identity';
 
@@ -438,6 +439,29 @@ export default class Compress extends Component<Props, State> {
     }));
   };
 
+  private onCopyCliClick = async (index: 0 | 1) => {
+    try {
+      const cliInvocation = generateCliInvocation(
+        this.state.sides[index].latestSettings.encoderState!,
+        this.state.sides[index].latestSettings.processorState,
+      );
+      await navigator.clipboard.writeText(cliInvocation);
+      const result = await this.props.showSnack(
+        'CLI command copied to clipboard',
+        {
+          timeout: 8000,
+          actions: ['usage', 'dismiss'],
+        },
+      );
+
+      if (result === 'usage') {
+        open('https://github.com/GoogleChromeLabs/squoosh/tree/dev/cli');
+      }
+    } catch (e) {
+      this.props.showSnack(e);
+    }
+  };
+
   /**
    * Debounce the heavy lifting of updateImage.
    * Otherwise, the thrashing causes jank, and sometimes crashes iOS Safari.
@@ -805,6 +829,7 @@ export default class Compress extends Component<Props, State> {
         onEncoderTypeChange={this.onEncoderTypeChange}
         onEncoderOptionsChange={this.onEncoderOptionsChange}
         onProcessorOptionsChange={this.onProcessorOptionsChange}
+        onCopyCliClick={this.onCopyCliClick}
       />
     ));
 

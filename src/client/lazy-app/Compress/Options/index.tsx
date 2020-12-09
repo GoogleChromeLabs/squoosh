@@ -13,11 +13,11 @@ import {
   encoderMap,
 } from '../../feature-meta';
 import Expander from './Expander';
-import Checkbox from './Checkbox';
 import Toggle from './Toggle';
 import Select from './Select';
 import { Options as QuantOptionsComponent } from 'features/processors/quantize/client';
 import { Options as ResizeOptionsComponent } from 'features/processors/resize/client';
+import { CLIIcon } from 'client/lazy-app/icons';
 
 interface Props {
   index: 0 | 1;
@@ -28,6 +28,7 @@ interface Props {
   onEncoderTypeChange(index: 0 | 1, newType: OutputType): void;
   onEncoderOptionsChange(index: 0 | 1, newOptions: EncoderOptions): void;
   onProcessorOptionsChange(index: 0 | 1, newOptions: ProcessorState): void;
+  onCopyCliClick(index: 0 | 1): void;
 }
 
 interface State {
@@ -106,6 +107,10 @@ export default class Options extends Component<Props, State> {
     this.props.onEncoderOptionsChange(this.props.index, newOptions);
   };
 
+  private onCopyCliClick = () => {
+    this.props.onCopyCliClick(this.props.index);
+  };
+
   render(
     { source, encoderState, processorState }: Props,
     { supportedEncoderMap }: State,
@@ -125,7 +130,18 @@ export default class Options extends Component<Props, State> {
         <Expander>
           {!encoderState ? null : (
             <div>
-              <h3 class={style.optionsTitle}>Edit</h3>
+              <h3 class={style.optionsTitle}>
+                <div class={style.titleAndButtons}>
+                  Edit
+                  <button
+                    class={style.cliButton}
+                    title="Copy npx command"
+                    onClick={this.onCopyCliClick}
+                  >
+                    <CLIIcon />
+                  </button>
+                </div>
+              </h3>
               <label class={style.sectionEnabler}>
                 Resize
                 <Toggle
