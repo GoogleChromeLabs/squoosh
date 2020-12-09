@@ -195,7 +195,9 @@ async function checkInputFilesValid(files) {
           `Warning: Input file does not exist: ${resolvePath(file)}`,
         );
         continue;
-      } else throw err;
+      } else {
+        throw err;
+      }
     }
 
     validFiles.push(file);
