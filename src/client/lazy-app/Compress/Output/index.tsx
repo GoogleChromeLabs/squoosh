@@ -370,7 +370,7 @@ export default class Output extends Component<Props, State> {
               class={style.menu}
               showing={hidden ? false : undefined}
               anchor="right"
-              direction={mobileView ? 'down' : 'up'}
+              direction={mobileView ? ['down', 'left'] : 'up'}
               toggle={
                 <button class={`${style.button} ${style.moreButton}`}>
                   <MoreIcon />

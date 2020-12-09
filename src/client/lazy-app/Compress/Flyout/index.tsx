@@ -1,13 +1,22 @@
-import { h, cloneElement, Component, VNode, createRef, ComponentChildren, ComponentProps } from "preact";
-import { ClickOutsideDetector } from "../ClickOutsideDetector";
+import {
+  h,
+  cloneElement,
+  Component,
+  VNode,
+  createRef,
+  ComponentChildren,
+  ComponentProps,
+} from 'preact';
+import { ClickOutsideDetector } from '../ClickOutsideDetector';
 import * as style from './style.css';
 import 'add-css:./style.css';
 
 type Anchor = 'left' | 'right' | 'top' | 'bottom';
+type Direction = 'left' | 'right' | 'up' | 'down';
 
 interface Props extends ComponentProps<'aside'> {
   showing?: boolean;
-  direction?: 'up' | 'down';
+  direction?: Direction | Direction[];
   anchor?: Anchor | Anchor[];
   toggle?: VNode;
   children?: ComponentChildren;
@@ -19,7 +28,7 @@ interface State {
 
 export default class Flyout extends Component<Props, State> {
   state = {
-    showing: this.props.showing === true
+    showing: this.props.showing === true,
   };
 
   private menu = createRef<HTMLElement>();
@@ -55,17 +64,23 @@ export default class Flyout extends Component<Props, State> {
     }
   }
 
-  render({ direction, anchor, toggle, children, ...props }: Props, { showing }: State) {
+  render(
+    { direction, anchor, toggle, children, ...props }: Props,
+    { showing }: State,
+  ) {
     const toggleProps = {
       flyoutOpen: showing,
-      onClick: this.toggle
+      onClick: this.toggle,
     };
 
+    const directionText = Array.isArray(direction)
+      ? direction.join(' ')
+      : direction;
     const anchorText = Array.isArray(anchor) ? anchor.join(' ') : anchor;
 
     return (
-        <span class={style.wrap} data-flyout-open={showing ? '' : undefined}>
-          <ClickOutsideDetector onClick={this.hide}>
+      <span class={style.wrap} data-flyout-open={showing ? '' : undefined}>
+        <ClickOutsideDetector onClick={this.hide}>
           {toggle && cloneElement(toggle, toggleProps)}
 
           <aside
@@ -73,12 +88,12 @@ export default class Flyout extends Component<Props, State> {
             ref={this.menu}
             hidden={!showing}
             data-anchor={anchorText}
-            data-direction={direction}
+            data-direction={directionText}
           >
             {children}
           </aside>
-          </ClickOutsideDetector>
-        </span>
+        </ClickOutsideDetector>
+      </span>
     );
   }
 }
