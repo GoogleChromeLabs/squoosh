@@ -820,7 +820,7 @@ export default class Compress extends Component<Props, State> {
   }
 
   render(
-    { onBack }: Props,
+    { onBack, showSnack }: Props,
     {
       loading,
       sides,
@@ -839,6 +839,7 @@ export default class Compress extends Component<Props, State> {
     const options = sides.map((side, index) => (
       <Options
         index={index as 0 | 1}
+        showSnack={showSnack}
         source={source}
         mobileView={mobileView}
         processorState={side.latestSettings.processorState}

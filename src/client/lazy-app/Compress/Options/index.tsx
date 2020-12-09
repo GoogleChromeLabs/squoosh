@@ -5,6 +5,7 @@ import 'add-css:./style.css';
 import { cleanSet, cleanMerge } from '../../util/clean-modify';
 
 import type { SourceImage, OutputType } from '..';
+import type SnackBarElement from 'shared/initial-app/custom-els/snack-bar';
 import {
   EncoderOptions,
   EncoderState,
@@ -19,8 +20,11 @@ import Select from './Select';
 import { Options as QuantOptionsComponent } from 'features/processors/quantize/client';
 import { Options as ResizeOptionsComponent } from 'features/processors/resize/client';
 
+import { generateCliInvocation } from '../../util/cli-invocation-generator';
+
 interface Props {
   index: 0 | 1;
+  showSnack: SnackBarElement['showSnackbar'];
   mobileView: boolean;
   source?: SourceImage;
   encoderState?: EncoderState;
@@ -106,6 +110,22 @@ export default class Options extends Component<Props, State> {
     this.props.onEncoderOptionsChange(this.props.index, newOptions);
   };
 
+  private onCreateCLIInvocation = () => {
+    if (!this.props.encoderState) {
+      return;
+    }
+
+    try {
+      const cliInvocation = generateCliInvocation(
+        this.props.encoderState,
+        this.props.processorState,
+      );
+      navigator.clipboard.writeText(cliInvocation);
+    } catch (e) {
+      this.props.showSnack(e);
+    }
+  };
+
   render(
     { source, encoderState, processorState }: Props,
     { supportedEncoderMap }: State,
@@ -125,7 +145,9 @@ export default class Options extends Component<Props, State> {
         <Expander>
           {!encoderState ? null : (
             <div>
-              <h3 class={style.optionsTitle}>Edit</h3>
+              <h3 class={style.optionsTitle}>
+                <button onClick={this.onCreateCLIInvocation}>CLI</button>Edit
+              </h3>
               <label class={style.sectionEnabler}>
                 Resize
                 <Toggle
