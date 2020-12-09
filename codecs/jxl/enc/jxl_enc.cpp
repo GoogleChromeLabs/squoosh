@@ -1,9 +1,9 @@
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
 
+#include "lib/jxl/base/thread_pool_internal.h"
 #include "lib/jxl/enc_file.h"
 #include "lib/jxl/external_image.h"
-#include "lib/jxl/base/thread_pool_internal.h"
 
 using namespace emscripten;
 
@@ -26,7 +26,7 @@ val encode(std::string image, int width, int height, JXLOptions options) {
   jxl::CodecInOut io;
   jxl::PaddedBytes bytes;
   jxl::ImageBundle* main = &io.Main();
-  jxl::ThreadPoolInternal *pool_ptr = nullptr;
+  jxl::ThreadPoolInternal* pool_ptr = nullptr;
 #ifdef __EMSCRIPTEN_PTHREADS__
   jxl::ThreadPoolInternal pool;
   pool_ptr = &pool;
