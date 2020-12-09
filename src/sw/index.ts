@@ -19,11 +19,11 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     (async function () {
       const promises = [];
-      promises.push(cacheBasics(versionedCache, ASSETS));
+      promises.push(cacheBasics(versionedCache));
 
       // If the user has already interacted with the app, update the codecs too.
       if (await get('user-interacted')) {
-        promises.push(cacheAdditionalProcessors(versionedCache, ASSETS));
+        promises.push(cacheAdditionalProcessors(versionedCache));
       }
 
       await Promise.all(promises);
@@ -53,6 +53,11 @@ self.addEventListener('fetch', (event) => {
   // Don't care about other-origin URLs
   if (url.origin !== location.origin) return;
 
+  if (url.pathname === '/editor') {
+    event.respondWith(Response.redirect('/'));
+    return;
+  }
+
   if (
     url.pathname === '/' &&
     url.searchParams.has('share-target') &&
@@ -77,7 +82,7 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('message', (event) => {
   switch (event.data) {
     case 'cache-all':
-      event.waitUntil(cacheAdditionalProcessors(versionedCache, ASSETS));
+      event.waitUntil(cacheAdditionalProcessors(versionedCache));
       break;
     case 'skip-waiting':
       self.skipWaiting();

@@ -31,6 +31,7 @@ import featurePlugin from './lib/feature-plugin';
 import initialCssPlugin from './lib/initial-css-plugin';
 import serviceWorkerPlugin from './lib/sw-plugin';
 import dataURLPlugin from './lib/data-url-plugin';
+import entryDataPlugin from './lib/entry-data-plugin';
 
 function resolveFileUrl({ fileName }) {
   return JSON.stringify(fileName.replace(/^static\//, '/'));
@@ -116,6 +117,7 @@ export default async function ({ watch }) {
             commonjs(),
             resolve(),
             replace({ __PRERENDER__: false, __PRODUCTION__: isProduction }),
+            entryDataPlugin(),
             isProduction ? terser({ module: true }) : {},
           ],
           preserveEntrySignatures: false,
