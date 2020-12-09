@@ -465,7 +465,6 @@ export default class Compress extends Component<Props, State> {
               if (cropChanged) {
                 const img = state.source?.decoded;
                 resizeSettings = {
-                  enabled: false,
                   width: img ? img.width - crop.left - crop.right : undefined,
                   height: img ? img.height - crop.top - crop.bottom : undefined,
                 };
