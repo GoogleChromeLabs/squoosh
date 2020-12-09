@@ -2,10 +2,10 @@ import { promises as fsp } from 'fs';
 import { instantiateEmscriptenWasm, pathify } from './emscripten-utils.js';
 
 // MozJPEG
-// import mozEnc from '../../codecs/mozjpeg/enc/mozjpeg_enc.js';
-// import mozEncWasm from 'asset-url:../../codecs/mozjpeg/enc/mozjpeg_enc.wasm';
-// import mozDec from '../../codecs/mozjpeg/dec/mozjpeg_dec.js';
-// import mozDecWasm from 'asset-url:../../codecs/mozjpeg/dec/mozjpeg_dec.wasm';
+import mozEnc from '../../codecs/mozjpeg/enc/mozjpeg_node_enc.js';
+import mozEncWasm from 'asset-url:../../codecs/mozjpeg/enc/mozjpeg_node_enc.wasm';
+import mozDec from '../../codecs/mozjpeg/dec/mozjpeg_node_dec.js';
+import mozDecWasm from 'asset-url:../../codecs/mozjpeg/dec/mozjpeg_node_dec.wasm';
 
 // WebP
 import webpEnc from '../../codecs/webp/enc/webp_node_enc.js';
@@ -195,36 +195,36 @@ export const preprocessors = {
 };
 
 export const codecs = {
-  // mozjpeg: {
-  //   name: "MozJPEG",
-  //   extension: "jpg",
-  //   detectors: [/^\xFF\xD8\xFF/],
-  //   dec: () => instantiateEmscriptenWasm(mozDec, mozDecWasm),
-  //   enc: () => instantiateEmscriptenWasm(mozEnc, mozEncWasm),
-  //   defaultEncoderOptions: {
-  //     quality: 75,
-  //     baseline: false,
-  //     arithmetic: false,
-  //     progressive: true,
-  //     optimize_coding: true,
-  //     smoothing: 0,
-  //     color_space: 3 /*YCbCr*/,
-  //     quant_table: 3,
-  //     trellis_multipass: false,
-  //     trellis_opt_zero: false,
-  //     trellis_opt_table: false,
-  //     trellis_loops: 1,
-  //     auto_subsample: true,
-  //     chroma_subsample: 2,
-  //     separate_chroma_quality: false,
-  //     chroma_quality: 75
-  //   },
-  //   autoOptimize: {
-  //     option: "quality",
-  //     min: 0,
-  //     max: 100
-  //   }
-  // },
+  mozjpeg: {
+    name: 'MozJPEG',
+    extension: 'jpg',
+    detectors: [/^\xFF\xD8\xFF/],
+    dec: () => instantiateEmscriptenWasm(mozDec, mozDecWasm),
+    enc: () => instantiateEmscriptenWasm(mozEnc, mozEncWasm),
+    defaultEncoderOptions: {
+      quality: 75,
+      baseline: false,
+      arithmetic: false,
+      progressive: true,
+      optimize_coding: true,
+      smoothing: 0,
+      color_space: 3 /*YCbCr*/,
+      quant_table: 3,
+      trellis_multipass: false,
+      trellis_opt_zero: false,
+      trellis_opt_table: false,
+      trellis_loops: 1,
+      auto_subsample: true,
+      chroma_subsample: 2,
+      separate_chroma_quality: false,
+      chroma_quality: 75,
+    },
+    autoOptimize: {
+      option: 'quality',
+      min: 0,
+      max: 100,
+    },
+  },
   webp: {
     name: 'WebP',
     extension: 'webp',

@@ -10,9 +10,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import mozjpeg_enc, { MozJPEGModule } from 'codecs/mozjpeg_enc/mozjpeg_enc';
+import mozjpeg_enc, { MozJPEGModule } from 'codecs/mozjpeg/enc/mozjpeg_enc';
 import { EncodeOptions } from '../shared/meta';
-import wasmUrl from 'url:codecs/mozjpeg_enc/mozjpeg_enc.wasm';
+import wasmUrl from 'url:codecs/mozjpeg/enc/mozjpeg_enc.wasm';
 import { initEmscriptenModule } from 'features/worker-utils';
 
 let emscriptenModule: Promise<MozJPEGModule>;
