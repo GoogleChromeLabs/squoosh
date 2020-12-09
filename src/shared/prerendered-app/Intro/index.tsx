@@ -283,7 +283,7 @@ export default class Intro extends Component<Props, State> {
             )}
             <div
               class={style.loadImgContent}
-              style={{ visibility: __PRERENDER__ ? 'hidden' : '' }}
+              style={{ visibility: __PRERENDER__ ? 'hidden' : undefined }}
             >
               <button class={style.loadBtn} onClick={this.onOpenClick}>
                 <svg viewBox="0 0 24 24" class={style.loadIcon}>
