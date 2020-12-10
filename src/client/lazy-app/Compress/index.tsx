@@ -33,6 +33,7 @@ import WorkerBridge from '../worker-bridge';
 import { resize } from 'features/processors/resize/client';
 import type SnackBarElement from 'shared/custom-els/snack-bar';
 import Transform from './Transform';
+import { generateCliInvocation } from '../util/cli';
 
 export type OutputType = EncoderType | 'identity';
 
