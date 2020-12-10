@@ -12,6 +12,8 @@ import 'shared/custom-els/snack-bar';
 import Intro from 'shared/prerendered-app/Intro';
 import 'shared/custom-els/loading-spinner';
 
+import { Console } from 'console-feed';
+
 const ROUTE_EDITOR = '/editor';
 
 const compressPromise = import('client/lazy-app/Compress');
@@ -115,6 +117,7 @@ export default class App extends Component<Props, State> {
 
     return (
       <div class={style.app}>
+        <Console logs={[]} />
         <file-drop onfiledrop={this.onFileDrop} class={style.drop}>
           {showSpinner ? (
             <loading-spinner class={style.appLoader} />

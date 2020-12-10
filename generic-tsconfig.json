@@ -17,7 +17,8 @@
       "static-build/*": ["src/static-build/*"],
       "client/*": ["src/client/*"],
       "shared/*": ["src/shared/*"],
-      "features/*": ["src/features/*"]
+      "features/*": ["src/features/*"],
+      "react": ["node_modules/preact/compat"]
     }
   }
 }
