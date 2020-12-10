@@ -112,7 +112,9 @@ export default async function ({ watch }) {
           plugins: [
             { resolveFileUrl, resolveImportMeta },
             OMT({ loader: await omtLoaderPromise }),
-            serviceWorkerPlugin({ output: 'static/sw.js' }),
+            serviceWorkerPlugin({
+              output: 'static/serviceworker.js',
+            }),
             ...commonPlugins(),
             commonjs(),
             resolve(),
