@@ -40,6 +40,7 @@ interface State {
   altBackground: boolean;
   transform: boolean;
   menuOpen: boolean;
+  smallControls: boolean;
 }
 
 const scaleToOpts: ScaleToOpts = {
@@ -56,6 +57,9 @@ export default class Output extends Component<Props, State> {
     altBackground: false,
     transform: false,
     menuOpen: false,
+    smallControls:
+      typeof matchMedia === 'function' &&
+      matchMedia('(max-width: 859px)').matches,
   };
   canvasLeft?: HTMLCanvasElement;
   canvasRight?: HTMLCanvasElement;
@@ -83,6 +87,12 @@ export default class Output extends Component<Props, State> {
     }
     if (this.canvasRight && rightDraw) {
       drawDataToCanvas(this.canvasRight, rightDraw);
+    }
+
+    if (typeof matchMedia === 'function') {
+      matchMedia('(max-width: 859px)').addEventListener('change', (e) =>
+        this.setState({ smallControls: e.matches }),
+      );
     }
   }
 
@@ -278,7 +288,7 @@ export default class Output extends Component<Props, State> {
       onShowPreprocessorTransforms,
       onToggleBackground,
     }: Props,
-    { scale, editingScale }: State,
+    { scale, editingScale, smallControls }: State,
   ) {
     const leftDraw = this.leftDrawable();
     const rightDraw = this.rightDrawable();
@@ -370,7 +380,7 @@ export default class Output extends Component<Props, State> {
               class={style.menu}
               showing={hidden ? false : undefined}
               anchor="right"
-              direction={mobileView ? ['down', 'left'] : 'up'}
+              direction={smallControls ? ['down', 'left'] : 'up'}
               toggle={
                 <button class={`${style.button} ${style.moreButton}`}>
                   <MoreIcon />

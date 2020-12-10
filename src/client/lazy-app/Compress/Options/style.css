@@ -15,7 +15,7 @@
   color: var(--header-text-color);
   margin: 0;
   height: 38px;
-  padding: 0 0 0 var(--horizontal-padding);
+  padding: 0 var(--horizontal-padding);
   font-weight: bold;
   font-size: 1.4rem;
   border-bottom: 1px solid var(--off-black);
@@ -90,12 +90,13 @@
   border-radius: 4px;
 }
 
-.options-title aside {
-  right: 10px;
-  bottom: calc(100% + 10px);
+.menu {
+  transform: translateY(-10px);
 }
 
 .title-button {
+  position: relative;
+  left: 10px;
   composes: unbutton from global;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0);

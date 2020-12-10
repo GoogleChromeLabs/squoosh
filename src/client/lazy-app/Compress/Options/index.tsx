@@ -139,6 +139,7 @@ export default class Options extends Component<Props, State> {
               <h3 class={style.optionsTitle}>
                 Edit
                 <Flyout
+                  class={style.menu}
                   direction={['up', 'left']}
                   anchor="right"
                   toggle={
