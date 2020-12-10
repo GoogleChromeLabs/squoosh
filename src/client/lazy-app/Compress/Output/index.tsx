@@ -337,7 +337,7 @@ export default class Output extends Component<Props, State> {
         </div>
 
         <div class={style.controls} hidden={hidden}>
-          <div class={style.zoomControls}>
+          <div class={style.buttonGroup}>
             <button class={style.button} onClick={this.zoomOut}>
               <RemoveIcon />
             </button>

@@ -66,7 +66,7 @@
   }
 }
 
-.zoom-controls {
+.button-group {
   display: flex;
   position: relative;
   z-index: 100;

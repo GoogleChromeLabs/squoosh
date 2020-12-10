@@ -81,3 +81,37 @@
   box-sizing: border-box;
   border-radius: 4px;
 }
+
+.title-and-buttons {
+  grid-template-columns: 1fr;
+  grid-auto-columns: max-content;
+  grid-auto-flow: column;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.title-button {
+  composes: unbutton from global;
+  svg {
+    --size: 20px;
+    display: block;
+    width: var(--size);
+    height: var(--size);
+  }
+}
+
+.cli-button {
+  composes: title-button;
+
+  svg {
+    stroke: var(--header-text-color);
+  }
+}
+
+.copy-over-button {
+  composes: title-button;
+
+  svg {
+    fill: var(--header-text-color);
+  }
+}
