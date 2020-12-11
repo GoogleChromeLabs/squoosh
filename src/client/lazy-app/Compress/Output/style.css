@@ -122,6 +122,17 @@
   }
 }
 
+.first-button {
+  composes: button;
+  border-radius: 6px 0 0 6px;
+}
+
+.last-button {
+  composes: button;
+  border-radius: 0 6px 6px 0;
+  border-left-width: 1px;
+}
+
 .zoom {
   cursor: text;
   width: 7rem;

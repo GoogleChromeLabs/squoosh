@@ -362,7 +362,7 @@ export default class Output extends Component<Props, State> {
                 <span class={style.zoomValue}>{Math.round(scale * 100)}</span>%
               </span>
             )}
-            <button class={style.button} onClick={this.zoomIn}>
+            <button class={style.lastButton} onClick={this.zoomIn}>
               <AddIcon />
             </button>
 
