@@ -858,7 +858,7 @@ export default class Compress extends Component<Props, State> {
   }
 
   render(
-    { onBack }: Props,
+    { onBack, showSnack }: Props,
     {
       loading,
       sides,

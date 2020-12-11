@@ -14,12 +14,20 @@
   background-color: var(--main-theme-color);
   color: var(--header-text-color);
   margin: 0;
-  padding: 10px var(--horizontal-padding);
+  height: 38px;
+  padding: 0 var(--horizontal-padding);
   font-weight: bold;
   font-size: 1.4rem;
   border-bottom: 1px solid var(--off-black);
   transition: all 300ms ease-in-out;
   transition-property: background-color, color;
+
+  display: grid;
+  align-items: center;
+  grid-template-columns: 1fr;
+  grid-auto-columns: max-content;
+  grid-auto-flow: column;
+  gap: 0.8rem 0;
 
   position: sticky;
   top: 0;
@@ -82,36 +90,63 @@
   border-radius: 4px;
 }
 
-.title-and-buttons {
-  grid-template-columns: 1fr;
-  grid-auto-columns: max-content;
-  grid-auto-flow: column;
-  display: grid;
-  gap: 0.8rem;
+.menu {
+  transform: translateY(-10px);
 }
 
 .title-button {
+  position: relative;
+  left: 10px;
   composes: unbutton from global;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0);
+
+  &:hover,
+  &:active {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
   svg {
-    --size: 20px;
+    --size: 24px;
+    fill: var(--header-text-color);
     display: block;
     width: var(--size);
     height: var(--size);
+    padding: 5px;
   }
 }
 
-.cli-button {
-  composes: title-button;
+.menu-button {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  margin: 8px 0;
+  background-color: rgba(29, 29, 29, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.67);
+  border-radius: 2rem;
+  line-height: 1.1;
+  white-space: nowrap;
+  height: 39px;
+  padding: 0 16px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #fff;
 
-  svg {
-    stroke: var(--header-text-color);
+  &:hover {
+    background: rgba(50, 50, 50, 0.92);
   }
-}
 
-.copy-over-button {
-  composes: title-button;
+  &:focus {
+    box-shadow: 0 0 0 2px #fff;
+    outline: none;
+    z-index: 1;
+  }
 
-  svg {
-    fill: var(--header-text-color);
+  & > svg {
+    position: relative;
+    width: 18px;
+    height: 18px;
+    margin-right: 12px;
+    color: var(--main-theme-color);
   }
 }
