@@ -12,10 +12,15 @@
  */
 import { h, render } from 'preact';
 import App from './App';
+import { init as initSentry } from '@sentry/browser';
 
 const root = document.getElementById('app') as HTMLElement;
 
 async function main() {
+  initSentry({
+    dsn:
+      'https://1bf731600de64315b8ac4d38bf6b9c25@o482280.ingest.sentry.io/5532246',
+  });
   if (!__PRODUCTION__) await import('preact/debug');
   render(<App />, root);
 }

@@ -55,6 +55,7 @@
     "*.rs": "rustfmt"
   },
   "dependencies": {
+    "@sentry/browser": "^5.29.0",
     "wasm-feature-detect": "^1.2.9"
   }
 }
