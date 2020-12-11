@@ -47,7 +47,7 @@ The default values for each `config` option can be found in the [`codecs.js`][co
 
 Squoosh CLI has an _experimental_ auto optimizer that compresses an image as much as possible, trying to hit a specific [Butteraugli] target value. The higher the Butteraugli target value, the more artifacts can be introduced.
 
-You can make use of the auto optimizer buy using “auto” as the config object.
+You can make use of the auto optimizer by using “auto” as the config object.
 
 ```
 $ npx @squoosh/cli --wp2 auto test.png

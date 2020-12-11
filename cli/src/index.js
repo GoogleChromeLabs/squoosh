@@ -4,6 +4,7 @@ import { isMainThread } from 'worker_threads';
 import { cpus } from 'os';
 import { extname, join, basename } from 'path';
 import { promises as fsp } from 'fs';
+import { resolve as resolvePath } from 'path';
 import { version } from 'json:../package.json';
 import ora from 'ora';
 import kleur from 'kleur';
@@ -182,7 +183,32 @@ function progressTracker(results) {
   return tracker;
 }
 
+async function checkInputFilesValid(files) {
+  const validFiles = [];
+
+  for (const file of files) {
+    try {
+      await fsp.stat(file);
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        console.warn(
+          `Warning: Input file does not exist: ${resolvePath(file)}`,
+        );
+        continue;
+      } else {
+        throw err;
+      }
+    }
+
+    validFiles.push(file);
+  }
+
+  return validFiles;
+}
+
 async function processFiles(files) {
+  files = await checkInputFilesValid(files);
+
   const parallelism = cpus().length;
 
   const results = new Map();
