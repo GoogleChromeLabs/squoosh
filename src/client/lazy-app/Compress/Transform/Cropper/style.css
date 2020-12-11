@@ -1,15 +1,12 @@
 .cropper {
   position: absolute;
-  left: calc(-10px / var(--scale, 1));
-  top: calc(-10px / var(--scale, 1));
-  right: calc(-10px / var(--scale, 1));
-  bottom: calc(-10px / var(--scale, 1));
+  left: -10px;
+  top: -10px;
+  right: -10px;
+  bottom: -10px;
   shape-rendering: crispedges;
-  overflow: hidden;
-  contain: strict;
-  transform-origin: 0 0;
-  transform: scale(calc(1 / var(--scale))) !important;
-  zoom: var(--scale, 1);
+  overflow: visible;
+  contain: layout size;
 
   &.pan {
     cursor: grabbing;
@@ -19,11 +16,8 @@
   }
 
   & > svg {
-    margin: -10px;
-    padding: 10px;
     overflow: visible;
-    contain: strict;
-    /* overflow: visible; */
+    contain: layout size;
   }
 }
 

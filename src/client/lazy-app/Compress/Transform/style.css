@@ -4,12 +4,8 @@
 
 .wrap {
   overflow: visible;
-
-  /*
-  & > canvas {
-    transition: transform 150ms ease;
-  }
-  */
+  contain: size layout;
+  will-change: initial !important;
 }
 
 .backdrop {
@@ -25,7 +21,6 @@
   & * {
     contain: strict;
   }
-  /* background: rgba(255, 0, 0, 0.5); */
 }
 
 .backdropArea {
@@ -283,15 +278,7 @@
   font-size: 1.2rem;
   cursor: pointer;
 
-  /*
-  @media (min-width: 600px) {
-    height: 39px;
-    padding: 0 16px;
-  }
-  */
-
   &:focus {
-    /* box-shadow: 0 0 0 2px var(--hot-pink); */
     box-shadow: 0 0 0 2px #fff;
     outline: none;
     z-index: 1;

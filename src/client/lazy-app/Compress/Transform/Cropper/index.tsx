@@ -1,4 +1,4 @@
-import { h, Component, ComponentChildren } from 'preact';
+import { h, Component, ComponentChildren, createRef } from 'preact';
 import * as style from './style.css';
 import 'add-css:./style.css';
 import { shallowEqual } from 'client/lazy-app/util';
@@ -43,6 +43,8 @@ export default class Cropper extends Component<Props, State> {
     pan: false,
   };
 
+  private root = createRef<SVGSVGElement>();
+
   shouldComponentUpdate(nextProps: Props, nextState: State) {
     if (!shallowEqual(nextState, this.state)) return true;
     const { size, scale, lockAspect, crop } = this.props;
@@ -53,6 +55,13 @@ export default class Cropper extends Component<Props, State> {
       lockAspect !== nextProps.lockAspect ||
       !shallowEqual(crop, nextProps.crop)
     );
+  }
+
+  componentDidUpdate() {
+    requestAnimationFrame(() => {
+      if (!this.root.current) return;
+      getComputedStyle(this.root.current);
+    });
   }
 
   componentWillReceiveProps({ crop }: Props, nextState: State) {
@@ -252,13 +261,13 @@ export default class Cropper extends Component<Props, State> {
     addEventListener('keyup', this.onKeyUp);
   }
 
-  render({ size, scale }: Props, { crop, pan }: State) {
+  render({ size }: Props, { crop, pan }: State) {
     const x = crop.left;
     const y = crop.top;
     const width = size.width - crop.left - crop.right;
     const height = size.height - crop.top - crop.bottom;
 
-    const s = (x: number) => x / (scale || 1);
+    const s = (x: number) => x.toFixed(3);
 
     const clip = `polygon(0 0, 0 100%, 100% 100%, 100% 0, 0 0, ${s(x)}px ${s(
       y,
@@ -268,14 +277,11 @@ export default class Cropper extends Component<Props, State> {
 
     return (
       <svg
+        ref={this.root}
         class={`${style.cropper} ${pan ? style.pan : ''}`}
         width={size.width + 20}
         height={size.height + 20}
         viewBox={`-10 -10 ${size.width + 20} ${size.height + 20}`}
-        style={{
-          // this is hack to force style invalidation in Chrome
-          zoom: (scale || 1).toFixed(3),
-        }}
         onPointerDown={this.onPointerDown}
         onPointerMove={this.onPointerMove}
         onPointerUp={this.onPointerUp}

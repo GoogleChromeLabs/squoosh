@@ -28,7 +28,7 @@ export default async function flip(
   const cols = width * 4;
   while (i < len) {
     let from = vertical ? (height - y) * cols + x * 4 : i;
-    if (horizontal) from = from - x * 4 + cols - x * 4; // todo: reduce
+    if (horizontal) from = from - x * 4 + cols - x * 4;
 
     pixels[i++] = source[from++];
     pixels[i++] = source[from++];
@@ -41,28 +41,5 @@ export default async function flip(
     }
   }
 
-  /*
-  function swap(a: number, b: number) {
-    let tmp = pixels[a];
-    pixels[a] = pixels[b];
-    pixels[b] = tmp;
-  }
-  function swapRgba(a: number, b: number) {
-    swap(a, b);
-    swap(a+1, b+1);
-    swap(a+2, b+2);
-    swap(a+3, b+3);
-  }
-  const COLS = data.width * 4;
-  // for (let y = 0, y2 = (data.height - 1); y < y2; y+=4, y2-=4) {
-  for (let y = 0; y < data.height; y++) {
-    for (let x = 0, x2 = COLS - 4; x < x2; x+=4, x2-=4) {
-      const offsetX = y * COLS;
-      const offsetY = (opts.vertical ? (data.height - y) : y) * COLS;
-      const flippedX = opts.horizontal ? x2 : x;
-      swapRgba(offsetX + x, offsetY + x2);
-    }
-  }
-  */
   return new ImageData(pixels, data.width, data.height);
 }
