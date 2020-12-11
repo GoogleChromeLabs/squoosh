@@ -18,7 +18,7 @@ type Direction = 'left' | 'right' | 'up' | 'down';
 const has = (haystack: string | string[] | undefined, needle: string) =>
   Array.isArray(haystack) ? haystack.includes(needle) : haystack === needle;
 
-interface Props extends ComponentProps<'aside'> {
+interface Props extends Omit<ComponentProps<'aside'>, 'ref'> {
   showing?: boolean;
   direction?: Direction | Direction[];
   anchor?: Anchor;
@@ -53,14 +53,22 @@ export default class Flyout extends Component<Props, State> {
     this.setShowing(false);
   };
 
+  hide = () => {
+    this.setShowing(false);
+  };
+
+  show = () => {
+    this.setShowing(true);
+  };
+
+  toggle = () => {
+    this.setShowing(!this.state.showing);
+  };
+
   private setShowing = (showing?: boolean) => {
     this.shown = Date.now();
     if (showing) this.setState({ showing: true, hasShown: true });
     else this.setState({ showing: false });
-  };
-
-  private toggle = () => {
-    this.setShowing(!this.state.showing);
   };
 
   private reposition = () => {

@@ -1,4 +1,4 @@
-import { h, Component } from 'preact';
+import { h, Component, createRef } from 'preact';
 
 import * as style from './style.css';
 import 'add-css:./style.css';
@@ -65,6 +65,8 @@ export default class Options extends Component<Props, State> {
     supportedEncoderMap: undefined,
   };
 
+  menu = createRef<Flyout>();
+
   constructor() {
     super();
     supportedEncoderMapP.then((supportedEncoderMap) =>
@@ -111,10 +113,12 @@ export default class Options extends Component<Props, State> {
 
   private onCopyCliClick = () => {
     this.props.onCopyCliClick(this.props.index);
+    if (this.menu.current) this.menu.current.hide();
   };
 
   private onCopyToOtherSideClick = () => {
     this.props.onCopyToOtherSideClick(this.props.index);
+    if (this.menu.current) this.menu.current.hide();
   };
 
   render(
@@ -139,6 +143,7 @@ export default class Options extends Component<Props, State> {
               <h3 class={style.optionsTitle}>
                 Edit
                 <Flyout
+                  ref={this.menu}
                   class={style.menu}
                   direction={['up', 'left']}
                   anchor="right"
