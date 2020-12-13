@@ -10,7 +10,7 @@ use resize::Type;
 use wasm_bindgen::prelude::*;
 
 mod srgb;
-use srgb::{linear_to_srgb, srgb_to_linear, Clamp};
+use srgb::{linear_to_srgb, Clamp};
 
 cfg_if! {
     // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
@@ -85,7 +85,7 @@ pub fn resize(
 
     let mut output_image: Vec<u8> = vec_with_len(num_output_pixels * 4, 0);
 
-    // If both options are false, there is no preprocessing on the pixel valus
+    // If both options are false, there is no preprocessing on the pixel values
     // and we can skip the loop.
     if !premultiply && !color_space_conversion {
         let mut resizer = resize::new(
@@ -100,8 +100,8 @@ pub fn resize(
         return output_image;
     }
 
-    // Otherwise, we convert to f32 images so we don’t introduce
-    // banding through the conversions.
+    // Otherwise, we convert to f32 images to keep the
+    // conversions as lossless and high-fidelity as possible.
     let (to_linear, to_srgb) = srgb_converter_funcs(color_space_conversion);
     let (premultiplier, demultiplier) = alpha_multiplier_funcs(premultiply);
 
