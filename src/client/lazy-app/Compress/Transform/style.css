@@ -3,8 +3,14 @@
 }
 
 .wrap {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  /** can't use transform-origin here, pinch-zoom relies on 0,0 */
+  transform: translate(-50%, -50%) translate(var(--x), var(--y))
+    scale(var(--scale));
   overflow: visible;
-  contain: size layout;
+  contain: layout;
   will-change: initial !important;
 }
 
@@ -42,6 +48,11 @@
   will-change: auto;
   /* Prevent the image becoming misshapen due to default flexbox layout. */
   flex-shrink: 0;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  transform-origin: 50% 50%;
 }
 
 .cancel,

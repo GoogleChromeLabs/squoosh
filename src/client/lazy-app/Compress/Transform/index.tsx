@@ -109,14 +109,16 @@ export default class Transform extends Component<Props, State> {
       this.setState(this.fromPreprocessorState(preprocessorState));
     }
     const { width, height } = source.decoded;
-    const cropWidth = width - crop.left - crop.right;
-    const cropHeight = height - crop.top - crop.bottom;
-    for (const [id, preset] of Object.entries(cropPresets)) {
-      if (cropHeight * preset.ratio === cropWidth) {
-        if (cropPreset !== id) {
-          this.setState({ cropPreset: id as CropPresetId });
+    if (crop) {
+      const cropWidth = width - crop.left - crop.right;
+      const cropHeight = height - crop.top - crop.bottom;
+      for (const [id, preset] of Object.entries(cropPresets)) {
+        if (cropHeight * preset.ratio === cropWidth) {
+          if (cropPreset !== id) {
+            this.setState({ cropPreset: id as CropPresetId });
+          }
+          break;
         }
-        break;
       }
     }
   }
@@ -268,12 +270,28 @@ export default class Transform extends Component<Props, State> {
     this.setState({ crop });
   }
 
-  // yeah these could just += 90
+  private adjustOffsetAfterRotation = (wideToTall: boolean) => {
+    const image = this.props.source.decoded;
+    let { x, y } = this.pinchZoom.current!;
+    let { width, height } = image;
+    if (wideToTall) {
+      [width, height] = [height, width];
+    }
+    x += (width - height) / 2;
+    y += (height - width) / 2;
+    this.pinchZoom.current!.setTransform({ x, y });
+  };
+
   private rotateClockwise = () => {
     let { rotate, crop } = this.state;
-    this.setState({
-      rotate: ((rotate + 90) % 360) as typeof ROTATE_ORIENTATIONS[number],
-    });
+    this.setState(
+      {
+        rotate: ((rotate + 90) % 360) as typeof ROTATE_ORIENTATIONS[number],
+      },
+      () => {
+        this.adjustOffsetAfterRotation(rotate === 0 || rotate === 180);
+      },
+    );
     this.setCrop({
       top: crop.left,
       left: crop.bottom,
@@ -284,11 +302,16 @@ export default class Transform extends Component<Props, State> {
 
   private rotateCounterClockwise = () => {
     let { rotate, crop } = this.state;
-    this.setState({
-      rotate: (rotate
-        ? rotate - 90
-        : 270) as typeof ROTATE_ORIENTATIONS[number],
-    });
+    this.setState(
+      {
+        rotate: (rotate
+          ? rotate - 90
+          : 270) as typeof ROTATE_ORIENTATIONS[number],
+      },
+      () => {
+        this.adjustOffsetAfterRotation(rotate === 0 || rotate === 180);
+      },
+    );
     this.setCrop({
       top: crop.right,
       right: crop.bottom,
@@ -348,11 +371,16 @@ export default class Transform extends Component<Props, State> {
     { scale, editingScale, rotate, flip, crop, cropPreset, lockAspect }: State,
   ) {
     const image = source.decoded;
+    const rotated = rotate === 90 || rotate === 270;
 
-    const width = source.decoded.width - crop.left - crop.right;
-    const height = source.decoded.height - crop.top - crop.bottom;
+    const displayWidth = rotated ? image.height : image.width;
+    const displayHeight = rotated ? image.width : image.height;
+
+    const width = displayWidth - crop.left - crop.right;
+    const height = displayHeight - crop.top - crop.bottom;
 
     let transform =
+      `translate(-50%, -50%) ` +
       `rotate(${rotate}deg) ` +
       `scale(${flip.horizontal ? -1 : 1}, ${flip.vertical ? -1 : 1})`;
 
@@ -367,12 +395,12 @@ export default class Transform extends Component<Props, State> {
             onChange={this.onPinchZoomChange}
             ref={this.pinchZoom}
           >
-            {/* <Backdrop width={image.width} height={image.height} /> */}
+            {/* <Backdrop width={displayWidth} height={displayHeight} /> */}
             <div
               class={style.wrap}
               style={{
-                width: image.width,
-                height: image.height,
+                width: displayWidth,
+                height: displayHeight,
               }}
             >
               <CanvasImage
@@ -382,7 +410,7 @@ export default class Transform extends Component<Props, State> {
               />
               {crop && (
                 <Cropper
-                  size={{ width: image.width, height: image.height }}
+                  size={{ width: displayWidth, height: displayHeight }}
                   scale={scale}
                   lockAspect={lockAspect}
                   crop={crop}
