@@ -263,6 +263,8 @@ export default class Transform extends Component<Props, State> {
       crop.left += crop.right;
       crop.right = 0;
     }
+    if (crop.left < 0 || crop.right < 0) crop.left = crop.right = 0;
+    if (crop.top < 0 || crop.bottom < 0) crop.top = crop.bottom = 0;
     this.setState({ crop });
   }
 
@@ -271,12 +273,12 @@ export default class Transform extends Component<Props, State> {
     let { rotate, crop } = this.state;
     this.setState({
       rotate: ((rotate + 90) % 360) as typeof ROTATE_ORIENTATIONS[number],
-      crop: {
-        top: crop.left,
-        left: crop.bottom,
-        bottom: crop.right,
-        right: crop.top,
-      },
+    });
+    this.setCrop({
+      top: crop.left,
+      left: crop.bottom,
+      bottom: crop.right,
+      right: crop.top,
     });
   };
 
@@ -286,12 +288,12 @@ export default class Transform extends Component<Props, State> {
       rotate: (rotate
         ? rotate - 90
         : 270) as typeof ROTATE_ORIENTATIONS[number],
-      crop: {
-        top: crop.right,
-        right: crop.bottom,
-        bottom: crop.left,
-        left: crop.top,
-      },
+    });
+    this.setCrop({
+      top: crop.right,
+      right: crop.bottom,
+      bottom: crop.left,
+      left: crop.top,
     });
   };
 
