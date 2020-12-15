@@ -18,6 +18,7 @@ struct WP2Options {
   int csp_type;
   int error_diffusion;
   bool use_random_matrix;
+  int tile_shape;
 };
 
 val encode(std::string image_in, int image_width, int image_height, WP2Options options) {
@@ -32,6 +33,7 @@ val encode(std::string image_in, int image_width, int image_height, WP2Options o
   config.sns = options.sns;
   config.error_diffusion = options.error_diffusion;
   config.use_random_matrix = options.use_random_matrix;
+  config.tile_shape = static_cast<WP2::TileShape>(options.tile_shape);
 
   uint8_t* image_buffer = (uint8_t*)image_in.c_str();
   WP2::ArgbBuffer src = WP2::ArgbBuffer();

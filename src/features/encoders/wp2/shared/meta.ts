@@ -11,7 +11,7 @@
  * limitations under the License.
  */
 import type { EncodeOptions } from 'codecs/wp2/enc/wp2_enc';
-import { UVMode, Csp } from 'codecs/wp2/enc/wp2_enc';
+import { UVMode, Csp, TileShape } from 'codecs/wp2/enc/wp2_enc';
 
 export { EncodeOptions, UVMode, Csp };
 
@@ -28,4 +28,5 @@ export const defaultOptions: EncodeOptions = {
   csp_type: Csp.kYCoCg,
   error_diffusion: 0,
   use_random_matrix: false,
+  tile_shape: TileShape.Auto,
 };

@@ -10,6 +10,7 @@ import Checkbox from 'client/lazy-app/Compress/Options/Checkbox';
 import Expander from 'client/lazy-app/Compress/Options/Expander';
 import linkState from 'linkstate';
 import Revealer from 'client/lazy-app/Compress/Options/Revealer';
+import { TileShape } from 'codecs/wp2/enc/wp2_enc';
 
 export const encode = (
   signal: AbortSignal,
@@ -38,6 +39,7 @@ interface State {
   useRandomMatrix: boolean;
   showAdvanced: boolean;
   separateAlpha: boolean;
+  tileShape: number;
 }
 
 export class Options extends Component<Props, State> {
@@ -62,6 +64,7 @@ export class Options extends Component<Props, State> {
       errorDiffusion: options.error_diffusion,
       useRandomMatrix: options.use_random_matrix,
       separateAlpha: options.quality !== options.alpha_quality,
+      tileShape: options.tile_shape,
     };
 
     // If quality is > 95, it's lossless with slight loss
@@ -121,6 +124,7 @@ export class Options extends Component<Props, State> {
           csp_type: optionState.colorSpace,
           error_diffusion: optionState.errorDiffusion,
           use_random_matrix: optionState.useRandomMatrix,
+          tile_shape: optionState.tileShape,
         };
 
         // Updating options, so we don't recalculate in getDerivedStateFromProps.
@@ -151,6 +155,7 @@ export class Options extends Component<Props, State> {
       useRandomMatrix,
       separateAlpha,
       showAdvanced,
+      tileShape,
     }: State,
   ) {
     return (
@@ -213,17 +218,23 @@ export class Options extends Component<Props, State> {
                   </div>
                 )}
               </Expander>
-              <label class={style.optionReveal}>
-                <Revealer
-                  checked={showAdvanced}
-                  onChange={linkState(this, 'showAdvanced')}
-                />
-                Advanced settings
-              </label>
+            </div>
+          )}
+        </Expander>
+        <label class={style.optionReveal}>
+          <Revealer
+            checked={showAdvanced}
+            onChange={linkState(this, 'showAdvanced')}
+          />
+          Advanced settings
+        </label>
+        <Expander>
+          {showAdvanced && (
+            <div>
               <Expander>
-                {showAdvanced && (
+                {!lossless && (
                   <div>
-                    <div class={style.optionOneCell}>
+                    {/*<div class={style.optionOneCell}>
                       <Range
                         min="1"
                         max="10"
@@ -233,7 +244,7 @@ export class Options extends Component<Props, State> {
                       >
                         Passes:
                       </Range>
-                    </div>
+                    </div>*/}
                     <div class={style.optionOneCell}>
                       <Range
                         min="0"
@@ -245,17 +256,6 @@ export class Options extends Component<Props, State> {
                         Spatial noise shaping:
                       </Range>
                     </div>
-                    <div class={style.optionOneCell}>
-                      <Range
-                        min="0"
-                        max="100"
-                        step="1"
-                        value={errorDiffusion}
-                        onInput={this._inputChange('errorDiffusion', 'number')}
-                      >
-                        Error diffusion:
-                      </Range>
-                    </div>
                     <label class={style.optionTextFirst}>
                       Subsample chroma:
                       <Select
@@ -263,7 +263,7 @@ export class Options extends Component<Props, State> {
                         onInput={this._inputChange('uvMode', 'number')}
                       >
                         <option value={UVMode.UVModeAuto}>Auto</option>
-                        <option value={UVMode.UVModeAdapt}>Vary</option>
+                        <option value={UVMode.UVModeAdapt}>Mixed</option>
                         <option value={UVMode.UVMode420}>Half</option>
                         <option value={UVMode.UVMode444}>Off</option>
                       </Select>
@@ -276,10 +276,11 @@ export class Options extends Component<Props, State> {
                       >
                         <option value={Csp.kYCoCg}>YCoCg</option>
                         <option value={Csp.kYCbCr}>YCbCr</option>
+                        <option value={Csp.kCustom}>Adaptive</option>
                         <option value={Csp.kYIQ}>YIQ</option>
                       </Select>
                     </label>
-                    <label class={style.optionToggle}>
+                    {/*<label class={style.optionToggle}>
                       Random matrix
                       <Checkbox
                         checked={useRandomMatrix}
@@ -288,10 +289,34 @@ export class Options extends Component<Props, State> {
                           'boolean',
                         )}
                       />
-                    </label>
+                    </label>*/}
+                    <div class={style.optionOneCell}>
+                      <Range
+                        min="0"
+                        max="100"
+                        step="1"
+                        value={errorDiffusion}
+                        onInput={this._inputChange('errorDiffusion', 'number')}
+                      >
+                        Error diffusion:
+                      </Range>
+                    </div>
                   </div>
                 )}
               </Expander>
+              <label class={style.optionTextFirst}>
+                Tile shape:
+                <Select
+                  value={tileShape}
+                  onInput={this._inputChange('tileShape', 'number')}
+                >
+                  <option value={TileShape.Auto}>Auto</option>
+                  <option value={TileShape.Square128}>128x128</option>
+                  <option value={TileShape.Square256}>256x256</option>
+                  <option value={TileShape.Square512}>512x512</option>
+                  <option value={TileShape.Wide}>Maximum</option>
+                </Select>
+              </label>
             </div>
           )}
         </Expander>
