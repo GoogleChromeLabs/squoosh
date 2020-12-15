@@ -604,6 +604,7 @@ export default class Compress extends Component<Props, State> {
             const resizeState: Partial<ProcessorState['resize']> = {
               width: decoded.width,
               height: decoded.height,
+              method: vectorImage ? 'vector' : 'lanczos3',
               // Disable resizing, to make it clearer to the user that something changed here
               enabled: false,
             };
