@@ -222,12 +222,13 @@
 .demo-icon-container {
   border-radius: var(--demo-size);
   position: relative;
-  overflow: hidden;
+  transition: box-shadow 250ms;
 }
 .demo-icon {
   width: var(--demo-size);
   height: var(--demo-size);
   display: block;
+  border-radius: 50%;
 }
 .demo-loader {
   composes: abs-fill from global;
@@ -245,5 +246,15 @@
 .drop-text {
   @media (max-width: 599px) {
     display: none;
+  }
+}
+
+.sample-button {
+  &:focus {
+    outline: 0;
+  }
+
+  &:focus-visible .demo-icon-container {
+    box-shadow: 0 0 0 4px var(--deep-blue), 0 0 0 8px var(--pink);
   }
 }
