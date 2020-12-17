@@ -36,7 +36,6 @@ interface State {
   slightLoss: number;
   colorSpace: number;
   errorDiffusion: number;
-  useRandomMatrix: boolean;
   showAdvanced: boolean;
   separateAlpha: boolean;
   tileShape: number;
@@ -62,7 +61,6 @@ export class Options extends Component<Props, State> {
       uvMode: options.uv_mode,
       colorSpace: options.csp_type,
       errorDiffusion: options.error_diffusion,
-      useRandomMatrix: options.use_random_matrix,
       separateAlpha: options.quality !== options.alpha_quality,
       tileShape: options.tile_shape,
     };
@@ -123,7 +121,6 @@ export class Options extends Component<Props, State> {
           uv_mode: optionState.uvMode,
           csp_type: optionState.colorSpace,
           error_diffusion: optionState.errorDiffusion,
-          use_random_matrix: optionState.useRandomMatrix,
           tile_shape: optionState.tileShape,
         };
 
@@ -152,7 +149,6 @@ export class Options extends Component<Props, State> {
       slightLoss,
       colorSpace,
       errorDiffusion,
-      useRandomMatrix,
       separateAlpha,
       showAdvanced,
       tileShape,
@@ -280,16 +276,6 @@ export class Options extends Component<Props, State> {
                         <option value={Csp.kYIQ}>YIQ</option>
                       </Select>
                     </label>
-                    {/*<label class={style.optionToggle}>
-                      Random matrix
-                      <Checkbox
-                        checked={useRandomMatrix}
-                        onChange={this._inputChange(
-                          'useRandomMatrix',
-                          'boolean',
-                        )}
-                      />
-                    </label>*/}
                     <div class={style.optionOneCell}>
                       <Range
                         min="0"

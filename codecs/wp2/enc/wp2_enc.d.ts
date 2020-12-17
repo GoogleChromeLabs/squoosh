@@ -7,7 +7,6 @@ export interface EncodeOptions {
   uv_mode: UVMode;
   csp_type: Csp;
   error_diffusion: number;
-  use_random_matrix: boolean;
   tile_shape: TileShape;
 }
 

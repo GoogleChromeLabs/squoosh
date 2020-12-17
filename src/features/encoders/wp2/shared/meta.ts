@@ -27,6 +27,5 @@ export const defaultOptions: EncodeOptions = {
   uv_mode: UVMode.UVModeAuto,
   csp_type: Csp.kYCoCg,
   error_diffusion: 0,
-  use_random_matrix: false,
   tile_shape: TileShape.Auto,
 };

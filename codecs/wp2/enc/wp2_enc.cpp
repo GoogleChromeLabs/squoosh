@@ -17,7 +17,6 @@ struct WP2Options {
   float sns;
   int csp_type;
   int error_diffusion;
-  bool use_random_matrix;
   int tile_shape;
 };
 
@@ -32,7 +31,6 @@ val encode(std::string image_in, int image_width, int image_height, WP2Options o
   config.csp_type = static_cast<WP2::Csp>(options.csp_type);
   config.sns = options.sns;
   config.error_diffusion = options.error_diffusion;
-  config.use_random_matrix = options.use_random_matrix;
   config.tile_shape = static_cast<WP2::TileShape>(options.tile_shape);
 
   uint8_t* image_buffer = (uint8_t*)image_in.c_str();
@@ -64,7 +62,6 @@ EMSCRIPTEN_BINDINGS(my_module) {
       .field("uv_mode", &WP2Options::uv_mode)
       .field("csp_type", &WP2Options::csp_type)
       .field("error_diffusion", &WP2Options::error_diffusion)
-      .field("use_random_matrix", &WP2Options::use_random_matrix)
       .field("sns", &WP2Options::sns);
 
   function("encode", &encode);
