@@ -183,31 +183,37 @@ function progressTracker(results) {
   return tracker;
 }
 
-async function checkInputFilesValid(files) {
+async function getInputFiles(paths) {
   const validFiles = [];
 
-  for (const file of files) {
-    try {
-      await fsp.stat(file);
-    } catch (err) {
-      if (err.code === 'ENOENT') {
-        console.warn(
-          `Warning: Input file does not exist: ${resolvePath(file)}`,
-        );
-        continue;
-      } else {
-        throw err;
+  for (const path of paths) {
+    //allow paths ending in / of \ to get all files in that directory
+    const files = path.endsWith('/') || path.endsWith('\\')
+      ? await fs.readdir(paths)
+      : [path];
+    for (const file of files) {
+      try {
+        await fsp.stat(file);
+      } catch (err) {
+        if (err.code === 'ENOENT') {
+          console.warn(
+            `Warning: Input file does not exist: ${resolvePath(file)}`,
+          );
+          continue;
+        } else {
+          throw err;
+        }
       }
-    }
 
-    validFiles.push(file);
+      validFiles.push(file);
+    }
   }
 
   return validFiles;
 }
 
 async function processFiles(files) {
-  files = await checkInputFilesValid(files);
+  files = await getInputFiles(files);
 
   const parallelism = cpus().length;
 
