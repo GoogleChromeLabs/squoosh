@@ -188,7 +188,7 @@ async function getInputFiles(paths) {
 
   for (const path of paths) {
     //allow paths ending in / of \ to get all files in that directory
-    const files = path.endsWith('/') || path.endsWith('\\')
+    const files = (await fsp.lstat(path)).isDirectory()
       ? (await fsp.readdir(path)).map(file => join(path, file))
       : [path];
     for (const file of files) {
