@@ -81,9 +81,9 @@ export default class WorkerPool {
   }
 
   async join() {
-    this.closing = true;
     this.jobQueue.writable.close();
     await this.done;
+    this.closing = true;
   }
 
   dispatchJob(msg) {
