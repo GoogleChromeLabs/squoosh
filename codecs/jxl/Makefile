@@ -1,5 +1,5 @@
 CODEC_URL = https://gitlab.com/wg1/jpeg-xl.git
-CODEC_VERSION = 739e6cd1305fdec5acfa47ad414189b3d3ecb6a4
+CODEC_VERSION = v0.2
 CODEC_DIR = node_modules/jxl
 CODEC_BUILD_ROOT := $(CODEC_DIR)/build
 CODEC_MT_BUILD_DIR := $(CODEC_BUILD_ROOT)/mt
@@ -41,8 +41,6 @@ $(OUT_JS):
 		-I $(CODEC_BUILD_DIR)/lib/include \
 		-I $(CODEC_DIR)/third_party/highway \
 		-I $(CODEC_DIR)/third_party/skcms \
-		-I $(CODEC_DIR)/third_party/brunsli \
-		-I $(CODEC_DIR)/third_party/brunsli/c/include \
 		--bind \
 		--closure 1 \
 		-s ALLOW_MEMORY_GROWTH=1 \
@@ -53,9 +51,6 @@ $(OUT_JS):
 		-s EXPORT_NAME="$(basename $(@F))" \
 		-o $@ \
 		$+ \
-		$(CODEC_BUILD_DIR)/artifacts/libbrunslienc-static.bc \
-		$(CODEC_BUILD_DIR)/artifacts/libbrunslicommon-static.bc \
-		$(CODEC_BUILD_DIR)/artifacts/libbrunslidec-static.bc \
 		$(CODEC_BUILD_DIR)/third_party/brotli/libbrotlidec-static.a \
 		$(CODEC_BUILD_DIR)/third_party/brotli/libbrotlienc-static.a \
 		$(CODEC_BUILD_DIR)/third_party/brotli/libbrotlicommon-static.a \

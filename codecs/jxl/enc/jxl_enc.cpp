@@ -102,8 +102,8 @@ val encode(std::string image, int width, int height, JXLOptions options) {
   auto result = jxl::ConvertImage(
       jxl::Span<const uint8_t>(reinterpret_cast<const uint8_t*>(image.data()), image.size()), width,
       height, jxl::ColorEncoding::SRGB(/*is_gray=*/false), /*has_alpha=*/true,
-      /*alpha_is_premultiplied=*/false, /*bits_per_alpha=*/8, /*bits_per_sample=*/8,
-      /*big_endian=*/false, /*flipped_y=*/false, pool_ptr, main);
+      /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/8, JXL_LITTLE_ENDIAN,
+      /*flipped_y=*/false, pool_ptr, main);
 
   if (!result) {
     return val::null();
