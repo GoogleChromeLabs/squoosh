@@ -107,8 +107,8 @@ pub fn resize(
                 to_linear(input_image[4 * i + j]),
                 (input_image[4 * i + 3] as f32) / 255.0,
             );
-            preprocessed_input_image[4 * i + 3] = (input_image[4 * i + 3] as f32) / 255.0;
         }
+        preprocessed_input_image[4 * i + 3] = (input_image[4 * i + 3] as f32) / 255.0;
     }
 
     let mut unprocessed_output_image = vec![0.0f32; num_output_pixels * 4];
