@@ -69,6 +69,7 @@ val decode(std::string data) {
                                            icc_profile.data(), icc_profile.size()));
 
   auto float_pixels = std::make_unique<float[]>(component_count);
+  EXPECT_EQ(JXL_DEC_NEED_IMAGE_OUT_BUFFER, JxlDecoderProcessInput(dec.get(), &next_in, &avail_in));
   EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderSetImageOutBuffer(dec.get(), &format, float_pixels.get(),
                                                          component_count * sizeof(float)));
   EXPECT_EQ(JXL_DEC_FULL_IMAGE, JxlDecoderProcessInput(dec.get(), &next_in, &avail_in));
