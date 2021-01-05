@@ -7,7 +7,7 @@ export interface EncodeOptions {
   uv_mode: UVMode;
   csp_type: Csp;
   error_diffusion: number;
-  use_random_matrix: boolean;
+  tile_shape: TileShape;
 }
 
 export const enum UVMode {
@@ -22,6 +22,14 @@ export const enum Csp {
   kYCbCr,
   kCustom,
   kYIQ,
+}
+
+export const enum TileShape {
+  Square128,
+  Square256,
+  Square512,
+  Wide,
+  Auto,
 }
 
 export interface WP2Module extends EmscriptenWasm.Module {
