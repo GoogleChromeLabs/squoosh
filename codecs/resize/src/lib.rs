@@ -77,7 +77,7 @@ pub fn resize(
     let num_input_pixels = input_width * input_height;
     let num_output_pixels = output_width * output_height;
 
-    let mut output_image: Vec<u8> = vec_with_len(num_output_pixels * 4, 0);
+    let mut output_image = vec![0u8; num_output_pixels * 4];
 
     // If both options are false, there is no preprocessing on the pixel values
     // and we can skip the loop.
