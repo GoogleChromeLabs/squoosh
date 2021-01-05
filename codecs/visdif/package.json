@@ -1,5 +1,5 @@
 {
-  "name": "mozjpeg_enc",
+  "name": "avif",
   "scripts": {
     "build": "../build-cpp.sh"
   }

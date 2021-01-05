@@ -1,5 +1,4 @@
-import webpDataUrl from 'data-url:./tiny.webp';
-import avifDataUrl from 'data-url:./tiny.avif';
+import { initial, theRest } from './to-cache';
 
 // Give TypeScript the correct global.
 declare var self: ServiceWorkerGlobalScope;
@@ -85,76 +84,14 @@ export function cleanupCache(
   );
 }
 
-function getAssetsWithPrefix(assets: string[], prefixes: string[]) {
-  return assets.filter((asset) =>
-    prefixes.some((prefix) => asset.startsWith(prefix)),
-  );
+export async function cacheBasics(cacheName: string) {
+  const cache = await caches.open(cacheName);
+  return cache.addAll(initial);
 }
 
-export async function cacheBasics(cacheName: string, buildAssets: string[]) {
-  const toCache = ['/'];
-
-  const prefixesToCache = [
-    // TODO: this is likely incomplete
-    // Main app JS & CSS:
-    'c/initial-app-',
-    // Service worker handler:
-    'c/sw-bridge-',
-    // Little icons for the demo images on the homescreen:
-    'c/icon-demo-',
-    // Site logo:
-    'c/logo-',
-  ];
-
-  const prefixMatches = getAssetsWithPrefix(buildAssets, prefixesToCache);
-
-  toCache.push(...prefixMatches);
-
+export async function cacheAdditionalProcessors(cacheName: string) {
   const cache = await caches.open(cacheName);
-  await cache.addAll(toCache);
-}
-
-export async function cacheAdditionalProcessors(
-  cacheName: string,
-  buildAssets: string[],
-) {
-  let toCache = [];
-
-  const prefixesToCache = [
-    // TODO: these will need to change
-    // Worker which handles image processing:
-    'processor-worker.',
-    // processor-worker imports:
-    'process-',
-  ];
-
-  const prefixMatches = getAssetsWithPrefix(buildAssets, prefixesToCache);
-  const wasm = buildAssets.filter((asset) => asset.endsWith('.wasm'));
-
-  toCache.push(...prefixMatches, ...wasm);
-
-  const [supportsWebP, supportsAvif] = await Promise.all(
-    [webpDataUrl, avifDataUrl].map(async (dataUrl) => {
-      if (!self.createImageBitmap) return false;
-      const response = await fetch(dataUrl);
-      const blob = await response.blob();
-      return createImageBitmap(blob).then(
-        () => true,
-        () => false,
-      );
-    }),
-  );
-
-  // TODO: this is likely wrong
-  // No point caching decoders the browser already supports:
-  toCache = toCache.filter(
-    (asset) =>
-      (supportsWebP ? !/webp[\-_]dec/.test(asset) : true) &&
-      (supportsAvif ? !/avif[\-_]dec/.test(asset) : true),
-  );
-
-  const cache = await caches.open(cacheName);
-  await cache.addAll(toCache);
+  return cache.addAll(await theRest);
 }
 
 const nextMessageResolveMap = new Map<string, (() => void)[]>();

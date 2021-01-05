@@ -13,19 +13,23 @@ import {
   encoderMap,
 } from '../../feature-meta';
 import Expander from './Expander';
-import Checkbox from './Checkbox';
+import Toggle from './Toggle';
 import Select from './Select';
 import { Options as QuantOptionsComponent } from 'features/processors/quantize/client';
 import { Options as ResizeOptionsComponent } from 'features/processors/resize/client';
+import { CLIIcon, SwapIcon } from 'client/lazy-app/icons';
 
 interface Props {
+  index: 0 | 1;
   mobileView: boolean;
   source?: SourceImage;
   encoderState?: EncoderState;
   processorState: ProcessorState;
-  onEncoderTypeChange(newType: OutputType): void;
-  onEncoderOptionsChange(newOptions: EncoderOptions): void;
-  onProcessorOptionsChange(newOptions: ProcessorState): void;
+  onEncoderTypeChange(index: 0 | 1, newType: OutputType): void;
+  onEncoderOptionsChange(index: 0 | 1, newOptions: EncoderOptions): void;
+  onProcessorOptionsChange(index: 0 | 1, newOptions: ProcessorState): void;
+  onCopyToOtherSideClick(index: 0 | 1): void;
+  onCopyCliClick(index: 0 | 1): void;
 }
 
 interface State {
@@ -73,7 +77,7 @@ export default class Options extends Component<Props, State> {
     // The select element only has values matching encoder types,
     // so 'as' is safe here.
     const type = el.value as OutputType;
-    this.props.onEncoderTypeChange(type);
+    this.props.onEncoderTypeChange(this.props.index, type);
   };
 
   private onProcessorEnabledChange = (event: Event) => {
@@ -81,24 +85,39 @@ export default class Options extends Component<Props, State> {
     const processor = el.name.split('.')[0] as keyof ProcessorState;
 
     this.props.onProcessorOptionsChange(
+      this.props.index,
       cleanSet(this.props.processorState, `${processor}.enabled`, el.checked),
     );
   };
 
   private onQuantizerOptionsChange = (opts: ProcessorOptions['quantize']) => {
     this.props.onProcessorOptionsChange(
+      this.props.index,
       cleanMerge(this.props.processorState, 'quantize', opts),
     );
   };
 
   private onResizeOptionsChange = (opts: ProcessorOptions['resize']) => {
     this.props.onProcessorOptionsChange(
+      this.props.index,
       cleanMerge(this.props.processorState, 'resize', opts),
     );
   };
 
+  private onEncoderOptionsChange = (newOptions: EncoderOptions) => {
+    this.props.onEncoderOptionsChange(this.props.index, newOptions);
+  };
+
+  private onCopyCliClick = () => {
+    this.props.onCopyCliClick(this.props.index);
+  };
+
+  private onCopyToOtherSideClick = () => {
+    this.props.onCopyToOtherSideClick(this.props.index);
+  };
+
   render(
-    { source, encoderState, processorState, onEncoderOptionsChange }: Props,
+    { source, encoderState, processorState }: Props,
     { supportedEncoderMap }: State,
   ) {
     const encoder = encoderState && encoderMap[encoderState.type];
@@ -106,18 +125,42 @@ export default class Options extends Component<Props, State> {
       encoder && 'Options' in encoder ? encoder.Options : undefined;
 
     return (
-      <div class={style.optionsScroller}>
+      <div
+        class={
+          style.optionsScroller +
+          ' ' +
+          (encoderState ? '' : style.originalImage)
+        }
+      >
         <Expander>
           {!encoderState ? null : (
             <div>
-              <h3 class={style.optionsTitle}>Edit</h3>
+              <h3 class={style.optionsTitle}>
+                <div class={style.titleAndButtons}>
+                  Edit
+                  <button
+                    class={style.cliButton}
+                    title="Copy npx command"
+                    onClick={this.onCopyCliClick}
+                  >
+                    <CLIIcon />
+                  </button>
+                  <button
+                    class={style.copyOverButton}
+                    title="Copy settings to other side"
+                    onClick={this.onCopyToOtherSideClick}
+                  >
+                    <SwapIcon />
+                  </button>
+                </div>
+              </h3>
               <label class={style.sectionEnabler}>
-                <Checkbox
+                Resize
+                <Toggle
                   name="resize.enable"
                   checked={!!processorState.resize.enabled}
                   onChange={this.onProcessorEnabledChange}
                 />
-                Resize
               </label>
               <Expander>
                 {processorState.resize.enabled ? (
@@ -132,12 +175,12 @@ export default class Options extends Component<Props, State> {
               </Expander>
 
               <label class={style.sectionEnabler}>
-                <Checkbox
+                Reduce palette
+                <Toggle
                   name="quantize.enable"
                   checked={!!processorState.quantize.enabled}
                   onChange={this.onProcessorEnabledChange}
                 />
-                Reduce palette
               </label>
               <Expander>
                 {processorState.quantize.enabled ? (
@@ -180,7 +223,7 @@ export default class Options extends Component<Props, State> {
                 // the correct type, but typescript isn't smart enough.
                 encoderState!.options as any
               }
-              onChange={onEncoderOptionsChange}
+              onChange={this.onEncoderOptionsChange}
             />
           )}
         </Expander>

@@ -1,11 +1,12 @@
 CODEC_URL = https://gitlab.com/wg1/jpeg-xl.git
-CODEC_VERSION = 739e6cd1305fdec5acfa47ad414189b3d3ecb6a4
+CODEC_VERSION = v0.2
 CODEC_DIR = node_modules/jxl
 CODEC_BUILD_ROOT := $(CODEC_DIR)/build
 CODEC_MT_BUILD_DIR := $(CODEC_BUILD_ROOT)/mt
 CODEC_MT_SIMD_BUILD_DIR := $(CODEC_BUILD_ROOT)/mt-simd
+ENVIRONMENT = worker
 
-OUT_JS = enc/jxl_enc.js enc/jxl_enc_mt.js enc/jxl_enc_mt_simd.js dec/jxl_dec.js
+OUT_JS = enc/jxl_enc.js enc/jxl_enc_mt.js enc/jxl_enc_mt_simd.js dec/jxl_dec.js enc/jxl_node_enc.js dec/jxl_node_dec.js
 OUT_WASM = $(OUT_JS:.js=.wasm)
 OUT_WORKER = $(OUT_JS:.js=.worker.js)
 
@@ -17,11 +18,13 @@ all: $(OUT_JS)
 $(filter enc/%,$(OUT_JS)): enc/jxl_enc.cpp
 $(filter dec/%,$(OUT_JS)): dec/jxl_dec.cpp
 
+enc/jxl_node_enc.js dec/jxl_node_dec.js: ENVIRONMENT = node
+
 # For single-threaded build, we compile with threads enabled, but then just don't use them nor link them in.
-enc/jxl_enc.js enc/jxl_enc_mt.js dec/jxl_dec.js: CODEC_BUILD_DIR:=$(CODEC_MT_BUILD_DIR)
+enc/jxl_enc.js enc/jxl_node_enc.js enc/jxl_enc_mt.js dec/jxl_dec.js dec/jxl_node_dec.js: CODEC_BUILD_DIR:=$(CODEC_MT_BUILD_DIR)
 enc/jxl_enc_mt_simd.js: CODEC_BUILD_DIR:=$(CODEC_MT_SIMD_BUILD_DIR)
 
-enc/jxl_enc.js dec/jxl_dec.js: $(CODEC_MT_BUILD_DIR)/lib/libjxl.a
+enc/jxl_node_enc.js dec/jxl_node_dec.js enc/jxl_enc.js dec/jxl_dec.js: $(CODEC_MT_BUILD_DIR)/lib/libjxl.a
 enc/jxl_enc_mt.js: $(CODEC_MT_BUILD_DIR)/lib/libjxl.a $(CODEC_MT_BUILD_DIR)/lib/libjxl_threads.a
 enc/jxl_enc_mt_simd.js: $(CODEC_MT_SIMD_BUILD_DIR)/lib/libjxl.a $(CODEC_MT_SIMD_BUILD_DIR)/lib/libjxl_threads.a
 
@@ -38,21 +41,16 @@ $(OUT_JS):
 		-I $(CODEC_BUILD_DIR)/lib/include \
 		-I $(CODEC_DIR)/third_party/highway \
 		-I $(CODEC_DIR)/third_party/skcms \
-		-I $(CODEC_DIR)/third_party/brunsli \
-		-I $(CODEC_DIR)/third_party/brunsli/c/include \
 		--bind \
 		--closure 1 \
 		-s ALLOW_MEMORY_GROWTH=1 \
 		-s MODULARIZE=1 \
 		-s TEXTDECODER=2 \
-		-s ENVIRONMENT='worker' \
+		-s ENVIRONMENT=$(ENVIRONMENT) \
 		-s EXPORT_ES6=1 \
 		-s EXPORT_NAME="$(basename $(@F))" \
 		-o $@ \
 		$+ \
-		$(CODEC_BUILD_DIR)/artifacts/libbrunslienc-static.bc \
-		$(CODEC_BUILD_DIR)/artifacts/libbrunslicommon-static.bc \
-		$(CODEC_BUILD_DIR)/artifacts/libbrunslidec-static.bc \
 		$(CODEC_BUILD_DIR)/third_party/brotli/libbrotlidec-static.a \
 		$(CODEC_BUILD_DIR)/third_party/brotli/libbrotlienc-static.a \
 		$(CODEC_BUILD_DIR)/third_party/brotli/libbrotlicommon-static.a \

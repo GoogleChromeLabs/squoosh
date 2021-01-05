@@ -1,9 +1,9 @@
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
 
+#include "lib/jxl/base/thread_pool_internal.h"
 #include "lib/jxl/enc_file.h"
 #include "lib/jxl/external_image.h"
-#include "lib/jxl/base/thread_pool_internal.h"
 
 using namespace emscripten;
 
@@ -26,7 +26,7 @@ val encode(std::string image, int width, int height, JXLOptions options) {
   jxl::CodecInOut io;
   jxl::PaddedBytes bytes;
   jxl::ImageBundle* main = &io.Main();
-  jxl::ThreadPoolInternal *pool_ptr = nullptr;
+  jxl::ThreadPoolInternal* pool_ptr = nullptr;
 #ifdef __EMSCRIPTEN_PTHREADS__
   jxl::ThreadPoolInternal pool;
   pool_ptr = &pool;
@@ -102,8 +102,8 @@ val encode(std::string image, int width, int height, JXLOptions options) {
   auto result = jxl::ConvertImage(
       jxl::Span<const uint8_t>(reinterpret_cast<const uint8_t*>(image.data()), image.size()), width,
       height, jxl::ColorEncoding::SRGB(/*is_gray=*/false), /*has_alpha=*/true,
-      /*alpha_is_premultiplied=*/false, /*bits_per_alpha=*/8, /*bits_per_sample=*/8,
-      /*big_endian=*/false, /*flipped_y=*/false, pool_ptr, main);
+      /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/8, JXL_LITTLE_ENDIAN,
+      /*flipped_y=*/false, pool_ptr, main);
 
   if (!result) {
     return val::null();

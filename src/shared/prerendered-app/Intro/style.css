@@ -6,7 +6,7 @@
   display: grid;
   grid-template-rows: 1fr max-content max-content;
   font-size: 1.2rem;
-  color: var(--dark-text);
+  color: var(--dim-text);
 }
 
 .blob-canvas {
@@ -133,11 +133,17 @@
 
 .footer-items {
   display: grid;
-  justify-content: end;
-  grid-auto-columns: max-content;
-  grid-auto-flow: column;
-  align-items: center;
-  gap: 4rem;
+
+  grid-auto-rows: max-content;
+  justify-items: center;
+  gap: 2rem;
+
+  @media (min-width: 480px) {
+    justify-content: end;
+    grid-auto-flow: column;
+    align-items: center;
+    gap: 4rem;
+  }
 }
 
 .footer-link {

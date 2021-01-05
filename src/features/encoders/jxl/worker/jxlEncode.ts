@@ -37,17 +37,10 @@ async function init() {
       );
     }
     const jxlEncoder = await import('codecs/jxl/enc/jxl_enc_mt');
-    return initEmscriptenModule(
-      jxlEncoder.default,
-      wasmUrlWithMT,
-      workerUrl,
-    );
+    return initEmscriptenModule(jxlEncoder.default, wasmUrlWithMT, workerUrl);
   }
   const jxlEncoder = await import('codecs/jxl/enc/jxl_enc');
-  return initEmscriptenModule(
-    jxlEncoder.default,
-    wasmUrl,
-  );
+  return initEmscriptenModule(jxlEncoder.default, wasmUrl);
 }
 
 export default async function encode(

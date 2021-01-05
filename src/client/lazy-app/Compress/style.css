@@ -3,37 +3,75 @@
   height: 100%;
   contain: strict;
   display: grid;
-  align-items: end;
-  align-content: end;
-  grid-template-rows: 1fr auto;
+  grid-template-rows: max-content 1fr;
+  grid-template-areas:
+    'header'
+    'opts';
+
+  --options-radius: 7px;
 
   @media (min-width: 600px) {
-    grid-template-columns: 1fr auto;
-    grid-template-rows: 100%;
+    grid-template-rows: max-content 1fr;
+    grid-template-columns: max-content 1fr max-content;
+    grid-template-areas:
+      'header header header'
+      'optsLeft viewportOpts optsRight';
   }
 }
 
 .options {
+  position: relative;
   color: #fff;
-  opacity: 0.9;
   font-size: 1.2rem;
-  display: flex;
-  flex-flow: column;
   max-width: 400px;
   margin: 0 auto;
   width: calc(100% - 60px);
-  max-height: calc(100% - 104px);
+  max-height: 100%;
   overflow: hidden;
+  grid-area: opts;
+  display: grid;
+  grid-template-rows: 1fr max-content;
+  align-content: end;
+  align-self: end;
 
   @media (min-width: 600px) {
-    max-height: calc(100% - 75px);
     width: 300px;
     margin: 0;
   }
+}
 
-  @media (min-width: 860px) {
-    max-height: calc(100% - 40px);
+.options-1-theme {
+  --main-theme-color: var(--pink);
+  --hot-theme-color: var(--hot-pink);
+  --header-text-color: var(--white);
+  --scroller-radius: var(--options-radius) var(--options-radius) 0 0;
+
+  @media (min-width: 600px) {
+    --scroller-radius: 0 var(--options-radius) var(--options-radius) 0;
   }
+}
+
+.options-2-theme {
+  --main-theme-color: var(--blue);
+  --hot-theme-color: var(--deep-blue);
+  --header-text-color: var(--dark-text);
+  --scroller-radius: var(--options-radius) var(--options-radius) 0 0;
+
+  @media (min-width: 600px) {
+    --scroller-radius: var(--options-radius) 0 0 var(--options-radius);
+  }
+}
+
+.options-1 {
+  composes: options;
+  composes: options-1-theme;
+  grid-area: optsLeft;
+}
+
+.options-2 {
+  composes: options;
+  composes: options-2-theme;
+  grid-area: optsRight;
 }
 
 .multi-panel {
@@ -61,15 +99,32 @@
   }
 }
 
-.expand-icon {
-  transform: rotate(180deg);
-  margin-left: -12px;
+.back {
+  composes: unbutton from global;
+  position: relative;
+  grid-area: header;
+  margin: 9px;
+  justify-self: start;
+  align-self: start;
+
+  & > svg {
+    width: 47px;
+  }
+
+  @media (min-width: 600px) {
+    margin: 14px;
+
+    & > svg {
+      width: 58px;
+    }
+  }
 }
 
-[content-expanded] .expand-icon {
-  transform: none;
+.back-blob {
+  fill: var(--hot-pink);
+  opacity: 0.77;
 }
 
-:focus .expand-icon {
-  fill: #34b9eb;
+.back-x {
+  fill: var(--white);
 }

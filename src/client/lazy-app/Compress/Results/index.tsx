@@ -1,36 +1,24 @@
-import { h, Component, ComponentChildren, ComponentChild } from 'preact';
+import { h, Component, Fragment } from 'preact';
 
 import * as style from './style.css';
 import 'add-css:./style.css';
-import FileSize from './FileSize';
-import {
-  DownloadIcon,
-  CopyAcrossIcon,
-  CopyAcrossIconProps,
-} from 'client/lazy-app/icons';
 import 'shared/custom-els/loading-spinner';
 import { SourceImage } from '../';
+import prettyBytes from './pretty-bytes';
+import { Arrow, DownloadIcon } from 'client/lazy-app/icons';
 
 interface Props {
   loading: boolean;
   source?: SourceImage;
   imageFile?: File;
   downloadUrl?: string;
-  children: ComponentChildren;
-  copyDirection: CopyAcrossIconProps['copyDirection'];
-  buttonPosition: keyof typeof buttonPositionClass;
-  onCopyToOtherClick(): void;
+  flipSide: boolean;
+  typeLabel: string;
 }
 
 interface State {
   showLoadingState: boolean;
 }
-
-const buttonPositionClass = {
-  'stack-right': style.stackRight,
-  'download-right': style.downloadRight,
-  'download-left': style.downloadLeft,
-};
 
 const loadingReactionDelay = 500;
 
@@ -56,11 +44,6 @@ export default class Results extends Component<Props, State> {
     }
   }
 
-  private onCopyToOtherClick = (event: Event) => {
-    event.preventDefault();
-    this.props.onCopyToOtherClick();
-  };
-
   private onDownload = () => {
     // GA can’t do floats. So we round to ints. We're deliberately rounding to nearest kilobyte to
     // avoid cases where exact image sizes leak something interesting about the user.
@@ -76,59 +59,83 @@ export default class Results extends Component<Props, State> {
   };
 
   render(
-    {
-      source,
-      imageFile,
-      downloadUrl,
-      children,
-      copyDirection,
-      buttonPosition,
-    }: Props,
+    { source, imageFile, downloadUrl, flipSide, typeLabel }: Props,
     { showLoadingState }: State,
   ) {
+    const prettySize = imageFile && prettyBytes(imageFile.size);
+    const isOriginal = !source || !imageFile || source.file === imageFile;
+    let diff;
+    let percent;
+
+    if (source && imageFile) {
+      diff = imageFile.size / source.file.size;
+      const absolutePercent = Math.round(Math.abs(diff) * 100);
+      percent = diff > 1 ? absolutePercent - 100 : 100 - absolutePercent;
+    }
+
     return (
-      <div class={`${style.results} ${buttonPositionClass[buttonPosition]}`}>
-        <div class={style.resultData}>
-          {children ? <div class={style.resultTitle}>{children}</div> : null}
-          {!imageFile || showLoadingState ? (
-            'Working…'
-          ) : (
-            <FileSize
-              blob={imageFile}
-              compareTo={
-                source && imageFile !== source.file ? source.file : undefined
-              }
-            />
-          )}
+      <div
+        class={
+          (flipSide ? style.resultsRight : style.resultsLeft) +
+          ' ' +
+          (isOriginal ? style.isOriginal : '')
+        }
+      >
+        <div class={style.expandArrow}>
+          <Arrow />
         </div>
-
-        <button
-          class={style.copyToOther}
-          title="Copy settings to other side"
-          onClick={this.onCopyToOtherClick}
+        <div class={style.bubble}>
+          <div class={style.bubbleInner}>
+            <div class={style.sizeInfo}>
+              <div class={style.fileSize}>
+                {prettySize ? (
+                  <Fragment>
+                    {prettySize.value}{' '}
+                    <span class={style.unit}>{prettySize.unit}</span>
+                    <span class={style.typeLabel}> {typeLabel}</span>
+                  </Fragment>
+                ) : (
+                  '…'
+                )}
+              </div>
+            </div>
+            <div class={style.percentInfo}>
+              <svg
+                viewBox="0 0 1 2"
+                class={style.bigArrow}
+                preserveAspectRatio="none"
+              >
+                <path d="M1 0v2L0 1z" />
+              </svg>
+              <div class={style.percentOutput}>
+                {diff && diff !== 1 && (
+                  <span class={style.sizeDirection}>
+                    {diff < 1 ? '↓' : '↑'}
+                  </span>
+                )}
+                <span class={style.sizeValue}>{percent || 0}</span>
+                <span class={style.percentChar}>%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <a
+          class={showLoadingState ? style.downloadDisable : style.download}
+          href={downloadUrl}
+          download={imageFile ? imageFile.name : ''}
+          title="Download"
+          onClick={this.onDownload}
         >
-          <CopyAcrossIcon
-            class={style.copyIcon}
-            copyDirection={copyDirection}
-          />
-        </button>
-
-        <div class={style.download}>
-          {downloadUrl && imageFile && (
-            <a
-              class={`${style.downloadLink} ${
-                showLoadingState ? style.downloadLinkDisable : ''
-              }`}
-              href={downloadUrl}
-              download={imageFile.name}
-              title="Download"
-              onClick={this.onDownload}
-            >
-              <DownloadIcon class={style.downloadIcon} />
-            </a>
-          )}
-          {showLoadingState && <loading-spinner class={style.spinner} />}
-        </div>
+          <svg class={style.downloadBlobs} viewBox="0 0 89.6 86.9">
+            <title>Download</title>
+            <path d="M27.3 72c-8-4-15.6-12.3-16.9-21-1.2-8.7 4-17.8 10.5-26s14.4-15.6 24-16 21.2 6 28.6 16.5c7.4 10.5 10.8 25 6.6 34S64.1 71.8 54 73.6c-10.2 2-18.7 2.3-26.7-1.6z" />
+            <path d="M19.8 24.8c4.3-7.8 13-15 21.8-15.7 8.7-.8 17.5 4.8 25.4 11.8 7.8 6.9 14.8 15.2 14.7 24.9s-7.1 20.7-18 27.6c-10.8 6.8-25.5 9.5-34.2 4.8S18.1 61.6 16.7 51.4c-1.3-10.3-1.3-18.8 3-26.6z" />
+          </svg>
+          <div class={style.downloadIcon}>
+            <DownloadIcon />
+          </div>
+          {showLoadingState && <loading-spinner />}
+        </a>
       </div>
     );
   }

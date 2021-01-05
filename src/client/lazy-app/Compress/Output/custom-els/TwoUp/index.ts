@@ -68,14 +68,21 @@ export default class TwoUp extends HTMLElement {
         );
       },
     });
+
+    window.addEventListener('keydown', event => this._onKeyDown(event));
   }
 
   connectedCallback() {
     this._childrenChange();
 
-    this._handle.innerHTML = `<div class="${
-      styles.scrubber
-    }">${`<svg viewBox="0 0 27 20" fill="currentColor">${'<path d="M17 19.2l9.5-9.6L16.9 0zM9.6 0L0 9.6l9.6 9.6z"/>'}</svg>`}</div>`;
+    // prettier-ignore
+    this._handle.innerHTML =
+      `<div class="${styles.scrubber}">${
+        `<svg viewBox="0 0 27 20">${
+          `<path class="${styles.arrowLeft}" d="M9.6 0L0 9.6l9.6 9.6z"/>` +
+          `<path class="${styles.arrowRight}" d="M17 19.2l9.5-9.6L16.9 0z"/>`
+        }</svg>
+      `}</div>`;
 
     if (!this._everConnected) {
       this._resetPosition();
@@ -86,6 +93,29 @@ export default class TwoUp extends HTMLElement {
   attributeChangedCallback(name: string) {
     if (name === orientationAttr) {
       this._resetPosition();
+    }
+  }
+
+  // KeyDown event handler
+  private _onKeyDown(event: KeyboardEvent) {
+    if (event.code === 'Digit1' || event.code === 'Numpad1') {
+      this._position = 0;
+      this._relativePosition = 0;
+      this._setPosition();
+    } else if (event.code === 'Digit2' || event.code === 'Numpad2') {
+      const dimensionAxis = this.orientation === 'vertical' ? 'height' : 'width';
+      const bounds = this.getBoundingClientRect();
+
+      this._position = bounds[dimensionAxis] / 2;
+      this._relativePosition = (this._position / bounds[dimensionAxis]) / 2;
+      this._setPosition();
+    } else if (event.code === 'Digit3' || event.code === 'Numpad3') {
+      const dimensionAxis = this.orientation === 'vertical' ? 'height' : 'width';
+      const bounds = this.getBoundingClientRect();
+
+      this._position = bounds[dimensionAxis];
+      this._relativePosition = this._position / bounds[dimensionAxis];
+      this._setPosition();
     }
   }
 

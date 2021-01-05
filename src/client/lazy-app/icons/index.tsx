@@ -11,12 +11,6 @@ const Icon = (props: preact.JSX.HTMLAttributes) => (
   />
 );
 
-export const DownloadIcon = (props: preact.JSX.HTMLAttributes) => (
-  <Icon {...props}>
-    <path d="M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2v-7h-2zm-6 .7l2.6-2.6 1.4 1.4-5 5-5-5 1.4-1.4 2.6 2.6V3h2z" />
-  </Icon>
-);
-
 export const ToggleBackgroundIcon = (props: preact.JSX.HTMLAttributes) => (
   <Icon {...props}>
     <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm2 4v-2H3c0 1.1.9 2 2 2zM3 9h2V7H3v2zm12 12h2v-2h-2v2zm4-18H9a2 2 0 0 0-2 2v10c0 1.1.9 2 2 2h10a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm0 12H9V5h10v10zm-8 6h2v-2h-2v2zm-4 0h2v-2H7v2z" />
@@ -67,42 +61,31 @@ export const ExpandIcon = (props: preact.JSX.HTMLAttributes) => (
   </Icon>
 );
 
-export const BackIcon = (props: preact.JSX.HTMLAttributes) => (
-  <Icon {...props}>
-    <path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20v-2z" />
-  </Icon>
+export const Arrow = () => (
+  <svg viewBox="0 -1.95 9.8 9.8">
+    <path d="M8.2.2a1 1 0 011.4 1.4l-4 4a1 1 0 01-1.4 0l-4-4A1 1 0 011.6.2l3.3 3.3L8.2.2z" />
+  </svg>
 );
 
-const copyAcrossRotations = {
-  up: 90,
-  right: 180,
-  down: -90,
-  left: 0,
-};
+export const DownloadIcon = () => (
+  <svg viewBox="0 0 23.9 24.9">
+    <path d="M6.6 2.7h-4v13.2h2.7A2.7 2.7 0 018 18.6a2.7 2.7 0 002.6 2.6h2.7a2.7 2.7 0 002.6-2.6 2.7 2.7 0 012.7-2.7h2.6V2.7h-4a1.3 1.3 0 110-2.7h4A2.7 2.7 0 0124 2.7v18.5a2.7 2.7 0 01-2.7 2.7H2.7A2.7 2.7 0 010 21.2V2.7A2.7 2.7 0 012.7 0h4a1.3 1.3 0 010 2.7zm4 7.4V1.3a1.3 1.3 0 112.7 0v8.8L15 8.4a1.3 1.3 0 011.9 1.8l-4 4a1.3 1.3 0 01-1.9 0l-4-4A1.3 1.3 0 019 8.4z" />
+  </svg>
+);
 
-export interface CopyAcrossIconProps extends preact.JSX.HTMLAttributes {
-  copyDirection: keyof typeof copyAcrossRotations;
-}
+export const CLIIcon = () => (
+  <svg viewBox="0 0 81.3 68.8">
+    <path
+      fill="none"
+      stroke-miterlimit="15.6"
+      stroke-width="6.3"
+      d="M3.1 3.1h75v62.5h-75zm18.8 43.8l12.5-12.5-12.5-12.5m18.7 25h18.8"
+    />
+  </svg>
+);
 
-export const CopyAcrossIcon = (props: CopyAcrossIconProps) => {
-  const { copyDirection, ...otherProps } = props;
-  const id = 'point-' + copyDirection;
-  const rotation = copyAcrossRotations[copyDirection];
-
-  return (
-    <Icon {...otherProps}>
-      <defs>
-        <clipPath id={id}>
-          <path
-            d="M-12-12v24h24v-24zM4.5 2h-4v3l-5-5 5-5v3h4z"
-            transform={`translate(12 13) rotate(${rotation})`}
-          />
-        </clipPath>
-      </defs>
-      <path
-        clip-path={`url(#${id})`}
-        d="M19 3h-4.2c-.4-1.2-1.5-2-2.8-2s-2.4.8-2.8 2H5a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7 0a1 1 0 0 1 0 2c-.6 0-1-.4-1-1s.4-1 1-1z"
-      />
-    </Icon>
-  );
-};
+export const SwapIcon = () => (
+  <svg viewBox="0 0 18 14">
+    <path d="M5.5 3.6v6.8L2.1 7l3.4-3.4M7 0L0 7l7 7V0zm4 0v14l7-7-7-7z" />
+  </svg>
+);

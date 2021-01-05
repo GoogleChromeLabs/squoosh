@@ -46,7 +46,7 @@ const demos = [
     url: logo,
     iconUrl: logoIcon,
   },
-];
+] as const;
 
 const blobAnimImport =
   !__PRERENDER__ && matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -350,6 +350,12 @@ export default class Intro extends Component<Props, State> {
                 href="https://github.com/GoogleChromeLabs/squoosh/blob/dev/README.md#privacy"
               >
                 Privacy
+              </a>
+              <a
+                class={style.footerLink}
+                href="https://github.com/GoogleChromeLabs/squoosh/tree/dev/cli"
+              >
+                Squoosh CLI
               </a>
               <a
                 class={style.footerLinkWithLogo}

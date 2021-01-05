@@ -18,5 +18,5 @@
 }
 
 .checked {
-  fill: #34b9eb;
+  fill: var(--main-theme-color);
 }

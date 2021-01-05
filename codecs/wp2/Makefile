@@ -4,8 +4,9 @@ CODEC_BUILD_ROOT := $(CODEC_DIR)/build
 CODEC_BASELINE_BUILD_DIR := $(CODEC_BUILD_ROOT)/baseline
 CODEC_MT_BUILD_DIR := $(CODEC_BUILD_ROOT)/mt
 CODEC_MT_SIMD_BUILD_DIR := $(CODEC_BUILD_ROOT)/mt-simd
+ENVIRONMENT = worker
 
-OUT_JS = enc/wp2_enc.js enc/wp2_enc_mt.js enc/wp2_enc_mt_simd.js dec/wp2_dec.js
+OUT_JS = enc/wp2_enc.js enc/wp2_enc_mt.js enc/wp2_enc_mt_simd.js dec/wp2_dec.js enc/wp2_node_enc.js dec/wp2_node_dec.js
 OUT_WASM := $(OUT_JS:.js=.wasm)
 OUT_WORKER := $(OUT_JS:.js=.worker.js)
 
@@ -16,7 +17,8 @@ all: $(OUT_JS)
 # Define dependencies for all variations of build artifacts.
 $(filter enc/%,$(OUT_JS)): enc/wp2_enc.o
 $(filter dec/%,$(OUT_JS)): dec/wp2_dec.o
-enc/wp2_enc.js dec/wp2_dec.js: $(CODEC_BASELINE_BUILD_DIR)/libwebp2.a
+enc/wp2_enc.js dec/wp2_dec.js enc/wp2_node_enc.js dec/wp2_node_dec.js: $(CODEC_BASELINE_BUILD_DIR)/libwebp2.a
+enc/wp2_node_enc.js dec/wp2_node_dec.js: ENVIRONMENT = node
 enc/wp2_enc_mt.js: $(CODEC_MT_BUILD_DIR)/libwebp2.a
 enc/wp2_enc_mt_simd.js: $(CODEC_MT_SIMD_BUILD_DIR)/libwebp2.a
 # Link multithreaded builds with -pthread.
@@ -30,7 +32,7 @@ $(OUT_JS):
 		-s ALLOW_MEMORY_GROWTH=1 \
 		-s MODULARIZE=1 \
 		-s TEXTDECODER=2 \
-		-s ENVIRONMENT='worker' \
+		-s ENVIRONMENT=$(ENVIRONMENT) \
 		-s EXPORT_ES6=1 \
 		-s EXPORT_NAME="$(basename $(@F))" \
 		-o $@ \
