@@ -30,7 +30,7 @@ npm run build
 You can run the development server with:
 
 ```sh
-npm start
+npm run dev
 ```
 
 [squoosh]: https://squoosh.app
