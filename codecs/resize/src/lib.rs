@@ -117,7 +117,7 @@ pub fn resize(
         }
     }
 
-    let mut unprocessed_output_image: Vec<f32> = vec_with_len(num_output_pixels * 4, 0.0f32);
+    let mut unprocessed_output_image = vec![0.0f32; num_output_pixels * 4];
 
     let mut resizer = resize::new(
         input_width,
