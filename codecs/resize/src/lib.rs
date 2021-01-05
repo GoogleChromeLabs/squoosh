@@ -55,12 +55,6 @@ fn alpha_multiplier_funcs(
     }
 }
 
-fn vec_with_len<T: Clone>(len: usize, item: T) -> Vec<T> {
-    let mut v: Vec<T> = Vec::with_capacity(len);
-    v.resize(len, item);
-    return v;
-}
-
 #[wasm_bindgen]
 #[no_mangle]
 pub fn resize(
