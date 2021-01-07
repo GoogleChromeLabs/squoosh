@@ -1,6 +1,7 @@
 import type SnackBarElement from 'shared/custom-els/snack-bar';
 
 import { get, set } from 'idb-keyval';
+import { canDecodeImageType } from 'client/lazy-app/util';
 
 import swUrl from 'service-worker:sw';
 
@@ -104,6 +105,12 @@ export async function mainAppLoaded() {
   // If the user has already interacted, no need to tell the service worker anything.
   const userInteracted = await get<boolean | undefined>('user-interacted');
   if (userInteracted) return;
+  await Promise.all(
+    ['avif', 'webp'].map(async (name) => {
+      let isSupported = await canDecodeImageType(`image/${name}`);
+      await set(`supports-${name}`, isSupported);
+    }),
+  );
   set('user-interacted', true);
   const serviceWorker = await getMostActiveServiceWorker();
   if (!serviceWorker) return; // Service worker not installing yet.

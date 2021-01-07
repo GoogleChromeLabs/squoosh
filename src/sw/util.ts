@@ -91,7 +91,7 @@ export async function cacheBasics(cacheName: string) {
 
 export async function cacheAdditionalProcessors(cacheName: string) {
   const cache = await caches.open(cacheName);
-  return cache.addAll(await theRest);
+  return cache.addAll(await theRest());
 }
 
 const nextMessageResolveMap = new Map<string, (() => void)[]>();

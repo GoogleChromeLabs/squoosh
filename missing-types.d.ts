@@ -32,11 +32,6 @@ declare module 'css:*' {
   export default source;
 }
 
-declare module 'data-url:*' {
-  const url: string;
-  export default url;
-}
-
 declare var ga: {
   (...args: any[]): void;
   q: any[];

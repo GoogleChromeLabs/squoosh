@@ -1,6 +1,5 @@
 import { threads, simd } from 'wasm-feature-detect';
-import webpDataUrl from 'data-url:./tiny.webp';
-import avifDataUrl from 'data-url:./tiny.avif';
+import { get } from 'idb-keyval';
 
 // Give TypeScript the correct global.
 declare var self: ServiceWorkerGlobalScope;
@@ -105,7 +104,7 @@ import wp2EncMtWasm from 'url:codecs/wp2/enc/wp2_enc_mt.wasm';
 import * as wp2Enc from 'entry-data:codecs/wp2/enc/wp2_enc';
 import wp2EncWasm from 'url:codecs/wp2/enc/wp2_enc.wasm';
 
-export const theRest = (async () => {
+export const theRest = async () => {
   const [
     supportsThreads,
     supportsSimd,
@@ -114,15 +113,8 @@ export const theRest = (async () => {
   ] = await Promise.all([
     threads(),
     simd(),
-    ...[webpDataUrl, avifDataUrl].map(async (dataUrl) => {
-      if (!self.createImageBitmap) return false;
-      const response = await fetch(dataUrl);
-      const blob = await response.blob();
-      return createImageBitmap(blob).then(
-        () => true,
-        () => false,
-      );
-    }),
+    get('supports-webp'),
+    get('supports-avif'),
   ]);
 
   const items = [
@@ -210,4 +202,4 @@ export const theRest = (async () => {
   }
 
   return [...new Set(items)];
-})();
+};
