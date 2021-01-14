@@ -16,6 +16,9 @@ import { renderPage, writeFiles } from './utils';
 import IndexPage from './pages/index';
 import iconLargeMaskable from 'url:static-build/assets/icon-large-maskable.png';
 import iconLarge from 'url:static-build/assets/icon-large.png';
+import screenshot1 from 'url:static-build/assets/screenshot1.png';
+import screenshot2 from 'url:static-build/assets/screenshot2.png';
+import screenshot3 from 'url:static-build/assets/screenshot3.png';
 import dedent from 'dedent';
 
 // Set by Netlify
@@ -58,6 +61,27 @@ const toOutput: Output = {
         type: 'image/png',
         sizes: '1024x1024',
         purpose: 'maskable',
+      },
+    ],
+    description:
+      'Compress and compare images with different codecs, right in your browser.',
+    lang: 'en',
+    categories: ['photo', 'productivity', 'utilities'],
+    screenshots: [
+      {
+        src: screenshot1,
+        type: 'image/png',
+        sizes: '540x720',
+      },
+      {
+        src: screenshot2,
+        type: 'image/png',
+        sizes: '540x720',
+      },
+      {
+        src: screenshot3,
+        type: 'image/png',
+        sizes: '540x720',
       },
     ],
     share_target: {
