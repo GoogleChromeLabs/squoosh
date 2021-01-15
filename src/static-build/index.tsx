@@ -16,9 +16,9 @@ import { renderPage, writeFiles } from './utils';
 import IndexPage from './pages/index';
 import iconLargeMaskable from 'url:static-build/assets/icon-large-maskable.png';
 import iconLarge from 'url:static-build/assets/icon-large.png';
-import screenshot1 from 'url:static-build/assets/screenshot1.png';
-import screenshot2 from 'url:static-build/assets/screenshot2.png';
-import screenshot3 from 'url:static-build/assets/screenshot3.png';
+import screenshot1 from 'url:static-build/assets/screenshot1.webp';
+import screenshot2 from 'url:static-build/assets/screenshot2.webp';
+import screenshot3 from 'url:static-build/assets/screenshot3.webp';
 import dedent from 'dedent';
 
 // Set by Netlify
