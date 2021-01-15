@@ -25,6 +25,7 @@
     "file-drop-element": "^1.0.1",
     "husky": "^4.3.0",
     "idb-keyval": "^3.2.0",
+    "image-size": "^0.9.3",
     "linkstate": "^2.0.0",
     "lint-staged": "^10.5.1",
     "lodash.camelcase": "^4.3.0",

@@ -14,13 +14,16 @@ import { h } from 'preact';
 
 import { renderPage, writeFiles } from './utils';
 import IndexPage from './pages/index';
-import iconLargeMaskable from 'url:static-build/assets/icon-large-maskable.png';
-import iconLarge from 'url:static-build/assets/icon-large.png';
-import screenshot1 from 'url:static-build/assets/screenshot1.png';
-import screenshot2 from 'url:static-build/assets/screenshot2.jpg';
-import screenshot3 from 'url:static-build/assets/screenshot3.jpg';
+import * as iconLargeMaskable from 'img-url:static-build/assets/icon-large-maskable.png';
+import * as iconLarge from 'img-url:static-build/assets/icon-large.png';
+import * as screenshot1 from 'img-url:static-build/assets/screenshot1.png';
+import * as screenshot2 from 'img-url:static-build/assets/screenshot2.jpg';
+import * as screenshot3 from 'img-url:static-build/assets/screenshot3.jpg';
 import dedent from 'dedent';
-import mime from 'mime-types';
+import { lookup as lookupMime } from 'mime-types';
+
+const manifestSize = ({ width, height }: { width: number; height: number }) =>
+  `${width}x${height}`;
 
 // Set by Netlify
 const branch = process.env.BRANCH;
@@ -53,14 +56,14 @@ const toOutput: Output = {
     theme_color: '#ff3385',
     icons: [
       {
-        src: iconLarge,
-        type: mime.lookup(iconLarge),
-        sizes: '1024x1024',
+        src: iconLarge.default,
+        type: lookupMime(iconLarge.default),
+        sizes: manifestSize(iconLarge),
       },
       {
-        src: iconLargeMaskable,
-        type: mime.lookup(iconLargeMaskable),
-        sizes: '1024x1024',
+        src: iconLargeMaskable.default,
+        type: lookupMime(iconLargeMaskable.default),
+        sizes: manifestSize(iconLargeMaskable),
         purpose: 'maskable',
       },
     ],
@@ -70,19 +73,19 @@ const toOutput: Output = {
     categories: ['photo', 'productivity', 'utilities'],
     screenshots: [
       {
-        src: screenshot1,
-        type: mime.lookup(screenshot1),
-        sizes: '540x720',
+        src: screenshot1.default,
+        type: lookupMime(screenshot1.default),
+        sizes: manifestSize(screenshot1),
       },
       {
-        src: screenshot2,
-        type: mime.lookup(screenshot2),
-        sizes: '540x720',
+        src: screenshot2.default,
+        type: lookupMime(screenshot2.default),
+        sizes: manifestSize(screenshot2),
       },
       {
-        src: screenshot3,
-        type: mime.lookup(screenshot3),
-        sizes: '540x720',
+        src: screenshot3.default,
+        type: lookupMime(screenshot3.default),
+        sizes: manifestSize(screenshot3),
       },
     ],
     share_target: {
