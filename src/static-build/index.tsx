@@ -20,6 +20,7 @@ import screenshot1 from 'url:static-build/assets/screenshot1.png';
 import screenshot2 from 'url:static-build/assets/screenshot2.jpg';
 import screenshot3 from 'url:static-build/assets/screenshot3.jpg';
 import dedent from 'dedent';
+import mime from 'mime-types';
 
 // Set by Netlify
 const branch = process.env.BRANCH;
@@ -53,12 +54,12 @@ const toOutput: Output = {
     icons: [
       {
         src: iconLarge,
-        type: 'image/png',
+        type: mime.lookup(iconLarge),
         sizes: '1024x1024',
       },
       {
         src: iconLargeMaskable,
-        type: 'image/png',
+        type: mime.lookup(iconLargeMaskable),
         sizes: '1024x1024',
         purpose: 'maskable',
       },
@@ -70,17 +71,17 @@ const toOutput: Output = {
     screenshots: [
       {
         src: screenshot1,
-        type: 'image/png',
+        type: mime.lookup(screenshot1),
         sizes: '540x720',
       },
       {
         src: screenshot2,
-        type: 'image/png',
+        type: mime.lookup(screenshot2),
         sizes: '540x720',
       },
       {
         src: screenshot3,
-        type: 'image/png',
+        type: mime.lookup(screenshot3),
         sizes: '540x720',
       },
     ],
