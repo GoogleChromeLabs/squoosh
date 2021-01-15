@@ -36,7 +36,7 @@ const Index: FunctionalComponent<Props> = () => (
       <meta name="mobile-web-app-capable" content="yes" />
       <meta name="apple-mobile-web-app-capable" content="yes" />
       <link rel="shortcut icon" href={favicon} />
-      <meta name="theme-color" content="#f78f21" />
+      <meta name="theme-color" content="#ff3385" />
       <link rel="manifest" href="/manifest.json" />
       <style
         dangerouslySetInnerHTML={{ __html: escapeStyleScriptContent(baseCss) }}
