@@ -46,7 +46,10 @@ $(CODEC_DIR)/Makefile: $(CODEC_DIR)/configure
 		--without-turbojpeg \
 		--without-simd \
 		--without-arith-enc \
-		--without-arith-dec
+		--without-arith-dec \
+		--with-build-date=squoosh
+		# ^ If not provided with a dummy value, MozJPEG includes a build date in the
+		# binary as part of the version string, making binaries different each time.
 
 $(CODEC_DIR)/configure: $(CODEC_DIR)/configure.ac
 	cd $(CODEC_DIR) && autoreconf -iv
