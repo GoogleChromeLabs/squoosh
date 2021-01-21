@@ -6,7 +6,7 @@ edition = "2018"
 publish = false
 
 [package.metadata.wasm-pack.profile.release]
-wasm-opt = ["-O", "--no-validation"]
+wasm-opt = false
 
 [lib]
 crate-type = ["cdylib"]
