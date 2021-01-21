@@ -14,9 +14,16 @@ import { h } from 'preact';
 
 import { renderPage, writeFiles } from './utils';
 import IndexPage from './pages/index';
-import iconLargeMaskable from 'url:static-build/assets/icon-large-maskable.png';
-import iconLarge from 'url:static-build/assets/icon-large.png';
+import * as iconLargeMaskable from 'img-url:static-build/assets/icon-large-maskable.png';
+import * as iconLarge from 'img-url:static-build/assets/icon-large.png';
+import * as screenshot1 from 'img-url:static-build/assets/screenshot1.png';
+import * as screenshot2 from 'img-url:static-build/assets/screenshot2.jpg';
+import * as screenshot3 from 'img-url:static-build/assets/screenshot3.jpg';
 import dedent from 'dedent';
+import { lookup as lookupMime } from 'mime-types';
+
+const manifestSize = ({ width, height }: { width: number; height: number }) =>
+  `${width}x${height}`;
 
 // Set by Netlify
 const branch = process.env.BRANCH;
@@ -49,15 +56,36 @@ const toOutput: Output = {
     theme_color: '#ff3385',
     icons: [
       {
-        src: iconLarge,
-        type: 'image/png',
-        sizes: '1024x1024',
+        src: iconLarge.default,
+        type: lookupMime(iconLarge.default),
+        sizes: manifestSize(iconLarge),
       },
       {
-        src: iconLargeMaskable,
-        type: 'image/png',
-        sizes: '1024x1024',
+        src: iconLargeMaskable.default,
+        type: lookupMime(iconLargeMaskable.default),
+        sizes: manifestSize(iconLargeMaskable),
         purpose: 'maskable',
+      },
+    ],
+    description:
+      'Compress and compare images with different codecs, right in your browser.',
+    lang: 'en',
+    categories: ['photo', 'productivity', 'utilities'],
+    screenshots: [
+      {
+        src: screenshot1.default,
+        type: lookupMime(screenshot1.default),
+        sizes: manifestSize(screenshot1),
+      },
+      {
+        src: screenshot2.default,
+        type: lookupMime(screenshot2.default),
+        sizes: manifestSize(screenshot2),
+      },
+      {
+        src: screenshot3.default,
+        type: lookupMime(screenshot3.default),
+        sizes: manifestSize(screenshot3),
       },
     ],
     share_target: {
