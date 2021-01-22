@@ -8,7 +8,7 @@ ENVIRONMENT = worker
 
 .PHONY: all clean
 
-all: $(OUT_JS) $(OUT_NODE_JS)
+all: $(OUT_JS)
 
 imagequant_node.js: ENVIRONMENT=node
 $(OUT_JS): $(CODEC_OUT)
