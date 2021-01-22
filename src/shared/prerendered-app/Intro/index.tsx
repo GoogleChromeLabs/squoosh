@@ -1,4 +1,4 @@
-import { h, Component } from 'preact';
+import { h, Component, Fragment } from 'preact';
 
 import { linkRef } from 'shared/prerendered-app/util';
 import '../../custom-els/loading-spinner';
