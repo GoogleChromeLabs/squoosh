@@ -106,8 +106,9 @@ const toOutput: Output = {
     /*
       Cache-Control: no-cache
 
-    /c/*
-      Cache-Control: max-age=31536000
+    # I don't think Rollup is cache-busting files correctly.
+    #/c/*
+    #  Cache-Control: max-age=31536000
 
     # COOP+COEP for WebAssembly threads.
     /*
