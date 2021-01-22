@@ -27,21 +27,6 @@ $(OUT_JS): $(CODEC_OUT)
 		$+ \
 		imagequant.cpp
 
-	$(CXX) \
-		-I $(CODEC_DIR) \
-		${CXXFLAGS} \
-		${LDFLAGS} \
-		--bind \
-		--closure 1 \
-		-s ALLOW_MEMORY_GROWTH=1 \
-		-s MODULARIZE=1 \
-		-s TEXTDECODER=2 \
-		-s ENVIRONMENT='node' \
-		-s EXPORT_ES6=1 \
-		-o $@ \
-		$+ \
-		imagequant.cpp
-
 $(CODEC_OUT): $(CODEC_DIR)/config.mk
 	$(MAKE) -C $(CODEC_DIR) $(CODEC_OUT_RELATIVE)
 
