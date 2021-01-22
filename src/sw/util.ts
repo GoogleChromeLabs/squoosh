@@ -84,14 +84,19 @@ export function cleanupCache(
   );
 }
 
+function urlsToRequests(urls: string[]): Request[] {
+  // Using no-cache, as our hashing aren't updating properly right now.
+  return urls.map((url) => new Request(url, { cache: 'no-cache' }));
+}
+
 export async function cacheBasics(cacheName: string) {
   const cache = await caches.open(cacheName);
-  return cache.addAll(initial);
+  return cache.addAll(urlsToRequests(initial));
 }
 
 export async function cacheAdditionalProcessors(cacheName: string) {
   const cache = await caches.open(cacheName);
-  return cache.addAll(await theRest);
+  return cache.addAll(urlsToRequests(await theRest));
 }
 
 const nextMessageResolveMap = new Map<string, (() => void)[]>();
