@@ -68,7 +68,7 @@ const toOutput: Output = {
       },
     ],
     description:
-      'Compress and compare images with different codecs, right in your browser.',
+      'Squoosh is an image compression web app that allows you to dive into the advanced options provided by various image compressors.',
     lang: 'en',
     categories: ['photo', 'productivity', 'utilities'],
     screenshots: [
