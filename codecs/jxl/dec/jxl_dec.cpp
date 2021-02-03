@@ -52,13 +52,14 @@ val decode(std::string data) {
 
   auto next_in = (const uint8_t*)data.c_str();
   auto avail_in = data.size();
-  EXPECT_EQ(JXL_DEC_BASIC_INFO, JxlDecoderProcessInput(dec.get(), &next_in, &avail_in));
+  JxlDecoderSetInput(dec.get(), next_in, avail_in);
+  EXPECT_EQ(JXL_DEC_BASIC_INFO, JxlDecoderProcessInput(dec.get()));
   JxlBasicInfo info;
   EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderGetBasicInfo(dec.get(), &info));
   size_t pixel_count = info.xsize * info.ysize;
   size_t component_count = pixel_count * COMPONENTS_PER_PIXEL;
 
-  EXPECT_EQ(JXL_DEC_COLOR_ENCODING, JxlDecoderProcessInput(dec.get(), &next_in, &avail_in));
+  EXPECT_EQ(JXL_DEC_COLOR_ENCODING, JxlDecoderProcessInput(dec.get()));
   static const JxlPixelFormat format = {COMPONENTS_PER_PIXEL, JXL_TYPE_FLOAT, JXL_LITTLE_ENDIAN, 0};
   size_t icc_size;
   EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderGetICCProfileSize(dec.get(), &format,
@@ -68,11 +69,15 @@ val decode(std::string data) {
             JxlDecoderGetColorAsICCProfile(dec.get(), &format, JXL_COLOR_PROFILE_TARGET_DATA,
                                            icc_profile.data(), icc_profile.size()));
 
+  EXPECT_EQ(JXL_DEC_NEED_IMAGE_OUT_BUFFER, JxlDecoderProcessInput(dec.get()));
+  size_t buffer_size;
+  EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderImageOutBufferSize(dec.get(), &format, &buffer_size));
+  EXPECT_EQ(buffer_size, component_count * sizeof(float));
+
   auto float_pixels = std::make_unique<float[]>(component_count);
-  EXPECT_EQ(JXL_DEC_NEED_IMAGE_OUT_BUFFER, JxlDecoderProcessInput(dec.get(), &next_in, &avail_in));
   EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderSetImageOutBuffer(dec.get(), &format, float_pixels.get(),
                                                          component_count * sizeof(float)));
-  EXPECT_EQ(JXL_DEC_FULL_IMAGE, JxlDecoderProcessInput(dec.get(), &next_in, &avail_in));
+  EXPECT_EQ(JXL_DEC_FULL_IMAGE, JxlDecoderProcessInput(dec.get()));
 
   auto byte_pixels = std::make_unique<uint8_t[]>(component_count);
   // Convert to sRGB.
