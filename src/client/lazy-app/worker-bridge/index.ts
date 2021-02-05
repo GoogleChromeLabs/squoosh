@@ -2,7 +2,7 @@ import { wrap } from 'comlink';
 import { BridgeMethods, methodNames } from './meta';
 import workerURL from 'omt:../../../features-worker';
 import type { ProcessorWorkerApi } from '../../../features-worker';
-import { abortable } from '../util';
+import { abortableFunc } from '../util';
 
 /** How long the worker should be idle before terminating. */
 const workerTimeout = 10_000;
@@ -40,29 +40,21 @@ for (const methodName of methodNames) {
     this._queue = this._queue
       // Ignore any errors in the queue
       .catch(() => {})
-      .then(async () => {
-        if (signal.aborted) throw new DOMException('AbortError', 'AbortError');
+      .then(() =>
+        abortableFunc(signal, async (setOnAbort) => {
+          clearTimeout(this._workerTimeout);
+          if (!this._worker) this._startWorker();
 
-        clearTimeout(this._workerTimeout);
-        if (!this._worker) this._startWorker();
+          setOnAbort(() => this._terminateWorker());
 
-        const onAbort = () => this._terminateWorker();
-        signal.addEventListener('abort', onAbort);
-
-        return abortable(
-          signal,
-          // @ts-ignore - TypeScript can't figure this out
-          this._workerApi![methodName](...args),
-        ).finally(() => {
-          // No longer care about aborting - this task is complete.
-          signal.removeEventListener('abort', onAbort);
-
-          // Start a timer to clear up the worker.
-          this._workerTimeout = setTimeout(() => {
-            this._terminateWorker();
-          }, workerTimeout);
-        });
-      });
+          return this._workerApi![methodName](...args).finally(() => {
+            // Start a timer to clear up the worker.
+            this._workerTimeout = setTimeout(() => {
+              this._terminateWorker();
+            }, workerTimeout);
+          });
+        }),
+      );
 
     return this._queue;
   } as any;

@@ -384,15 +384,41 @@ export async function abortable<T>(
   signal: AbortSignal,
   promise: Promise<T>,
 ): Promise<T> {
-  assertSignal(signal);
-  return Promise.race([
-    promise,
+  return abortableFunc(signal, () => promise);
+}
+
+type AbortableCallback<T> = (
+  setAbort: (abortCallback: () => void) => void,
+) => Promise<T>;
+
+/**
+ * A helper to create abortable things.
+ *
+ * @param signal Signal to abort the task
+ * @param callback The task
+ */
+export async function abortableFunc<T>(
+  signal: AbortSignal | undefined,
+  callback: AbortableCallback<T>,
+): Promise<T> {
+  if (signal) assertSignal(signal);
+  let onAbort: () => void;
+  let listener: () => void;
+  const setOnAbort = (abortCallback: () => void) => {
+    onAbort = abortCallback;
+  };
+  const promise = callback(setOnAbort);
+
+  return Promise.race<T>([
     new Promise<T>((_, reject) => {
-      signal.addEventListener('abort', () =>
-        reject(new DOMException('AbortError', 'AbortError')),
-      );
+      listener = () => {
+        onAbort?.();
+        reject(new DOMException('AbortError', 'AbortError'));
+      };
+      signal?.addEventListener('abort', listener);
     }),
-  ]);
+    promise,
+  ]).finally(() => signal?.removeEventListener('abort', listener));
 }
 
 /**
