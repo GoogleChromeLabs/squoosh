@@ -387,8 +387,9 @@ export function abortable<T>(
   return abortableFunc(signal, () => promise);
 }
 
+type SetAbortArg = (() => void) | undefined;
 type AbortableCallback<T> = (
-  setAbort: (abortCallback: () => void) => void,
+  setAbort: (abortCallback: SetAbortArg) => void,
 ) => Promise<T>;
 
 /**
@@ -402,9 +403,9 @@ export async function abortableFunc<T>(
   callback: AbortableCallback<T>,
 ): Promise<T> {
   if (signal) assertSignal(signal);
-  let onAbort: () => void;
+  let onAbort: (() => void) | undefined;
   let listener: () => void;
-  const setOnAbort = (abortCallback: () => void) => {
+  const setOnAbort = (abortCallback: SetAbortArg) => {
     onAbort = abortCallback;
   };
   const promise = callback(setOnAbort);
