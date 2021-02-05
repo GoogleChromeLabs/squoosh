@@ -380,7 +380,7 @@ export function assertSignal(signal: AbortSignal) {
  * Take a signal and promise, and returns a promise that rejects with an AbortError if the abort is
  * signalled, otherwise resolves with the promise.
  */
-export async function abortable<T>(
+export function abortable<T>(
   signal: AbortSignal,
   promise: Promise<T>,
 ): Promise<T> {
