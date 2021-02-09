@@ -80,7 +80,7 @@ async function decodeImage(url: string): Promise<HTMLImageElement> {
   const img = new Image();
   img.decoding = 'async';
   img.src = url;
-  const loaded = new Promise((resolve, reject) => {
+  const loaded = new Promise<void>((resolve, reject) => {
     img.onload = () => resolve();
     img.onerror = () => reject(Error('Image loading error'));
   });

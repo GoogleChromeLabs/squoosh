@@ -22,6 +22,13 @@ declare module 'url:*' {
   export default value;
 }
 
+declare module 'img-url:*' {
+  const value: string;
+  export default value;
+  export const width: number;
+  export const height: number;
+}
+
 declare module 'omt:*' {
   const value: string;
   export default value;

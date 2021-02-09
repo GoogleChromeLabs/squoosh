@@ -86,7 +86,7 @@ export default class SnackBarElement extends HTMLEl {
 
       // Transition the snack away.
       el.setAttribute('aria-hidden', 'true');
-      await new Promise((resolve) => {
+      await new Promise<void>((resolve) => {
         el.addEventListener('animationend', () => resolve());
       });
       el.remove();

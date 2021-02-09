@@ -1,4 +1,4 @@
-CODEC_URL = https://chromium.googlesource.com/codecs/libwebp2/+archive/7c0dceb507efdec47f9d219e0b8be91092db8b48.tar.gz
+CODEC_URL = https://chromium.googlesource.com/codecs/libwebp2/+archive/413df7caeca5013fa9a51401660f7efd8572e0ae.tar.gz
 CODEC_DIR = node_modules/wp2
 CODEC_BUILD_ROOT := $(CODEC_DIR)/build
 CODEC_BASELINE_BUILD_DIR := $(CODEC_BUILD_ROOT)/baseline
@@ -60,6 +60,7 @@ $(CODEC_MT_SIMD_BUILD_DIR)/Makefile: CMAKE_FLAGS+=-DWP2_ENABLE_SIMD=1
 		-DWP2_BUILD_TESTS=0 \
 		-DWP2_BUILD_EXAMPLES=0 \
 		-DWP2_BUILD_EXTRAS=0 \
+		-DWP2_REDUCED=1 \
 		-B $(@D) \
 		$(<D)
 

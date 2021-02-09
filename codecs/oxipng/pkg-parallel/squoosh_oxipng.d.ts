@@ -22,8 +22,6 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 
 export interface InitOutput {
   readonly optimise: (a: number, b: number, c: number, d: number) => void;
-  readonly malloc: (a: number) => number;
-  readonly free: (a: number) => void;
   readonly worker_initializer: (a: number) => number;
   readonly start_main_thread: () => void;
   readonly start_worker_thread: () => void;
