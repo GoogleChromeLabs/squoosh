@@ -42,17 +42,6 @@ val encode(std::string image, int width, int height, JXLOptions options) {
     cparams.options.predictor = jxl::Predictor::Zero;
   }
 
-  // Reduce memory usage of tree learning for lossless data.
-  // TODO(veluca93): this is a mitigation for excessive memory usage in the JXL encoder.
-  float megapixels = width * height * 0.000001;
-  if (megapixels > 8) {
-    cparams.options.nb_repeats = 0.1;
-  } else if (megapixels > 4) {
-    cparams.options.nb_repeats = 0.3;
-  } else {
-    // default is OK.
-  }
-
   float quality = options.quality;
 
   // Quality settings roughly match libjpeg qualities.
@@ -102,7 +91,7 @@ val encode(std::string image, int width, int height, JXLOptions options) {
   auto result = jxl::ConvertImage(
       jxl::Span<const uint8_t>(reinterpret_cast<const uint8_t*>(image.data()), image.size()), width,
       height, jxl::ColorEncoding::SRGB(/*is_gray=*/false), /*has_alpha=*/true,
-      /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/8, JXL_LITTLE_ENDIAN,
+      /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/8, /*endiannes=*/JXL_LITTLE_ENDIAN,
       /*flipped_y=*/false, pool_ptr, main);
 
   if (!result) {
