@@ -22,10 +22,10 @@ void planarize(std::vector<ImageF>& img,
     float* const row_b = img[2].Row(y);
     float* const row_a = img[3].Row(y);
     for (int x = 0; x < width; x++) {
-      row_r[x] = 255.0 * pow(rgba[y * width * 4 + x * 4 + 0] / 255.0, gamma);
-      row_g[x] = 255.0 * pow(rgba[y * width * 4 + x * 4 + 1] / 255.0, gamma);
-      row_b[x] = 255.0 * pow(rgba[y * width * 4 + x * 4 + 2] / 255.0, gamma);
-      row_a[x] = 255.0 * pow(rgba[y * width * 4 + x * 4 + 3] / 255.0, gamma);
+      row_r[x] = 255.0 * pow((uint8_t)rgba[(y * width + x) * 4 + 0] / 255.0, gamma);
+      row_g[x] = 255.0 * pow((uint8_t)rgba[(y * width + x) * 4 + 1] / 255.0, gamma);
+      row_b[x] = 255.0 * pow((uint8_t)rgba[(y * width + x) * 4 + 2] / 255.0, gamma);
+      row_a[x] = 255.0 * pow((uint8_t)rgba[(y * width + x) * 4 + 3] / 255.0, gamma);
     }
   }
 }
