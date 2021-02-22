@@ -1,7 +1,7 @@
 
 var visdif = (function() {
-  var _scriptDir = typeof document !== 'undefined' && document.currentScript ? document.currentScript.src : undefined;
-  if (typeof __filename !== 'undefined') _scriptDir = _scriptDir || __filename;
+  var _scriptDir = import.meta.url;
+  
   return (
 function(visdif) {
   visdif = visdif || {};
@@ -71,10 +71,4 @@ f.run=Wb;if(f.preInit)for("function"==typeof f.preInit&&(f.preInit=[f.preInit]);
 }
 );
 })();
-if (typeof exports === 'object' && typeof module === 'object')
-      module.exports = visdif;
-    else if (typeof define === 'function' && define['amd'])
-      define([], function() { return visdif; });
-    else if (typeof exports === 'object')
-      exports["visdif"] = visdif;
-    
+export default visdif;
