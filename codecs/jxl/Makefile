@@ -1,5 +1,5 @@
 CODEC_URL = https://gitlab.com/wg1/jpeg-xl.git
-CODEC_VERSION = v0.3.1
+CODEC_VERSION = 5175d11717f3c48cf506a2c0e0afb070392ae296
 CODEC_DIR = node_modules/jxl
 CODEC_BUILD_ROOT := $(CODEC_DIR)/build
 CODEC_MT_BUILD_DIR := $(CODEC_BUILD_ROOT)/mt
