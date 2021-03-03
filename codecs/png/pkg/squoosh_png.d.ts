@@ -20,6 +20,7 @@ export interface InitOutput {
   readonly encode: (a: number, b: number, c: number, d: number, e: number) => void;
   readonly decode: (a: number, b: number) => number;
   readonly __wbindgen_free: (a: number, b: number) => void;
+  readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
   readonly __wbindgen_malloc: (a: number) => number;
 }
 
@@ -32,4 +33,3 @@ export interface InitOutput {
 * @returns {Promise<InitOutput>}
 */
 export default function init (module_or_path?: InitInput | Promise<InitInput>): Promise<InitOutput>;
-        

@@ -32,7 +32,6 @@ $(OUT_JS): $(OUT_CPP) $(LIBAOM_OUT) $(CODEC_OUT)
 		$(LDFLAGS) \
 		$(OUT_FLAGS) \
 		--bind \
-		--closure 1 \
 		-s ALLOW_MEMORY_GROWTH=1 \
 		-s MODULARIZE=1 \
 		-s TEXTDECODER=2 \
@@ -44,7 +43,7 @@ $(OUT_JS): $(OUT_CPP) $(LIBAOM_OUT) $(CODEC_OUT)
 
 $(CODEC_OUT): $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_OUT)
 	emcmake cmake \
-		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
 		-DBUILD_SHARED_LIBS=0 \
 		-DAVIF_CODEC_AOM=1 \
 		-DAOM_LIBRARY=$(LIBAOM_OUT) \
@@ -56,7 +55,7 @@ $(CODEC_OUT): $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_OUT)
 
 $(LIBAOM_OUT): $(LIBAOM_DIR)/CMakeLists.txt
 	emcmake cmake \
-		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
 		-DENABLE_CCACHE=0 \
 		-DAOM_TARGET_CPU=generic \
 		-DENABLE_DOCS=0 \

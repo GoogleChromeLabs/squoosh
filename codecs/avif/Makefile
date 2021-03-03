@@ -1,7 +1,7 @@
-CODEC_URL = https://github.com/AOMediaCodec/libavif/archive/31d7c6d1e32cf467ac24fb8c7a76c4902a4c00db.tar.gz
+CODEC_URL = https://github.com/AOMediaCodec/libavif/archive/v0.9.0.tar.gz
 CODEC_PACKAGE = node_modules/libavif.tar.gz
 
-LIBAOM_URL = https://aomedia.googlesource.com/aom/+archive/v2.0.0.tar.gz
+LIBAOM_URL = https://aomedia.googlesource.com/aom/+archive/v2.0.2.tar.gz
 LIBAOM_PACKAGE = node_modules/libaom.tar.gz
 
 export CODEC_DIR = node_modules/libavif
@@ -21,11 +21,15 @@ ENVIRONMENT = worker
 
 HELPER_MAKEFLAGS := -f helper.Makefile
 
+export CFLAGS+=-g
+export CXXFLAGS+=-g
+export LDFLAGS+=-g
+
 .PHONY: all clean
 
 all: $(OUT_ENC_JS) $(OUT_DEC_JS) $(OUT_ENC_MT_JS) $(OUT_NODE_ENC_JS) $(OUT_NODE_DEC_JS)
 
-$(OUT_NODE_ENC_JS): ENVIRONMENT=node 
+$(OUT_NODE_ENC_JS): ENVIRONMENT=node
 $(OUT_NODE_ENC_JS) $(OUT_ENC_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt
 	$(MAKE) \
 		$(HELPER_MAKEFLAGS) \

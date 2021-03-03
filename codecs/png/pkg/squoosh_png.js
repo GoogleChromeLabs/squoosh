@@ -64,8 +64,7 @@ function getArrayU8FromWasm0(ptr, len) {
 */
 export function encode(data, width, height) {
     try {
-        const retptr = wasm.__wbindgen_export_1.value - 16;
-        wasm.__wbindgen_export_1.value = retptr;
+        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
         var ptr0 = passArray8ToWasm0(data, wasm.__wbindgen_malloc);
         var len0 = WASM_VECTOR_LEN;
         wasm.encode(retptr, ptr0, len0, width, height);
@@ -75,7 +74,7 @@ export function encode(data, width, height) {
         wasm.__wbindgen_free(r0, r1 * 1);
         return v1;
     } finally {
-        wasm.__wbindgen_export_1.value += 16;
+        wasm.__wbindgen_add_to_stack_pointer(16);
     }
 }
 
@@ -138,7 +137,7 @@ async function load(module, imports) {
 
 async function init(input) {
     if (typeof input === 'undefined') {
-        input = import.meta.url.replace(/\.js$/, '_bg.wasm');
+        input = new URL('squoosh_png_bg.wasm', import.meta.url);
     }
     const imports = {};
     imports.wbg = {};
