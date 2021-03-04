@@ -8,6 +8,9 @@ export CODEC_DIR = node_modules/libavif
 export BUILD_DIR = node_modules/build
 export LIBAOM_DIR = node_modules/libaom
 
+export CFLAGS += -g
+export CXXFLAGS += -g
+
 OUT_ENC_JS = enc/avif_enc.js
 OUT_NODE_ENC_JS = enc/avif_node_enc.js
 OUT_ENC_MT_JS = enc/avif_enc_mt.js
