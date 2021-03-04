@@ -1991,6 +1991,7 @@ function cancelThread(pthread_ptr) {
 }
 
 function cleanupThread(pthread_ptr) {
+  console.trace("cleaning up a pthread " + pthread_ptr);
  if (ENVIRONMENT_IS_PTHREAD) throw "Internal Error! cleanupThread() can only ever be called from main application thread!";
  if (!pthread_ptr) throw "Internal Error! Null pthread_ptr in cleanupThread!";
  GROWABLE_HEAP_I32()[pthread_ptr + 12 >> 2] = 0;
@@ -4079,7 +4080,7 @@ function resetPrototype(constructor, attrs) {
 }
 
 function _pthread_create(pthread_ptr, attr, start_routine, arg) {
- console.trace("creating a pthread");
+ console.trace("creating a pthread " + pthread_ptr);
  if (typeof SharedArrayBuffer === "undefined") {
   err("Current environment does not support SharedArrayBuffer, pthreads are not available!");
   return 6;
