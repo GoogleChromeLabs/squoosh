@@ -1,7 +1,7 @@
 
 var avif_enc_mt = (function() {
   var _scriptDir = import.meta.url;
-
+  
   return (
 function(avif_enc_mt) {
   avif_enc_mt = avif_enc_mt || {};
@@ -385,7 +385,7 @@ function setValue(ptr, value, type, noSafe) {
   break;
 
  case "i64":
-  tempI64 = [ value >>> 0, (tempDouble = value, +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? (Math.min(+Math.floor(tempDouble / 4294967296), 4294967295) | 0) >>> 0 : ~~+Math.ceil((tempDouble - +(~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0) ],
+  tempI64 = [ value >>> 0, (tempDouble = value, +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? (Math.min(+Math.floor(tempDouble / 4294967296), 4294967295) | 0) >>> 0 : ~~+Math.ceil((tempDouble - +(~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0) ], 
   GROWABLE_HEAP_I32()[ptr >> 2] = tempI64[0], GROWABLE_HEAP_I32()[ptr + 4 >> 2] = tempI64[1];
   break;
 
@@ -769,7 +769,7 @@ function updateGlobalBufferAndViews(buf) {
  Module["HEAPF64"] = HEAPF64 = new Float64Array(buf);
 }
 
-var STACK_BASE = 6122352, STACKTOP = STACK_BASE, STACK_MAX = 879472;
+var STACK_BASE = 6123680, STACKTOP = STACK_BASE, STACK_MAX = 880800;
 
 if (ENVIRONMENT_IS_PTHREAD) {}
 
@@ -1057,15 +1057,15 @@ var tempDouble;
 var tempI64;
 
 var ASM_CONSTS = {
- 575953: function($0, $1) {
+ 577281: function($0, $1) {
   setTimeout(function() {
    _do_emscripten_dispatch_to_thread($0, $1);
   }, 0);
  },
- 576031: function() {
+ 577359: function() {
   throw "Canceled!";
  },
- 576073: function() {
+ 577401: function() {
   return TOTAL_STACK;
  }
 };
@@ -3369,7 +3369,6 @@ function resetPrototype(constructor, attrs) {
 }
 
 function _pthread_create(pthread_ptr, attr, start_routine, arg) {
-  console.warn('pthread_create');
  if (typeof SharedArrayBuffer === "undefined") {
   err("Current environment does not support SharedArrayBuffer, pthreads are not available!");
   return 6;
@@ -3807,7 +3806,7 @@ var dynCall_iiijii = Module["dynCall_iiijii"] = function() {
  return (dynCall_iiijii = Module["dynCall_iiijii"] = Module["asm"]["dynCall_iiijii"]).apply(null, arguments);
 };
 
-var _main_thread_futex = Module["_main_thread_futex"] = 877852;
+var _main_thread_futex = Module["_main_thread_futex"] = 879180;
 
 function invoke_vi(index, a1) {
  var sp = stackSave();
