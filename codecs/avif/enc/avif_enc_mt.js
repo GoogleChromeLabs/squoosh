@@ -1,7 +1,7 @@
 
 var avif_enc_mt = (function() {
   var _scriptDir = import.meta.url;
-  
+
   return (
 function(avif_enc_mt) {
   avif_enc_mt = avif_enc_mt || {};
@@ -385,7 +385,7 @@ function setValue(ptr, value, type, noSafe) {
   break;
 
  case "i64":
-  tempI64 = [ value >>> 0, (tempDouble = value, +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? (Math.min(+Math.floor(tempDouble / 4294967296), 4294967295) | 0) >>> 0 : ~~+Math.ceil((tempDouble - +(~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0) ], 
+  tempI64 = [ value >>> 0, (tempDouble = value, +Math.abs(tempDouble) >= 1 ? tempDouble > 0 ? (Math.min(+Math.floor(tempDouble / 4294967296), 4294967295) | 0) >>> 0 : ~~+Math.ceil((tempDouble - +(~~tempDouble >>> 0)) / 4294967296) >>> 0 : 0) ],
   GROWABLE_HEAP_I32()[ptr >> 2] = tempI64[0], GROWABLE_HEAP_I32()[ptr + 4 >> 2] = tempI64[1];
   break;
 
@@ -3369,6 +3369,7 @@ function resetPrototype(constructor, attrs) {
 }
 
 function _pthread_create(pthread_ptr, attr, start_routine, arg) {
+ console.warn('pthread_create');
  if (typeof SharedArrayBuffer === "undefined") {
   err("Current environment does not support SharedArrayBuffer, pthreads are not available!");
   return 6;
@@ -3501,6 +3502,7 @@ function __emscripten_do_pthread_join(thread, status, block) {
 }
 
 function _pthread_join(thread, status) {
+ console.warn('pthread_join');
  return __emscripten_do_pthread_join(thread, status, true);
 }
 
