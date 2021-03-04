@@ -32,7 +32,6 @@ $(OUT_JS): $(OUT_CPP) $(LIBAOM_OUT) $(CODEC_OUT)
 		$(LDFLAGS) \
 		$(OUT_FLAGS) \
 		--bind \
-		--closure 1 \
 		-s ALLOW_MEMORY_GROWTH=1 \
 		-s MODULARIZE=1 \
 		-s TEXTDECODER=2 \

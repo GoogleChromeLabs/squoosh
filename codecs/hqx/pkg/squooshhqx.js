@@ -37,14 +37,19 @@ function getArrayU32FromWasm0(ptr, len) {
 * @returns {Uint32Array}
 */
 export function resize(input_image, input_width, input_height, factor) {
-    var ptr0 = passArray32ToWasm0(input_image, wasm.__wbindgen_malloc);
-    var len0 = WASM_VECTOR_LEN;
-    wasm.resize(8, ptr0, len0, input_width, input_height, factor);
-    var r0 = getInt32Memory0()[8 / 4 + 0];
-    var r1 = getInt32Memory0()[8 / 4 + 1];
-    var v1 = getArrayU32FromWasm0(r0, r1).slice();
-    wasm.__wbindgen_free(r0, r1 * 4);
-    return v1;
+    try {
+        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+        var ptr0 = passArray32ToWasm0(input_image, wasm.__wbindgen_malloc);
+        var len0 = WASM_VECTOR_LEN;
+        wasm.resize(retptr, ptr0, len0, input_width, input_height, factor);
+        var r0 = getInt32Memory0()[retptr / 4 + 0];
+        var r1 = getInt32Memory0()[retptr / 4 + 1];
+        var v1 = getArrayU32FromWasm0(r0, r1).slice();
+        wasm.__wbindgen_free(r0, r1 * 4);
+        return v1;
+    } finally {
+        wasm.__wbindgen_add_to_stack_pointer(16);
+    }
 }
 
 async function load(module, imports) {
@@ -82,7 +87,7 @@ async function load(module, imports) {
 
 async function init(input) {
     if (typeof input === 'undefined') {
-        input = import.meta.url.replace(/\.js$/, '_bg.wasm');
+        input = new URL('squooshhqx_bg.wasm', import.meta.url);
     }
     const imports = {};
 
