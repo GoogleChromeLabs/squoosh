@@ -4079,6 +4079,7 @@ function resetPrototype(constructor, attrs) {
 }
 
 function _pthread_create(pthread_ptr, attr, start_routine, arg) {
+ console.trace("creating a pthread");
  if (typeof SharedArrayBuffer === "undefined") {
   err("Current environment does not support SharedArrayBuffer, pthreads are not available!");
   return 6;
