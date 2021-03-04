@@ -769,7 +769,7 @@ function updateGlobalBufferAndViews(buf) {
  Module["HEAPF64"] = HEAPF64 = new Float64Array(buf);
 }
 
-var STACK_BASE = 6123680, STACKTOP = STACK_BASE, STACK_MAX = 880800;
+var STACK_BASE = 6123808, STACKTOP = STACK_BASE, STACK_MAX = 880928;
 
 if (ENVIRONMENT_IS_PTHREAD) {}
 
@@ -1057,15 +1057,15 @@ var tempDouble;
 var tempI64;
 
 var ASM_CONSTS = {
- 577281: function($0, $1) {
+ 577409: function($0, $1) {
   setTimeout(function() {
    _do_emscripten_dispatch_to_thread($0, $1);
   }, 0);
  },
- 577359: function() {
+ 577487: function() {
   throw "Canceled!";
  },
- 577401: function() {
+ 577529: function() {
   return TOTAL_STACK;
  }
 };
@@ -3806,7 +3806,7 @@ var dynCall_iiijii = Module["dynCall_iiijii"] = function() {
  return (dynCall_iiijii = Module["dynCall_iiijii"] = Module["asm"]["dynCall_iiijii"]).apply(null, arguments);
 };
 
-var _main_thread_futex = Module["_main_thread_futex"] = 879180;
+var _main_thread_futex = Module["_main_thread_futex"] = 879308;
 
 function invoke_vi(index, a1) {
  var sp = stackSave();
