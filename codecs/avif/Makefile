@@ -1,8 +1,8 @@
-# Taken from https://source.corp.google.com/piper///depot/google3/third_party/libavif/METADATA
+# Tracking the version in google3/third_party/libavif
 CODEC_URL = https://github.com/AOMediaCodec/libavif/archive/v0.9.0.tar.gz
 CODEC_PACKAGE = node_modules/libavif.tar.gz
 
-# Taken from https://source.corp.google.com/piper///depot/google3/third_party/libaom/METADATA
+# Tracking the version in google3/third_party/libaom
 LIBAOM_URL = https://aomedia.googlesource.com/aom/+archive/4a8e276e3e0ef3c76083f3975d5caa85bc9593ce.tar.gz
 LIBAOM_PACKAGE = node_modules/libaom.tar.gz
 
