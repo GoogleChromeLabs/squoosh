@@ -9,10 +9,8 @@ struct AvifOptions {
   // [0 - 63]
   // 0 = lossless
   // 63 = worst quality
-  int minQuantizer;
-  int maxQuantizer;
+  int cqLevel;
   int minQuantizerAlpha;
-  int maxQuantizerAlpha;
   // [0 - 6]
   // Creates 2^n tiles in that dimension
   int tileRowsLog2;
@@ -26,6 +24,12 @@ struct AvifOptions {
   // 2 = 4:2:2
   // 3 = 4:4:4
   int subsample;
+  // Extra chroma compression
+  bool chromaDeltaQ;
+  // 0-7
+  int sharpness;
+  // (0: off, 1: variance, 2: complexity, 3: cyclic refresh)
+  int aqMode;
 };
 
 thread_local const val Uint8Array = val::global("Uint8Array");
@@ -49,12 +53,12 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
       break;
   }
 
+  bool lossless = options.cqLevel == AVIF_QUANTIZER_LOSSLESS &&
+                  options.minQuantizerAlpha == AVIF_QUANTIZER_LOSSLESS &&
+                  format == AVIF_PIXEL_FORMAT_YUV444;
   avifImage* image = avifImageCreate(width, height, depth, format);
 
-  if (options.maxQuantizer == AVIF_QUANTIZER_LOSSLESS &&
-      options.minQuantizer == AVIF_QUANTIZER_LOSSLESS &&
-      options.minQuantizerAlpha == AVIF_QUANTIZER_LOSSLESS &&
-      options.maxQuantizerAlpha == AVIF_QUANTIZER_LOSSLESS && format == AVIF_PIXEL_FORMAT_YUV444) {
+  if (lossless) {
     image->matrixCoefficients = AVIF_MATRIX_COEFFICIENTS_IDENTITY;
   } else {
     image->matrixCoefficients = AVIF_MATRIX_COEFFICIENTS_BT709;
@@ -69,14 +73,34 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
   avifImageRGBToYUV(image, &srcRGB);
 
   avifEncoder* encoder = avifEncoderCreate();
+
+  if (lossless) {
+    encoder->minQuantizer = AVIF_QUANTIZER_LOSSLESS;
+    encoder->maxQuantizer = AVIF_QUANTIZER_LOSSLESS;
+    encoder->minQuantizerAlpha = AVIF_QUANTIZER_LOSSLESS;
+    encoder->maxQuantizerAlpha = AVIF_QUANTIZER_LOSSLESS;
+  } else {
+    encoder->minQuantizer = AVIF_QUANTIZER_BEST_QUALITY;
+    encoder->maxQuantizer = AVIF_QUANTIZER_WORST_QUALITY;
+    encoder->minQuantizerAlpha = options.minQuantizerAlpha;
+    encoder->maxQuantizerAlpha = AVIF_QUANTIZER_WORST_QUALITY;
+    avifEncoderSetCodecSpecificOption(encoder, "end-usage", "q");
+    avifEncoderSetCodecSpecificOption(encoder, "cq-level", std::to_string(options.cqLevel).c_str());
+    avifEncoderSetCodecSpecificOption(encoder, "aq-mode", std::to_string(options.aqMode).c_str());
+
+    avifEncoderSetCodecSpecificOption(encoder, "sharpness",
+                                      std::to_string(options.sharpness).c_str());
+
+    if (options.chromaDeltaQ) {
+      avifEncoderSetCodecSpecificOption(encoder, "enable-chroma-deltaq", "1");
+    }
+  }
+
   encoder->maxThreads = emscripten_num_logical_cores();
-  encoder->minQuantizer = options.minQuantizer;
-  encoder->maxQuantizer = options.maxQuantizer;
-  encoder->minQuantizerAlpha = options.minQuantizerAlpha;
-  encoder->maxQuantizerAlpha = options.maxQuantizerAlpha;
   encoder->tileRowsLog2 = options.tileRowsLog2;
   encoder->tileColsLog2 = options.tileColsLog2;
   encoder->speed = options.speed;
+
   avifResult encodeResult = avifEncoderWrite(encoder, image, &output);
   auto js_result = val::null();
   if (encodeResult == AVIF_RESULT_OK) {
@@ -91,13 +115,14 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
 
 EMSCRIPTEN_BINDINGS(my_module) {
   value_object<AvifOptions>("AvifOptions")
-      .field("minQuantizer", &AvifOptions::minQuantizer)
-      .field("maxQuantizer", &AvifOptions::maxQuantizer)
+      .field("cqLevel", &AvifOptions::cqLevel)
       .field("minQuantizerAlpha", &AvifOptions::minQuantizerAlpha)
-      .field("maxQuantizerAlpha", &AvifOptions::maxQuantizerAlpha)
       .field("tileRowsLog2", &AvifOptions::tileRowsLog2)
       .field("tileColsLog2", &AvifOptions::tileColsLog2)
       .field("speed", &AvifOptions::speed)
+      .field("chromaDeltaQ", &AvifOptions::chromaDeltaQ)
+      .field("sharpness", &AvifOptions::sharpness)
+      .field("aqMode", &AvifOptions::aqMode)
       .field("subsample", &AvifOptions::subsample);
 
   function("encode", &encode);

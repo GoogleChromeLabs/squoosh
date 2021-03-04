@@ -25,18 +25,17 @@ interface Props {
 interface State {
   options: EncodeOptions;
   lossless: boolean;
-  maxQuality: number;
-  minQuality: number;
-  separateAlpha: boolean;
-  losslessAlpha: boolean;
-  maxAlphaQuality: number;
-  minAlphaQuality: number;
+  quality: number;
   showAdvanced: boolean;
+  maxAlphaQuality: number;
+  chromaDeltaQ: boolean;
   grayscale: boolean;
   subsample: number;
   tileRows: number;
   tileCols: number;
   effort: number;
+  sharpness: number;
+  aqMode: number;
 }
 
 const maxQuant = 63;
@@ -53,34 +52,15 @@ export class Options extends Component<Props, State> {
 
     const { options } = props;
 
-    const lossless = options.maxQuantizer === 0 && options.minQuantizer === 0;
-    const minQuantizerValue = lossless
-      ? defaultOptions.minQuantizer
-      : options.minQuantizer;
-    const maxQuantizerValue = lossless
-      ? defaultOptions.maxQuantizer
-      : options.maxQuantizer;
-    const losslessAlpha =
-      options.maxQuantizerAlpha === 0 && options.minQuantizerAlpha === 0;
-    const minQuantizerAlphaValue = losslessAlpha
-      ? defaultOptions.minQuantizerAlpha
-      : options.minQuantizerAlpha;
-    const maxQuantizerAlphaValue = losslessAlpha
-      ? defaultOptions.maxQuantizerAlpha
-      : options.maxQuantizerAlpha;
+    const lossless = options.cqLevel === 0 && options.minQuantizerAlpha === 0;
+    const cqLevel = lossless ? defaultOptions.cqLevel : options.cqLevel;
 
     // Create default form state from options
     return {
       options,
       lossless,
-      losslessAlpha,
-      maxQuality: maxQuant - minQuantizerValue,
-      minQuality: maxQuant - maxQuantizerValue,
-      separateAlpha:
-        options.maxQuantizer !== options.maxQuantizerAlpha ||
-        options.minQuantizer !== options.minQuantizerAlpha,
-      maxAlphaQuality: maxQuant - minQuantizerAlphaValue,
-      minAlphaQuality: maxQuant - maxQuantizerAlphaValue,
+      quality: maxQuant - cqLevel,
+      maxAlphaQuality: maxQuant - options.minQuantizerAlpha,
       grayscale: options.subsample === 0,
       subsample:
         options.subsample === 0 || lossless
@@ -89,6 +69,9 @@ export class Options extends Component<Props, State> {
       tileRows: options.tileRowsLog2,
       tileCols: options.tileColsLog2,
       effort: maxSpeed - options.speed,
+      chromaDeltaQ: options.chromaDeltaQ,
+      sharpness: options.sharpness,
+      aqMode: options.aqMode,
     };
   }
 
@@ -115,55 +98,16 @@ export class Options extends Component<Props, State> {
           [prop]: newVal,
         };
 
-        // Ensure that min cannot be greater than max
-        switch (prop) {
-          case 'maxQuality':
-            if (newVal < this.state.minQuality) {
-              newState.minQuality = newVal as number;
-            }
-            break;
-          case 'minQuality':
-            if (newVal > this.state.maxQuality) {
-              newState.maxQuality = newVal as number;
-            }
-            break;
-          case 'maxAlphaQuality':
-            if (newVal < this.state.minAlphaQuality) {
-              newState.minAlphaQuality = newVal as number;
-            }
-            break;
-          case 'minAlphaQuality':
-            if (newVal > this.state.maxAlphaQuality) {
-              newState.maxAlphaQuality = newVal as number;
-            }
-            break;
-        }
-
         const optionState = {
           ...this.state,
           ...newState,
         };
 
-        const maxQuantizer = optionState.lossless
-          ? 0
-          : maxQuant - optionState.minQuality;
-        const minQuantizer = optionState.lossless
-          ? 0
-          : maxQuant - optionState.maxQuality;
-
         const newOptions: EncodeOptions = {
-          maxQuantizer,
-          minQuantizer,
-          maxQuantizerAlpha: optionState.separateAlpha
-            ? optionState.losslessAlpha
-              ? 0
-              : maxQuant - optionState.minAlphaQuality
-            : maxQuantizer,
-          minQuantizerAlpha: optionState.separateAlpha
-            ? optionState.losslessAlpha
-              ? 0
-              : maxQuant - optionState.maxAlphaQuality
-            : minQuantizer,
+          cqLevel: optionState.lossless ? 0 : maxQuant - optionState.quality,
+          minQuantizerAlpha: optionState.lossless
+            ? 0
+            : maxQuant - optionState.maxAlphaQuality,
           // Always set to 4:4:4 if lossless
           subsample: optionState.grayscale
             ? 0
@@ -173,6 +117,9 @@ export class Options extends Component<Props, State> {
           tileColsLog2: optionState.tileCols,
           tileRowsLog2: optionState.tileRows,
           speed: maxSpeed - optionState.effort,
+          chromaDeltaQ: optionState.chromaDeltaQ,
+          sharpness: optionState.sharpness,
+          aqMode: optionState.aqMode,
         };
 
         // Updating options, so we don't recalculate in getDerivedStateFromProps.
@@ -196,16 +143,15 @@ export class Options extends Component<Props, State> {
       effort,
       grayscale,
       lossless,
-      losslessAlpha,
       maxAlphaQuality,
-      maxQuality,
-      minAlphaQuality,
-      minQuality,
-      separateAlpha,
+      quality,
       showAdvanced,
       subsample,
       tileCols,
       tileRows,
+      chromaDeltaQ,
+      sharpness,
+      aqMode,
     }: State,
   ) {
     return (
@@ -219,73 +165,15 @@ export class Options extends Component<Props, State> {
         </label>
         <Expander>
           {!lossless && (
-            <div>
-              <div class={style.optionOneCell}>
-                <Range
-                  min="0"
-                  max="62"
-                  value={maxQuality}
-                  onInput={this._inputChange('maxQuality', 'number')}
-                >
-                  Max quality:
-                </Range>
-              </div>
-              <div class={style.optionOneCell}>
-                <Range
-                  min="0"
-                  max="62"
-                  value={minQuality}
-                  onInput={this._inputChange('minQuality', 'number')}
-                >
-                  Min quality:
-                </Range>
-              </div>
-            </div>
-          )}
-        </Expander>
-        <label class={style.optionToggle}>
-          Separate alpha quality
-          <Checkbox
-            checked={separateAlpha}
-            onChange={this._inputChange('separateAlpha', 'boolean')}
-          />
-        </label>
-        <Expander>
-          {separateAlpha && (
-            <div>
-              <label class={style.optionToggle}>
-                Lossless alpha
-                <Checkbox
-                  checked={losslessAlpha}
-                  onChange={this._inputChange('losslessAlpha', 'boolean')}
-                />
-              </label>
-              <Expander>
-                {!losslessAlpha && (
-                  <div>
-                    <div class={style.optionOneCell}>
-                      <Range
-                        min="0"
-                        max="62"
-                        value={maxAlphaQuality}
-                        onInput={this._inputChange('maxAlphaQuality', 'number')}
-                      >
-                        Max alpha quality:
-                      </Range>
-                    </div>
-                    <div class={style.optionOneCell}>
-                      <Range
-                        min="0"
-                        max="62"
-                        value={minAlphaQuality}
-                        onInput={this._inputChange('minAlphaQuality', 'number')}
-                      >
-                        Min alpha quality:
-                      </Range>
-                    </div>
-                  </div>
-                )}
-              </Expander>
+            <div class={style.optionOneCell}>
+              <Range
+                min="0"
+                max="62"
+                value={quality}
+                onInput={this._inputChange('quality', 'number')}
+              >
+                Quality:
+              </Range>
             </div>
           )}
         </Expander>
@@ -302,25 +190,68 @@ export class Options extends Component<Props, State> {
               {/*<label class={style.optionToggle}>
                 Grayscale
                 <Checkbox
-                  data-set-state="grayscale"
                   checked={grayscale}
                   onChange={this._inputChange('grayscale', 'boolean')}
                 />
               </label>*/}
               <Expander>
                 {!grayscale && !lossless && (
-                  <label class={style.optionTextFirst}>
-                    Subsample chroma:
-                    <Select
-                      data-set-state="subsample"
-                      value={subsample}
-                      onChange={this._inputChange('subsample', 'number')}
-                    >
-                      <option value="1">Half</option>
-                      {/*<option value="2">4:2:2</option>*/}
-                      <option value="3">Off</option>
-                    </Select>
-                  </label>
+                  <div>
+                    <label class={style.optionTextFirst}>
+                      Subsample chroma:
+                      <Select
+                        value={subsample}
+                        onChange={this._inputChange('subsample', 'number')}
+                      >
+                        <option value="1">Half</option>
+                        {/*<option value="2">4:2:2</option>*/}
+                        <option value="3">Off</option>
+                      </Select>
+                    </label>
+                    <div class={style.optionOneCell}>
+                      <Range
+                        min="0"
+                        max="62"
+                        value={maxAlphaQuality}
+                        onInput={this._inputChange('maxAlphaQuality', 'number')}
+                      >
+                        Max alpha quality:
+                      </Range>
+                    </div>
+                    <label class={style.optionToggle}>
+                      Extra chroma compression
+                      <Checkbox
+                        checked={chromaDeltaQ}
+                        onChange={this._inputChange('chromaDeltaQ', 'boolean')}
+                      />
+                    </label>
+                    <div class={style.optionOneCell}>
+                      <Range
+                        min="0"
+                        max="7"
+                        value={sharpness}
+                        onInput={this._inputChange('sharpness', 'number')}
+                      >
+                        Sharpness:
+                      </Range>
+                    </div>
+                    <label class={style.optionTextFirst}>
+                      Adaptive quantization mode:
+                      <Select
+                        value={aqMode}
+                        onChange={this._inputChange('aqMode', 'number')}
+                      >
+                        {[
+                          'Off',
+                          'Variance',
+                          'Complexity',
+                          'Cyclic refresh',
+                        ].map((name, i) => (
+                          <option value={i}>{name}</option>
+                        ))}
+                      </Select>
+                    </label>
+                  </div>
                 )}
               </Expander>
               <div class={style.optionOneCell}>

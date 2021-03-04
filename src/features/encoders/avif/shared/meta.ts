@@ -18,12 +18,13 @@ export const label = 'AVIF';
 export const mimeType = 'image/avif';
 export const extension = 'avif';
 export const defaultOptions: EncodeOptions = {
-  minQuantizer: 33,
-  maxQuantizer: 63,
-  minQuantizerAlpha: 33,
-  maxQuantizerAlpha: 63,
+  cqLevel: 33,
+  minQuantizerAlpha: 0,
   tileColsLog2: 0,
   tileRowsLog2: 0,
   speed: 8,
   subsample: 1,
+  chromaDeltaQ: false,
+  sharpness: 0,
+  aqMode: 0,
 };
