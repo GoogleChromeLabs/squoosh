@@ -2,8 +2,8 @@
 #include <emscripten/val.h>
 
 #include "lib/jxl/base/thread_pool_internal.h"
+#include "lib/jxl/enc_external_image.h"
 #include "lib/jxl/enc_file.h"
-#include "lib/jxl/external_image.h"
 
 using namespace emscripten;
 
@@ -88,7 +88,7 @@ val encode(std::string image, int width, int height, JXLOptions options) {
 
   uint8_t* inBuffer = (uint8_t*)image.c_str();
 
-  auto result = jxl::ConvertImage(
+  auto result = jxl::ConvertFromExternal(
       jxl::Span<const uint8_t>(reinterpret_cast<const uint8_t*>(image.data()), image.size()), width,
       height, jxl::ColorEncoding::SRGB(/*is_gray=*/false), /*has_alpha=*/true,
       /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/8, /*endiannes=*/JXL_LITTLE_ENDIAN,
