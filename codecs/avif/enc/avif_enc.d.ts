@@ -1,12 +1,13 @@
 export interface EncodeOptions {
-  minQuantizer: number;
-  maxQuantizer: number;
+  cqLevel: number;
   minQuantizerAlpha: number;
-  maxQuantizerAlpha: number;
   tileRowsLog2: number;
   tileColsLog2: number;
   speed: number;
   subsample: number;
+  chromaDeltaQ: boolean;
+  sharpness: number;
+  targetSsim: boolean;
 }
 
 export interface AVIFModule extends EmscriptenWasm.Module {
