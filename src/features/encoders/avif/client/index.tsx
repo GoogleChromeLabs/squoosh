@@ -174,7 +174,7 @@ export class Options extends Component<Props, State> {
             <div class={style.optionOneCell}>
               <Range
                 min="0"
-                max="62"
+                max="63"
                 value={quality}
                 onInput={this._inputChange('quality', 'number')}
               >
@@ -217,7 +217,7 @@ export class Options extends Component<Props, State> {
                     <div class={style.optionOneCell}>
                       <Range
                         min="0"
-                        max="62"
+                        max="63"
                         value={maxAlphaQuality}
                         onInput={this._inputChange('maxAlphaQuality', 'number')}
                       >

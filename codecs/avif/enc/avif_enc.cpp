@@ -61,10 +61,10 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
   if (lossless) {
     image->matrixCoefficients = AVIF_MATRIX_COEFFICIENTS_IDENTITY;
   } else {
-    image->matrixCoefficients = AVIF_MATRIX_COEFFICIENTS_BT709;
+    image->matrixCoefficients = AVIF_MATRIX_COEFFICIENTS_BT601;
   }
 
-  uint8_t* rgba = (uint8_t*)buffer.c_str();
+  uint8_t* rgba = reinterpret_cast<uint8_t*>(const_cast<char*>(buffer.data()));
 
   avifRGBImage srcRGB;
   avifRGBImageSetDefaults(&srcRGB, image);
