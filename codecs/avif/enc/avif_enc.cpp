@@ -28,8 +28,8 @@ struct AvifOptions {
   bool chromaDeltaQ;
   // 0-7
   int sharpness;
-  // (0: off, 1: variance, 2: complexity, 3: cyclic refresh)
-  int aqMode;
+  // Target ssim rather than psnr
+  bool targetSsim;
 };
 
 thread_local const val Uint8Array = val::global("Uint8Array");
@@ -86,10 +86,12 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
     encoder->maxQuantizerAlpha = AVIF_QUANTIZER_WORST_QUALITY;
     avifEncoderSetCodecSpecificOption(encoder, "end-usage", "q");
     avifEncoderSetCodecSpecificOption(encoder, "cq-level", std::to_string(options.cqLevel).c_str());
-    avifEncoderSetCodecSpecificOption(encoder, "aq-mode", std::to_string(options.aqMode).c_str());
-
     avifEncoderSetCodecSpecificOption(encoder, "sharpness",
                                       std::to_string(options.sharpness).c_str());
+
+    if (options.targetSsim) {
+      avifEncoderSetCodecSpecificOption(encoder, "tune", "ssim");
+    }
 
     if (options.chromaDeltaQ) {
       avifEncoderSetCodecSpecificOption(encoder, "enable-chroma-deltaq", "1");
@@ -122,7 +124,7 @@ EMSCRIPTEN_BINDINGS(my_module) {
       .field("speed", &AvifOptions::speed)
       .field("chromaDeltaQ", &AvifOptions::chromaDeltaQ)
       .field("sharpness", &AvifOptions::sharpness)
-      .field("aqMode", &AvifOptions::aqMode)
+      .field("targetSsim", &AvifOptions::targetSsim)
       .field("subsample", &AvifOptions::subsample);
 
   function("encode", &encode);

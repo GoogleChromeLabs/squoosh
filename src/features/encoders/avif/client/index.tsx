@@ -36,6 +36,7 @@ interface State {
   effort: number;
   sharpness: number;
   aqMode: number;
+  tune: 'ssim' | 'psnr';
 }
 
 const maxQuant = 63;
@@ -71,7 +72,7 @@ export class Options extends Component<Props, State> {
       effort: maxSpeed - options.speed,
       chromaDeltaQ: options.chromaDeltaQ,
       sharpness: options.sharpness,
-      aqMode: options.aqMode,
+      tune: options.targetSsim ? 'ssim' : 'psnr',
     };
   }
 
@@ -82,7 +83,10 @@ export class Options extends Component<Props, State> {
 
   private _inputChangeCallbacks = new Map<string, (event: Event) => void>();
 
-  private _inputChange = (prop: keyof State, type: 'number' | 'boolean') => {
+  private _inputChange = (
+    prop: keyof State,
+    type: 'number' | 'boolean' | 'string',
+  ) => {
     // Cache the callback for performance
     if (!this._inputChangeCallbacks.has(prop)) {
       this._inputChangeCallbacks.set(prop, (event: Event) => {
@@ -92,7 +96,9 @@ export class Options extends Component<Props, State> {
             ? 'checked' in formEl
               ? formEl.checked
               : !!formEl.value
-            : Number(formEl.value);
+            : type === 'number'
+            ? Number(formEl.value)
+            : formEl.value;
 
         const newState: Partial<State> = {
           [prop]: newVal,
@@ -119,7 +125,7 @@ export class Options extends Component<Props, State> {
           speed: maxSpeed - optionState.effort,
           chromaDeltaQ: optionState.chromaDeltaQ,
           sharpness: optionState.sharpness,
-          aqMode: optionState.aqMode,
+          targetSsim: optionState.tune === 'ssim',
         };
 
         // Updating options, so we don't recalculate in getDerivedStateFromProps.
@@ -151,7 +157,7 @@ export class Options extends Component<Props, State> {
       tileRows,
       chromaDeltaQ,
       sharpness,
-      aqMode,
+      tune,
     }: State,
   ) {
     return (
@@ -236,19 +242,13 @@ export class Options extends Component<Props, State> {
                       </Range>
                     </div>
                     <label class={style.optionTextFirst}>
-                      Adaptive quantization mode:
+                      Tune for:
                       <Select
-                        value={aqMode}
-                        onChange={this._inputChange('aqMode', 'number')}
+                        value={tune}
+                        onChange={this._inputChange('tune', 'string')}
                       >
-                        {[
-                          'Off',
-                          'Variance',
-                          'Complexity',
-                          'Cyclic refresh',
-                        ].map((name, i) => (
-                          <option value={i}>{name}</option>
-                        ))}
+                        <option value="psnr">PSNR</option>
+                        <option value="ssim">SSIM</option>
                       </Select>
                     </label>
                   </div>

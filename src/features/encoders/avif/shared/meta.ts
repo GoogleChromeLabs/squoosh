@@ -26,5 +26,5 @@ export const defaultOptions: EncodeOptions = {
   subsample: 1,
   chromaDeltaQ: false,
   sharpness: 0,
-  aqMode: 0,
+  targetSsim: false,
 };

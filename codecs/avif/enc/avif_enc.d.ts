@@ -7,7 +7,7 @@ export interface EncodeOptions {
   subsample: number;
   chromaDeltaQ: boolean;
   sharpness: number;
-  aqMode: number;
+  targetSsim: boolean;
 }
 
 export interface AVIFModule extends EmscriptenWasm.Module {
