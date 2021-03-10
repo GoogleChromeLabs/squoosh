@@ -11,6 +11,7 @@ import {
   canDecodeImageType,
   abortable,
   assertSignal,
+  ImageMimeTypes,
 } from '../util';
 import {
   PreprocessorState,
@@ -102,7 +103,7 @@ async function decodeImage(
       if (mimeType === 'image/webp') {
         return await workerBridge.webpDecode(signal, blob);
       }
-      if (mimeType === 'image/jpegxl') {
+      if (mimeType === 'image/jxl') {
         return await workerBridge.jxlDecode(signal, blob);
       }
       if (mimeType === 'image/webp2') {
@@ -178,10 +179,13 @@ async function compressImage(
     encodeData.options as any,
   );
 
+  // This type ensures the image mimetype is consistent with our mimetype sniffer
+  const type: ImageMimeTypes = encoder.meta.mimeType;
+
   return new File(
     [compressedData],
     sourceFilename.replace(/.[^.]*$/, `.${encoder.meta.extension}`),
-    { type: encoder.meta.mimeType },
+    { type },
   );
 }
 
