@@ -68,9 +68,6 @@ import webpDecWasm from 'url:codecs/webp/dec/webp_dec.wasm';
 import wp2DecWasm from 'url:codecs/wp2/dec/wp2_dec.wasm';
 
 // AVIF
-import * as avifEncMtWorker from 'entry-data:codecs/avif/enc/avif_enc_mt.worker.js';
-import * as avifEncMt from 'entry-data:codecs/avif/enc/avif_enc_mt';
-import avifEncMtWasm from 'url:codecs/avif/enc/avif_enc_mt.wasm';
 import avifEncWasm from 'url:codecs/avif/enc/avif_enc.wasm';
 import * as avifEnc from 'entry-data:codecs/avif/enc/avif_enc.js';
 
@@ -141,17 +138,7 @@ export const theRest = (async () => {
   if (!supportsWebP) items.push(webpDec.main, ...webpDec.deps, webpDecWasm);
 
   // AVIF
-  if (supportsThreads) {
-    items.push(
-      avifEncMtWorker.main,
-      ...avifEncMtWorker.deps,
-      avifEncMt.main,
-      ...avifEncMt.deps,
-      avifEncMtWasm,
-    );
-  } else {
-    items.push(avifEnc.main, ...avifEnc.deps, avifEncWasm);
-  }
+  items.push(avifEnc.main, ...avifEnc.deps, avifEncWasm);
 
   // JXL
   if (supportsThreads && supportsSimd) {

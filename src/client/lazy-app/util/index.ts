@@ -137,7 +137,7 @@ export function blobToText(blob: Blob): Promise<string> {
   return new Response(blob).text();
 }
 
-const magicNumberToMimeType = new Map<RegExp, string>([
+const magicNumberMapInput = [
   [/^%PDF-/, 'application/pdf'],
   [/^GIF87a/, 'image/gif'],
   [/^GIF89a/, 'image/gif'],
@@ -150,10 +150,17 @@ const magicNumberToMimeType = new Map<RegExp, string>([
   [/^RIFF....WEBPVP8[LX ]/, 'image/webp'],
   [/^\xF4\xFF\x6F/, 'image/webp2'],
   [/^\x00\x00\x00 ftypavif\x00\x00\x00\x00/, 'image/avif'],
-  [/^\xff\x0a/, 'image/jpegxl'],
-]);
+  [/^\xff\x0a/, 'image/jxl'],
+  [/^\x00\x00\x00\x0cJXL \x0d\x0a\x87\x0a/, 'image/jxl'],
+] as const;
 
-export async function sniffMimeType(blob: Blob): Promise<string> {
+export type ImageMimeTypes = typeof magicNumberMapInput[number][1];
+
+const magicNumberToMimeType = new Map<RegExp, ImageMimeTypes>(
+  magicNumberMapInput,
+);
+
+export async function sniffMimeType(blob: Blob): Promise<ImageMimeTypes | ''> {
   const firstChunk = await blobToArrayBuffer(blob.slice(0, 16));
   const firstChunkString = Array.from(new Uint8Array(firstChunk))
     .map((v) => String.fromCodePoint(v))

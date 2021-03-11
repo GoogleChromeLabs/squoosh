@@ -15,7 +15,7 @@ import type { EncodeOptions } from 'codecs/jxl/enc/jxl_enc';
 export { EncodeOptions };
 
 export const label = 'JPEG XL (beta)';
-export const mimeType = 'image/jpegxl';
+export const mimeType = 'image/jxl';
 export const extension = 'jxl';
 export const defaultOptions: EncodeOptions = {
   speed: 4,
