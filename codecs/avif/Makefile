@@ -1,5 +1,5 @@
 # Tracking the version in google3/third_party/libavif
-CODEC_URL = https://github.com/AOMediaCodec/libavif/archive/v0.9.0.tar.gz
+CODEC_URL = https://github.com/AOMediaCodec/libavif/archive/f56df6d4c99928af484634af65cdbd62bac2dd6e.tar.gz
 CODEC_PACKAGE = node_modules/libavif.tar.gz
 
 # Tracking the version in google3/third_party/libaom
