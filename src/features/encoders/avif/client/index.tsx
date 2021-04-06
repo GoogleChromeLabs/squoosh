@@ -27,9 +27,11 @@ interface State {
   lossless: boolean;
   quality: number;
   showAdvanced: boolean;
-  maxAlphaQuality: number;
+  separateAlpha: boolean;
+  alphaQuality: number;
+  separateColor: boolean;
+  colorQuality: number;
   chromaDeltaQ: boolean;
-  grayscale: boolean;
   subsample: number;
   tileRows: number;
   tileCols: number;
@@ -53,7 +55,15 @@ export class Options extends Component<Props, State> {
 
     const { options } = props;
 
-    const lossless = options.cqLevel === 0 && options.minQuantizerAlpha === 0;
+    const lossless =
+      options.cqLevel === 0 &&
+      options.cqAlphaLevel <= 0 &&
+      options.cqColorLevel <= 0 &&
+      options.subsample == 3;
+
+    const separateAlpha = options.cqAlphaLevel !== -1;
+    const separateColor = options.cqColorLevel !== -1;
+
     const cqLevel = lossless ? defaultOptions.cqLevel : options.cqLevel;
 
     // Create default form state from options
@@ -61,8 +71,14 @@ export class Options extends Component<Props, State> {
       options,
       lossless,
       quality: maxQuant - cqLevel,
-      maxAlphaQuality: maxQuant - options.minQuantizerAlpha,
-      grayscale: options.subsample === 0,
+      separateAlpha,
+      alphaQuality:
+        maxQuant -
+        (separateAlpha ? options.cqAlphaLevel : defaultOptions.cqLevel),
+      separateColor,
+      colorQuality:
+        maxQuant -
+        (separateColor ? options.cqColorLevel : defaultOptions.cqLevel),
       subsample:
         options.subsample === 0 || lossless
           ? defaultOptions.subsample
@@ -111,15 +127,16 @@ export class Options extends Component<Props, State> {
 
         const newOptions: EncodeOptions = {
           cqLevel: optionState.lossless ? 0 : maxQuant - optionState.quality,
-          minQuantizerAlpha: optionState.lossless
-            ? 0
-            : maxQuant - optionState.maxAlphaQuality,
+          cqAlphaLevel:
+            optionState.lossless || !optionState.separateAlpha
+              ? -1
+              : maxQuant - optionState.alphaQuality,
+          cqColorLevel:
+            optionState.lossless || !optionState.separateColor
+              ? -1
+              : maxQuant - optionState.colorQuality,
           // Always set to 4:4:4 if lossless
-          subsample: optionState.grayscale
-            ? 0
-            : optionState.lossless
-            ? 3
-            : optionState.subsample,
+          subsample: optionState.lossless ? 3 : optionState.subsample,
           tileColsLog2: optionState.tileCols,
           tileRowsLog2: optionState.tileRows,
           speed: maxSpeed - optionState.effort,
@@ -147,9 +164,11 @@ export class Options extends Component<Props, State> {
     _: Props,
     {
       effort,
-      grayscale,
       lossless,
-      maxAlphaQuality,
+      alphaQuality,
+      colorQuality,
+      separateAlpha,
+      separateColor,
       quality,
       showAdvanced,
       subsample,
@@ -193,15 +212,8 @@ export class Options extends Component<Props, State> {
         <Expander>
           {showAdvanced && (
             <div>
-              {/*<label class={style.optionToggle}>
-                Grayscale
-                <Checkbox
-                  checked={grayscale}
-                  onChange={this._inputChange('grayscale', 'boolean')}
-                />
-              </label>*/}
               <Expander>
-                {!grayscale && !lossless && (
+                {!lossless && (
                   <div>
                     <label class={style.optionTextFirst}>
                       Subsample chroma:
@@ -214,16 +226,54 @@ export class Options extends Component<Props, State> {
                         <option value="3">Off</option>
                       </Select>
                     </label>
-                    <div class={style.optionOneCell}>
-                      <Range
-                        min="0"
-                        max="63"
-                        value={maxAlphaQuality}
-                        onInput={this._inputChange('maxAlphaQuality', 'number')}
-                      >
-                        Max alpha quality:
-                      </Range>
-                    </div>
+                    <label class={style.optionToggle}>
+                      Separate alpha quality
+                      <Checkbox
+                        checked={separateAlpha}
+                        onChange={this._inputChange('separateAlpha', 'boolean')}
+                      />
+                    </label>
+                    <Expander>
+                      {separateAlpha && (
+                        <div class={style.optionOneCell}>
+                          <Range
+                            min="0"
+                            max="63"
+                            value={alphaQuality}
+                            onInput={this._inputChange(
+                              'alphaQuality',
+                              'number',
+                            )}
+                          >
+                            Alpha quality:
+                          </Range>
+                        </div>
+                      )}
+                    </Expander>
+                    <label class={style.optionToggle}>
+                      Separate color quality
+                      <Checkbox
+                        checked={separateColor}
+                        onChange={this._inputChange('separateColor', 'boolean')}
+                      />
+                    </label>
+                    <Expander>
+                      {separateColor && (
+                        <div class={style.optionOneCell}>
+                          <Range
+                            min="0"
+                            max="63"
+                            value={colorQuality}
+                            onInput={this._inputChange(
+                              'colorQuality',
+                              'number',
+                            )}
+                          >
+                            Color quality:
+                          </Range>
+                        </div>
+                      )}
+                    </Expander>
                     <label class={style.optionToggle}>
                       Extra chroma compression
                       <Checkbox

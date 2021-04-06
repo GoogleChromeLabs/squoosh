@@ -1,6 +1,7 @@
 export interface EncodeOptions {
   cqLevel: number;
-  minQuantizerAlpha: number;
+  cqColorLevel: number;
+  cqAlphaLevel: number;
   tileRowsLog2: number;
   tileColsLog2: number;
   speed: number;
