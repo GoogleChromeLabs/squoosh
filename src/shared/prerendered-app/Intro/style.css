@@ -251,7 +251,7 @@
 
 .sample-button {
   &:focus {
-    outline: 0;
+    outline: transparent solid 2px;
   }
 
   &:focus-visible .demo-icon-container {
