@@ -20,7 +20,7 @@ export const extension = 'avif';
 export const defaultOptions: EncodeOptions = {
   cqLevel: 33,
   cqAlphaLevel: -1,
-  cqColorLevel: -1,
+  denoiseLevel: 0,
   tileColsLog2: 0,
   tileRowsLog2: 0,
   speed: 8,

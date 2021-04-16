@@ -1,6 +1,6 @@
 export interface EncodeOptions {
   cqLevel: number;
-  cqColorLevel: number;
+  denoiseLevel: number;
   cqAlphaLevel: number;
   tileRowsLog2: number;
   tileColsLog2: number;

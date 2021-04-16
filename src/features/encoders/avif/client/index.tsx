@@ -29,14 +29,13 @@ interface State {
   showAdvanced: boolean;
   separateAlpha: boolean;
   alphaQuality: number;
-  separateColor: boolean;
-  colorQuality: number;
   chromaDeltaQ: boolean;
   subsample: number;
   tileRows: number;
   tileCols: number;
   effort: number;
   sharpness: number;
+  denoiseLevel: number;
   aqMode: number;
   tune: 'ssim' | 'psnr';
 }
@@ -58,11 +57,9 @@ export class Options extends Component<Props, State> {
     const lossless =
       options.cqLevel === 0 &&
       options.cqAlphaLevel <= 0 &&
-      options.cqColorLevel <= 0 &&
       options.subsample == 3;
 
     const separateAlpha = options.cqAlphaLevel !== -1;
-    const separateColor = options.cqColorLevel !== -1;
 
     const cqLevel = lossless ? defaultOptions.cqLevel : options.cqLevel;
 
@@ -75,10 +72,6 @@ export class Options extends Component<Props, State> {
       alphaQuality:
         maxQuant -
         (separateAlpha ? options.cqAlphaLevel : defaultOptions.cqLevel),
-      separateColor,
-      colorQuality:
-        maxQuant -
-        (separateColor ? options.cqColorLevel : defaultOptions.cqLevel),
       subsample:
         options.subsample === 0 || lossless
           ? defaultOptions.subsample
@@ -88,6 +81,7 @@ export class Options extends Component<Props, State> {
       effort: maxSpeed - options.speed,
       chromaDeltaQ: options.chromaDeltaQ,
       sharpness: options.sharpness,
+      denoiseLevel: options.denoiseLevel,
       tune: options.targetSsim ? 'ssim' : 'psnr',
     };
   }
@@ -131,10 +125,6 @@ export class Options extends Component<Props, State> {
             optionState.lossless || !optionState.separateAlpha
               ? -1
               : maxQuant - optionState.alphaQuality,
-          cqColorLevel:
-            optionState.lossless || !optionState.separateColor
-              ? -1
-              : maxQuant - optionState.colorQuality,
           // Always set to 4:4:4 if lossless
           subsample: optionState.lossless ? 3 : optionState.subsample,
           tileColsLog2: optionState.tileCols,
@@ -142,6 +132,7 @@ export class Options extends Component<Props, State> {
           speed: maxSpeed - optionState.effort,
           chromaDeltaQ: optionState.chromaDeltaQ,
           sharpness: optionState.sharpness,
+          denoiseLevel: optionState.denoiseLevel,
           targetSsim: optionState.tune === 'ssim',
         };
 
@@ -166,9 +157,7 @@ export class Options extends Component<Props, State> {
       effort,
       lossless,
       alphaQuality,
-      colorQuality,
       separateAlpha,
-      separateColor,
       quality,
       showAdvanced,
       subsample,
@@ -176,6 +165,7 @@ export class Options extends Component<Props, State> {
       tileRows,
       chromaDeltaQ,
       sharpness,
+      denoiseLevel,
       tune,
     }: State,
   ) {
@@ -251,30 +241,6 @@ export class Options extends Component<Props, State> {
                       )}
                     </Expander>
                     <label class={style.optionToggle}>
-                      Separate color quality
-                      <Checkbox
-                        checked={separateColor}
-                        onChange={this._inputChange('separateColor', 'boolean')}
-                      />
-                    </label>
-                    <Expander>
-                      {separateColor && (
-                        <div class={style.optionOneCell}>
-                          <Range
-                            min="0"
-                            max="63"
-                            value={colorQuality}
-                            onInput={this._inputChange(
-                              'colorQuality',
-                              'number',
-                            )}
-                          >
-                            Color quality:
-                          </Range>
-                        </div>
-                      )}
-                    </Expander>
-                    <label class={style.optionToggle}>
                       Extra chroma compression
                       <Checkbox
                         checked={chromaDeltaQ}
@@ -289,6 +255,16 @@ export class Options extends Component<Props, State> {
                         onInput={this._inputChange('sharpness', 'number')}
                       >
                         Sharpness:
+                      </Range>
+                    </div>
+                    <div class={style.optionOneCell}>
+                      <Range
+                        min="0"
+                        max="50"
+                        value={denoiseLevel}
+                        onInput={this._inputChange('denoiseLevel', 'number')}
+                      >
+                        Noise synthesis:
                       </Range>
                     </div>
                     <label class={style.optionTextFirst}>

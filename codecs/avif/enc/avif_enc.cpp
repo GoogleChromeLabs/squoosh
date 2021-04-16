@@ -12,7 +12,6 @@ struct AvifOptions {
   int cqLevel;
   // As above, but -1 means 'use cqLevel'
   int cqAlphaLevel;
-  int cqColorLevel;
   // [0 - 6]
   // Creates 2^n tiles in that dimension
   int tileRowsLog2;
@@ -32,6 +31,8 @@ struct AvifOptions {
   int sharpness;
   // Target ssim rather than psnr
   bool targetSsim;
+  // 0-50
+  int denoiseLevel;
 };
 
 thread_local const val Uint8Array = val::global("Uint8Array");
@@ -57,7 +58,6 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
 
   bool lossless = options.cqLevel == AVIF_QUANTIZER_LOSSLESS &&
                   options.cqAlphaLevel <= AVIF_QUANTIZER_LOSSLESS &&
-                  options.cqColorLevel <= AVIF_QUANTIZER_LOSSLESS &&
                   format == AVIF_PIXEL_FORMAT_YUV444;
 
   avifImage* image = avifImageCreate(width, height, depth, format);
@@ -98,11 +98,6 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
                                         std::to_string(options.cqAlphaLevel).c_str());
     }
 
-    if (options.cqColorLevel != -1) {
-      avifEncoderSetCodecSpecificOption(encoder, "color:cq-level",
-                                        std::to_string(options.cqColorLevel).c_str());
-    }
-
     if (options.targetSsim) {
       avifEncoderSetCodecSpecificOption(encoder, "tune", "ssim");
     }
@@ -110,6 +105,9 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
     if (options.chromaDeltaQ) {
       avifEncoderSetCodecSpecificOption(encoder, "enable-chroma-deltaq", "1");
     }
+
+    avifEncoderSetCodecSpecificOption(encoder, "denoise-noise-level",
+                                      std::to_string(options.denoiseLevel).c_str());
   }
 
   encoder->maxThreads = emscripten_num_logical_cores();
@@ -132,7 +130,6 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
 EMSCRIPTEN_BINDINGS(my_module) {
   value_object<AvifOptions>("AvifOptions")
       .field("cqLevel", &AvifOptions::cqLevel)
-      .field("cqColorLevel", &AvifOptions::cqColorLevel)
       .field("cqAlphaLevel", &AvifOptions::cqAlphaLevel)
       .field("tileRowsLog2", &AvifOptions::tileRowsLog2)
       .field("tileColsLog2", &AvifOptions::tileColsLog2)
@@ -140,6 +137,7 @@ EMSCRIPTEN_BINDINGS(my_module) {
       .field("chromaDeltaQ", &AvifOptions::chromaDeltaQ)
       .field("sharpness", &AvifOptions::sharpness)
       .field("targetSsim", &AvifOptions::targetSsim)
+      .field("denoiseLevel", &AvifOptions::denoiseLevel)
       .field("subsample", &AvifOptions::subsample);
 
   function("encode", &encode);
