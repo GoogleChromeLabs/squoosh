@@ -106,7 +106,7 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
       avifEncoderSetCodecSpecificOption(encoder, "enable-chroma-deltaq", "1");
     }
 
-    avifEncoderSetCodecSpecificOption(encoder, "denoise-noise-level",
+    avifEncoderSetCodecSpecificOption(encoder, "color:denoise-noise-level",
                                       std::to_string(options.denoiseLevel).c_str());
   }
 
