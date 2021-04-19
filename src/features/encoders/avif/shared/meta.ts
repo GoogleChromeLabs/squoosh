@@ -23,7 +23,7 @@ export const defaultOptions: EncodeOptions = {
   denoiseLevel: 0,
   tileColsLog2: 0,
   tileRowsLog2: 0,
-  speed: 8,
+  speed: 7,
   subsample: 1,
   chromaDeltaQ: false,
   sharpness: 0,
