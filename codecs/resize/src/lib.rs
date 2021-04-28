@@ -133,8 +133,9 @@ pub fn resize(
                 unprocessed_output_image[4 * i + 3],
             ));
         }
-        output_image[4 * i + 3] =
-            (unprocessed_output_image[4 * i + 3] * 255.0).clamp(0.0, 255.0) as u8;
+        output_image[4 * i + 3] = (unprocessed_output_image[4 * i + 3] * 255.0)
+            .round()
+            .clamp(0.0, 255.0) as u8;
     }
 
     return output_image;
