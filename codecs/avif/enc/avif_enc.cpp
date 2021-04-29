@@ -10,7 +10,8 @@ struct AvifOptions {
   // 0 = lossless
   // 63 = worst quality
   int cqLevel;
-  int minQuantizerAlpha;
+  // As above, but -1 means 'use cqLevel'
+  int cqAlphaLevel;
   // [0 - 6]
   // Creates 2^n tiles in that dimension
   int tileRowsLog2;
@@ -30,6 +31,8 @@ struct AvifOptions {
   int sharpness;
   // Target ssim rather than psnr
   bool targetSsim;
+  // 0-50
+  int denoiseLevel;
 };
 
 thread_local const val Uint8Array = val::global("Uint8Array");
@@ -54,8 +57,9 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
   }
 
   bool lossless = options.cqLevel == AVIF_QUANTIZER_LOSSLESS &&
-                  options.minQuantizerAlpha == AVIF_QUANTIZER_LOSSLESS &&
+                  options.cqAlphaLevel <= AVIF_QUANTIZER_LOSSLESS &&
                   format == AVIF_PIXEL_FORMAT_YUV444;
+
   avifImage* image = avifImageCreate(width, height, depth, format);
 
   if (lossless) {
@@ -82,12 +86,17 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
   } else {
     encoder->minQuantizer = AVIF_QUANTIZER_BEST_QUALITY;
     encoder->maxQuantizer = AVIF_QUANTIZER_WORST_QUALITY;
-    encoder->minQuantizerAlpha = options.minQuantizerAlpha;
+    encoder->minQuantizerAlpha = AVIF_QUANTIZER_BEST_QUALITY;
     encoder->maxQuantizerAlpha = AVIF_QUANTIZER_WORST_QUALITY;
     avifEncoderSetCodecSpecificOption(encoder, "end-usage", "q");
     avifEncoderSetCodecSpecificOption(encoder, "cq-level", std::to_string(options.cqLevel).c_str());
     avifEncoderSetCodecSpecificOption(encoder, "sharpness",
                                       std::to_string(options.sharpness).c_str());
+
+    if (options.cqAlphaLevel != -1) {
+      avifEncoderSetCodecSpecificOption(encoder, "alpha:cq-level",
+                                        std::to_string(options.cqAlphaLevel).c_str());
+    }
 
     if (options.targetSsim) {
       avifEncoderSetCodecSpecificOption(encoder, "tune", "ssim");
@@ -96,6 +105,9 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
     if (options.chromaDeltaQ) {
       avifEncoderSetCodecSpecificOption(encoder, "enable-chroma-deltaq", "1");
     }
+
+    avifEncoderSetCodecSpecificOption(encoder, "color:denoise-noise-level",
+                                      std::to_string(options.denoiseLevel).c_str());
   }
 
   encoder->maxThreads = emscripten_num_logical_cores();
@@ -118,13 +130,14 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
 EMSCRIPTEN_BINDINGS(my_module) {
   value_object<AvifOptions>("AvifOptions")
       .field("cqLevel", &AvifOptions::cqLevel)
-      .field("minQuantizerAlpha", &AvifOptions::minQuantizerAlpha)
+      .field("cqAlphaLevel", &AvifOptions::cqAlphaLevel)
       .field("tileRowsLog2", &AvifOptions::tileRowsLog2)
       .field("tileColsLog2", &AvifOptions::tileColsLog2)
       .field("speed", &AvifOptions::speed)
       .field("chromaDeltaQ", &AvifOptions::chromaDeltaQ)
       .field("sharpness", &AvifOptions::sharpness)
       .field("targetSsim", &AvifOptions::targetSsim)
+      .field("denoiseLevel", &AvifOptions::denoiseLevel)
       .field("subsample", &AvifOptions::subsample);
 
   function("encode", &encode);
