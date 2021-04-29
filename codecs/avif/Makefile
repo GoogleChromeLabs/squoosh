@@ -3,7 +3,6 @@
 CODEC_URL = https://github.com/AOMediaCodec/libavif/archive/d37ef74127986184500e571bf1f9793cc0bdef50.tar.gz
 CODEC_PACKAGE = node_modules/libavif.tar.gz
 
-# Tracking the version in google3/third_party/libaom
 LIBAOM_URL = https://aomedia.googlesource.com/aom/+archive/0a5da45c7f942908974f5ab8e107c9fa82048ae7.tar.gz
 LIBAOM_PACKAGE = node_modules/libaom.tar.gz
 
