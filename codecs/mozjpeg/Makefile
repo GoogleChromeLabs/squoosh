@@ -30,8 +30,7 @@ $(OUT_WASM): $(CODEC_OUT)
 		-o $@ \
 		enc/mozjpeg_enc.cpp \
 		$(CODEC_OUT)
-	$(BINARYEN_PREFIX)/bin/wasm-opt -O4 -o $(OUT_WASM) $(OUT_WASM)
-	$(WABT_PREFIX)/bin/wasm-strip $(OUT_WASM)
+	$(BINARYEN_PREFIX)/bin/wasm-opt --strip-debug --strip-dwarf --strip-producers --strip-target-features -O4 -o $(OUT_WASM) $(OUT_WASM)
 
 # This one is a bit special: there is no rule for .libs/libjpeg.a
 #  so we use libjpeg.la which implicitly builds that one instead.
