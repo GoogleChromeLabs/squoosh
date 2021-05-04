@@ -27,7 +27,6 @@ $(OUT_WASM): $(CODEC_OUT)
 		-I $(CODEC_DIR) \
 		${CXXFLAGS} \
 		${LDFLAGS} \
-		-mexec-model=reactor \
 		-o $@ \
 		enc/mozjpeg_enc.cpp \
 		$(CODEC_OUT)
