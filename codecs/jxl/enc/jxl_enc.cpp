@@ -18,6 +18,7 @@ struct JXLOptions {
   int epf;
   int nearLossless;
   bool lossyPalette;
+  size_t decodingSpeedTier;
 };
 
 val encode(std::string image, int width, int height, JXLOptions options) {
@@ -35,6 +36,7 @@ val encode(std::string image, int width, int height, JXLOptions options) {
   cparams.epf = options.epf;
   cparams.speed_tier = static_cast<jxl::SpeedTier>(options.speed);
   cparams.near_lossless = options.nearLossless;
+  cparams.decoding_speed_tier = options.decodingSpeedTier;
 
   if (options.lossyPalette) {
     cparams.lossy_palette = true;
@@ -113,6 +115,7 @@ EMSCRIPTEN_BINDINGS(my_module) {
       .field("progressive", &JXLOptions::progressive)
       .field("nearLossless", &JXLOptions::nearLossless)
       .field("lossyPalette", &JXLOptions::lossyPalette)
+      .field("decodingSpeedTier", &JXLOptions::decodingSpeedTier)
       .field("epf", &JXLOptions::epf);
 
   function("encode", &encode);
