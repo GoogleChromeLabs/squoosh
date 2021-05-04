@@ -10,23 +10,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import mozjpeg_enc, { MozJPEGModule } from 'codecs/mozjpeg/enc/mozjpeg_enc';
-import { EncodeOptions } from '../shared/meta';
+import { MozJPEGModuleExports, EncodeOptions } from '../shared/meta';
 import wasmUrl from 'url:codecs/mozjpeg/enc/mozjpeg_enc.wasm';
-import { initEmscriptenModule } from 'features/worker-utils';
+import { instantiateStreaming } from 'features/worker-utils';
+import {
+  makeEverythingElseThrow,
+  makeWasiEnv,
+} from 'features/worker-utils/wasi-utils';
 
-let emscriptenModule: Promise<MozJPEGModule>;
+const instancePromise: Promise<WebAssembly.Instance> = instantiateStreaming(
+  fetch(wasmUrl),
+  {
+    wasi_snapshot_preview1: makeEverythingElseThrow(makeWasiEnv()),
+  },
+).then(({ instance }) => instance);
 
 export default async function encode(
   data: ImageData,
   options: EncodeOptions,
 ): Promise<ArrayBuffer> {
-  if (!emscriptenModule) {
-    emscriptenModule = initEmscriptenModule(mozjpeg_enc, wasmUrl);
-  }
+  const instance = await instancePromise;
+  const exports: MozJPEGModuleExports = (instance.exports as unknown) as MozJPEGModuleExports;
 
-  const module = await emscriptenModule;
-  const resultView = module.encode(data.data, data.width, data.height, options);
+  for (const [opt, value] of Object.entries(options)) {
+    // @ts-ignore Can’t be bothered to make these typings works
+    exports[`set_opts_${opt}`](value);
+  }
+  const inPtr = exports.alloc(data.data.byteLength);
+  new Uint8ClampedArray(exports.memory.buffer, inPtr, data.data.length).set(
+    data.data,
+  );
+  const resultPtr = exports.encode(inPtr, data.width, data.height);
+  const dv = new DataView(exports.memory.buffer);
+  const length = dv.getUint32(resultPtr, true);
+  const outPtr = dv.getUint32(resultPtr + 4, true);
+  const result = new Uint8Array(exports.memory.buffer, outPtr, length).slice();
+  exports.dealloc(inPtr);
+  exports.dealloc(outPtr);
+  exports.dealloc(resultPtr);
   // wasm can’t run on SharedArrayBuffers, so we hard-cast to ArrayBuffer.
-  return resultView.buffer as ArrayBuffer;
+  return result.buffer;
 }

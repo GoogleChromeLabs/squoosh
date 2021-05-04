@@ -29,3 +29,16 @@ export function initEmscriptenModule<T extends EmscriptenWasm.Module>(
 export function blobToArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
   return new Response(blob).arrayBuffer();
 }
+
+export async function instantiateStreaming(
+  resp: Response | PromiseLike<Response>,
+  importObj?: WebAssembly.Imports,
+): Promise<WebAssembly.WebAssemblyInstantiatedSource> {
+  if (WebAssembly.instantiateStreaming) {
+    return WebAssembly.instantiateStreaming(resp, importObj);
+  }
+  return WebAssembly.instantiate(
+    await Promise.resolve(resp).then((r) => r.arrayBuffer()),
+    importObj,
+  );
+}
