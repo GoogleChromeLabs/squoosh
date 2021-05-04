@@ -7,5 +7,8 @@ RUN mkdir -p ${WASI_SDK_PREFIX} && \
 ENV BINARYEN_PREFIX "/opt/binaryen"
 RUN mkdir -p ${BINARYEN_PREFIX} && \
   curl -L https://github.com/WebAssembly/binaryen/releases/download/version_101/binaryen-version_101-x86_64-linux.tar.gz | tar -xz --strip 1 -C ${BINARYEN_PREFIX}
+ENV WABT_PREFIX "/opt/wabt"
+RUN mkdir -p ${WABT_PREFIX} && \
+  curl -L https://github.com/WebAssembly/wabt/releases/download/1.0.23/wabt-1.0.23-ubuntu.tar.gz | tar -xz --strip 1 -C ${WABT_PREFIX}
 WORKDIR /src
 CMD ["sh", "-c", "make -j`nproc`"]
