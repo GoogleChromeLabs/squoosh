@@ -9,7 +9,7 @@ Squoosh API is currently not the fastest image compression tool in town and does
 The Squoosh API can be installed to your local project with the following command:
 
 ```
-$ npm --install @squoosh/api
+$ npm install @squoosh/api
 ```
 
 You can start using the API by adding these lines to the top of your JS program:
