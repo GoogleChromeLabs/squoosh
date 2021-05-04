@@ -3,9 +3,9 @@
 [Squoosh] is an image compression web app that allows you to dive into the advanced options provided
 by various image compressors.
 
-# CLI
+# API & CLI
 
-[Squoosh now has a CLI](https://github.com/GoogleChromeLabs/squoosh/tree/dev/cli) that allows you to compress many images at once.
+Squoosh now has [an API](https://github.com/GoogleChromeLabs/squoosh/tree/dev/api) and [a CLI](https://github.com/GoogleChromeLabs/squoosh/tree/dev/cli) that allows you to compress many images at once.
 
 # Privacy
 
