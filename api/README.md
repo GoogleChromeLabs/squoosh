@@ -76,7 +76,7 @@ await imagePool.close();
 
 ## Writing encoded images to the file system
 
-When you have encoded an image, you normally want write it to a file.
+When you have encoded an image, you normally want to write it to a file.
 
 This example takes an image that has been encoded as a `jpg` and writes it to a file:
 
