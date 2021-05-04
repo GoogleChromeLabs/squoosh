@@ -27,6 +27,8 @@ struct MozJpegOptions {
   int chroma_quality;
 };
 
+thread_local struct MozJpegOptions opts = {};
+
 struct DynArray {
   size_t size;
   uint8_t* ptr;
@@ -36,25 +38,6 @@ __attribute__((export_name("encode"))) intptr_t* encode(uintptr_t* image_in,
                                                         int image_width,
                                                         int image_height) {
   uint8_t* image_buffer = reinterpret_cast<uint8_t*>(image_in);
-
-  struct MozJpegOptions opts = {
-      10,         // int quality;
-      false,      // bool baseline;
-      false,      // bool arithmetic;
-      true,       // bool progressive;
-      true,       // bool optimize_coding;
-      0,          // int smoothing;
-      JCS_YCbCr,  // int color_space;
-      3,          // int quant_table;
-      false,      // bool trellis_multipass;
-      false,      // bool trellis_opt_zero;
-      false,      // bool trellis_opt_table;
-      1,          // int trellis_loops;
-      true,       // bool auto_subsample;
-      2,          // int chroma_subsample;
-      false,      // bool separate_chroma_quality;
-      75          // int chroma_quality;
-  };
 
   // The code below is basically the `write_JPEG_file` function from
   // https://github.com/mozilla/mozjpeg/blob/master/example.c
@@ -213,6 +196,29 @@ __attribute__((export_name("dealloc"))) void dealloc(uintptr_t* ptr) {
   return free(ptr);
 }
 
+#define MAKE_SETTER(type, name)                                                    \
+  __attribute__((export_name("set_opts_" #name))) void set_opts_##name(type val) { \
+    opts.name = val;                                                               \
+  }
+
+MAKE_SETTER(int, quality);
+MAKE_SETTER(bool, baseline);
+MAKE_SETTER(bool, arithmetic);
+MAKE_SETTER(bool, progressive);
+MAKE_SETTER(bool, optimize_coding);
+MAKE_SETTER(int, smoothing);
+MAKE_SETTER(int, color_space);
+MAKE_SETTER(int, quant_table);
+MAKE_SETTER(bool, trellis_multipass);
+MAKE_SETTER(bool, trellis_opt_zero);
+MAKE_SETTER(bool, trellis_opt_table);
+MAKE_SETTER(int, trellis_loops);
+MAKE_SETTER(bool, auto_subsample);
+MAKE_SETTER(int, chroma_subsample);
+MAKE_SETTER(bool, separate_chroma_quality);
+MAKE_SETTER(int, chroma_quality);
+
+// To satisfy WASI SDK compiler and make sure that init code runs.
 int main() {
   return 0;
 }

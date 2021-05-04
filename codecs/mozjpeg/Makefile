@@ -30,6 +30,7 @@ $(OUT_WASM): $(CODEC_OUT)
 		-o $@ \
 		enc/mozjpeg_enc.cpp \
 		$(CODEC_OUT)
+	$(BINARYEN_PREFIX)/bin/wasm-opt -O3 -o $(OUT_WASM) $(OUT_WASM)
 
 # This one is a bit special: there is no rule for .libs/libjpeg.a
 #  so we use libjpeg.la which implicitly builds that one instead.
@@ -43,8 +44,8 @@ $(CODEC_BUILD_DIR)/Makefile: $(CODEC_DIR)/configure
 	mkdir -p $(CODEC_BUILD_DIR) && \
 	cd $(CODEC_BUILD_DIR) && \
 	../configure \
-		--target=wasm32-unknown-wasi \
-		--host=wasm32-unknown-wasi \
+		--target=wasm32-wasi \
+		--host=wasm32-wasi \
 		--disable-shared \
 		--without-turbojpeg \
 		--without-simd \
