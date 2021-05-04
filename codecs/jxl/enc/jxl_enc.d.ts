@@ -5,6 +5,7 @@ export interface EncodeOptions {
   epf: number;
   nearLossless: number;
   lossyPalette: boolean;
+  decodingSpeedTier: number;
 }
 
 export interface JXLModule extends EmscriptenWasm.Module {

@@ -24,4 +24,5 @@ export const defaultOptions: EncodeOptions = {
   epf: -1,
   nearLossless: 0,
   lossyPalette: false,
+  decodingSpeedTier: 0,
 };
