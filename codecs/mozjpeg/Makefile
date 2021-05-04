@@ -1,47 +1,51 @@
 CODEC_URL := https://github.com/mozilla/mozjpeg/archive/v3.3.1.tar.gz
 CODEC_DIR := node_modules/mozjpeg
+CODEC_BUILD_DIR := $(CODEC_DIR)/build
 CODEC_OUT_RELATIVE := .libs/libjpeg.a rdswitch.o
-CODEC_OUT := $(addprefix $(CODEC_DIR)/, $(CODEC_OUT_RELATIVE))
-ENVIRONMENT = worker
+CODEC_OUT := $(addprefix $(CODEC_BUILD_DIR)/, $(CODEC_OUT_RELATIVE))
 
-OUT_JS := enc/mozjpeg_enc.js enc/mozjpeg_node_enc.js dec/mozjpeg_node_dec.js
-OUT_WASM := $(OUT_JS:.js=.wasm)
+OUT_WASM := enc/mozjpeg_enc.wasm
+
+OPTIMIZE := 3
+
+override CC = $(WASI_SDK_PREFIX)/bin/clang
+override CXX = $(WASI_SDK_PREFIX)/bin/clang++
+override CXXFLAGS += --sysroot=$(WASI_SDK_PREFIX)/share/wasi-sysroot -O$(OPTIMIZE) 
+override CFLAGS += --sysroot=$(WASI_SDK_PREFIX)/share/wasi-sysroot -O$(OPTIMIZE)
+override RANLIB = $(WASI_SDK_PREFIX)/bin/ranlib
+
+# Without this export, configure doesn’t seem to see $CC and $CFLAGS
+export
 
 .PHONY: all clean
 
-all: $(OUT_JS)
+all: $(OUT_WASM)
 
-# Define dependencies for all variations of build artifacts.
-$(filter enc/%,$(OUT_JS)): enc/mozjpeg_enc.cpp
-$(filter dec/%,$(OUT_JS)): dec/mozjpeg_dec.cpp
-
-enc/mozjpeg_node_enc.js dec/mozjpeg_node_dec.js: ENVIRONMENT = node
-
-%.js: $(CODEC_OUT)
+$(OUT_WASM): $(CODEC_OUT)
 	$(CXX) \
+		-I $(CODEC_BUILD_DIR) \
 		-I $(CODEC_DIR) \
 		${CXXFLAGS} \
 		${LDFLAGS} \
-		--closure 1 \
-		--bind \
-		-s ALLOW_MEMORY_GROWTH=1 \
-		-s MODULARIZE=1 \
-		-s TEXTDECODER=2 \
-		-s ENVIRONMENT=$(ENVIRONMENT) \
-		-s EXPORT_ES6=1 \
 		-o $@ \
-		$+
+		enc/mozjpeg_enc.cpp \
+		$(CODEC_OUT)
+	$(BINARYEN_PREFIX)/bin/wasm-opt --strip-debug --strip-dwarf --strip-producers --strip-target-features -O4 -o $(OUT_WASM) $(OUT_WASM)
 
 # This one is a bit special: there is no rule for .libs/libjpeg.a
 #  so we use libjpeg.la which implicitly builds that one instead.
-$(CODEC_DIR)/.libs/libjpeg.a: $(CODEC_DIR)/Makefile
-	$(MAKE) -C $(CODEC_DIR) libjpeg.la
+$(CODEC_BUILD_DIR)/.libs/libjpeg.a: $(CODEC_BUILD_DIR)/Makefile
+	$(MAKE) -C $(CODEC_BUILD_DIR) libjpeg.la
 
-$(CODEC_DIR)/rdswitch.o: $(CODEC_DIR)/Makefile
-	$(MAKE) -C $(CODEC_DIR) rdswitch.o
+$(CODEC_BUILD_DIR)/rdswitch.o: $(CODEC_BUILD_DIR)/Makefile
+	$(MAKE) -C $(CODEC_BUILD_DIR) rdswitch.o
 
-$(CODEC_DIR)/Makefile: $(CODEC_DIR)/configure
-	cd $(CODEC_DIR) && ./configure \
+$(CODEC_BUILD_DIR)/Makefile: $(CODEC_DIR)/configure
+	mkdir -p $(CODEC_BUILD_DIR) && \
+	cd $(CODEC_BUILD_DIR) && \
+	../configure \
+		--target=wasm32-wasi \
+		--host=wasm32-wasi \
 		--disable-shared \
 		--without-turbojpeg \
 		--without-simd \
@@ -59,7 +63,10 @@ $(CODEC_DIR)/configure.ac: $(CODEC_DIR)
 $(CODEC_DIR):
 	mkdir -p $@
 	curl -sL $(CODEC_URL) | tar xz --strip 1 -C $@
+	cp $(WASI_SDK_PREFIX)/share/misc/config.* $(CODEC_DIR)
+	# ^ Monkey-path autoconf files as Ubuntu’s autoconf tools are too old
+  # to recognize WASI
 
 clean:
-	$(RM) $(OUT_JS) $(OUT_WASM)
-	$(MAKE) -C $(CODEC_DIR) clean
+	$(RM) $(OUT_WASM)
+	$(RM) -r $(CODEC_BUILD_DIR)

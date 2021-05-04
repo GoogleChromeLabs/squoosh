@@ -1,5 +1,5 @@
 {
   "scripts": {
-    "build": "../build-cpp.sh"
+    "build": "../build-wasi-sdk.sh"
   }
 }

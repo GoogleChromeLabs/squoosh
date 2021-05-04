@@ -1,24 +1,12 @@
-#include <emscripten/bind.h>
-#include <emscripten/val.h>
-#include <inttypes.h>
-#include <setjmp.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <stdint.h>
+#include <string>
+
 #include "config.h"
 #include "jpeglib.h"
 
 extern "C" {
 #include "cdjpeg.h"
 }
-
-using namespace emscripten;
-
-// MozJPEG doesn’t expose a numeric version, so I have to do some fun C macro
-// hackery to turn it into a string. More details here:
-// https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html
-#define xstr(s) str(s)
-#define str(s) #s
 
 struct MozJpegOptions {
   int quality;
@@ -39,26 +27,17 @@ struct MozJpegOptions {
   int chroma_quality;
 };
 
-int version() {
-  char buffer[] = xstr(MOZJPEG_VERSION);
-  int version = 0;
-  int last_index = 0;
-  for (int i = 0; i < strlen(buffer); i++) {
-    if (buffer[i] == '.') {
-      buffer[i] = '\0';
-      version = version << 8 | atoi(&buffer[last_index]);
-      buffer[i] = '.';
-      last_index = i + 1;
-    }
-  }
-  version = version << 8 | atoi(&buffer[last_index]);
-  return version;
-}
+thread_local struct MozJpegOptions opts = {};
 
-thread_local const val Uint8Array = val::global("Uint8Array");
+struct DynArray {
+  size_t size;
+  uint8_t* ptr;
+};
 
-val encode(std::string image_in, int image_width, int image_height, MozJpegOptions opts) {
-  uint8_t* image_buffer = (uint8_t*)image_in.c_str();
+__attribute__((export_name("encode"))) intptr_t* encode(uintptr_t* image_in,
+                                                        int image_width,
+                                                        int image_height) {
+  uint8_t* image_buffer = reinterpret_cast<uint8_t*>(image_in);
 
   // The code below is basically the `write_JPEG_file` function from
   // https://github.com/mozilla/mozjpeg/blob/master/example.c
@@ -199,35 +178,47 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
 
   /* Step 7: release JPEG compression object */
 
-  auto js_result = Uint8Array.new_(typed_memory_view(size, output));
-
   /* This is an important step since it will release a good deal of memory. */
   jpeg_destroy_compress(&cinfo);
-  free(output);
 
   /* And we're done! */
-  return js_result;
+  auto result = new DynArray();
+  result->size = size;
+  result->ptr = output;
+  return reinterpret_cast<intptr_t*>(result);
 }
 
-EMSCRIPTEN_BINDINGS(my_module) {
-  value_object<MozJpegOptions>("MozJpegOptions")
-      .field("quality", &MozJpegOptions::quality)
-      .field("baseline", &MozJpegOptions::baseline)
-      .field("arithmetic", &MozJpegOptions::arithmetic)
-      .field("progressive", &MozJpegOptions::progressive)
-      .field("optimize_coding", &MozJpegOptions::optimize_coding)
-      .field("smoothing", &MozJpegOptions::smoothing)
-      .field("color_space", &MozJpegOptions::color_space)
-      .field("quant_table", &MozJpegOptions::quant_table)
-      .field("trellis_multipass", &MozJpegOptions::trellis_multipass)
-      .field("trellis_opt_zero", &MozJpegOptions::trellis_opt_zero)
-      .field("trellis_opt_table", &MozJpegOptions::trellis_opt_table)
-      .field("trellis_loops", &MozJpegOptions::trellis_loops)
-      .field("chroma_subsample", &MozJpegOptions::chroma_subsample)
-      .field("auto_subsample", &MozJpegOptions::auto_subsample)
-      .field("separate_chroma_quality", &MozJpegOptions::separate_chroma_quality)
-      .field("chroma_quality", &MozJpegOptions::chroma_quality);
+__attribute__((export_name("alloc"))) uintptr_t* alloc(size_t size) {
+  return reinterpret_cast<uintptr_t*>(malloc(size));
+}
 
-  function("version", &version);
-  function("encode", &encode);
+__attribute__((export_name("dealloc"))) void dealloc(uintptr_t* ptr) {
+  return free(ptr);
+}
+
+#define MAKE_SETTER(type, name)                                                    \
+  __attribute__((export_name("set_opts_" #name))) void set_opts_##name(type val) { \
+    opts.name = val;                                                               \
+  }
+
+MAKE_SETTER(int, quality);
+MAKE_SETTER(bool, baseline);
+MAKE_SETTER(bool, arithmetic);
+MAKE_SETTER(bool, progressive);
+MAKE_SETTER(bool, optimize_coding);
+MAKE_SETTER(int, smoothing);
+MAKE_SETTER(int, color_space);
+MAKE_SETTER(int, quant_table);
+MAKE_SETTER(bool, trellis_multipass);
+MAKE_SETTER(bool, trellis_opt_zero);
+MAKE_SETTER(bool, trellis_opt_table);
+MAKE_SETTER(int, trellis_loops);
+MAKE_SETTER(bool, auto_subsample);
+MAKE_SETTER(int, chroma_subsample);
+MAKE_SETTER(bool, separate_chroma_quality);
+MAKE_SETTER(int, chroma_quality);
+
+// To satisfy WASI SDK compiler and make sure that init code runs.
+int main() {
+  return 0;
 }

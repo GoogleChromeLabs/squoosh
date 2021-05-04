@@ -13,8 +13,9 @@
 import {
   EncodeOptions,
   MozJpegColorSpace,
+  MozJPEGModuleExports,
 } from 'codecs/mozjpeg/enc/mozjpeg_enc';
-export { EncodeOptions, MozJpegColorSpace };
+export { EncodeOptions, MozJpegColorSpace, MozJPEGModuleExports };
 
 export const label = 'MozJPEG';
 export const mimeType = 'image/jpeg';
