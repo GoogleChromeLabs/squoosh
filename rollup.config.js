@@ -58,10 +58,6 @@ function jsFileName(chunkInfo) {
 }
 
 export default async function ({ watch }) {
-  const omtLoaderPromise = fsp.readFile(
-    path.join(__dirname, 'lib', 'omt.ejs'),
-    'utf-8',
-  );
   await del('.tmp/build');
 
   const isProduction = !watch;
@@ -111,7 +107,7 @@ export default async function ({ watch }) {
           external: ['worker_threads'],
           plugins: [
             { resolveFileUrl, resolveImportMeta },
-            OMT({ loader: await omtLoaderPromise }),
+            OMT(),
             serviceWorkerPlugin({
               output: 'static/serviceworker.js',
             }),

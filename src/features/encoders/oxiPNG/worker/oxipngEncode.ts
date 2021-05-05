@@ -14,54 +14,17 @@ import initOxiWasmST, {
   optimise as optimiseST,
 } from 'codecs/oxipng/pkg/squoosh_oxipng';
 import initOxiWasmMT, {
-  worker_initializer,
-  start_main_thread,
+  initThreadPool,
   optimise as optimiseMT,
 } from 'codecs/oxipng/pkg-parallel/squoosh_oxipng';
 import oxiWasmUrlST from 'url:codecs/oxipng/pkg/squoosh_oxipng_bg.wasm';
 import oxiWasmUrlMT from 'url:codecs/oxipng/pkg-parallel/squoosh_oxipng_bg.wasm';
 import { EncodeOptions } from '../shared/meta';
 import { threads } from 'wasm-feature-detect';
-import workerURL from 'omt:./sub-worker';
-import type { WorkerInit } from './sub-worker';
-
-function initWorker(worker: Worker, workerInit: WorkerInit) {
-  return new Promise<void>((resolve) => {
-    worker.postMessage(workerInit);
-    worker.addEventListener('message', () => resolve(), { once: true });
-  });
-}
 
 async function initMT() {
-  const num = navigator.hardwareConcurrency;
-
-  // First, let browser fetch and spawn Workers for our pool in the background.
-  // This is fairly expensive, so we want to start it as early as possible.
-  const workers = Array.from({ length: num }, () => new Worker(workerURL));
-
-  // Meanwhile, asynchronously compile, instantiate and initialise Wasm on our main thread.
   await initOxiWasmMT(oxiWasmUrlMT);
-
-  // Get module+memory from the Wasm instance.
-  //
-  // Ideally we wouldn't go via Wasm bindings here, since both are just JS variables, but memory is
-  // currently not exposed on the Wasm instance correctly by wasm-bindgen.
-  const workerInit: WorkerInit = worker_initializer(num);
-
-  // Once done, we want to send module+memory to each Worker so that they instantiate Wasm too.
-  // While doing so, we need to wait for Workers to acknowledge that they have received our message.
-  // Ideally this shouldn't be necessary, but Chromium currently doesn't conform to the spec:
-  // https://bugs.chromium.org/p/chromium/issues/detail?id=1075645
-  //
-  // If we didn't do this ping-pong game, the `start_main_thread` below would block the current
-  // thread on an atomic before even *sending* the `postMessage` containing memory,
-  // so Workers would never be able to unblock us back.
-  await Promise.all(workers.map((worker) => initWorker(worker, workerInit)));
-
-  // Finally, instantiate rayon pool - this will use shared Wasm memory to send tasks to the
-  // Workers and then block until they're all ready.
-  start_main_thread();
-
+  await initThreadPool(navigator.hardwareConcurrency);
   return optimiseMT;
 }
 
@@ -77,7 +40,7 @@ export default async function encode(
   options: EncodeOptions,
 ): Promise<ArrayBuffer> {
   if (!wasmReady) {
-    wasmReady = (await threads()) ? initMT() : initST();
+    wasmReady = threads().then((hasThreads: boolean) => hasThreads ? initMT() : initST());
   }
 
   const optimise = await wasmReady;
