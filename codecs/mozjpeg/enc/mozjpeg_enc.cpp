@@ -183,7 +183,7 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
       }
       scanptr->Ss = scanptr->Se = scanptr->Ah = scanptr->Al = 0;
       scanptr++;
-      // Luma progression
+      // Luma progressions
       scanptr->comps_in_scan = 1;
       scanptr->component_index[0] = 0;
       scanptr->Ss = 1;
@@ -198,13 +198,6 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
       scanptr->Ah = 2;
       scanptr->Al = 1;
       scanptr++;
-      scanptr->comps_in_scan = 1;
-      scanptr->component_index[0] = 0;
-      scanptr->Ss = 1;
-      scanptr->Se = 63;
-      scanptr->Ah = 1;
-      scanptr->Al = 0;
-      scanptr++;
       // Chroma full
       scanptr->comps_in_scan = 1;
       scanptr->component_index[0] = 2;
@@ -218,6 +211,14 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
       scanptr->Ss = 1;
       scanptr->Se = 63;
       scanptr->Ah = 0;
+      scanptr->Al = 0;
+      scanptr++;
+      // Luma full
+      scanptr->comps_in_scan = 1;
+      scanptr->component_index[0] = 0;
+      scanptr->Ss = 1;
+      scanptr->Se = 63;
+      scanptr->Ah = 1;
       scanptr->Al = 0;
       scanptr++;
     }
