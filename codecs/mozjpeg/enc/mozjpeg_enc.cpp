@@ -141,6 +141,7 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
   jpeg_c_set_bool_param(&cinfo, JBOOLEAN_TRELLIS_EOB_OPT, opts.trellis_opt_zero);
   jpeg_c_set_bool_param(&cinfo, JBOOLEAN_TRELLIS_Q_OPT, opts.trellis_opt_table);
   jpeg_c_set_int_param(&cinfo, JINT_TRELLIS_NUM_LOOPS, opts.trellis_loops);
+  jpeg_c_set_int_param(&cinfo, JINT_DC_SCAN_OPT_MODE, 0);
 
   // A little hacky to build a string for this, but it means we can use
   // set_quality_ratings which does some useful heuristic stuff.
@@ -160,7 +161,66 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
   }
 
   if (!opts.baseline && opts.progressive) {
-    jpeg_simple_progression(&cinfo);
+    if (cinfo.jpeg_color_space != JCS_YCbCr) {
+      jpeg_simple_progression(&cinfo);
+    } else {
+      jpeg_c_set_bool_param(&cinfo, JBOOLEAN_OPTIMIZE_SCANS, FALSE);
+      int num_scans = 6;
+      if (cinfo.script_space == NULL || cinfo.script_space_size < num_scans) {
+        cinfo.script_space_size = ((num_scans) > (10) ? (num_scans) : (10));
+        cinfo.script_space = (jpeg_scan_info*)(*cinfo.mem->alloc_small)(
+            (j_common_ptr)&cinfo, JPOOL_PERMANENT,
+            cinfo.script_space_size * sizeof(jpeg_scan_info));
+      }
+      jpeg_scan_info* scanptr = cinfo.script_space;
+      cinfo.scan_info = scanptr;
+      cinfo.num_scans = num_scans;
+
+      // DC scan
+      scanptr->comps_in_scan = 3;
+      for (int ci = 0; ci < 3; ci++) {
+        scanptr->component_index[ci] = ci;
+      }
+      scanptr->Ss = scanptr->Se = scanptr->Ah = scanptr->Al = 0;
+      scanptr++;
+      // Luma progression
+      scanptr->comps_in_scan = 1;
+      scanptr->component_index[0] = 0;
+      scanptr->Ss = 1;
+      scanptr->Se = 63;
+      scanptr->Ah = 0;
+      scanptr->Al = 2;
+      scanptr++;
+      scanptr->comps_in_scan = 1;
+      scanptr->component_index[0] = 0;
+      scanptr->Ss = 1;
+      scanptr->Se = 63;
+      scanptr->Ah = 2;
+      scanptr->Al = 1;
+      scanptr++;
+      scanptr->comps_in_scan = 1;
+      scanptr->component_index[0] = 0;
+      scanptr->Ss = 1;
+      scanptr->Se = 63;
+      scanptr->Ah = 1;
+      scanptr->Al = 0;
+      scanptr++;
+      // Chroma full
+      scanptr->comps_in_scan = 1;
+      scanptr->component_index[0] = 2;
+      scanptr->Ss = 1;
+      scanptr->Se = 63;
+      scanptr->Ah = 0;
+      scanptr->Al = 0;
+      scanptr++;
+      scanptr->comps_in_scan = 1;
+      scanptr->component_index[0] = 1;
+      scanptr->Ss = 1;
+      scanptr->Se = 63;
+      scanptr->Ah = 0;
+      scanptr->Al = 0;
+      scanptr++;
+    }
   } else {
     cinfo.num_scans = 0;
     cinfo.scan_info = NULL;
