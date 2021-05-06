@@ -165,7 +165,7 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
       jpeg_simple_progression(&cinfo);
     } else {
       jpeg_c_set_bool_param(&cinfo, JBOOLEAN_OPTIMIZE_SCANS, FALSE);
-      int num_scans = 6;
+      int num_scans = 8;
       if (cinfo.script_space == NULL || cinfo.script_space_size < num_scans) {
         cinfo.script_space_size = ((num_scans) > (10) ? (num_scans) : (10));
         cinfo.script_space = (jpeg_scan_info*)(*cinfo.mem->alloc_small)(
@@ -198,24 +198,41 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
       scanptr->Ah = 2;
       scanptr->Al = 1;
       scanptr++;
-      // Chroma full
+      // Chroma almost full
       scanptr->comps_in_scan = 1;
       scanptr->component_index[0] = 2;
       scanptr->Ss = 1;
       scanptr->Se = 63;
       scanptr->Ah = 0;
-      scanptr->Al = 0;
+      scanptr->Al = 1;
       scanptr++;
       scanptr->comps_in_scan = 1;
       scanptr->component_index[0] = 1;
       scanptr->Ss = 1;
       scanptr->Se = 63;
       scanptr->Ah = 0;
-      scanptr->Al = 0;
+      scanptr->Al = 1;
       scanptr++;
       // Luma full
       scanptr->comps_in_scan = 1;
       scanptr->component_index[0] = 0;
+      scanptr->Ss = 1;
+      scanptr->Se = 63;
+      scanptr->Ah = 1;
+      scanptr->Al = 0;
+      scanptr++;
+      // Chroma full
+      // TODO: once the decoder is fixed, try this vs full chroma earlier
+      // (as in, just one Chroma pass where it's currently "Chroma almost full")
+      scanptr->comps_in_scan = 1;
+      scanptr->component_index[0] = 2;
+      scanptr->Ss = 1;
+      scanptr->Se = 63;
+      scanptr->Ah = 1;
+      scanptr->Al = 0;
+      scanptr++;
+      scanptr->comps_in_scan = 1;
+      scanptr->component_index[0] = 1;
       scanptr->Ss = 1;
       scanptr->Se = 63;
       scanptr->Ah = 1;
