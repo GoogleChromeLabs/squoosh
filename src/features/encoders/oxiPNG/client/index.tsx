@@ -2,6 +2,7 @@ import {
   canvasEncode,
   abortable,
   blobToArrayBuffer,
+  inputFieldChecked,
 } from 'client/lazy-app/util';
 import { EncodeOptions } from '../shared/meta';
 import type WorkerBridge from 'client/lazy-app/worker-bridge';
@@ -9,6 +10,7 @@ import { h, Component } from 'preact';
 import { inputFieldValueAsNumber, preventDefault } from 'client/lazy-app/util';
 import * as style from 'client/lazy-app/Compress/Options/style.css';
 import Range from 'client/lazy-app/Compress/Options/Range';
+import Checkbox from 'client/lazy-app/Compress/Options/Checkbox';
 
 export async function encode(
   signal: AbortSignal,
@@ -34,6 +36,7 @@ export class Options extends Component<Props, {}> {
 
     const options: EncodeOptions = {
       level: inputFieldValueAsNumber(form.level),
+      interlace: inputFieldChecked(form.interlace),
     };
     this.props.onChange(options);
   };
@@ -41,6 +44,14 @@ export class Options extends Component<Props, {}> {
   render({ options }: Props) {
     return (
       <form class={style.optionsSection} onSubmit={preventDefault}>
+        <label class={style.optionToggle}>
+          Interlace
+          <Checkbox
+            name="interlace"
+            checked={options.interlace}
+            onChange={this.onChange}
+          />
+        </label>
         <div class={style.optionOneCell}>
           <Range
             name="level"
