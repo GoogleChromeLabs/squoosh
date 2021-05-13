@@ -22,6 +22,8 @@ val encode(std::string image_in, int image_width, int image_height /*, MozJpegOp
   params.m_read_source_images = false;
   // Generate .basis file
   params.m_uastc = true;
+  // No printf pls
+  params.m_status_output = false;
   params.m_compression_level = 2; /* 0-4 */
   params.m_source_images.push_back(img);
 
