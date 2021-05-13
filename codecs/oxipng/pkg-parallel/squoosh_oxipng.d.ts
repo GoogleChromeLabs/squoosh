@@ -3,9 +3,10 @@
 /**
 * @param {Uint8Array} data
 * @param {number} level
+* @param {boolean} interlace
 * @returns {Uint8Array}
 */
-export function optimise(data: Uint8Array, level: number): Uint8Array;
+export function optimise(data: Uint8Array, level: number, interlace: boolean): Uint8Array;
 /**
 * @param {number} num_threads
 * @returns {Promise<any>}
@@ -35,7 +36,7 @@ export class wbg_rayon_PoolBuilder {
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
-  readonly optimise: (a: number, b: number, c: number, d: number) => void;
+  readonly optimise: (a: number, b: number, c: number, d: number, e: number) => void;
   readonly __wbg_wbg_rayon_poolbuilder_free: (a: number) => void;
   readonly wbg_rayon_poolbuilder_numThreads: (a: number) => number;
   readonly wbg_rayon_poolbuilder_receiver: (a: number) => number;

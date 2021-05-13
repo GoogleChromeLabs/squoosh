@@ -40,9 +40,12 @@ export default async function encode(
   options: EncodeOptions,
 ): Promise<ArrayBuffer> {
   if (!wasmReady) {
-    wasmReady = threads().then((hasThreads: boolean) => hasThreads ? initMT() : initST());
+    wasmReady = threads().then((hasThreads: boolean) =>
+      hasThreads ? initMT() : initST(),
+    );
   }
 
   const optimise = await wasmReady;
-  return optimise(new Uint8Array(data), options.level).buffer;
+  return optimise(new Uint8Array(data), options.level, options.interlace)
+    .buffer;
 }

@@ -12,7 +12,7 @@ wasm-opt = ["-O", "--no-validation"]
 crate-type = ["cdylib"]
 
 [dependencies]
-oxipng = { version = "4.0.1", default-features = false, features = ["libdeflater"] }
+oxipng = { version = "4.0.3", default-features = false, features = ["libdeflater"] }
 libdeflater = { version = "0.7.1", features = ["freestanding"] }
 wasm-bindgen = "0.2.73"
 log = { version = "0.4.11", features = ["release_max_level_off"] }
