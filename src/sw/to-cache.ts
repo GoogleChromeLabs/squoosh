@@ -85,7 +85,6 @@ import jxlEncWasm from 'url:codecs/jxl/enc/jxl_enc.wasm';
 import * as jxlEnc from 'entry-data:codecs/jxl/enc/jxl_enc';
 
 // OXI
-import * as oxiMtWorker from 'entry-data:features/encoders/oxiPNG/worker/sub-worker';
 import oxiMtWasm from 'url:codecs/oxipng/pkg-parallel/squoosh_oxipng_bg.wasm';
 import oxiWasm from 'url:codecs/oxipng/pkg/squoosh_oxipng_bg.wasm';
 
@@ -176,7 +175,7 @@ export const theRest = (async () => {
 
   // OXI
   if (supportsThreads) {
-    items.push(oxiMtWorker.main, ...oxiMtWorker.deps, oxiMtWasm);
+    items.push(oxiMtWasm);
   } else {
     items.push(oxiWasm);
   }

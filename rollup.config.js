@@ -37,13 +37,6 @@ function resolveFileUrl({ fileName }) {
   return JSON.stringify(fileName.replace(/^static\//, '/'));
 }
 
-// With AMD output, Rollup always uses document.baseURI, which breaks in workers.
-// This fixes it:
-function resolveImportMeta(property, { chunkId }) {
-  if (property !== 'url') return;
-  return `new URL(${resolveFileUrl({ fileName: chunkId })}, location).href`;
-}
-
 const dir = '.tmp/build';
 const staticPath = 'static/c/[name]-[hash][extname]';
 const jsPath = staticPath.replace('[extname]', '.js');
@@ -62,6 +55,7 @@ export default async function ({ watch }) {
     path.join(__dirname, 'lib', 'omt.ejs'),
     'utf-8',
   );
+
   await del('.tmp/build');
 
   const isProduction = !watch;
@@ -83,7 +77,7 @@ export default async function ({ watch }) {
     ]),
     urlPlugin(),
     dataURLPlugin(),
-    cssPlugin(resolveFileUrl),
+    cssPlugin(),
   ];
 
   return {
@@ -105,12 +99,12 @@ export default async function ({ watch }) {
     },
     preserveModules: true,
     plugins: [
-      { resolveFileUrl, resolveImportMeta },
+      { resolveFileUrl },
       clientBundlePlugin(
         {
           external: ['worker_threads'],
           plugins: [
-            { resolveFileUrl, resolveImportMeta },
+            { resolveFileUrl },
             OMT({ loader: await omtLoaderPromise }),
             serviceWorkerPlugin({
               output: 'static/serviceworker.js',

@@ -1,8 +1,8 @@
+#[cfg(feature = "parallel")]
+pub use wasm_bindgen_rayon::init_thread_pool;
+
 use oxipng::AlphaOptim;
 use wasm_bindgen::prelude::*;
-
-#[cfg(feature = "parallel")]
-pub mod parallel;
 
 #[wasm_bindgen]
 pub fn optimise(data: &[u8], level: u8) -> Vec<u8> {

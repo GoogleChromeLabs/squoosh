@@ -1,21 +1,6 @@
+import { startWorkers } from './snippets/wasm-bindgen-rayon-3d2df09ebec17a22/src/workerHelpers.js';
 
 let wasm;
-let memory;
-
-const heap = new Array(32).fill(undefined);
-
-heap.push(undefined, null, true, false);
-
-let heap_next = heap.length;
-
-function addHeapObject(obj) {
-    if (heap_next === heap.length) heap.push(heap.length + 1);
-    const idx = heap_next;
-    heap_next = heap[idx];
-
-    heap[idx] = obj;
-    return idx;
-}
 
 let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
 
@@ -31,6 +16,21 @@ function getUint8Memory0() {
 
 function getStringFromWasm0(ptr, len) {
     return cachedTextDecoder.decode(getUint8Memory0().slice(ptr, ptr + len));
+}
+
+const heap = new Array(32).fill(undefined);
+
+heap.push(undefined, null, true, false);
+
+let heap_next = heap.length;
+
+function addHeapObject(obj) {
+    if (heap_next === heap.length) heap.push(heap.length + 1);
+    const idx = heap_next;
+    heap_next = heap[idx];
+
+    heap[idx] = obj;
+    return idx;
 }
 
 let WASM_VECTOR_LEN = 0;
@@ -60,8 +60,7 @@ function getArrayU8FromWasm0(ptr, len) {
 */
 export function optimise(data, level) {
     try {
-        const retptr = wasm.__wbindgen_export_1.value - 16;
-        wasm.__wbindgen_export_1.value = retptr;
+        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
         var ptr0 = passArray8ToWasm0(data, wasm.__wbindgen_malloc);
         var len0 = WASM_VECTOR_LEN;
         wasm.optimise(retptr, ptr0, len0, level);
@@ -71,7 +70,7 @@ export function optimise(data, level) {
         wasm.__wbindgen_free(r0, r1 * 1);
         return v1;
     } finally {
-        wasm.__wbindgen_export_1.value += 16;
+        wasm.__wbindgen_add_to_stack_pointer(16);
     }
 }
 
@@ -89,29 +88,66 @@ function takeObject(idx) {
     return ret;
 }
 /**
-* @param {number} num
-* @returns {any}
+* @param {number} num_threads
+* @returns {Promise<any>}
 */
-export function worker_initializer(num) {
-    var ret = wasm.worker_initializer(num);
+export function initThreadPool(num_threads) {
+    var ret = wasm.initThreadPool(num_threads);
     return takeObject(ret);
 }
 
 /**
+* @param {number} receiver
 */
-export function start_main_thread() {
-    wasm.start_main_thread();
+export function wbg_rayon_start_worker(receiver) {
+    wasm.wbg_rayon_start_worker(receiver);
 }
 
 /**
 */
-export function start_worker_thread() {
-    wasm.start_worker_thread();
+export class wbg_rayon_PoolBuilder {
+
+    static __wrap(ptr) {
+        const obj = Object.create(wbg_rayon_PoolBuilder.prototype);
+        obj.ptr = ptr;
+
+        return obj;
+    }
+
+    __destroy_into_raw() {
+        const ptr = this.ptr;
+        this.ptr = 0;
+
+        return ptr;
+    }
+
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_wbg_rayon_poolbuilder_free(ptr);
+    }
+    /**
+    * @returns {number}
+    */
+    numThreads() {
+        var ret = wasm.wbg_rayon_poolbuilder_numThreads(this.ptr);
+        return ret >>> 0;
+    }
+    /**
+    * @returns {number}
+    */
+    receiver() {
+        var ret = wasm.wbg_rayon_poolbuilder_receiver(this.ptr);
+        return ret;
+    }
+    /**
+    */
+    build() {
+        wasm.wbg_rayon_poolbuilder_build(this.ptr);
+    }
 }
 
-async function load(module, imports, maybe_memory) {
+async function load(module, imports) {
     if (typeof Response === 'function' && module instanceof Response) {
-        memory = imports.wbg.memory = new WebAssembly.Memory({initial:17,maximum:16384,shared:true});
         if (typeof WebAssembly.instantiateStreaming === 'function') {
             try {
                 return await WebAssembly.instantiateStreaming(module, imports);
@@ -130,7 +166,6 @@ async function load(module, imports, maybe_memory) {
         return await WebAssembly.instantiate(bytes, imports);
 
     } else {
-        memory = imports.wbg.memory = maybe_memory;
         const instance = await WebAssembly.instantiate(module, imports);
 
         if (instance instanceof WebAssembly.Instance) {
@@ -144,10 +179,13 @@ async function load(module, imports, maybe_memory) {
 
 async function init(input, maybe_memory) {
     if (typeof input === 'undefined') {
-        input = import.meta.url.replace(/\.js$/, '_bg.wasm');
+        input = new URL('squoosh_oxipng_bg.wasm', import.meta.url);
     }
     const imports = {};
     imports.wbg = {};
+    imports.wbg.__wbindgen_throw = function(arg0, arg1) {
+        throw new Error(getStringFromWasm0(arg0, arg1));
+    };
     imports.wbg.__wbindgen_module = function() {
         var ret = init.__wbindgen_wasm_module;
         return addHeapObject(ret);
@@ -156,19 +194,18 @@ async function init(input, maybe_memory) {
         var ret = wasm.__wbindgen_export_0;
         return addHeapObject(ret);
     };
-    imports.wbg.__wbg_of_6510501edc06d65e = function(arg0, arg1) {
-        var ret = Array.of(takeObject(arg0), takeObject(arg1));
+    imports.wbg.__wbg_startWorkers_914655bb4d5bb5e1 = function(arg0, arg1, arg2) {
+        var ret = startWorkers(takeObject(arg0), takeObject(arg1), wbg_rayon_PoolBuilder.__wrap(arg2));
         return addHeapObject(ret);
-    };
-    imports.wbg.__wbindgen_throw = function(arg0, arg1) {
-        throw new Error(getStringFromWasm0(arg0, arg1));
     };
 
     if (typeof input === 'string' || (typeof Request === 'function' && input instanceof Request) || (typeof URL === 'function' && input instanceof URL)) {
         input = fetch(input);
     }
 
-    const { instance, module } = await load(await input, imports, maybe_memory);
+    imports.wbg.memory = maybe_memory || new WebAssembly.Memory({initial:17,maximum:16384,shared:true});
+
+    const { instance, module } = await load(await input, imports);
 
     wasm = instance.exports;
     init.__wbindgen_wasm_module = module;
