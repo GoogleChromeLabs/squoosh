@@ -2,11 +2,11 @@ import { isMainThread } from 'worker_threads';
 import { cpus } from 'os';
 import { promises as fsp } from 'fs';
 
-import { codecs as encoders, preprocessors as manipulations } from './codecs.js';
+import { codecs as encoders, preprocessors} from './codecs.js';
 import WorkerPool from './worker_pool.js';
 import { autoOptimize } from './auto-optimizer.js';
 
-export { ImagePool, encoders, manipulations };
+export { ImagePool, encoders, preprocessors};
 
 
 async function decodeFile({ file }) {
@@ -30,9 +30,9 @@ async function decodeFile({ file }) {
   };
 }
 
-async function manipulateImage({ manipulationType, options, image }) {
-  const manipulator = await manipulations[manipulationType].instantiate();
-  image.bitmap = await manipulator(
+async function preprocessImage({ preprocessorName, options, image }) {
+  const preprocessor = await preprocessors[preprocessorName].instantiate();
+  image.bitmap = await preprocessor(
     image.bitmap.data,
     image.bitmap.width,
     image.bitmap.height,
@@ -103,8 +103,8 @@ function handleJob(params) {
       return encodeImage(params);
     case 'decode':
       return decodeFile(params);
-    case 'manipulate':
-      return manipulateImage(params);
+    case 'preprocess':
+      return preprocessImage(params);
     default:
       throw Error(`Invalid job "${operation}"`);
   }
@@ -121,25 +121,25 @@ class Image {
   }
 
   /**
-   * Define one or several manipulations to apply to the image.
-   * @param {object} manipulateOptions - An object with manipulations to apply, and their settings.
-   * @returns {Promise<undefined>} - A promise that resolves when all manipulations have completed.
+   * Define one or several preprocessors to use on the image.
+   * @param {object} preprocessOptions - An object with preprocessors to use, and their settings.
+   * @returns {Promise<undefined>} - A promise that resolves when all preprocessors have completed their work.
    */
-  async manipulate (manipulateOptions = {}) {
-    for (const [type, options] of Object.entries(manipulateOptions)) {
-      if (!Object.keys(manipulations).includes(type)) {
-        throw Error(`Invalid manipulation type "${type}"`);
+  async preprocess (preprocessOptions = {}) {
+    for (const [name, options] of Object.entries(preprocessOptions)) {
+      if (!Object.keys(preprocessors).includes(name)) {
+        throw Error(`Invalid preprocessor "${name}"`);
       }
-      const manipulatorOptions = Object.assign(
+      const preprocessorOptions = Object.assign(
         {},
-        manipulations[type].defaultOptions,
+        preprocessors[name].defaultOptions,
         options,
       );
       this.decoded = this.workerPool.dispatchJob({
-        operation: 'manipulate',
-        manipulationType: type,
+        operation: 'preprocess',
+        preprocessorName: name,
         image: await this.decoded,
-        options: manipulatorOptions,
+        options: preprocessorOptions,
       });
       await this.decoded;
     }

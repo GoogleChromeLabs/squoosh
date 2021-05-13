@@ -32,23 +32,23 @@ const image = imagePool.ingestImage(imagePath);
 
 These `ingestImage` function can take anything the node [`readFile`][readFile] function can take, uncluding a buffer and `FileHandle`.
 
-The returned `image` object is a representation of the original image, that you can now manipulate, encode, and extract information about.
+The returned `image` object is a representation of the original image, that you can now preprocess, encode, and extract information about.
 
-## Manipulating and encoding images
+## Preprocessing and encoding images
 
-When an image has been ingested, you can start manipulating it and encoding it to other formats. This example will resize the image and then encode it to a `.jpg` and `.jxl` image:
+When an image has been ingested, you can start preprocessing it and encoding it to other formats. This example will resize the image and then encode it to a `.jpg` and `.jxl` image:
 
 ```js
-await image.decoded; //Wait until the image is decoded before running manipulations
+await image.decoded; //Wait until the image is decoded before running preprocessors
 
-const manipulateOptions: {
+const preprocessOptions: {
   resize: {
     enabled: true,
     width: 100,
     height: 50,
   }
 }
-await image.manipulate(manipulateOptions);
+await image.preprocess(preprocessOptions);
 
 const encodeOptions: {
   mozjpeg: {}, //an empty object means 'use default settings'

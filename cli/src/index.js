@@ -8,7 +8,7 @@ import ora from 'ora';
 import kleur from 'kleur';
 
 //Replace package name with '../../api/build/index.js' to test unpublished changes in the API
-import { ImagePool, manipulations, encoders } from '@squoosh/api';
+import { ImagePool, preprocessors, encoders } from '@squoosh/api';
 
 function clamp(v, min, max) {
   if (v < min) return min;
@@ -129,17 +129,17 @@ async function processFiles(files) {
     }),
   );
 
-  const manipulationOptions = {};
+  const preprocessOptions = {};
 
-  for (const manipulatorType of Object.keys(manipulations)) {
-    if (!program[manipulatorType]) {
+  for (const preprocessorName of Object.keys(preprocessors)) {
+    if (!program[preprocessorName]) {
       continue;
     }
-    manipulationOptions[manipulatorType] = JSON5.parse(program[manipulatorType]);
+    preprocessOptions[preprocessorName] = JSON5.parse(program[preprocessorName]);
   }
 
   for(const image of decodedFiles){
-    image.manipulate(manipulationOptions);
+    image.preprocess(preprocessOptions);
   }
 
   await Promise.all(decodedFiles.map( (image) => image.decoded ));
@@ -214,7 +214,7 @@ program
   .action(processFiles);
 
 // Create a CLI option for each supported preprocessor
-for (const [key, value] of Object.entries(manipulations)) {
+for (const [key, value] of Object.entries(preprocessors)) {
   program.option(`--${key} [config]`, value.description);
 }
 // Create a CLI option for each supported encoder
