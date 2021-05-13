@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { program } from 'commander';
+import { program } from 'commander/esm.mjs';
 import JSON5 from 'json5';
 import path from 'path';
 import { promises as fsp } from 'fs';
@@ -112,7 +112,7 @@ async function processFiles(files) {
   progress.setProgress(0, files.length);
 
   // Create output directory
-  await fsp.mkdir(program.outputDir, { recursive: true });
+  await fsp.mkdir(program.opts().outputDir, { recursive: true });
 
   let decoded = 0;
   let decodedFiles = await Promise.all(
@@ -132,10 +132,10 @@ async function processFiles(files) {
   const preprocessOptions = {};
 
   for (const preprocessorName of Object.keys(preprocessors)) {
-    if (!program[preprocessorName]) {
+    if (!program.opts()[preprocessorName]) {
       continue;
     }
-    preprocessOptions[preprocessorName] = JSON5.parse(program[preprocessorName]);
+    preprocessOptions[preprocessorName] = JSON5.parse(program.opts()[preprocessorName]);
   }
 
   for(const image of decodedFiles){
@@ -155,14 +155,14 @@ async function processFiles(files) {
     const originalFile = results.get(image).file;
 
     const encodeOptions = {
-      optimizerButteraugliTarget: Number(program.optimizerButteraugliTarget),
-      maxOptimizerRounds: Number(program.maxOptimizerRounds),
+      optimizerButteraugliTarget: Number(program.opts().optimizerButteraugliTarget),
+      maxOptimizerRounds: Number(program.opts().maxOptimizerRounds),
     }
     for (const encName of Object.keys(encoders)) {
-      if (!program[encName]) {
+      if (!program.opts()[encName]) {
         continue;
       }
-      const encParam = program[encName];
+      const encParam = program.opts()[encName];
       const encConfig = encParam.toLowerCase() === 'auto' ? 'auto' : JSON5.parse(encParam);
       encodeOptions[encName] = encConfig;
     }
@@ -170,7 +170,7 @@ async function processFiles(files) {
     const job = image.encode(encodeOptions)
       .then(async () => {
         jobsFinished++;
-        const outputPath = path.join(program.outputDir, program.suffix + path.basename(originalFile, path.extname(originalFile)));
+        const outputPath = path.join(program.opts().outputDir, program.opts().suffix + path.basename(originalFile, path.extname(originalFile)));
         for(const [extension, output] of Object.entries(image.encodedAs)){
           const outputFile = `${outputPath}.${extension}`;
           await fsp.writeFile(outputFile, (await output).binary);
