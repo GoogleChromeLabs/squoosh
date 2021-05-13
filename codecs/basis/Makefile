@@ -1,10 +1,13 @@
 CODEC_URL := https://github.com/BinomialLLC/basis_universal/archive/refs/tags/v1.15_rel2.tar.gz
 CODEC_DIR := node_modules/basis
 BUILD_DIR := build
-ENVIRONMENT = node
+ENVIRONMENT = worker
 
 OUT_JS := enc/basis_enc.js # enc/basis_node_enc.js
 OUT_WASM := $(OUT_JS:.js=.wasm)
+
+override 	CXXFLAGS += -O3
+override 	CFLAGS += -O3
 
 CODEC_CPP_SOURCE_FILES := \
 	encoder/basisu_comp.cpp \
@@ -20,6 +23,7 @@ CODEC_CPP_SOURCE_FILES := \
 	encoder/basisu_astc_decomp.cpp \
 	encoder/basisu_global_selector_palette_helpers.cpp \
 	encoder/basisu_resampler.cpp \
+	encoder/basisu_kernels_sse.cpp \
 	encoder/jpgd.cpp \
 	encoder/lodepng.cpp \
 	transcoder/basisu_transcoder.cpp
@@ -35,7 +39,7 @@ CODEC_C_OBJECT_FILE_PATHS := $(addprefix $(CODEC_DIR)/, $(CODEC_C_OBJECT_FILES))
 
 .PHONY: all clean
 
-all: $(OUT_JS)
+all: $(CODEC_DIR) $(OUT_JS)
 
 # Define dependencies for all variations of build artifacts.
 $(filter enc/%,$(OUT_JS)): enc/basis_enc.cpp
@@ -60,11 +64,13 @@ $(filter enc/%,$(OUT_JS)): enc/basis_enc.cpp
 
 $(CODEC_CPP_OBJECT_FILES): $(CODEC_DIR)
 	$(CXX) \
+		${CXXFLAGS} \
 		-o $@ \
 		-c $(@:.o=.cpp)
 
 $(CODEC_C_OBJECT_FILES): $(CODEC_DIR)
 	$(CC) \
+		${CFLAGS} \
 		-o $@ \
 		-c $(@:.o=.c)
 

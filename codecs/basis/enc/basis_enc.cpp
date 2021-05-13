@@ -7,14 +7,15 @@
 using namespace emscripten;
 using namespace basisu;
 
-
-
 thread_local const val Uint8Array = val::global("Uint8Array");
 
-val encode(std::string image_in, int image_width, int image_height/*, MozJpegOptions opts*/) {
+val encode(std::string image_in, int image_width, int image_height /*, MozJpegOptions opts*/) {
+  basisu_encoder_init();
+
   basis_compressor_params params;
   basis_compressor compressor;
-  image img = image(reinterpret_cast<const uint8_t*>(image_in.c_str()), image_width, image_height, 4);
+  image img =
+      image(reinterpret_cast<const uint8_t*>(image_in.c_str()), image_width, image_height, 4);
   // We don’t need the encoder to read/decode files from the filesystem
   params.m_read_source_images = false;
   // Writing is unnecessary, too
@@ -24,11 +25,11 @@ val encode(std::string image_in, int image_width, int image_height/*, MozJpegOpt
   params.m_compression_level = 2; /* 0-4 */
   params.m_source_images.push_back(img);
 
-  if(!compressor.init(params)) {
+  if (!compressor.init(params)) {
     return val(std::string("Well something went wrong during init"));
   }
 
-  if(compressor.process() != 0) {
+  if (compressor.process() != 0) {
     return val(std::string("Well something went wrong during processing"));
   }
 
