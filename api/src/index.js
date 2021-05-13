@@ -91,6 +91,7 @@ async function encodeImage({
   return {
     optionsUsed,
     binary,
+    extension: encoders[encName].extension,
     size: binary.length,
   };
 }
@@ -117,7 +118,7 @@ class Image {
   constructor (workerPool, file) {
     this.workerPool = workerPool;
     this.decoded = workerPool.dispatchJob({operation: 'decode', file});
-    this.encodedAs = {};
+    this.encodedWith = {};
   }
 
   /**
@@ -165,7 +166,7 @@ class Image {
               encRef.defaultEncoderOptions,
               options,
             );
-      this.encodedAs[encRef.extension] = this.workerPool.dispatchJob({
+      this.encodedWith[encName] = this.workerPool.dispatchJob({
         operation: 'encode',
         bitmap,
         encName,
@@ -178,7 +179,7 @@ class Image {
         ),
       });
     }
-    await Promise.all(Object.values(this.encodedAs));
+    await Promise.all(Object.values(this.encodedWith));
   }
 }
 

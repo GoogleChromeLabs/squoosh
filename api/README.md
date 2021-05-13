@@ -81,7 +81,7 @@ When you have encoded an image, you normally want to write it to a file.
 This example takes an image that has been encoded as a `jpg` and writes it to a file:
 
 ```js
-const rawEncodedImage = (await image.encodedAs.jpg).binary;
+const rawEncodedImage = (await image.encodedWidth.mozjpeg).binary;
 
 fs.writeFile('/path/to/new/image.jpg', rawEncodedImage);
 ```
@@ -91,8 +91,8 @@ This example iterates through all encoded versions of the image and writes them 
 ```js
 const newImagePath = '/path/to/image.'; //extension is added automatically
 
-for(const [extension, encodedImage] of Object.entries(image.encodedAs)){
-  fs.writeFile(newImagePath + extension, (await encodedImage).binary);
+for(const encodedImage of Object.values(image.encodedWith)){
+  fs.writeFile(newImagePath + (await encodedImage).extension, (await encodedImage).binary);
 }
 ```
 
@@ -119,11 +119,11 @@ console.log(await image.decoded);
 }
 ```
 
-Information about an encoded image can be found at `Image.encodedAs[extension]`. It looks something like this:
+Information about an encoded image can be found at `Image.encodedWith[encoderName]`. It looks something like this:
 
 
 ```js
-console.log(await image.encodedAs.jxl);
+console.log(await image.encodedWith.jxl);
 // Returns:
 {
   optionsUsed: {
@@ -139,6 +139,7 @@ console.log(await image.encodedAs.jxl);
       9,  10,  10,   9,
     ... //the entire raw encoded image
   ],
+  extension: 'jxl',
   size: 1266975  //bytes
 }
 ```

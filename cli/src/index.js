@@ -171,8 +171,8 @@ async function processFiles(files) {
       .then(async () => {
         jobsFinished++;
         const outputPath = path.join(program.opts().outputDir, program.opts().suffix + path.basename(originalFile, path.extname(originalFile)));
-        for(const [extension, output] of Object.entries(image.encodedAs)){
-          const outputFile = `${outputPath}.${extension}`;
+        for(const output of Object.values(image.encodedWith)){
+          const outputFile = `${outputPath}.${(await output).extension}`;
           await fsp.writeFile(outputFile, (await output).binary);
           results.get(image).outputs.push(
             Object.assign(
