@@ -1,0 +1,24 @@
+<!doctype html>
+<input type="file" id="file">
+<button id="go">Go</button>
+<script type="module">
+import factory from "./enc/basis_enc.js";
+
+const {file, go} = document.all;
+async function main() {
+  const instance = await factory();
+  const bitmap = await createImageBitmap(file.files[0]);
+  const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(bitmap, 0, 0);
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);  
+  const result = instance.encode(imgData.data, imgData.width, imgData.height);
+  const blob = new File([result], "lol.basis");
+  const u = URL.createObjectURL(blob);
+  const a = document.createElement("a")
+  a.download = "lol.basis";
+  a.href = u;
+  a.click();
+}
+go.onclick = main;
+</script>

@@ -3,7 +3,7 @@ CODEC_DIR := node_modules/basis
 BUILD_DIR := build
 ENVIRONMENT = worker
 
-OUT_JS := enc/basis_enc.js # enc/basis_node_enc.js
+OUT_JS := enc/basis_enc.js dec/basis_dec.js
 OUT_WASM := $(OUT_JS:.js=.wasm)
 
 override 	CXXFLAGS += -O3
@@ -43,13 +43,14 @@ all: $(CODEC_DIR) $(OUT_JS)
 
 # Define dependencies for all variations of build artifacts.
 $(filter enc/%,$(OUT_JS)): enc/basis_enc.cpp
-# $(filter dec/%,$(OUT_JS)): dec/mozjpeg_dec.cpp
+$(filter dec/%,$(OUT_JS)): dec/basis_dec.cpp
 
 # enc/mozjpeg_node_enc.js dec/mozjpeg_node_dec.js: ENVIRONMENT = node
 
 %.js: $(CODEC_CPP_OBJECT_FILE_PATHS) $(CODEC_C_OBJECT_FILE_PATHS)
 	$(CXX) \
 		-I $(CODEC_DIR)/encoder \
+		-I $(CODEC_DIR)/transcoder \
 		${CXXFLAGS} \
 		${LDFLAGS} \
 		--closure 1 \
