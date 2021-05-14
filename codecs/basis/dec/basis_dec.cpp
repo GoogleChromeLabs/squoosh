@@ -1,6 +1,7 @@
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
 #include <inttypes.h>
+#include <string>
 #include "basisu_global_selector_palette.h"
 #include "basisu_transcoder.h"
 
@@ -23,6 +24,7 @@ val decode(std::string data) {
   basist::basisu_image_info info;
   transcoder.get_image_info(dataPtr, dataSize, info, 0 /* image_index */);
 
+  transcoder.start_transcoding(dataPtr, dataSize);
   auto buffer = std::vector<uint8_t>(info.m_width * info.m_height * 4);
   auto ok = transcoder.transcode_image_level(dataPtr, dataSize,
                                              /* image_index */ 0, /* level_index */ 0,

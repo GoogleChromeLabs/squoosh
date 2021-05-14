@@ -1,13 +1,14 @@
 CODEC_URL := https://github.com/BinomialLLC/basis_universal/archive/refs/tags/v1.15_rel2.tar.gz
 CODEC_DIR := node_modules/basis
-BUILD_DIR := build
 ENVIRONMENT = worker
 
 OUT_JS := enc/basis_enc.js dec/basis_dec.js
 OUT_WASM := $(OUT_JS:.js=.wasm)
 
-override 	CXXFLAGS += -O3
-override 	CFLAGS += -O3
+COMMON_FLAGS := -O3
+
+override 	CXXFLAGS += $(COMMON_FLAGS)
+override 	CFLAGS += $(COMMAN_FLAGS)
 
 CODEC_CPP_SOURCE_FILES := \
 	encoder/basisu_comp.cpp \
