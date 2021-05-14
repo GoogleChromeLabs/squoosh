@@ -1,4 +1,5 @@
 export interface EncodeOptions {
+  quality: number;
 }
 
 export interface BasisModule extends EmscriptenWasm.Module {

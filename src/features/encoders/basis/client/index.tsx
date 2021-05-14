@@ -1,21 +1,27 @@
-import { EncodeOptions, defaultOptions } from '../shared/meta';
+import { EncodeOptions } from '../shared/meta';
 import type WorkerBridge from 'client/lazy-app/worker-bridge';
 import { h, Component } from 'preact';
-import { preventDefault, shallowEqual } from 'client/lazy-app/util';
+import {
+  inputFieldChecked,
+  inputFieldValueAsNumber,
+  preventDefault,
+} from 'client/lazy-app/util';
 import * as style from 'client/lazy-app/Compress/Options/style.css';
+import linkState from 'linkstate';
+import Range from 'client/lazy-app/Compress/Options/Range';
 import Checkbox from 'client/lazy-app/Compress/Options/Checkbox';
 import Expander from 'client/lazy-app/Compress/Options/Expander';
 import Select from 'client/lazy-app/Compress/Options/Select';
-import Range from 'client/lazy-app/Compress/Options/Range';
-import linkState from 'linkstate';
 import Revealer from 'client/lazy-app/Compress/Options/Revealer';
 
-export const encode = (
+export function encode(
   signal: AbortSignal,
   workerBridge: WorkerBridge,
   imageData: ImageData,
   options: EncodeOptions,
-) => workerBridge.basisEncode(signal, imageData, options);
+) {
+  return workerBridge.basisEncode(signal, imageData, options);
+}
 
 interface Props {
   options: EncodeOptions;
@@ -23,89 +29,53 @@ interface Props {
 }
 
 interface State {
-  options: EncodeOptions;
   showAdvanced: boolean;
 }
 
 export class Options extends Component<Props, State> {
-  static getDerivedStateFromProps(
-    props: Props,
-    state: State,
-  ): Partial<State> | null {
-    if (state.options && shallowEqual(state.options, props.options)) {
-      return null;
-    }
-
-    const { options } = props;
-
-    return {
-      options,
-    };
-  }
-
-  // The rest of the defaults are set in getDerivedStateFromProps
   state: State = {
     showAdvanced: false,
-  } as State;
-
-  private _inputChangeCallbacks = new Map<string, (event: Event) => void>();
-
-  private _inputChange = (
-    prop: keyof State,
-    type: 'number' | 'boolean' | 'string',
-  ) => {
-    // Cache the callback for performance
-    if (!this._inputChangeCallbacks.has(prop)) {
-      this._inputChangeCallbacks.set(prop, (event: Event) => {
-        const formEl = event.target as HTMLInputElement | HTMLSelectElement;
-        const newVal =
-          type === 'boolean'
-            ? 'checked' in formEl
-              ? formEl.checked
-              : !!formEl.value
-            : type === 'number'
-            ? Number(formEl.value)
-            : formEl.value;
-
-        const newState: Partial<State> = {
-          [prop]: newVal,
-        };
-
-        const optionState = {
-          ...this.state,
-          ...newState,
-        };
-
-        const newOptions: EncodeOptions = {};
-
-        // Updating options, so we don't recalculate in getDerivedStateFromProps.
-        newState.options = newOptions;
-
-        this.setState(
-          // It isn't clear to me why I have to cast this :)
-          newState as State,
-        );
-
-        this.props.onChange(newOptions);
-      });
-    }
-
-    return this._inputChangeCallbacks.get(prop)!;
   };
 
-  render(_: Props, {}: State) {
+  onChange = (event: Event) => {
+    const form = (event.currentTarget as HTMLInputElement).closest(
+      'form',
+    ) as HTMLFormElement;
+    const { options } = this.props;
+
+    const newOptions: EncodeOptions = {
+      // Copy over options the form doesn't currently care about, eg arithmetic
+      ...this.props.options,
+      // .value
+      quality: inputFieldValueAsNumber(form.quality, options.quality),
+    };
+    this.props.onChange(newOptions);
+  };
+
+  render({ options }: Props, { showAdvanced }: State) {
+    // I'm rendering both lossy and lossless forms, as it becomes much easier when
+    // gathering the data.
     return (
       <form class={style.optionsSection} onSubmit={preventDefault}>
         <div class={style.optionOneCell}>
           <Range
+            name="quality"
             min="0"
             max="4"
-            // value={quality}
-            // onInput={this._inputChange('quality', 'number')}
+            value={options.quality}
+            onInput={this.onChange}
           >
             Quality:
           </Range>
         </div>
+        <label class={style.optionReveal}>
+          <Revealer
+            checked={showAdvanced}
+            onChange={linkState(this, 'showAdvanced')}
+          />
+          Advanced settings
+        </label>
+        <Expander>{showAdvanced ? <div>Nothing here yet</div> : null}</Expander>
       </form>
     );
   }

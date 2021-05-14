@@ -7,7 +7,9 @@
 using namespace emscripten;
 using namespace basisu;
 
-struct BasisOptions {};
+struct BasisOptions {
+  uint8_t quality;
+};
 
 thread_local const val Uint8Array = val::global("Uint8Array");
 
@@ -26,7 +28,7 @@ val encode(std::string image_in, int image_width, int image_height, BasisOptions
   params.m_uastc = true;
   // No printf pls
   params.m_status_output = false;
-  params.m_compression_level = 2; /* 0-4 */
+  params.m_compression_level = opts.quality;
   params.m_source_images.push_back(img);
 
   if (!compressor.init(params)) {
@@ -44,8 +46,7 @@ val encode(std::string image_in, int image_width, int image_height, BasisOptions
 }
 
 EMSCRIPTEN_BINDINGS(my_module) {
-  value_object<BasisOptions>("BasisOptions");
-  // .field("quality", &MozJpegOptions::quality);
+  value_object<BasisOptions>("BasisOptions").field("quality", &BasisOptions::quality);
 
   function("encode", &encode);
 }
