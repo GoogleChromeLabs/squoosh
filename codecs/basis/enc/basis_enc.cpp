@@ -7,9 +7,11 @@
 using namespace emscripten;
 using namespace basisu;
 
+struct BasisOptions {};
+
 thread_local const val Uint8Array = val::global("Uint8Array");
 
-val encode(std::string image_in, int image_width, int image_height /*, MozJpegOptions opts*/) {
+val encode(std::string image_in, int image_width, int image_height, BasisOptions opts) {
   basisu_encoder_init();
 
   basis_compressor_params params;
@@ -42,23 +44,8 @@ val encode(std::string image_in, int image_width, int image_height /*, MozJpegOp
 }
 
 EMSCRIPTEN_BINDINGS(my_module) {
-  // value_object<MozJpegOptions>("MozJpegOptions")
-  //     .field("quality", &MozJpegOptions::quality)
-  //     .field("baseline", &MozJpegOptions::baseline)
-  //     .field("arithmetic", &MozJpegOptions::arithmetic)
-  //     .field("progressive", &MozJpegOptions::progressive)
-  //     .field("optimize_coding", &MozJpegOptions::optimize_coding)
-  //     .field("smoothing", &MozJpegOptions::smoothing)
-  //     .field("color_space", &MozJpegOptions::color_space)
-  //     .field("quant_table", &MozJpegOptions::quant_table)
-  //     .field("trellis_multipass", &MozJpegOptions::trellis_multipass)
-  //     .field("trellis_opt_zero", &MozJpegOptions::trellis_opt_zero)
-  //     .field("trellis_opt_table", &MozJpegOptions::trellis_opt_table)
-  //     .field("trellis_loops", &MozJpegOptions::trellis_loops)
-  //     .field("chroma_subsample", &MozJpegOptions::chroma_subsample)
-  //     .field("auto_subsample", &MozJpegOptions::auto_subsample)
-  //     .field("separate_chroma_quality", &MozJpegOptions::separate_chroma_quality)
-  //     .field("chroma_quality", &MozJpegOptions::chroma_quality);
+  value_object<BasisOptions>("BasisOptions");
+  // .field("quality", &MozJpegOptions::quality);
 
   function("encode", &encode);
 }
