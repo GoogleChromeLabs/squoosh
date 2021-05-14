@@ -46,9 +46,19 @@ export class Options extends Component<Props, State> {
     const newOptions: EncodeOptions = {
       // Copy over options the form doesn't currently care about, eg arithmetic
       ...this.props.options,
+      uastc: inputFieldChecked(
+        form.uastc,
+        options.uastc,
+      ),
+      mipmap: inputFieldChecked(
+        form.mipmap,
+        options.mipmap,
+      ),
       // .value
       quality: inputFieldValueAsNumber(form.quality, options.quality),
+      compression: inputFieldValueAsNumber(form.compression, options.compression),
     };
+    console.log({newOptions});
     this.props.onChange(newOptions);
   };
 
@@ -60,12 +70,23 @@ export class Options extends Component<Props, State> {
         <div class={style.optionOneCell}>
           <Range
             name="quality"
-            min="0"
-            max="4"
+            min="1"
+            max="255"
             value={options.quality}
             onInput={this.onChange}
           >
             Quality:
+          </Range>
+        </div>
+        <div class={style.optionOneCell}>
+          <Range
+            name="compression"
+            min="0"
+            max="4"
+            value={options.compression}
+            onInput={this.onChange}
+          >
+            Compression:
           </Range>
         </div>
         <label class={style.optionReveal}>
@@ -75,7 +96,25 @@ export class Options extends Component<Props, State> {
           />
           Advanced settings
         </label>
-        <Expander>{showAdvanced ? <div>Nothing here yet</div> : null}</Expander>
+          <Expander>{showAdvanced ? (<div>
+          <label class={style.optionToggle}>
+            UASTC 
+                      <Checkbox
+                        name="uastc"
+                        checked={options.uastc}
+                        onChange={this.onChange}
+                      />
+                    </label>
+          <label class={style.optionToggle}>
+            Embed Mipmaps 
+                      <Checkbox
+                        name="mipmap"
+                        checked={options.mipmap}
+                        onChange={this.onChange}
+                      />
+                    </label>
+
+        </div>) : null}</Expander>
       </form>
     );
   }

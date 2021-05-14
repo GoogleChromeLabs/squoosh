@@ -18,5 +18,8 @@ export const label = 'Basis';
 export const mimeType = 'image/basisu';
 export const extension = 'basis';
 export const defaultOptions: EncodeOptions = {
-  quality: 2,
+  quality: 128,
+  compression: 2,
+  uastc: false,
+  mipmap: false,
 };

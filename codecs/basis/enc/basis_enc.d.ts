@@ -1,5 +1,8 @@
 export interface EncodeOptions {
   quality: number;
+  compression: number;
+  uastc: boolean;
+  mipmap: boolean;
 }
 
 export interface BasisModule extends EmscriptenWasm.Module {

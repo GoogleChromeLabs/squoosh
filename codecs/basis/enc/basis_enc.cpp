@@ -9,6 +9,9 @@ using namespace basisu;
 
 struct BasisOptions {
   uint8_t quality;
+  uint8_t compression;
+  bool uastc;
+  bool mipmap;
 };
 
 thread_local const val Uint8Array = val::global("Uint8Array");
@@ -24,11 +27,13 @@ val encode(std::string image_in, int image_width, int image_height, BasisOptions
   params.m_read_source_images = false;
   // Writing is unnecessary, too
   params.m_read_source_images = false;
-  // Generate .basis file
-  params.m_uastc = true;
   // No printf pls
   params.m_status_output = false;
-  params.m_compression_level = opts.quality;
+  // True => UASTC, False => ETC1S
+  params.m_uastc = opts.uastc;
+  params.m_mip_gen = opts.mipmap;
+  params.m_quality_level = opts.quality;
+  params.m_compression_level = opts.compression;
   params.m_source_images.push_back(img);
 
   if (!compressor.init(params)) {
@@ -46,7 +51,11 @@ val encode(std::string image_in, int image_width, int image_height, BasisOptions
 }
 
 EMSCRIPTEN_BINDINGS(my_module) {
-  value_object<BasisOptions>("BasisOptions").field("quality", &BasisOptions::quality);
+  value_object<BasisOptions>("BasisOptions")
+    .field("quality", &BasisOptions::quality)
+    .field("compression", &BasisOptions::compression)
+    .field("uastc", &BasisOptions::uastc)
+    .field("mipmap", &BasisOptions::mipmap);
 
   function("encode", &encode);
 }
