@@ -58,7 +58,6 @@ export class Options extends Component<Props, State> {
       quality: inputFieldValueAsNumber(form.quality, options.quality),
       compression: inputFieldValueAsNumber(form.compression, options.compression),
     };
-    console.log({newOptions});
     this.props.onChange(newOptions);
   };
 
