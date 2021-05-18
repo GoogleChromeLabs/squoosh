@@ -192,17 +192,35 @@ interface DrawableToImageDataOptions {
   sh?: number;
 }
 
+function getWidth(
+  drawable: ImageBitmap | HTMLImageElement | VideoFrame,
+): number {
+  if ('displayWidth' in drawable) {
+    return drawable.displayWidth;
+  }
+  return drawable.width;
+}
+
+function getHeight(
+  drawable: ImageBitmap | HTMLImageElement | VideoFrame,
+): number {
+  if ('displayHeight' in drawable) {
+    return drawable.displayHeight;
+  }
+  return drawable.height;
+}
+
 export function drawableToImageData(
-  drawable: ImageBitmap | HTMLImageElement,
+  drawable: ImageBitmap | HTMLImageElement | VideoFrame,
   opts: DrawableToImageDataOptions = {},
 ): ImageData {
   const {
-    width = drawable.width,
-    height = drawable.height,
+    width = getWidth(drawable),
+    height = getHeight(drawable),
     sx = 0,
     sy = 0,
-    sw = drawable.width,
-    sh = drawable.height,
+    sw = getWidth(drawable),
+    sh = getHeight(drawable),
   } = opts;
 
   // Make canvas same size as image

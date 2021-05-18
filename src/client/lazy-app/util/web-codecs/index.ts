@@ -21,6 +21,6 @@ export async function decode(
     // Non-obvious way to turn an Blob into a ReadableStream
     data: new Response(blob).body!,
   });
-  const result = await decoder.decode();
-  return drawableToImageData(result.image);
+  const { image } = await decoder.decode();
+  return drawableToImageData(image);
 }
