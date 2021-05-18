@@ -20,20 +20,13 @@ interface ImageDecodeResult {
 
 // I didn’t do all the types because the class is kinda complex.
 // I focused on what we need.
+// See https://w3c.github.io/webcodecs/#videoframe
 declare class VideoFrame {
-  codedWidth: number;
-  codedHeight: number;
-  cropLeft: number;
-  cropTop: number;
-  cropWidth: number;
-  cropHeight: number;
   displayWidth: number;
   displayHeight: number;
-
-  clone(): VideoFrame;
-  close(): void;
 }
 
+// Add VideoFrame to canvas’ drawImage()
 interface CanvasDrawImage {
   drawImage(
     image: CanvasImageSource | VideoFrame,
