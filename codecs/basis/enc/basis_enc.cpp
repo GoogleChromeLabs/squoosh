@@ -52,10 +52,10 @@ val encode(std::string image_in, int image_width, int image_height, BasisOptions
 
 EMSCRIPTEN_BINDINGS(my_module) {
   value_object<BasisOptions>("BasisOptions")
-    .field("quality", &BasisOptions::quality)
-    .field("compression", &BasisOptions::compression)
-    .field("uastc", &BasisOptions::uastc)
-    .field("mipmap", &BasisOptions::mipmap);
+      .field("quality", &BasisOptions::quality)
+      .field("compression", &BasisOptions::compression)
+      .field("uastc", &BasisOptions::uastc)
+      .field("mipmap", &BasisOptions::mipmap);
 
   function("encode", &encode);
 }

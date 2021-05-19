@@ -25,10 +25,11 @@ val decode(std::string data) {
 
   transcoder.start_transcoding(dataPtr, dataSize);
   auto buffer = std::vector<uint8_t>(info.m_width * info.m_height * 4);
-  auto ok = transcoder.transcode_image_level(dataPtr, dataSize,
-                                             /* image_index */ 0, /* level_index */ 0,
-                                             buffer.data(), buffer.size() / 4,
-                                             basist::transcoder_texture_format::cTFRGBA32);
+  auto ok = transcoder.transcode_image_level(
+      dataPtr, dataSize,
+      /* image_index */ 0, /* level_index */ 0, buffer.data(), buffer.size() / 4,
+      basist::transcoder_texture_format::cTFRGBA32, 0 /* decode_flags */,
+      info.m_width /* output_row_pitch_in_blocks_or_pixels */);
   if (!ok) {
     return val(std::string("Could not decode"));
   }
