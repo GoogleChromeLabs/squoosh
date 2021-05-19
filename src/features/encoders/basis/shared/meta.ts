@@ -14,9 +14,9 @@ import { EncodeOptions } from 'codecs/basis/enc/basis_enc';
 
 export { EncodeOptions };
 
-export const label = 'Basis';
-export const mimeType = 'image/basisu';
-export const extension = 'basis';
+export const label = 'KTX2 (Basis Universal)';
+export const mimeType = 'image/ktx2';
+export const extension = 'ktx2';
 export const defaultOptions: EncodeOptions = {
   quality: 128,
   compression: 2,

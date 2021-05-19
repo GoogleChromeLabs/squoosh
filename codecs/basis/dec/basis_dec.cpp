@@ -16,26 +16,28 @@ val decode(std::string data) {
 
   basist::etc1_global_selector_codebook sel_codebook = basist::etc1_global_selector_codebook(
       basist::g_global_selector_cb_size, basist::g_global_selector_cb);
-  basist::basisu_transcoder transcoder = basist::basisu_transcoder(&sel_codebook);
+  basist::ktx2_transcoder transcoder = basist::ktx2_transcoder(&sel_codebook);
 
   const void* dataPtr = reinterpret_cast<const void*>(data.c_str());
   auto dataSize = data.size();
-  basist::basisu_image_info info;
-  transcoder.get_image_info(dataPtr, dataSize, info, 0 /* image_index */);
+  transcoder.init(dataPtr, dataSize);
 
-  transcoder.start_transcoding(dataPtr, dataSize);
-  auto buffer = std::vector<uint8_t>(info.m_width * info.m_height * 4);
+  auto header = transcoder.get_header();
+  auto image_width = static_cast<uint32_t>(header.m_pixel_width);
+  auto image_height = static_cast<uint32_t>(header.m_pixel_height);
+
+  transcoder.start_transcoding();
+  auto buffer = std::vector<uint8_t>(image_width * image_height * 4);
   auto ok = transcoder.transcode_image_level(
-      dataPtr, dataSize,
-      /* image_index */ 0, /* level_index */ 0, buffer.data(), buffer.size() / 4,
-      basist::transcoder_texture_format::cTFRGBA32, 0 /* decode_flags */,
-      info.m_width /* output_row_pitch_in_blocks_or_pixels */);
+      0 /* level_index */, 0 /* layer_index */, 0 /* face_index */, buffer.data(),
+      buffer.size() / 4, basist::transcoder_texture_format::cTFRGBA32, 0 /* decode_flags */,
+      image_width /* output_row_pitch_in_blocks_or_pixels */);
   if (!ok) {
     return val(std::string("Could not decode"));
   }
 
   auto img_data_data = Uint8ClampedArray.new_(typed_memory_view(buffer.size(), buffer.data()));
-  auto imgData = ImageData.new_(img_data_data, info.m_width, info.m_height);
+  auto imgData = ImageData.new_(img_data_data, image_width, image_height);
   return imgData;
 }
 

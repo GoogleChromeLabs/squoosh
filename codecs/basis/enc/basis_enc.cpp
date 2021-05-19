@@ -19,6 +19,9 @@ thread_local const val Uint8Array = val::global("Uint8Array");
 val encode(std::string image_in, int image_width, int image_height, BasisOptions opts) {
   basisu_encoder_init();
 
+  basist::etc1_global_selector_codebook sel_codebook(basist::g_global_selector_cb_size,
+                                                     basist::g_global_selector_cb);
+
   basis_compressor_params params;
   basis_compressor compressor;
   image img =
@@ -31,6 +34,11 @@ val encode(std::string image_in, int image_width, int image_height, BasisOptions
   params.m_status_output = false;
   // True => UASTC, False => ETC1S
   params.m_uastc = opts.uastc;
+  // Use the standardized KTX2 format
+  params.m_create_ktx2_file = true;
+  // Codebook, whatever this exactly is or does.
+  params.m_pSel_codebook = &sel_codebook;
+
   params.m_mip_gen = opts.mipmap;
   params.m_quality_level = opts.quality;
   params.m_compression_level = opts.compression;
@@ -44,7 +52,7 @@ val encode(std::string image_in, int image_width, int image_height, BasisOptions
     return val(std::string("Well something went wrong during processing"));
   }
 
-  auto comp_data = compressor.get_output_basis_file();
+  auto comp_data = compressor.get_output_ktx2_file();
   auto js_result = Uint8Array.new_(typed_memory_view(comp_data.size(), &comp_data[0]));
   // Not sure if there is anything to free here
   return js_result;

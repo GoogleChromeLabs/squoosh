@@ -152,7 +152,7 @@ const magicNumberMapInput = [
   [/^\x00\x00\x00 ftypavif\x00\x00\x00\x00/, 'image/avif'],
   [/^\xff\x0a/, 'image/jxl'],
   [/^\x00\x00\x00\x0cJXL \x0d\x0a\x87\x0a/, 'image/jxl'],
-  [/^sB/, 'image/basisu'],
+  [/^«KTX 20»\r\n/, 'image/ktx2'],
 ] as const;
 
 export type ImageMimeTypes = typeof magicNumberMapInput[number][1];
