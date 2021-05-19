@@ -1,7 +1,7 @@
-import { instantiateEmscriptenWasm } from "./emscripten-utils.js";
+import { instantiateEmscriptenWasm } from './emscripten-utils.js';
 
-import visdif from "../../codecs/visdif/visdif.js";
-import visdifWasm from "asset-url:../../codecs/visdif/visdif.wasm";
+import visdif from '../../codecs/visdif/visdif.js';
+import visdifWasm from 'asset-url:../../codecs/visdif/visdif.wasm';
 
 // `measure` is a (async) function that takes exactly one numeric parameter and
 // returns a value. The function is assumed to be monotonic (an increase in `parameter`
@@ -11,7 +11,7 @@ import visdifWasm from "asset-url:../../codecs/visdif/visdif.wasm";
 export async function binarySearch(
   measureGoal,
   measure,
-  { min = 0, max = 100, epsilon = 0.1, maxRounds = 8 } = {}
+  { min = 0, max = 100, epsilon = 0.1, maxRounds = 8 } = {},
 ) {
   let parameter = (max - min) / 2 + min;
   let delta = (max - min) / 4;
@@ -36,14 +36,14 @@ export async function autoOptimize(
   bitmapIn,
   encode,
   decode,
-  { butteraugliDistanceGoal = 1.4, ...otherOpts } = {}
+  { butteraugliDistanceGoal = 1.4, ...otherOpts } = {},
 ) {
   const { VisDiff } = await instantiateEmscriptenWasm(visdif, visdifWasm);
 
   const comparator = new VisDiff(
     bitmapIn.data,
     bitmapIn.width,
-    bitmapIn.height
+    bitmapIn.height,
   );
 
   let bitmapOut;
@@ -53,18 +53,18 @@ export async function autoOptimize(
   // increase the metric value. So multipliy Butteraugli values by -1.
   const { parameter } = await binarySearch(
     -1 * butteraugliDistanceGoal,
-    async quality => {
+    async (quality) => {
       binaryOut = await encode(bitmapIn, quality);
       bitmapOut = await decode(binaryOut);
       return -1 * comparator.distance(bitmapOut.data);
     },
-    otherOpts
+    otherOpts,
   );
   comparator.delete();
 
   return {
     bitmap: bitmapOut,
     binary: binaryOut,
-    quality: parameter
+    quality: parameter,
   };
 }
