@@ -31,7 +31,8 @@ val encode(std::string image_in, int image_width, int image_height, BasisOptions
   // Writing is unnecessary, too
   params.m_read_source_images = false;
   // No printf pls
-  params.m_status_output = false;
+  params.m_status_output = true;
+  params.m_debug = true;
   // True => UASTC, False => ETC1S
   params.m_uastc = opts.uastc;
   // Use the standardized KTX2 format
@@ -44,14 +45,17 @@ val encode(std::string image_in, int image_width, int image_height, BasisOptions
   params.m_compression_level = opts.compression;
   params.m_source_images.push_back(img);
 
+  printf("%d\n", __LINE__);
   if (!compressor.init(params)) {
     return val(std::string("Well something went wrong during init"));
   }
 
+  printf("%d\n", __LINE__);
   if (compressor.process() != 0) {
     return val(std::string("Well something went wrong during processing"));
   }
 
+  printf("%d\n", __LINE__);
   auto comp_data = compressor.get_output_ktx2_file();
   auto js_result = Uint8Array.new_(typed_memory_view(comp_data.size(), &comp_data[0]));
   // Not sure if there is anything to free here
