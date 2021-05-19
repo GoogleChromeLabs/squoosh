@@ -40,6 +40,8 @@ CODEC_C_OBJECT_FILE_PATHS := $(addprefix $(CODEC_DIR)/, $(CODEC_C_OBJECT_FILES))
 
 .PHONY: all clean
 
+.PRECIOUS: $(CODEC_C_OBJECT_FILES) $(CODEC_CPP_OBJECT_FILES)
+
 all: $(CODEC_DIR) $(OUT_JS)
 
 # Define dependencies for all variations of build artifacts.
