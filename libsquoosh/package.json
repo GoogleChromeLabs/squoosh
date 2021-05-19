@@ -1,7 +1,7 @@
 {
-  "name": "@squoosh/api",
+  "name": "@squoosh/lib",
   "version": "0.1.0",
-  "description": "An API for Squoosh",
+  "description": "A Node library for Squoosh",
   "public": true,
   "main": "/build/index.js",
   "files": [

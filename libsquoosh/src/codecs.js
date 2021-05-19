@@ -344,7 +344,11 @@ export const codecs = {
       await oxipngPromise;
       return {
         encode: (buffer, width, height, opts) => {
-          const simplePng = pngEncDec.encode(new Uint8Array(buffer), width, height);
+          const simplePng = pngEncDec.encode(
+            new Uint8Array(buffer),
+            width,
+            height,
+          );
           return oxipng.optimise(simplePng, opts.level);
         },
       };

@@ -30,7 +30,7 @@ const imagePath = 'path/to/image.png';
 const image = imagePool.ingestImage(imagePath);
 ```
 
-These `ingestImage` function can take anything the node [`readFile`][readFile] function can take, uncluding a buffer and `FileHandle`.
+These `ingestImage` function can take anything the node [`readFile`][readfile] function can take, uncluding a buffer and `FileHandle`.
 
 The returned `image` object is a representation of the original image, that you can now preprocess, encode, and extract information about.
 
@@ -91,11 +91,13 @@ This example iterates through all encoded versions of the image and writes them 
 ```js
 const newImagePath = '/path/to/image.'; //extension is added automatically
 
-for(const encodedImage of Object.values(image.encodedWith)){
-  fs.writeFile(newImagePath + (await encodedImage).extension, (await encodedImage).binary);
+for (const encodedImage of Object.values(image.encodedWith)) {
+  fs.writeFile(
+    newImagePath + (await encodedImage).extension,
+    (await encodedImage).binary,
+  );
 }
 ```
-
 
 ## Extracting image information
 
@@ -120,7 +122,6 @@ console.log(await image.decoded);
 ```
 
 Information about an encoded image can be found at `Image.encodedWith[encoderName]`. It looks something like this:
-
 
 ```js
 console.log(await image.encodedWith.jxl);
@@ -159,4 +160,4 @@ const encodeOptions: {
 [squoosh]: https://squoosh.app
 [codecs.js]: https://github.com/GoogleChromeLabs/squoosh/blob/dev/cli/src/codecs.js
 [butteraugli]: https://github.com/google/butteraugli
-[readFile]: https://nodejs.org/api/fs.html#fs_fspromises_readfile_path_options
+[readfile]: https://nodejs.org/api/fs.html#fs_fspromises_readfile_path_options

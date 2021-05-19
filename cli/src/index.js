@@ -7,8 +7,7 @@ import { promises as fsp } from 'fs';
 import ora from 'ora';
 import kleur from 'kleur';
 
-//Replace package name with '../../api/build/index.js' to test unpublished changes in the API
-import { ImagePool, preprocessors, encoders } from '@squoosh/api';
+import { ImagePool, preprocessors, encoders } from '@squoosh/lib';
 
 function clamp(v, min, max) {
   if (v < min) return min;
@@ -55,9 +54,9 @@ function progressTracker(results) {
     for (const result of results.values()) {
       out += `\n ${kleur.cyan(result.file)}: ${prettyPrintSize(result.size)}`;
       for (const { outputFile, size: outputSize, infoText } of result.outputs) {
-        out += `\n  ${kleur.dim('└')} ${kleur.cyan(outputFile.padEnd(5))} → ${prettyPrintSize(
-          outputSize,
-        )}`;
+        out += `\n  ${kleur.dim('└')} ${kleur.cyan(
+          outputFile.padEnd(5),
+        )} → ${prettyPrintSize(outputSize)}`;
         const percent = ((outputSize / result.size) * 100).toPrecision(3);
         out += ` (${kleur[outputSize > result.size ? 'red' : 'green'](
           percent + '%',
@@ -76,7 +75,7 @@ async function getInputFiles(paths) {
 
   for (const inputPath of paths) {
     const files = (await fsp.lstat(inputPath)).isDirectory()
-      ? (await fsp.readdir(inputPath)).map(file => path.join(inputPath, file))
+      ? (await fsp.readdir(inputPath)).map((file) => path.join(inputPath, file))
       : [inputPath];
     for (const file of files) {
       try {
@@ -135,17 +134,21 @@ async function processFiles(files) {
     if (!program.opts()[preprocessorName]) {
       continue;
     }
-    preprocessOptions[preprocessorName] = JSON5.parse(program.opts()[preprocessorName]);
+    preprocessOptions[preprocessorName] = JSON5.parse(
+      program.opts()[preprocessorName],
+    );
   }
 
-  for(const image of decodedFiles){
+  for (const image of decodedFiles) {
     image.preprocess(preprocessOptions);
   }
 
-  await Promise.all(decodedFiles.map( (image) => image.decoded ));
+  await Promise.all(decodedFiles.map((image) => image.decoded));
 
   progress.progressOffset = decoded;
-  progress.setStatus('Encoding ' + kleur.dim(`(${imagePool.workerPool.numWorkers} threads)`));
+  progress.setStatus(
+    'Encoding ' + kleur.dim(`(${imagePool.workerPool.numWorkers} threads)`),
+  );
   progress.setProgress(0, files.length);
 
   const jobs = [];
@@ -155,34 +158,37 @@ async function processFiles(files) {
     const originalFile = results.get(image).file;
 
     const encodeOptions = {
-      optimizerButteraugliTarget: Number(program.opts().optimizerButteraugliTarget),
+      optimizerButteraugliTarget: Number(
+        program.opts().optimizerButteraugliTarget,
+      ),
       maxOptimizerRounds: Number(program.opts().maxOptimizerRounds),
-    }
+    };
     for (const encName of Object.keys(encoders)) {
       if (!program.opts()[encName]) {
         continue;
       }
       const encParam = program.opts()[encName];
-      const encConfig = encParam.toLowerCase() === 'auto' ? 'auto' : JSON5.parse(encParam);
+      const encConfig =
+        encParam.toLowerCase() === 'auto' ? 'auto' : JSON5.parse(encParam);
       encodeOptions[encName] = encConfig;
     }
     jobsStarted++;
-    const job = image.encode(encodeOptions)
-      .then(async () => {
-        jobsFinished++;
-        const outputPath = path.join(program.opts().outputDir, program.opts().suffix + path.basename(originalFile, path.extname(originalFile)));
-        for(const output of Object.values(image.encodedWith)){
-          const outputFile = `${outputPath}.${(await output).extension}`;
-          await fsp.writeFile(outputFile, (await output).binary);
-          results.get(image).outputs.push(
-            Object.assign(
-              await output,
-              {outputFile},
-            )
-          );
-        }
-        progress.setProgress(jobsFinished, jobsStarted);
-      });
+    const job = image.encode(encodeOptions).then(async () => {
+      jobsFinished++;
+      const outputPath = path.join(
+        program.opts().outputDir,
+        program.opts().suffix +
+          path.basename(originalFile, path.extname(originalFile)),
+      );
+      for (const output of Object.values(image.encodedWith)) {
+        const outputFile = `${outputPath}.${(await output).extension}`;
+        await fsp.writeFile(outputFile, (await output).binary);
+        results
+          .get(image)
+          .outputs.push(Object.assign(await output, { outputFile }));
+      }
+      progress.setProgress(jobsFinished, jobsStarted);
+    });
     jobs.push(job);
   }
 
@@ -193,8 +199,6 @@ async function processFiles(files) {
   await imagePool.close();
   progress.finish('Squoosh results:');
 }
-
-
 
 program
   .name('squoosh-cli')
@@ -226,5 +230,3 @@ for (const [key, value] of Object.entries(encoders)) {
 }
 
 program.parse(process.argv);
-
-

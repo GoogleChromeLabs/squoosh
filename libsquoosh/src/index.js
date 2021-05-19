@@ -2,12 +2,11 @@ import { isMainThread } from 'worker_threads';
 import { cpus } from 'os';
 import { promises as fsp } from 'fs';
 
-import { codecs as encoders, preprocessors} from './codecs.js';
+import { codecs as encoders, preprocessors } from './codecs.js';
 import WorkerPool from './worker_pool.js';
 import { autoOptimize } from './auto-optimizer.js';
 
-export { ImagePool, encoders, preprocessors};
-
+export { ImagePool, encoders, preprocessors };
 
 async function decodeFile({ file }) {
   const buffer = await fsp.readFile(file);
@@ -21,9 +20,7 @@ async function decodeFile({ file }) {
   if (!key) {
     throw Error(`${file} has an unsupported format`);
   }
-  const rgba = (await encoders[key].dec()).decode(
-    new Uint8Array(buffer),
-  );
+  const rgba = (await encoders[key].dec()).decode(new Uint8Array(buffer));
   return {
     bitmap: rgba,
     size: buffer.length,
@@ -115,9 +112,9 @@ function handleJob(params) {
  * Represents an ingested image.
  */
 class Image {
-  constructor (workerPool, file) {
+  constructor(workerPool, file) {
     this.workerPool = workerPool;
-    this.decoded = workerPool.dispatchJob({operation: 'decode', file});
+    this.decoded = workerPool.dispatchJob({ operation: 'decode', file });
     this.encodedWith = {};
   }
 
@@ -126,7 +123,7 @@ class Image {
    * @param {object} preprocessOptions - An object with preprocessors to use, and their settings.
    * @returns {Promise<undefined>} - A promise that resolves when all preprocessors have completed their work.
    */
-  async preprocess (preprocessOptions = {}) {
+  async preprocess(preprocessOptions = {}) {
     for (const [name, options] of Object.entries(preprocessOptions)) {
       if (!Object.keys(preprocessors).includes(name)) {
         throw Error(`Invalid preprocessor "${name}"`);
@@ -151,7 +148,7 @@ class Image {
    * @param {object} encodeOptions - An object with encoders to use, and their settings.
    * @returns {Promise<undefined>} - A promise that resolves when the image has been encoded with all the specified encoders.
    */
-  async encode (encodeOptions = {}){
+  async encode(encodeOptions = {}) {
     const { bitmap } = await this.decoded;
     for (const [encName, options] of Object.entries(encodeOptions)) {
       if (!Object.keys(encoders).includes(encName)) {
@@ -161,11 +158,7 @@ class Image {
       const encConfig =
         typeof options === 'string'
           ? options
-          : Object.assign(
-              {},
-              encRef.defaultEncoderOptions,
-              options,
-            );
+          : Object.assign({}, encRef.defaultEncoderOptions, options);
       this.encodedWith[encName] = this.workerPool.dispatchJob({
         operation: 'encode',
         bitmap,
@@ -174,9 +167,7 @@ class Image {
         optimizerButteraugliTarget: Number(
           encodeOptions.optimizerButteraugliTarget,
         ),
-        maxOptimizerRounds: Number(
-          encodeOptions.maxOptimizerRounds
-        ),
+        maxOptimizerRounds: Number(encodeOptions.maxOptimizerRounds),
       });
     }
     await Promise.all(Object.values(this.encodedWith));
@@ -191,7 +182,7 @@ class ImagePool {
    * Create a new pool.
    * @param {number} [threads] - Number of concurrent image processes to run in the pool. Defaults to the number of CPU cores in the system.
    */
-  constructor (threads) {
+  constructor(threads) {
     this.workerPool = new WorkerPool(threads || cpus().length, __filename);
   }
 
@@ -200,7 +191,7 @@ class ImagePool {
    * @param {string | Buffer | URL | object} image - The image or path to the image that should be ingested and decoded.
    * @returns {Image} - A custom class reference to the decoded image.
    */
-  ingestImage (image) {
+  ingestImage(image) {
     return new Image(this.workerPool, image);
   }
 
@@ -208,7 +199,7 @@ class ImagePool {
    * Closes the underlying image processing pipeline. The already processed images will still be there, but no new processing can start.
    * @returns {Promise<undefined>} - A promise that resolves when the underlying pipeline has closed.
    */
-  async close () {
+  async close() {
     await this.workerPool.join();
   }
 }
