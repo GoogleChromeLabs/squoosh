@@ -1,21 +1,21 @@
-# Squoosh API
+# libSquoosh
 
-Squoosh API is an _experimental_ way to run all the codecs you know from the [Squoosh] web app directly inside your own JavaScript program. The Squoosh API uses a worker pool to parallelize processing images. This way you can apply the same codec to many images at once.
+libSquoosh is an _experimental_ way to run all the codecs you know from the [Squoosh] web app directly inside your own JavaScript program. libSquoosh uses a worker pool to parallelize processing images. This way you can apply the same codec to many images at once.
 
-Squoosh API is currently not the fastest image compression tool in town and doesn’t aim to be. It is, however, fast enough to compress many images sufficiently quick at once.
+libSquoosh is currently not the fastest image compression tool in town and doesn’t aim to be. It is, however, fast enough to compress many images sufficiently quick at once.
 
 ## Installation
 
-The Squoosh API can be installed to your local project with the following command:
+libSquoosh can be installed to your local project with the following command:
 
 ```
-$ npm install @squoosh/api
+$ npm install @squoosh/lib
 ```
 
-You can start using the API by adding these lines to the top of your JS program:
+You can start using the libSquoosh by adding these lines to the top of your JS program:
 
 ```js
-import { ImagePool } from '@squoosh/api';
+import { ImagePool } from '@squoosh/lib';
 const imagePool = new ImagePool();
 ```
 
@@ -147,7 +147,7 @@ console.log(await image.encodedWith.jxl);
 
 ## Auto optimizer
 
-Squoosh API has an _experimental_ auto optimizer that compresses an image as much as possible, trying to hit a specific [Butteraugli] target value. The higher the Butteraugli target value, the more artifacts can be introduced.
+libSquoosh has an _experimental_ auto optimizer that compresses an image as much as possible, trying to hit a specific [Butteraugli] target value. The higher the Butteraugli target value, the more artifacts can be introduced.
 
 You can make use of the auto optimizer by using “auto” as the config object.
 
