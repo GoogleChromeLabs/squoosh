@@ -29,16 +29,23 @@ val encode(std::string image_in, int image_width, int image_height, BasisOptions
   // We don’t need the encoder to read/decode files from the filesystem
   params.m_read_source_images = false;
   // Writing is unnecessary, too
-  params.m_read_source_images = false;
+  params.m_write_output_basis_files = false;
   // No printf pls
-  params.m_status_output = true;
-  params.m_debug = true;
+  params.m_status_output = false;
   // True => UASTC, False => ETC1S
   params.m_uastc = opts.uastc;
   // Use the standardized KTX2 format
   params.m_create_ktx2_file = true;
   // Codebook, whatever this exactly is or does.
   params.m_pSel_codebook = &sel_codebook;
+  // No multithreading. It apparently doesn’t work well in Wasm.
+  // But we still need to provide a job pool.
+  params.m_multithreading = false;
+  job_pool jpool(1);
+  params.m_pJob_pool = &jpool;
+
+  // Needs to be exposed as an option
+  params.m_ktx2_uastc_supercompression = basist::KTX2_SS_ZSTANDARD;
 
   params.m_mip_gen = opts.mipmap;
   params.m_quality_level = opts.quality;
