@@ -264,6 +264,8 @@ const resultTitles = ['Top', 'Bottom'] as const;
 // These are only used in the desktop view
 const buttonPositions = ['download-left', 'download-right'] as const;
 
+const loadingIndicator = '⏳ ';
+
 const originalDocumentTitle = document.title;
 
 function updateDocumentTitle(filename: string = ''): void {
@@ -337,6 +339,7 @@ export default class Compress extends Component<Props, State> {
             },
       ),
     });
+    updateDocumentTitle(loadingIndicator + this.state.source?.file.name);
   };
 
   private onProcessorOptionsChange = (
@@ -382,6 +385,7 @@ export default class Compress extends Component<Props, State> {
 
   componentDidUpdate(prevProps: Props, prevState: State): void {
     this.queueUpdateImage();
+    updateDocumentTitle(this.state.source?.file.name);
   }
 
   private onCopyToOtherClick = async (index: 0 | 1) => {
