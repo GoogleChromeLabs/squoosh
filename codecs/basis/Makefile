@@ -5,7 +5,7 @@ ENVIRONMENT = worker
 OUT_JS := enc/basis_enc.js dec/basis_dec.js
 OUT_WASM := $(OUT_JS:.js=.wasm)
 
-COMMON_FLAGS := -O3
+COMMON_FLAGS := -O3 -fno-strict-aliasing
 
 override 	CXXFLAGS += $(COMMON_FLAGS)
 override 	CFLAGS += $(COMMAN_FLAGS)
