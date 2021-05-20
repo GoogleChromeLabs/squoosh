@@ -48,6 +48,7 @@ val encode(std::string image_in, int image_width, int image_height, BasisOptions
   params.m_ktx2_uastc_supercompression = basist::KTX2_SS_ZSTANDARD;
 
   params.m_mip_gen = opts.mipmap;
+  params.m_mip_filter = "box";
   params.m_quality_level = opts.quality;
   params.m_compression_level = opts.compression;
   params.m_source_images.push_back(img);
