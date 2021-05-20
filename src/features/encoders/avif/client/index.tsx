@@ -1,4 +1,4 @@
-import { EncodeOptions, defaultOptions } from '../shared/meta';
+import { EncodeOptions, defaultOptions, AVIFTune } from '../shared/meta';
 import type WorkerBridge from 'client/lazy-app/worker-bridge';
 import { h, Component } from 'preact';
 import { preventDefault, shallowEqual } from 'client/lazy-app/util';
@@ -37,7 +37,7 @@ interface State {
   sharpness: number;
   denoiseLevel: number;
   aqMode: number;
-  tune: 'ssim' | 'psnr';
+  tune: AVIFTune;
 }
 
 const maxQuant = 63;
@@ -82,7 +82,7 @@ export class Options extends Component<Props, State> {
       chromaDeltaQ: options.chromaDeltaQ,
       sharpness: options.sharpness,
       denoiseLevel: options.denoiseLevel,
-      tune: options.targetSsim ? 'ssim' : 'psnr',
+      tune: options.tune,
     };
   }
 
@@ -133,7 +133,7 @@ export class Options extends Component<Props, State> {
           chromaDeltaQ: optionState.chromaDeltaQ,
           sharpness: optionState.sharpness,
           denoiseLevel: optionState.denoiseLevel,
-          targetSsim: optionState.tune === 'ssim',
+          tune: optionState.tune,
         };
 
         // Updating options, so we don't recalculate in getDerivedStateFromProps.
@@ -268,13 +268,14 @@ export class Options extends Component<Props, State> {
                       </Range>
                     </div>
                     <label class={style.optionTextFirst}>
-                      Tune for:
+                      Tuning:
                       <Select
                         value={tune}
-                        onChange={this._inputChange('tune', 'string')}
+                        onChange={this._inputChange('tune', 'number')}
                       >
-                        <option value="psnr">PSNR</option>
-                        <option value="ssim">SSIM</option>
+                        <option value={AVIFTune.auto}>Auto</option>
+                        <option value={AVIFTune.psnr}>PSNR</option>
+                        <option value={AVIFTune.ssim}>SSIM</option>
                       </Select>
                     </label>
                   </div>

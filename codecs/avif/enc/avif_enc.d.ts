@@ -1,3 +1,9 @@
+export const enum AVIFTune {
+  auto,
+  psnr,
+  ssim,
+}
+
 export interface EncodeOptions {
   cqLevel: number;
   denoiseLevel: number;
@@ -8,7 +14,7 @@ export interface EncodeOptions {
   subsample: number;
   chromaDeltaQ: boolean;
   sharpness: number;
-  targetSsim: boolean;
+  tune: AVIFTune;
 }
 
 export interface AVIFModule extends EmscriptenWasm.Module {

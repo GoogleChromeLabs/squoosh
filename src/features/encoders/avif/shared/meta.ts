@@ -10,9 +10,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import type { EncodeOptions } from 'codecs/avif/enc/avif_enc';
+import { EncodeOptions, AVIFTune } from 'codecs/avif/enc/avif_enc';
 
-export { EncodeOptions };
+export { EncodeOptions, AVIFTune };
 
 export const label = 'AVIF';
 export const mimeType = 'image/avif';
@@ -27,5 +27,5 @@ export const defaultOptions: EncodeOptions = {
   subsample: 1,
   chromaDeltaQ: false,
   sharpness: 0,
-  targetSsim: false,
+  tune: AVIFTune.auto,
 };

@@ -28,6 +28,7 @@ interface State {
   lossless: boolean;
   slightLoss: boolean;
   autoEdgePreservingFilter: boolean;
+  decodingSpeedTier: number;
 }
 
 const maxSpeed = 7;
@@ -53,6 +54,7 @@ export class Options extends Component<Props, State> {
       lossless: options.quality === 100,
       slightLoss: options.lossyPalette,
       autoEdgePreservingFilter: options.epf === -1,
+      decodingSpeedTier: options.decodingSpeedTier,
     };
   }
 
@@ -93,6 +95,7 @@ export class Options extends Component<Props, State> {
             : optionState.edgePreservingFilter,
           nearLossless: 0,
           lossyPalette: optionState.lossless ? optionState.slightLoss : false,
+          decodingSpeedTier: optionState.decodingSpeedTier,
         };
 
         // Updating options, so we don't recalculate in getDerivedStateFromProps.
@@ -117,6 +120,7 @@ export class Options extends Component<Props, State> {
       lossless,
       slightLoss,
       autoEdgePreservingFilter,
+      decodingSpeedTier,
     }: State,
   ) {
     // I'm rendering both lossy and lossless forms, as it becomes much easier when
@@ -185,6 +189,16 @@ export class Options extends Component<Props, State> {
                   </div>
                 )}
               </Expander>
+              <div class={style.optionOneCell}>
+                <Range
+                  min="0"
+                  max="4"
+                  value={decodingSpeedTier}
+                  onInput={this._inputChange('decodingSpeedTier', 'number')}
+                >
+                  Optimise for decoding speed (worse compression):
+                </Range>
+              </div>
             </div>
           )}
         </Expander>

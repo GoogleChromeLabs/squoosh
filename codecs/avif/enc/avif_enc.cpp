@@ -29,8 +29,10 @@ struct AvifOptions {
   bool chromaDeltaQ;
   // 0-7
   int sharpness;
-  // Target ssim rather than psnr
-  bool targetSsim;
+  // 0 = auto
+  // 1 = PSNR
+  // 2 = SSIM
+  int tune;
   // 0-50
   int denoiseLevel;
 };
@@ -98,7 +100,7 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
                                         std::to_string(options.cqAlphaLevel).c_str());
     }
 
-    if (options.targetSsim) {
+    if (options.tune == 2 || (options.tune == 0 && options.cqLevel <= 32)) {
       avifEncoderSetCodecSpecificOption(encoder, "tune", "ssim");
     }
 
@@ -136,7 +138,7 @@ EMSCRIPTEN_BINDINGS(my_module) {
       .field("speed", &AvifOptions::speed)
       .field("chromaDeltaQ", &AvifOptions::chromaDeltaQ)
       .field("sharpness", &AvifOptions::sharpness)
-      .field("targetSsim", &AvifOptions::targetSsim)
+      .field("tune", &AvifOptions::tune)
       .field("denoiseLevel", &AvifOptions::denoiseLevel)
       .field("subsample", &AvifOptions::subsample);
 

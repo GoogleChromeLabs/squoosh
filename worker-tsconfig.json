@@ -5,7 +5,6 @@
   },
   "include": [
     "src/features/**/worker/**/*",
-    "src/features/**/sub-worker/**/*",
     "src/features/**/shared/**/*",
     "src/features/worker-utils/**/*",
     "src/features-worker/**/*",
