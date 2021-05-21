@@ -46,17 +46,16 @@ export class Options extends Component<Props, State> {
     const newOptions: EncodeOptions = {
       // Copy over options the form doesn't currently care about, eg arithmetic
       ...this.props.options,
-      uastc: inputFieldChecked(
-        form.uastc,
-        options.uastc,
-      ),
-      mipmap: inputFieldChecked(
-        form.mipmap,
-        options.mipmap,
-      ),
+      uastc: inputFieldChecked(form.uastc, options.uastc),
+      perceptual: inputFieldChecked(form.perceptual, options.perceptual),
+      mipmap: inputFieldChecked(form.mipmap, options.mipmap),
+      srgb_mipmap: inputFieldChecked(form.srgb_mipmap, options.srgb_mipmap),
       // .value
       quality: inputFieldValueAsNumber(form.quality, options.quality),
-      compression: inputFieldValueAsNumber(form.compression, options.compression),
+      compression: inputFieldValueAsNumber(
+        form.compression,
+        options.compression,
+      ),
     };
     this.props.onChange(newOptions);
   };
@@ -95,25 +94,48 @@ export class Options extends Component<Props, State> {
           />
           Advanced settings
         </label>
-          <Expander>{showAdvanced ? (<div>
-          <label class={style.optionToggle}>
-            UASTC 
-                      <Checkbox
-                        name="uastc"
-                        checked={options.uastc}
-                        onChange={this.onChange}
-                      />
-                    </label>
-          <label class={style.optionToggle}>
-            Embed Mipmaps 
-                      <Checkbox
-                        name="mipmap"
-                        checked={options.mipmap}
-                        onChange={this.onChange}
-                      />
-                    </label>
-
-        </div>) : null}</Expander>
+        <Expander>
+          {showAdvanced ? (
+            <div>
+              <label class={style.optionToggle}>
+                UASTC
+                <Checkbox
+                  name="uastc"
+                  checked={options.uastc}
+                  onChange={this.onChange}
+                />
+              </label>
+              <label class={style.optionToggle}>
+                Perceptual distance metric
+                <Checkbox
+                  name="perceptual"
+                  checked={options.perceptual}
+                  onChange={this.onChange}
+                />
+              </label>
+              <label class={style.optionToggle}>
+                Embed Mipmaps
+                <Checkbox
+                  name="mipmap"
+                  checked={options.mipmap}
+                  onChange={this.onChange}
+                />
+              </label>
+              <Expander>
+                {options.mipmap ? (
+                  <label class={style.optionToggle}>
+                    sRGB Mipmapping
+                    <Checkbox
+                      name="srgb_mipmap"
+                      checked={options.srgb_mipmap}
+                      onChange={this.onChange}
+                    />
+                  </label>
+                ) : null}
+              </Expander>
+            </div>
+          ) : null}
+        </Expander>
       </form>
     );
   }

@@ -12,6 +12,8 @@ struct BasisOptions {
   uint8_t compression;
   bool uastc;
   bool mipmap;
+  bool srgb_mipmap;
+  bool perceptual;
 };
 
 thread_local const val Uint8Array = val::global("Uint8Array");
@@ -46,7 +48,10 @@ val encode(std::string image_in, int image_width, int image_height, BasisOptions
   // Needs to be exposed as an option
   params.m_ktx2_uastc_supercompression = basist::KTX2_SS_ZSTANDARD;
 
+  params.m_perceptual = opts.perceptual;
+
   params.m_mip_gen = opts.mipmap;
+  params.m_mip_srgb = opts.srgb_mipmap;
   params.m_mip_filter = "box";
   params.m_quality_level = opts.quality;
   params.m_compression_level = opts.compression;
@@ -74,7 +79,9 @@ EMSCRIPTEN_BINDINGS(my_module) {
       .field("quality", &BasisOptions::quality)
       .field("compression", &BasisOptions::compression)
       .field("uastc", &BasisOptions::uastc)
-      .field("mipmap", &BasisOptions::mipmap);
+      .field("perceptual", &BasisOptions::perceptual)
+      .field("mipmap", &BasisOptions::mipmap)
+      .field("srgb_mipmap", &BasisOptions::srgb_mipmap);
 
   function("encode", &encode);
 }

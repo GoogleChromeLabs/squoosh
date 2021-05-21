@@ -3,6 +3,8 @@ export interface EncodeOptions {
   compression: number;
   uastc: boolean;
   mipmap: boolean;
+  srgb_mipmap: boolean;
+  perceptual: boolean;
 }
 
 export interface BasisModule extends EmscriptenWasm.Module {

@@ -22,4 +22,6 @@ export const defaultOptions: EncodeOptions = {
   compression: 2,
   uastc: false,
   mipmap: false,
+  srgb_mipmap: false,
+  perceptual: true,
 };
