@@ -577,10 +577,7 @@ export default class Compress extends Component<Props, State> {
       }
     }
 
-    if (!jobNeeded) {
-      updateDocumentTitle(this.state.source?.file.name);
-      return;
-    }
+    if (!jobNeeded) return;
 
     const mainSignal = this.mainAbortController.signal;
     const sideSignals = this.sideAbortControllers.map((ac) => ac.signal);
@@ -690,6 +687,7 @@ export default class Compress extends Component<Props, State> {
             }) as [Side, Side],
           };
           newState = stateForNewSourceData(newState);
+          updateDocumentTitle(this.state.source?.file.name);
           return newState;
         });
       } catch (err) {
