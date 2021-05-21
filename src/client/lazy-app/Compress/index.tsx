@@ -32,7 +32,6 @@ import Results from './Results';
 import WorkerBridge from '../worker-bridge';
 import { resize } from 'features/processors/resize/client';
 import type SnackBarElement from 'shared/custom-els/snack-bar';
-import { Arrow, ExpandIcon } from '../icons';
 import { generateCliInvocation } from '../util/cli';
 
 export type OutputType = EncoderType | 'identity';
@@ -70,7 +69,6 @@ interface State {
   sides: [Side, Side];
   /** Source image load */
   loading: boolean;
-  error?: string;
   mobileView: boolean;
   preprocessorState: PreprocessorState;
   encodedPreprocessorState?: PreprocessorState;
