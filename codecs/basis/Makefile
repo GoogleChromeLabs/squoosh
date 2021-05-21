@@ -35,9 +35,6 @@ CODEC_C_SOURCE_FILES := \
 	encoder/apg_bmp.c \
 	zstd/zstd.c
 
-CODEC_CPP_SOURCE_FILE_PATHS := $(addprefix $(CODEC_DIR)/, $(CODEC_CPP_SOURCE_FILES))
-CODEC_C_SOURCE_FILE_PATHS := $(addprefix $(CODEC_DIR)/, $(CODEC_C_SOURCE_FILES))
-
 override CXXFLAGS += -DBASISU_FORCE_DEVEL_MESSAGES=1
 
 .PHONY: all clean
