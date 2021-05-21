@@ -687,7 +687,7 @@ export default class Compress extends Component<Props, State> {
             }) as [Side, Side],
           };
           newState = stateForNewSourceData(newState);
-          updateDocumentTitle(this.state.source?.file.name);
+          updateDocumentTitle(source.file.name);
           return newState;
         });
       } catch (err) {
