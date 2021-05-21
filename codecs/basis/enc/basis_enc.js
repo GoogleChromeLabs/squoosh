@@ -971,9 +971,9 @@ function updateGlobalBufferAndViews(buf) {
   Module['HEAPF64'] = HEAPF64 = new Float64Array(buf);
 }
 
-var STACK_BASE = 5878720,
+var STACK_BASE = 5878144,
     STACKTOP = STACK_BASE,
-    STACK_MAX = 635840;
+    STACK_MAX = 635264;
 
 var TOTAL_STACK = 5242880;
 
@@ -2972,11 +2972,6 @@ var ___wasm_call_ctors = Module["___wasm_call_ctors"] = function() {
 };
 
 /** @type {function(...*):?} */
-var _free = Module["_free"] = function() {
-  return (_free = Module["_free"] = Module["asm"]["free"]).apply(null, arguments);
-};
-
-/** @type {function(...*):?} */
 var _realloc = Module["_realloc"] = function() {
   return (_realloc = Module["_realloc"] = Module["asm"]["realloc"]).apply(null, arguments);
 };
@@ -2984,6 +2979,11 @@ var _realloc = Module["_realloc"] = function() {
 /** @type {function(...*):?} */
 var _malloc = Module["_malloc"] = function() {
   return (_malloc = Module["_malloc"] = Module["asm"]["malloc"]).apply(null, arguments);
+};
+
+/** @type {function(...*):?} */
+var _free = Module["_free"] = function() {
+  return (_free = Module["_free"] = Module["asm"]["free"]).apply(null, arguments);
 };
 
 /** @type {function(...*):?} */

@@ -1,5 +1,7 @@
 CODEC_URL := https://github.com/BinomialLLC/basis_universal/archive/refs/tags/v1.15_rel2.tar.gz
 CODEC_DIR := node_modules/basis
+CODEC_BUILD_DIR := $(CODEC_DIR)/build
+CODEC_LIB := $(CODEC_BUILD_DIR)/basis.a
 ENVIRONMENT = worker
 
 OUT_JS := enc/basis_enc.js dec/basis_dec.js
@@ -33,10 +35,8 @@ CODEC_C_SOURCE_FILES := \
 	encoder/apg_bmp.c \
 	zstd/zstd.c
 
-CODEC_CPP_OBJECT_FILES := $(CODEC_CPP_SOURCE_FILES:.cpp=.o)
-CODEC_C_OBJECT_FILES := $(CODEC_C_SOURCE_FILES:.c=.o)
-CODEC_CPP_OBJECT_FILE_PATHS := $(addprefix $(CODEC_DIR)/, $(CODEC_CPP_OBJECT_FILES))
-CODEC_C_OBJECT_FILE_PATHS := $(addprefix $(CODEC_DIR)/, $(CODEC_C_OBJECT_FILES))
+CODEC_CPP_SOURCE_FILE_PATHS := $(addprefix $(CODEC_DIR)/, $(CODEC_CPP_SOURCE_FILES))
+CODEC_C_SOURCE_FILE_PATHS := $(addprefix $(CODEC_DIR)/, $(CODEC_C_SOURCE_FILES))
 
 override CXXFLAGS += -DBASISU_FORCE_DEVEL_MESSAGES=1
 
@@ -52,7 +52,7 @@ $(filter dec/%,$(OUT_JS)): dec/basis_dec.cpp
 
 # enc/mozjpeg_node_enc.js dec/mozjpeg_node_dec.js: ENVIRONMENT = node
 
-%.js: $(CODEC_CPP_OBJECT_FILE_PATHS) $(CODEC_C_OBJECT_FILE_PATHS)
+%.js: $(CODEC_LIB)
 	$(CXX) \
 		-I $(CODEC_DIR)/encoder \
 		-I $(CODEC_DIR)/transcoder \
@@ -68,21 +68,21 @@ $(filter dec/%,$(OUT_JS)): dec/basis_dec.cpp
 		-o $@ \
 		$+ 
 
-$(CODEC_CPP_OBJECT_FILES): $(CODEC_DIR)
+$(CODEC_LIB): $(CODEC_DIR)
+	mkdir -p $(CODEC_BUILD_DIR)
+	cd $(CODEC_BUILD_DIR) && \
 	$(CXX) \
 		${CXXFLAGS} \
-		-o $@ \
-		-c $(@:.o=.cpp)
-
-$(CODEC_C_OBJECT_FILES): $(CODEC_DIR)
+		-c $(addprefix ../, $(CODEC_CPP_SOURCE_FILES))
+	cd $(CODEC_BUILD_DIR) && \
 	$(CC) \
 		${CFLAGS} \
-		-o $@ \
-		-c $(@:.o=.c)
+		-c $(addprefix ../, $(CODEC_C_SOURCE_FILES))
+	$(AR) rc $(CODEC_LIB) $(CODEC_BUILD_DIR)/*.o
 
 $(CODEC_DIR):
 	mkdir -p $@
 	curl -sL $(CODEC_URL) | tar xz --strip 1 -C $@
 
 clean:
-	$(RM) $(OUT_JS) $(OUT_WASM)
+	$(RM) $(OUT_JS) $(OUT_WASM) $(CODEC_BUILD_DIR)

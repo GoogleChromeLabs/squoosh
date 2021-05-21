@@ -21,7 +21,6 @@ val encode(std::string image_in, int image_width, int image_height, BasisOptions
 
   basist::etc1_global_selector_codebook sel_codebook(basist::g_global_selector_cb_size,
                                                      basist::g_global_selector_cb);
-
   basis_compressor_params params;
   basis_compressor compressor;
   image img =
