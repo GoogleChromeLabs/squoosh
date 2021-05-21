@@ -265,6 +265,7 @@ const resultTitles = ['Top', 'Bottom'] as const;
 const buttonPositions = ['download-left', 'download-right'] as const;
 
 const loadingIndicator = '⏳ ';
+const errorIndicator = '⚠️ ';
 
 const originalDocumentTitle = document.title;
 
@@ -385,7 +386,6 @@ export default class Compress extends Component<Props, State> {
 
   componentDidUpdate(prevProps: Props, prevState: State): void {
     this.queueUpdateImage();
-    updateDocumentTitle(this.state.source?.file.name);
   }
 
   private onCopyToOtherClick = async (index: 0 | 1) => {
@@ -573,7 +573,10 @@ export default class Compress extends Component<Props, State> {
       }
     }
 
-    if (!jobNeeded) return;
+    if (!jobNeeded) {
+      updateDocumentTitle(this.state.source?.file.name);
+      return;
+    }
 
     const mainSignal = this.mainAbortController.signal;
     const sideSignals = this.sideAbortControllers.map((ac) => ac.signal);
@@ -622,9 +625,11 @@ export default class Compress extends Component<Props, State> {
               resizeState,
             );
           }) as [Side, Side];
+          updateDocumentTitle(this.state.source?.file.name);
           return { sides };
         });
       } catch (err) {
+        updateDocumentTitle(errorIndicator + this.state.source?.file.name);
         if (err.name === 'AbortError') return;
         this.props.showSnack(`Source decoding error: ${err}`);
         throw err;
@@ -680,13 +685,14 @@ export default class Compress extends Component<Props, State> {
             }) as [Side, Side],
           };
           newState = stateForNewSourceData(newState);
-          updateDocumentTitle(source.file.name);
+          updateDocumentTitle(this.state.source?.file.name);
           return newState;
         });
       } catch (err) {
         if (err.name === 'AbortError') return;
         this.setState({ loading: false });
         this.props.showSnack(`Preprocessing error: ${err}`);
+        updateDocumentTitle(errorIndicator + this.state.source?.file.name);
         throw err;
       }
     } else {
@@ -803,6 +809,7 @@ export default class Compress extends Component<Props, State> {
             },
           };
           const sides = cleanSet(currentState.sides, sideIndex, side);
+          updateDocumentTitle(this.state.source?.file.name);
           return { sides };
         });
 
@@ -813,6 +820,7 @@ export default class Compress extends Component<Props, State> {
           const sides = cleanMerge(currentState.sides, sideIndex, {
             loading: false,
           });
+          updateDocumentTitle(errorIndicator + this.state.source?.file.name);
           return { sides };
         });
         this.props.showSnack(`Processing error: ${err}`);
