@@ -113,10 +113,8 @@ async function decodeImage(
     }
     // If none of those work, let’s see if Web Codecs API is available
     if (await WebCodecs.isTypeSupported(mimeType)) {
-      let result;
       try {
-        result = await abortable(signal, WebCodecs.decode(blob, mimeType));
-        return result;
+        return await abortable(signal, WebCodecs.decode(blob, mimeType));
       } catch (e) {}
     }
     // Otherwise fall through and try built-in decoding for a laugh.
