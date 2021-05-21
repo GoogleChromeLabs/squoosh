@@ -30,7 +30,7 @@ const imagePath = 'path/to/image.png';
 const image = imagePool.ingestImage(imagePath);
 ```
 
-The `ingestImage` function can take anything the node [`readFile`][readfile] function can take, uncluding a buffer and `FileHandle`.
+These `ingestImage` function can take anything the node [`readFile`][readfile] function can take, uncluding a buffer and `FileHandle`.
 
 The returned `image` object is a representation of the original image, that you can now preprocess, encode, and extract information about.
 
@@ -151,13 +151,13 @@ libSquoosh has an _experimental_ auto optimizer that compresses an image as much
 
 You can make use of the auto optimizer by using “auto” as the config object.
 
-```js
+```
 const encodeOptions: {
   mozjpeg: 'auto',
 }
 ```
 
 [squoosh]: https://squoosh.app
-[codecs.js]: https://github.com/GoogleChromeLabs/squoosh/blob/dev/libsquoosh/src/codecs.js
+[codecs.js]: https://github.com/GoogleChromeLabs/squoosh/blob/dev/cli/src/codecs.js
 [butteraugli]: https://github.com/google/butteraugli
 [readfile]: https://nodejs.org/api/fs.html#fs_fspromises_readfile_path_options

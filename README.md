@@ -5,7 +5,7 @@ by various image compressors.
 
 # API & CLI
 
-Squoosh now has [an API](https://github.com/GoogleChromeLabs/squoosh/tree/dev/libsquoosh) and [a CLI](https://github.com/GoogleChromeLabs/squoosh/tree/dev/cli) that allows you to compress many images at once.
+Squoosh now has [an API](https://github.com/GoogleChromeLabs/squoosh/tree/dev/api) and [a CLI](https://github.com/GoogleChromeLabs/squoosh/tree/dev/cli) that allows you to compress many images at once.
 
 # Privacy
 

@@ -55,5 +55,5 @@ $ npx @squoosh/cli --wp2 auto test.png
 ```
 
 [squoosh]: https://squoosh.app
-[codecs.js]: https://github.com/GoogleChromeLabs/squoosh/blob/dev/libsquoosh/src/codecs.js
+[codecs.js]: https://github.com/GoogleChromeLabs/squoosh/blob/dev/cli/src/codecs.js
 [butteraugli]: https://github.com/google/butteraugli
