@@ -325,6 +325,7 @@ export default class Compress extends Component<Props, State> {
 
   private onMobileWidthChange = () => {
     this.setState({ mobileView: this.widthQuery.matches });
+    updateDocumentTitle(loadingIndicator + this.state.source?.file.name);
   };
 
   private onEncoderTypeChange = (index: 0 | 1, newType: OutputType): void => {
@@ -354,6 +355,7 @@ export default class Compress extends Component<Props, State> {
         options,
       ),
     });
+    updateDocumentTitle(loadingIndicator + this.state.source?.file.name);
   };
 
   private onEncoderOptionsChange = (
@@ -367,6 +369,7 @@ export default class Compress extends Component<Props, State> {
         options,
       ),
     });
+    updateDocumentTitle(loadingIndicator + this.state.source?.file.name);
   };
 
   componentWillReceiveProps(nextProps: Props): void {
@@ -445,6 +448,7 @@ export default class Compress extends Component<Props, State> {
             );
           }) as [Side, Side]),
     }));
+    updateDocumentTitle(loadingIndicator + this.state.source?.file.name);
   };
 
   private onCopyCliClick = async (index: 0 | 1) => {
@@ -592,6 +596,7 @@ export default class Compress extends Component<Props, State> {
           source: undefined,
           loading: true,
         });
+        updateDocumentTitle(loadingIndicator + this.state.source?.file.name);
 
         // Special-case SVG. We need to avoid createImageBitmap because of
         // https://bugs.chromium.org/p/chromium/issues/detail?id=606319.
@@ -625,7 +630,6 @@ export default class Compress extends Component<Props, State> {
               resizeState,
             );
           }) as [Side, Side];
-          updateDocumentTitle(this.state.source?.file.name);
           return { sides };
         });
       } catch (err) {
@@ -647,6 +651,7 @@ export default class Compress extends Component<Props, State> {
         this.setState({
           loading: true,
         });
+        updateDocumentTitle(loadingIndicator + this.state.source?.file.name);
 
         const preprocessed = await preprocessImage(
           mainSignal,
@@ -685,7 +690,6 @@ export default class Compress extends Component<Props, State> {
             }) as [Side, Side],
           };
           newState = stateForNewSourceData(newState);
-          updateDocumentTitle(this.state.source?.file.name);
           return newState;
         });
       } catch (err) {
@@ -738,6 +742,9 @@ export default class Compress extends Component<Props, State> {
               });
               return { sides };
             });
+            updateDocumentTitle(
+              loadingIndicator + this.state.source?.file.name,
+            );
 
             if (sideWorkNeeded.processing) {
               processed = await processImage(
