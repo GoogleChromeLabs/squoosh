@@ -24,4 +24,5 @@ export const defaultOptions: EncodeOptions = {
   mipmap: false,
   srgb_mipmap: false,
   perceptual: true,
+  y_flip: false,
 };

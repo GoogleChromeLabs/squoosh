@@ -47,6 +47,7 @@ export class Options extends Component<Props, State> {
       // Copy over options the form doesn't currently care about, eg arithmetic
       ...this.props.options,
       uastc: inputFieldChecked(form.uastc, options.uastc),
+      y_flip: inputFieldChecked(form.y_flip, options.y_flip),
       perceptual: inputFieldChecked(form.perceptual, options.perceptual),
       mipmap: inputFieldChecked(form.mipmap, options.mipmap),
       srgb_mipmap: inputFieldChecked(form.srgb_mipmap, options.srgb_mipmap),
@@ -87,6 +88,14 @@ export class Options extends Component<Props, State> {
             Compression:
           </Range>
         </div>
+        <label class={style.optionToggle}>
+          Flip Y Axis
+          <Checkbox
+            name="y_flip"
+            checked={options.y_flip}
+            onChange={this.onChange}
+          />
+        </label>
         <label class={style.optionReveal}>
           <Revealer
             checked={showAdvanced}

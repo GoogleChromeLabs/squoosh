@@ -2,6 +2,7 @@ export interface EncodeOptions {
   quality: number;
   compression: number;
   uastc: boolean;
+  y_flip: boolean;
   mipmap: boolean;
   srgb_mipmap: boolean;
   perceptual: boolean;
