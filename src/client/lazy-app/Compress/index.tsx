@@ -257,11 +257,6 @@ function processorStateEquivalent(a: ProcessorState, b: ProcessorState) {
   return true;
 }
 
-// These are only used in the mobile view
-const resultTitles = ['Top', 'Bottom'] as const;
-// These are only used in the desktop view
-const buttonPositions = ['download-left', 'download-right'] as const;
-
 const loadingIndicator = '⏳ ';
 
 const originalDocumentTitle = document.title;
