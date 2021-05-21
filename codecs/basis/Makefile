@@ -7,6 +7,7 @@ ENVIRONMENT = worker
 OUT_JS := enc/basis_enc.js dec/basis_dec.js
 OUT_WASM := $(OUT_JS:.js=.wasm)
 
+# TODO: Go back to -O3
 COMMON_FLAGS := -O0 -g -fno-strict-aliasing
 
 override 	CXXFLAGS += $(COMMON_FLAGS)
@@ -35,11 +36,10 @@ CODEC_C_SOURCE_FILES := \
 	encoder/apg_bmp.c \
 	zstd/zstd.c
 
+# TODO: Remove me
 override CXXFLAGS += -DBASISU_FORCE_DEVEL_MESSAGES=1
 
 .PHONY: all clean
-
-.PRECIOUS: $(CODEC_C_OBJECT_FILES) $(CODEC_CPP_OBJECT_FILES)
 
 all: $(CODEC_DIR) $(OUT_JS)
 
@@ -47,6 +47,7 @@ all: $(CODEC_DIR) $(OUT_JS)
 $(filter enc/%,$(OUT_JS)): enc/basis_enc.cpp
 $(filter dec/%,$(OUT_JS)): dec/basis_dec.cpp
 
+# TODO: Make it build for node
 # enc/mozjpeg_node_enc.js dec/mozjpeg_node_dec.js: ENVIRONMENT = node
 
 %.js: $(CODEC_LIB)
@@ -82,4 +83,4 @@ $(CODEC_DIR):
 	curl -sL $(CODEC_URL) | tar xz --strip 1 -C $@
 
 clean:
-	$(RM) $(OUT_JS) $(OUT_WASM) $(CODEC_BUILD_DIR)
+	$(RM) -r $(OUT_JS) $(OUT_WASM) $(CODEC_BUILD_DIR)
