@@ -384,7 +384,8 @@ export default class Compress extends Component<Props, State> {
       this.state.loading ||
       this.state.sides[0].loading ||
       this.state.sides[1].loading;
-    if (wasLoading !== isLoading) {
+    const sourceChanged = prevState.source !== this.state.source;
+    if (wasLoading !== isLoading || sourceChanged) {
       if (isLoading) {
         updateDocumentTitle(loadingIndicator + this.state.source?.file.name);
       } else {
@@ -686,7 +687,6 @@ export default class Compress extends Component<Props, State> {
             }) as [Side, Side],
           };
           newState = stateForNewSourceData(newState);
-          updateDocumentTitle(source.file.name);
           return newState;
         });
       } catch (err) {
