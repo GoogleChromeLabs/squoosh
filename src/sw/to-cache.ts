@@ -1,4 +1,4 @@
-import { threads, simd } from 'wasm-feature-detect';
+import { threads } from 'wasm-feature-detect';
 import webpDataUrl from 'data-url:./tiny.webp';
 import avifDataUrl from 'data-url:./tiny.avif';
 
@@ -75,9 +75,6 @@ import avifEncWasm from 'url:codecs/avif/enc/avif_enc.wasm';
 import * as avifEnc from 'entry-data:codecs/avif/enc/avif_enc.js';
 
 // JXL
-import * as jxlEncMtSimdWorker from 'entry-data:codecs/jxl/enc/jxl_enc_mt_simd.worker.js';
-import * as jxlEncMtSimd from 'entry-data:codecs/jxl/enc/jxl_enc_mt_simd';
-import jxlEncMtSimdWasm from 'url:codecs/jxl/enc/jxl_enc_mt_simd.wasm';
 import * as jxlEncMtWorker from 'entry-data:codecs/jxl/enc/jxl_enc_mt.worker.js';
 import * as jxlEncMt from 'entry-data:codecs/jxl/enc/jxl_enc_mt';
 import jxlEncMtWasm from 'url:codecs/jxl/enc/jxl_enc_mt.wasm';
@@ -89,15 +86,10 @@ import oxiMtWasm from 'url:codecs/oxipng/pkg-parallel/squoosh_oxipng_bg.wasm';
 import oxiWasm from 'url:codecs/oxipng/pkg/squoosh_oxipng_bg.wasm';
 
 // WebP
-import * as webpEncSimd from 'entry-data:codecs/webp/enc/webp_enc_simd';
-import webpEncSimdWasm from 'url:codecs/webp/enc/webp_enc_simd.wasm';
 import * as webpEnc from 'entry-data:codecs/webp/enc/webp_enc';
 import webpEncWasm from 'url:codecs/webp/enc/webp_enc.wasm';
 
 // WP2
-import * as wp2EncMtSimdWorker from 'entry-data:codecs/wp2/enc/wp2_enc_mt_simd.worker.js';
-import * as wp2EncMtSimd from 'entry-data:codecs/wp2/enc/wp2_enc_mt_simd';
-import wp2EncMtSimdWasm from 'url:codecs/wp2/enc/wp2_enc_mt_simd.wasm';
 import * as wp2EncMtWorker from 'entry-data:codecs/wp2/enc/wp2_enc_mt.worker.js';
 import * as wp2EncMt from 'entry-data:codecs/wp2/enc/wp2_enc_mt';
 import wp2EncMtWasm from 'url:codecs/wp2/enc/wp2_enc_mt.wasm';
@@ -105,14 +97,8 @@ import * as wp2Enc from 'entry-data:codecs/wp2/enc/wp2_enc';
 import wp2EncWasm from 'url:codecs/wp2/enc/wp2_enc.wasm';
 
 export const theRest = (async () => {
-  const [
-    supportsThreads,
-    supportsSimd,
-    supportsWebP,
-    supportsAvif,
-  ] = await Promise.all([
+  const [supportsThreads, supportsWebP, supportsAvif] = await Promise.all([
     threads(),
-    simd(),
     ...[webpDataUrl, avifDataUrl].map(async (dataUrl) => {
       if (!self.createImageBitmap) return false;
       const response = await fetch(dataUrl);
@@ -153,15 +139,7 @@ export const theRest = (async () => {
   }
 
   // JXL
-  if (supportsThreads && supportsSimd) {
-    items.push(
-      jxlEncMtSimdWorker.main,
-      ...jxlEncMtSimdWorker.deps,
-      jxlEncMtSimd.main,
-      ...jxlEncMtSimd.deps,
-      jxlEncMtSimdWasm,
-    );
-  } else if (supportsThreads) {
+  if (supportsThreads) {
     items.push(
       jxlEncMtWorker.main,
       ...jxlEncMtWorker.deps,
@@ -181,22 +159,10 @@ export const theRest = (async () => {
   }
 
   // WebP
-  if (supportsSimd) {
-    items.push(webpEncSimd.main, ...webpEncSimd.deps, webpEncSimdWasm);
-  } else {
-    items.push(webpEnc.main, ...webpEnc.deps, webpEncWasm);
-  }
+  items.push(webpEnc.main, ...webpEnc.deps, webpEncWasm);
 
   // WP2
-  if (supportsThreads && supportsSimd) {
-    items.push(
-      wp2EncMtSimdWorker.main,
-      ...wp2EncMtSimdWorker.deps,
-      wp2EncMtSimd.main,
-      ...wp2EncMtSimd.deps,
-      wp2EncMtSimdWasm,
-    );
-  } else if (supportsThreads) {
+  if (supportsThreads) {
     items.push(
       wp2EncMtWorker.main,
       ...wp2EncMtWorker.deps,
