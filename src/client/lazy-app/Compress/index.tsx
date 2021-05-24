@@ -384,12 +384,12 @@ export default class Compress extends Component<Props, State> {
       this.state.loading ||
       this.state.sides[0].loading ||
       this.state.sides[1].loading;
-    const startedLoading = !wasLoading && isLoading;
-    const stoppedLoading = wasLoading && !isLoading;
-    if (startedLoading) {
-      updateDocumentTitle(loadingIndicator + this.state.source?.file.name);
-    } else if (stoppedLoading) {
-      updateDocumentTitle(this.state.source?.file.name);
+    if (wasLoading !== isLoading) {
+      if (isLoading) {
+        updateDocumentTitle(loadingIndicator + this.state.source?.file.name);
+      } else {
+        updateDocumentTitle(this.state.source?.file.name);
+      }
     }
     this.queueUpdateImage();
   }
