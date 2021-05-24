@@ -244,9 +244,9 @@ export async function builtinDecode(
 ): Promise<ImageData> {
   // If WebCodecs are supported, use that.
   if (await WebCodecs.isTypeSupported(mimeType)) {
-    if (signal.aborted) return Promise.reject('Aborted');
+    assertSignal(signal);
     try {
-      return await WebCodecs.decode(blob, mimeType);
+      return await abortable(signal, WebCodecs.decode(blob, mimeType));
     } catch (e) {}
   }
   assertSignal(signal);
