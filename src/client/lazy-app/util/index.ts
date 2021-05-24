@@ -250,9 +250,9 @@ export async function builtinDecode(
     } catch (e) {}
   }
   assertSignal(signal);
-  
+
   // Prefer createImageBitmap as it's the off-thread option for Firefox.
-  const drawable = await abortable(
+  const drawable = await abortable<HTMLImageElement | ImageBitmap>(
     signal,
     'createImageBitmap' in self ? createImageBitmap(blob) : blobToImg(blob),
   );
