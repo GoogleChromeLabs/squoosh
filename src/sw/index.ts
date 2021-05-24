@@ -7,6 +7,7 @@ import {
   serveShareTarget,
 } from './util';
 import { get } from 'idb-keyval';
+import { shouldCacheDynamically } from './to-cache';
 
 // Give TypeScript the correct global.
 declare var self: ServiceWorkerGlobalScope;
@@ -70,7 +71,7 @@ self.addEventListener('fetch', (event) => {
   // We only care about GET from here on in.
   if (event.request.method !== 'GET') return;
 
-  if (url.pathname.startsWith('/c/demo-')) {
+  if (shouldCacheDynamically(url.pathname)) {
     cacheOrNetworkAndCache(event, dynamicCache);
     cleanupCache(event, dynamicCache, ASSETS);
     return;

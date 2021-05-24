@@ -12,17 +12,10 @@
  */
 export function initEmscriptenModule<T extends EmscriptenWasm.Module>(
   moduleFactory: EmscriptenWasm.ModuleFactory<T>,
-  wasmUrl: string,
-  workerUrl?: string,
 ): Promise<T> {
   return moduleFactory({
     // Just to be safe, don't automatically invoke any wasm functions
     noInitialRun: true,
-    locateFile: (url: string) => {
-      if (url.endsWith('.wasm')) return wasmUrl;
-      if (url.endsWith('.worker.js')) return workerUrl!;
-      throw Error('Unknown url in locateFile ' + url);
-    },
   });
 }
 

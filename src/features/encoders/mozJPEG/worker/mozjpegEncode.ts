@@ -12,7 +12,6 @@
  */
 import mozjpeg_enc, { MozJPEGModule } from 'codecs/mozjpeg/enc/mozjpeg_enc';
 import { EncodeOptions } from '../shared/meta';
-import wasmUrl from 'url:codecs/mozjpeg/enc/mozjpeg_enc.wasm';
 import { initEmscriptenModule } from 'features/worker-utils';
 
 let emscriptenModule: Promise<MozJPEGModule>;
@@ -22,7 +21,7 @@ export default async function encode(
   options: EncodeOptions,
 ): Promise<ArrayBuffer> {
   if (!emscriptenModule) {
-    emscriptenModule = initEmscriptenModule(mozjpeg_enc, wasmUrl);
+    emscriptenModule = initEmscriptenModule(mozjpeg_enc);
   }
 
   const module = await emscriptenModule;
