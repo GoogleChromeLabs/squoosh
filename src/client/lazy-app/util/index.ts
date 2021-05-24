@@ -249,15 +249,13 @@ export async function builtinDecode(
       return await WebCodecs.decode(blob, mimeType);
     } catch (e) {}
   }
-  if (signal.aborted) return Promise.reject('Aborted');
-
+  assertSignal(signal);
+  
   // Prefer createImageBitmap as it's the off-thread option for Firefox.
-  const drawable =
-    'createImageBitmap' in self
-      ? await createImageBitmap(blob)
-      : await blobToImg(blob);
-
-  if (signal.aborted) return Promise.reject('Aborted');
+  const drawable = await abortable(
+    signal,
+    'createImageBitmap' in self ? createImageBitmap(blob) : blobToImg(blob),
+  );
   return drawableToImageData(drawable);
 }
 
