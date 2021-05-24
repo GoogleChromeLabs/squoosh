@@ -376,10 +376,16 @@ export default class Compress extends Component<Props, State> {
   }
 
   componentDidUpdate(prevProps: Props, prevState: State): void {
-    const wasLoading = prevState.loading;
-    const isLoading = this.state.loading || this.state.sides[0].loading || this.state.sides[1].loading;
-    const changedLoadingState = wasLoading !== isLoading;
-    if (changedLoadingState) {
+    const wasLoading =
+      prevState.loading ||
+      prevState.sides[0].loading ||
+      prevState.sides[1].loading;
+    const isLoading =
+      this.state.loading ||
+      this.state.sides[0].loading ||
+      this.state.sides[1].loading;
+    const startedLoading = !wasLoading && isLoading;
+    if (startedLoading) {
       updateDocumentTitle(loadingIndicator + this.state.source?.file.name);
     } else {
       updateDocumentTitle(this.state.source?.file.name);
