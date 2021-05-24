@@ -84,6 +84,11 @@ interface SideJob {
   encoderState?: EncoderState;
 }
 
+interface LoadingFileInfo {
+  loading: boolean;
+  filename?: string;
+}
+
 async function decodeImage(
   signal: AbortSignal,
   blob: Blob,
@@ -261,10 +266,12 @@ const loadingIndicator = '⏳ ';
 
 const originalDocumentTitle = document.title;
 
-function updateDocumentTitle(filename: string = ''): void {
-  document.title = filename
-    ? `${filename} - ${originalDocumentTitle}`
-    : originalDocumentTitle;
+function updateDocumentTitle(loadingFileInfo: LoadingFileInfo): void {
+  const { loading, filename } = loadingFileInfo;
+  document.title =
+    filename && loading
+      ? `${filename} - ${originalDocumentTitle}`
+      : originalDocumentTitle;
 }
 
 export default class Compress extends Component<Props, State> {
@@ -368,7 +375,7 @@ export default class Compress extends Component<Props, State> {
   }
 
   componentWillUnmount(): void {
-    updateDocumentTitle();
+    updateDocumentTitle({ loading: false });
     this.mainAbortController.abort();
     for (const controller of this.sideAbortControllers) {
       controller.abort();
@@ -386,11 +393,11 @@ export default class Compress extends Component<Props, State> {
       this.state.sides[1].loading;
     const sourceChanged = prevState.source !== this.state.source;
     if (wasLoading !== isLoading || sourceChanged) {
-      if (isLoading) {
-        updateDocumentTitle(loadingIndicator + this.state.source?.file.name);
-      } else {
-        updateDocumentTitle(this.state.source?.file.name);
-      }
+      updateDocumentTitle({
+        loading: isLoading,
+        filename:
+          (isLoading ? loadingIndicator : '') + this.state.source?.file.name,
+      });
     }
     this.queueUpdateImage();
   }
