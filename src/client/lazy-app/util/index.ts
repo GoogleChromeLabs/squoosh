@@ -10,6 +10,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import * as WebCodecs from '../util/web-codecs';
+
 /**
  * Compare two objects, returning a boolean indicating if
  * they have the same properties and strictly equal values.
@@ -234,13 +237,27 @@ export function drawableToImageData(
   return ctx.getImageData(0, 0, width, height);
 }
 
-export async function builtinDecode(blob: Blob): Promise<ImageData> {
+export async function builtinDecode(
+  signal: AbortSignal,
+  blob: Blob,
+  mimeType: string,
+): Promise<ImageData> {
+  // If WebCodecs are supported, use that.
+  if (await WebCodecs.isTypeSupported(mimeType)) {
+    if (signal.aborted) return Promise.reject('Aborted');
+    try {
+      return await WebCodecs.decode(blob, mimeType);
+    } catch (e) {}
+  }
+  if (signal.aborted) return Promise.reject('Aborted');
+
   // Prefer createImageBitmap as it's the off-thread option for Firefox.
   const drawable =
     'createImageBitmap' in self
       ? await createImageBitmap(blob)
       : await blobToImg(blob);
 
+  if (signal.aborted) return Promise.reject('Aborted');
   return drawableToImageData(drawable);
 }
 

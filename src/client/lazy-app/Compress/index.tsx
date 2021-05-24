@@ -34,7 +34,6 @@ import { resize } from 'features/processors/resize/client';
 import type SnackBarElement from 'shared/custom-els/snack-bar';
 import { Arrow, ExpandIcon } from '../icons';
 import { generateCliInvocation } from '../util/cli';
-import * as WebCodecs from '../util/web-codecs';
 
 export type OutputType = EncoderType | 'identity';
 
@@ -111,14 +110,8 @@ async function decodeImage(
         return await workerBridge.wp2Decode(signal, blob);
       }
     }
-    // If none of those work, let’s see if Web Codecs API is available
-    if (await WebCodecs.isTypeSupported(mimeType)) {
-      try {
-        return await abortable(signal, WebCodecs.decode(blob, mimeType));
-      } catch (e) {}
-    }
     // Otherwise fall through and try built-in decoding for a laugh.
-    return await abortable(signal, builtinDecode(blob));
+    return await builtinDecode(signal, blob, mimeType);
   } catch (err) {
     if (err.name === 'AbortError') throw err;
     console.log(err);
