@@ -14,28 +14,17 @@ import type { JXLModule } from 'codecs/jxl/enc/jxl_enc';
 import type { EncodeOptions } from '../shared/meta';
 
 import { initEmscriptenModule } from 'features/worker-utils';
-import { threads, simd } from 'wasm-feature-detect';
+import { threads } from 'wasm-feature-detect';
 
 import wasmUrl from 'url:codecs/jxl/enc/jxl_enc.wasm';
 
 import wasmUrlWithMT from 'url:codecs/jxl/enc/jxl_enc_mt.wasm';
 import workerUrl from 'omt:codecs/jxl/enc/jxl_enc_mt.worker.js';
 
-import wasmUrlWithMTAndSIMD from 'url:codecs/jxl/enc/jxl_enc_mt_simd.wasm';
-import workerUrlWithSIMD from 'omt:codecs/jxl/enc/jxl_enc_mt_simd.worker.js';
-
 let emscriptenModule: Promise<JXLModule>;
 
 async function init() {
   if (await threads()) {
-    if (await simd()) {
-      const jxlEncoder = await import('codecs/jxl/enc/jxl_enc_mt_simd');
-      return initEmscriptenModule(
-        jxlEncoder.default,
-        wasmUrlWithMTAndSIMD,
-        workerUrlWithSIMD,
-      );
-    }
     const jxlEncoder = await import('codecs/jxl/enc/jxl_enc_mt');
     return initEmscriptenModule(jxlEncoder.default, wasmUrlWithMT, workerUrl);
   }

@@ -13,9 +13,6 @@ export default {
     dir: 'build',
     format: 'cjs',
     assetFileNames: '[name]-[hash][extname]',
-    // This is needed so the resulting `index.js` can be
-    // executed by `npx`.
-    banner: '#!/usr/bin/env node',
   },
   plugins: [
     resolve(),
@@ -27,7 +24,7 @@ export default {
       babelrc: false,
       configFile: false,
       minified: process.env.DEBUG != '',
-      comments: false,
+      comments: true,
       presets: [
         [
           '@babel/preset-env',
@@ -41,5 +38,5 @@ export default {
       ],
     }),
   ],
-  external: builtinModules,
+  external: [...builtinModules, 'web-streams-polyfill'],
 };
