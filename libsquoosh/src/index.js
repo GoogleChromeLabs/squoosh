@@ -9,7 +9,21 @@ import { autoOptimize } from './auto-optimizer.js';
 export { ImagePool, encoders, preprocessors };
 
 async function decodeFile({ file }) {
-  const buffer = await fsp.readFile(file);
+  let buffer;
+  if (ArrayBuffer.isView(file)) {
+    buffer = Buffer.from(file.buffer);
+    file = 'Binary blob';
+  } else if (file instanceof ArrayBuffer) {
+    buffer = Buffer.from(file);
+    file = 'Binary blob';
+  } else if (file instanceof Buffer) {
+    buffer = file;
+    file = 'Binary blob';
+  } else if (typeof file === 'string') {
+    buffer = await fsp.readFile(file);
+  } else {
+    throw Error('Unexpected input type');
+  }
   const firstChunk = buffer.slice(0, 16);
   const firstChunkString = Array.from(firstChunk)
     .map((v) => String.fromCodePoint(v))
@@ -113,6 +127,7 @@ function handleJob(params) {
  */
 class Image {
   constructor(workerPool, file) {
+    this.file = file;
     this.workerPool = workerPool;
     this.decoded = workerPool.dispatchJob({ operation: 'decode', file });
     this.encodedWith = {};

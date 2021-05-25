@@ -112,9 +112,9 @@ async function decodeImage(
       if (mimeType === 'image/webp2') {
         return await workerBridge.wp2Decode(signal, blob);
       }
-      // If it's not one of those types, fall through and try built-in decoding for a laugh.
     }
-    return await abortable(signal, builtinDecode(blob));
+    // Otherwise fall through and try built-in decoding for a laugh.
+    return await builtinDecode(signal, blob, mimeType);
   } catch (err) {
     if (err.name === 'AbortError') throw err;
     console.log(err);

@@ -10,6 +10,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import * as WebCodecs from '../util/web-codecs';
+
 /**
  * Compare two objects, returning a boolean indicating if
  * they have the same properties and strictly equal values.
@@ -192,17 +195,35 @@ interface DrawableToImageDataOptions {
   sh?: number;
 }
 
+function getWidth(
+  drawable: ImageBitmap | HTMLImageElement | VideoFrame,
+): number {
+  if ('displayWidth' in drawable) {
+    return drawable.displayWidth;
+  }
+  return drawable.width;
+}
+
+function getHeight(
+  drawable: ImageBitmap | HTMLImageElement | VideoFrame,
+): number {
+  if ('displayHeight' in drawable) {
+    return drawable.displayHeight;
+  }
+  return drawable.height;
+}
+
 export function drawableToImageData(
-  drawable: ImageBitmap | HTMLImageElement,
+  drawable: ImageBitmap | HTMLImageElement | VideoFrame,
   opts: DrawableToImageDataOptions = {},
 ): ImageData {
   const {
-    width = drawable.width,
-    height = drawable.height,
+    width = getWidth(drawable),
+    height = getHeight(drawable),
     sx = 0,
     sy = 0,
-    sw = drawable.width,
-    sh = drawable.height,
+    sw = getWidth(drawable),
+    sh = getHeight(drawable),
   } = opts;
 
   // Make canvas same size as image
@@ -216,13 +237,25 @@ export function drawableToImageData(
   return ctx.getImageData(0, 0, width, height);
 }
 
-export async function builtinDecode(blob: Blob): Promise<ImageData> {
-  // Prefer createImageBitmap as it's the off-thread option for Firefox.
-  const drawable =
-    'createImageBitmap' in self
-      ? await createImageBitmap(blob)
-      : await blobToImg(blob);
+export async function builtinDecode(
+  signal: AbortSignal,
+  blob: Blob,
+  mimeType: string,
+): Promise<ImageData> {
+  // If WebCodecs are supported, use that.
+  if (await WebCodecs.isTypeSupported(mimeType)) {
+    assertSignal(signal);
+    try {
+      return await abortable(signal, WebCodecs.decode(blob, mimeType));
+    } catch (e) {}
+  }
+  assertSignal(signal);
 
+  // Prefer createImageBitmap as it's the off-thread option for Firefox.
+  const drawable = await abortable<HTMLImageElement | ImageBitmap>(
+    signal,
+    'createImageBitmap' in self ? createImageBitmap(blob) : blobToImg(blob),
+  );
   return drawableToImageData(drawable);
 }
 

@@ -8,17 +8,20 @@ function uuid() {
 }
 
 function jobPromise(worker, msg) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const id = uuid();
     worker.postMessage({ msg, id });
-    worker.on('message', function f({ result, id: rid }) {
+    worker.on('message', function f({ error, result, id: rid }) {
       if (rid !== id) {
+        return;
+      }
+      if (error) {
+        reject(error);
         return;
       }
       worker.off('message', f);
       resolve(result);
     });
-    worker.on('error', (error) => console.error('Worker error: ', error));
   });
 }
 
@@ -45,14 +48,17 @@ export default class WorkerPool {
         await this._terminateAll();
         return;
       }
-      const { msg, resolve } = value;
+      const { msg, resolve, reject } = value;
       const worker = await this._nextWorker();
-      jobPromise(worker, msg).then((result) => {
-        resolve(result);
-        const writer = this.workerQueue.writable.getWriter();
-        writer.write(worker);
-        writer.releaseLock();
-      });
+      jobPromise(worker, msg)
+        .then((result) => resolve(result))
+        .catch((reason) => reject(reason))
+        .finally(() => {
+          // Return the worker to the pool
+          const writer = this.workerQueue.writable.getWriter();
+          writer.write(worker);
+          writer.releaseLock();
+        });
     }
   }
 
@@ -77,9 +83,9 @@ export default class WorkerPool {
   }
 
   dispatchJob(msg) {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const writer = this.jobQueue.writable.getWriter();
-      writer.write({ msg, resolve });
+      writer.write({ msg, resolve, reject });
       writer.releaseLock();
     });
   }
@@ -87,8 +93,12 @@ export default class WorkerPool {
   static useThisThreadAsWorker(cb) {
     parentPort.on('message', async (data) => {
       const { msg, id } = data;
-      const result = await cb(msg);
-      parentPort.postMessage({ result, id });
+      try {
+        const result = await cb(msg);
+        parentPort.postMessage({ result, id });
+      } catch (e) {
+        parentPort.postMessage({ error: e.message, id });
+      }
     });
   }
 }
