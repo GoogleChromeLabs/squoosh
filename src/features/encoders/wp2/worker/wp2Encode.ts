@@ -14,17 +14,28 @@ import type { WP2Module } from 'codecs/wp2/enc/wp2_enc';
 import type { EncodeOptions } from '../shared/meta';
 
 import { initEmscriptenModule } from 'features/worker-utils';
-import { threads } from 'wasm-feature-detect';
+import { threads, simd } from 'wasm-feature-detect';
 
 import wasmUrl from 'url:codecs/wp2/enc/wp2_enc.wasm';
 
 import wasmUrlWithMT from 'url:codecs/wp2/enc/wp2_enc_mt.wasm';
 import workerUrl from 'omt:codecs/wp2/enc/wp2_enc_mt.worker.js';
 
+import wasmUrlWithMTAndSIMD from 'url:codecs/wp2/enc/wp2_enc_mt_simd.wasm';
+import workerUrlWithSIMD from 'omt:codecs/wp2/enc/wp2_enc_mt_simd.worker.js';
+
 let emscriptenModule: Promise<WP2Module>;
 
 async function init() {
   if (await threads()) {
+    if (await simd()) {
+      const wp2Encoder = await import('codecs/wp2/enc/wp2_enc_mt_simd');
+      return initEmscriptenModule(
+        wp2Encoder.default,
+        wasmUrlWithMTAndSIMD,
+        workerUrlWithSIMD,
+      );
+    }
     const wp2Encoder = await import('codecs/wp2/enc/wp2_enc_mt');
     return initEmscriptenModule(wp2Encoder.default, wasmUrlWithMT, workerUrl);
   }
