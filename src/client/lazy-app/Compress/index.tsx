@@ -268,10 +268,11 @@ const originalDocumentTitle = document.title;
 
 function updateDocumentTitle(loadingFileInfo: LoadingFileInfo): void {
   const { loading, filename } = loadingFileInfo;
-  document.title =
-    filename && loading
-      ? `${filename} - ${originalDocumentTitle}`
-      : originalDocumentTitle;
+  let title = '';
+  if (loading) title += loadingIndicator;
+  if (filename) title += filename + ' - ';
+  title += originalDocumentTitle;
+  document.title = title;
 }
 
 export default class Compress extends Component<Props, State> {
@@ -395,8 +396,7 @@ export default class Compress extends Component<Props, State> {
     if (wasLoading !== isLoading || sourceChanged) {
       updateDocumentTitle({
         loading: isLoading,
-        filename:
-          (isLoading ? loadingIndicator : '') + this.state.source?.file.name,
+        filename: this.state.source?.file.name,
       });
     }
     this.queueUpdateImage();
