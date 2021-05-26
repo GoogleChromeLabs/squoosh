@@ -84,6 +84,11 @@ interface SideJob {
   encoderState?: EncoderState;
 }
 
+interface LoadingFileInfo {
+  loading: boolean;
+  filename?: string;
+}
+
 async function decodeImage(
   signal: AbortSignal,
   blob: Blob,
@@ -257,12 +262,17 @@ function processorStateEquivalent(a: ProcessorState, b: ProcessorState) {
   return true;
 }
 
+const loadingIndicator = '⏳ ';
+
 const originalDocumentTitle = document.title;
 
-function updateDocumentTitle(filename: string = ''): void {
-  document.title = filename
-    ? `${filename} - ${originalDocumentTitle}`
-    : originalDocumentTitle;
+function updateDocumentTitle(loadingFileInfo: LoadingFileInfo): void {
+  const { loading, filename } = loadingFileInfo;
+  let title = '';
+  if (loading) title += loadingIndicator;
+  if (filename) title += filename + ' - ';
+  title += originalDocumentTitle;
+  document.title = title;
 }
 
 export default class Compress extends Component<Props, State> {
@@ -366,7 +376,7 @@ export default class Compress extends Component<Props, State> {
   }
 
   componentWillUnmount(): void {
-    updateDocumentTitle();
+    updateDocumentTitle({ loading: false });
     this.mainAbortController.abort();
     for (const controller of this.sideAbortControllers) {
       controller.abort();
@@ -374,6 +384,21 @@ export default class Compress extends Component<Props, State> {
   }
 
   componentDidUpdate(prevProps: Props, prevState: State): void {
+    const wasLoading =
+      prevState.loading ||
+      prevState.sides[0].loading ||
+      prevState.sides[1].loading;
+    const isLoading =
+      this.state.loading ||
+      this.state.sides[0].loading ||
+      this.state.sides[1].loading;
+    const sourceChanged = prevState.source !== this.state.source;
+    if (wasLoading !== isLoading || sourceChanged) {
+      updateDocumentTitle({
+        loading: isLoading,
+        filename: this.state.source?.file.name,
+      });
+    }
     this.queueUpdateImage();
   }
 
@@ -669,7 +694,6 @@ export default class Compress extends Component<Props, State> {
             }) as [Side, Side],
           };
           newState = stateForNewSourceData(newState);
-          updateDocumentTitle(source.file.name);
           return newState;
         });
       } catch (err) {
