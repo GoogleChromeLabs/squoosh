@@ -2,7 +2,7 @@ import {
   builtinResize,
   BuiltinResizeMethod,
   drawableToImageData,
-} from 'client/lazy-app/util';
+} from 'client/lazy-app/util/canvas';
 import {
   BrowserResizeOptions,
   VectorResizeOptions,
