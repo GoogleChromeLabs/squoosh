@@ -51,11 +51,14 @@ export class Options extends Component<Props, State> {
       mipmap: inputFieldChecked(form.mipmap, options.mipmap),
       srgb_mipmap: inputFieldChecked(form.srgb_mipmap, options.srgb_mipmap),
       mipmap_filter: form.mipmap_filter?.value ?? defaultOptions.mipmap_filter,
+      // FIXME: We really should support range remapping
+      // in the range-slider component. For now I’ll
+      // shoe-horn it into the state management.
       mipmap_min_dimension:
         2 **
         inputFieldValueAsNumber(
           form.mipmap_min_dimension,
-          options.mipmap_min_dimension,
+          Math.floor(Math.log2(options.mipmap_min_dimension)),
         ),
       quality: inputFieldValueAsNumber(form.quality, options.quality),
       compression: inputFieldValueAsNumber(
