@@ -28,6 +28,7 @@ CODEC_CPP_SOURCE_FILES := \
 	encoder/basisu_global_selector_palette_helpers.cpp \
 	encoder/basisu_resampler.cpp \
 	encoder/basisu_kernels_sse.cpp \
+	encoder/basisu_resample_filters.cpp \
 	encoder/jpgd.cpp \
 	encoder/lodepng.cpp \
 	transcoder/basisu_transcoder.cpp
