@@ -1,4 +1,4 @@
-import { drawableToImageData } from 'client/lazy-app/util';
+import { drawableToImageData } from '../canvas';
 
 const hasImageDecoder = typeof ImageDecoder !== 'undefined';
 export async function isTypeSupported(mimeType: string): Promise<boolean> {
