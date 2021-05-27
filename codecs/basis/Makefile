@@ -7,8 +7,7 @@ ENVIRONMENT = worker
 OUT_JS := enc/basis_enc.js dec/basis_dec.js
 OUT_WASM := $(OUT_JS:.js=.wasm)
 
-# TODO: Go back to -O3
-COMMON_FLAGS := -O0 -g -fno-strict-aliasing
+COMMON_FLAGS := -O3 -fno-strict-aliasing
 
 override 	CXXFLAGS += $(COMMON_FLAGS)
 override 	CFLAGS += $(COMMAN_FLAGS)
@@ -36,9 +35,6 @@ CODEC_CPP_SOURCE_FILES := \
 CODEC_C_SOURCE_FILES := \
 	encoder/apg_bmp.c \
 	zstd/zstd.c
-
-# TODO: Remove me
-override CXXFLAGS += -DBASISU_FORCE_DEVEL_MESSAGES=1
 
 .PHONY: all clean
 
