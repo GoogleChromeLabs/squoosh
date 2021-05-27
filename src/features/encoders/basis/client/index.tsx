@@ -44,9 +44,8 @@ export class Options extends Component<Props, State> {
     const { options } = this.props;
 
     const newOptions: EncodeOptions = {
-      // Copy over options the form doesn't currently care about, eg arithmetic
       ...this.props.options,
-      uastc: inputFieldChecked(form.uastc, options.uastc),
+      uastc: form.mode.value === '1',
       y_flip: inputFieldChecked(form.y_flip, options.y_flip),
       perceptual: inputFieldChecked(form.perceptual, options.perceptual),
       mipmap: inputFieldChecked(form.mipmap, options.mipmap),
@@ -67,6 +66,17 @@ export class Options extends Component<Props, State> {
     return (
       <form class={style.optionsSection} onSubmit={preventDefault}>
         <div class={style.optionOneCell}>
+          <label class={style.optionTextFirst}>
+            Mode:
+            <Select
+              name="mode"
+              value={options.uastc ? '1' : '0'}
+              onChange={this.onChange}
+            >
+              <option value="0">Compression (ETC1S)</option>
+              <option value="1">Quality (UASTC)</option>
+            </Select>
+          </label>
           <Range
             name="quality"
             min="1"
@@ -106,14 +116,6 @@ export class Options extends Component<Props, State> {
         <Expander>
           {showAdvanced ? (
             <div>
-              <label class={style.optionToggle}>
-                UASTC
-                <Checkbox
-                  name="uastc"
-                  checked={options.uastc}
-                  onChange={this.onChange}
-                />
-              </label>
               <label class={style.optionToggle}>
                 Perceptual distance metric
                 <Checkbox
