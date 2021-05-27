@@ -13,8 +13,10 @@ struct BasisOptions {
   bool uastc;
   bool mipmap;
   bool srgb_mipmap;
+  std::string mipmap_filter;
   bool perceptual;
   bool y_flip;
+  uint32_t mipmap_min_dimension;
 };
 
 thread_local const val Uint8Array = val::global("Uint8Array");
@@ -53,7 +55,8 @@ val encode(std::string image_in, int image_width, int image_height, BasisOptions
   params.m_y_flip = opts.y_flip;
   params.m_mip_gen = opts.mipmap;
   params.m_mip_srgb = opts.srgb_mipmap;
-  params.m_mip_filter = "box";
+  params.m_mip_filter = opts.mipmap_filter;
+  params.m_mip_smallest_dimension = opts.mipmap_min_dimension;
   params.m_quality_level = opts.quality;
   params.m_compression_level = opts.compression;
   params.m_source_images.push_back(img);
@@ -80,7 +83,9 @@ EMSCRIPTEN_BINDINGS(my_module) {
       .field("perceptual", &BasisOptions::perceptual)
       .field("y_flip", &BasisOptions::y_flip)
       .field("mipmap", &BasisOptions::mipmap)
-      .field("srgb_mipmap", &BasisOptions::srgb_mipmap);
+      .field("srgb_mipmap", &BasisOptions::srgb_mipmap)
+      .field("mipmap_filter", &BasisOptions::mipmap_filter)
+      .field("mipmap_min_dimension", &BasisOptions::mipmap_min_dimension);
 
   function("encode", &encode);
 }

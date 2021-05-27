@@ -1,6 +1,6 @@
-import { EncodeOptions } from '../shared/meta';
+import { EncodeOptions, defaultOptions } from '../shared/meta';
 import type WorkerBridge from 'client/lazy-app/worker-bridge';
-import { h, Component } from 'preact';
+import { h, Component, Fragment } from 'preact';
 import {
   inputFieldChecked,
   inputFieldValueAsNumber,
@@ -50,7 +50,13 @@ export class Options extends Component<Props, State> {
       perceptual: inputFieldChecked(form.perceptual, options.perceptual),
       mipmap: inputFieldChecked(form.mipmap, options.mipmap),
       srgb_mipmap: inputFieldChecked(form.srgb_mipmap, options.srgb_mipmap),
-      // .value
+      mipmap_filter: form.mipmap_filter?.value ?? defaultOptions.mipmap_filter,
+      mipmap_min_dimension:
+        2 **
+        inputFieldValueAsNumber(
+          form.mipmap_min_dimension,
+          options.mipmap_min_dimension,
+        ),
       quality: inputFieldValueAsNumber(form.quality, options.quality),
       compression: inputFieldValueAsNumber(
         form.compression,
@@ -61,22 +67,20 @@ export class Options extends Component<Props, State> {
   };
 
   render({ options }: Props, { showAdvanced }: State) {
-    // I'm rendering both lossy and lossless forms, as it becomes much easier when
-    // gathering the data.
     return (
       <form class={style.optionsSection} onSubmit={preventDefault}>
+        <label class={style.optionTextFirst}>
+          Mode:
+          <Select
+            name="mode"
+            value={options.uastc ? '1' : '0'}
+            onChange={this.onChange}
+          >
+            <option value="0">Compression (ETC1S)</option>
+            <option value="1">Quality (UASTC)</option>
+          </Select>
+        </label>
         <div class={style.optionOneCell}>
-          <label class={style.optionTextFirst}>
-            Mode:
-            <Select
-              name="mode"
-              value={options.uastc ? '1' : '0'}
-              onChange={this.onChange}
-            >
-              <option value="0">Compression (ETC1S)</option>
-              <option value="1">Quality (UASTC)</option>
-            </Select>
-          </label>
           <Range
             name="quality"
             min="1"
@@ -134,14 +138,58 @@ export class Options extends Component<Props, State> {
               </label>
               <Expander>
                 {options.mipmap ? (
-                  <label class={style.optionToggle}>
-                    sRGB Mipmapping
-                    <Checkbox
-                      name="srgb_mipmap"
-                      checked={options.srgb_mipmap}
-                      onChange={this.onChange}
-                    />
-                  </label>
+                  <Fragment>
+                    <div class={style.optionOneCell}>
+                      <Range
+                        min="0"
+                        max="10"
+                        name="mipmap_min_dimension"
+                        value={Math.floor(
+                          Math.log2(options.mipmap_min_dimension),
+                        )}
+                        onInput={this.onChange}
+                      >
+                        Smallest mipmap (2^x):
+                      </Range>
+                    </div>
+                    <label class={style.optionTextFirst}>
+                      Resampling filter:
+                      <Select
+                        name="mipmap_filter"
+                        value={options.mipmap_filter}
+                        onChange={this.onChange}
+                      >
+                        <option value="box">Box</option>
+                        <option value="tent">Tent</option>
+                        <option value="bell">Bell</option>
+                        <option value="b-spline">B-Spline</option>
+                        <option value="mitchell">Mitchell</option>
+                        <option value="blackman">Blackman</option>
+                        <option value="lanczos3">Lanczos3</option>
+                        <option value="lanczos4">Lanczos4</option>
+                        <option value="lanczos6">Lanczos6</option>
+                        <option value="lanczos12">Lanczos12</option>
+                        <option value="kaiser">Kaiser</option>
+                        <option value="gaussian">Gaussian</option>
+                        <option value="catmullrom">Catmullrom</option>
+                        <option value="quadratic_interp">
+                          Quadratic Interpolation
+                        </option>
+                        <option value="quadratic_approx">
+                          Quadratic Approx
+                        </option>
+                        <option value="quadratic_mix">Quadratic Mix</option>
+                      </Select>
+                    </label>
+                    <label class={style.optionToggle}>
+                      sRGB Mipmapping
+                      <Checkbox
+                        name="srgb_mipmap"
+                        checked={options.srgb_mipmap}
+                        onChange={this.onChange}
+                      />
+                    </label>
+                  </Fragment>
                 ) : null}
               </Expander>
             </div>

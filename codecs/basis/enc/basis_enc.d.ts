@@ -6,6 +6,8 @@ export interface EncodeOptions {
   mipmap: boolean;
   srgb_mipmap: boolean;
   perceptual: boolean;
+  mipmap_filter: string;
+  mipmap_min_dimension: number;
 }
 
 export interface BasisModule extends EmscriptenWasm.Module {

@@ -25,4 +25,6 @@ export const defaultOptions: EncodeOptions = {
   srgb_mipmap: false,
   perceptual: true,
   y_flip: false,
+  mipmap_filter: 'kaiser',
+  mipmap_min_dimension: 1,
 };
