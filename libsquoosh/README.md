@@ -81,7 +81,7 @@ When you have encoded an image, you normally want to write it to a file.
 This example takes an image that has been encoded as a `jpg` and writes it to a file:
 
 ```js
-const rawEncodedImage = (await image.encodedWidth.mozjpeg).binary;
+const rawEncodedImage = (await image.encodedWith.mozjpeg).binary;
 
 fs.writeFile('/path/to/new/image.jpg', rawEncodedImage);
 ```
