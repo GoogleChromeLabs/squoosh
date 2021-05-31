@@ -1,5 +1,6 @@
 import resolve from '@rollup/plugin-node-resolve';
 import cjs from '@rollup/plugin-commonjs';
+import simpleTS from './lib/simple-ts';
 import asset from './lib/asset-plugin.js';
 import json from './lib/json-plugin.js';
 import autojson from './lib/autojson-plugin.js';
@@ -20,6 +21,7 @@ export default {
     asset(),
     autojson(),
     json(),
+    simpleTS('.'),
     getBabelOutputPlugin({
       babelrc: false,
       configFile: false,
