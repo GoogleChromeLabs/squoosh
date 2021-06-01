@@ -33,9 +33,21 @@ import initialCssPlugin from './lib/initial-css-plugin';
 import serviceWorkerPlugin from './lib/sw-plugin';
 import dataURLPlugin from './lib/data-url-plugin';
 import entryDataPlugin, { fileNameToURL } from './lib/entry-data-plugin';
+import dedent from 'dedent';
 
 function resolveFileUrl({ fileName }) {
   return JSON.stringify(fileNameToURL(fileName));
+}
+
+function resolveImportMetaUrlInStaticBuild(property, { moduleId }) {
+  if (property !== 'url') return;
+  throw new Error(dedent`
+    Attempted to use a \`new URL(..., import.meta.url)\` pattern in ${path.relative(
+      process.cwd(),
+      moduleId,
+    )} for URL that needs to end up in static HTML.
+    This is currently unsupported.
+  `);
 }
 
 const dir = '.tmp/build';
@@ -100,7 +112,7 @@ export default async function ({ watch }) {
     },
     preserveModules: true,
     plugins: [
-      { resolveFileUrl },
+      { resolveFileUrl, resolveImportMeta: resolveImportMetaUrlInStaticBuild },
       clientBundlePlugin(
         {
           external: ['worker_threads'],
