@@ -9,13 +9,19 @@ import artwork from 'url:./imgs/demos/demo-artwork.jpg';
 import deviceScreen from 'url:./imgs/demos/demo-device-screen.png';
 import largePhotoIcon from 'url:./imgs/demos/icon-demo-large-photo.jpg';
 import artworkIcon from 'url:./imgs/demos/icon-demo-artwork.jpg';
-import deviceScreenIcon from 'url:./imgs/demos/icon-demo-device-screen.jpg';
+//import deviceScreenIcon from 'url:./imgs/demos/icon-demo-device-screen.jpg';
 import logoIcon from 'url:./imgs/demos/icon-demo-logo.png';
 import logoWithText from 'url:./imgs/logo-with-text.svg';
 import * as style from './style.css';
 import type SnackBarElement from 'shared/custom-els/snack-bar';
 import 'shared/custom-els/snack-bar';
 import { startBlobs } from './blob-anim/meta';
+
+const deviceScreenIcon = new URL(
+  './imgs/demos/icon-demo-device-screen.jpg',
+  // @ts-ignore
+  import.meta.url,
+).href;
 
 const demos = [
   {
