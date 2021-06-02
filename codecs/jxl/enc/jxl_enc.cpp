@@ -10,15 +10,14 @@ using namespace emscripten;
 thread_local const val Uint8Array = val::global("Uint8Array");
 
 struct JXLOptions {
-  // 1 = slowest
-  // 7 = fastest
-  int speed;
+  int effort;
   float quality;
   bool progressive;
   int epf;
   int nearLossless;
   bool lossyPalette;
   size_t decodingSpeedTier;
+  bool noise;
 };
 
 val encode(std::string image, int width, int height, JXLOptions options) {
@@ -33,10 +32,16 @@ val encode(std::string image, int width, int height, JXLOptions options) {
   pool_ptr = &pool;
 #endif
 
+  size_t st = 10 - options.effort;
+  cparams.speed_tier = jxl::SpeedTier(st);
+
   cparams.epf = options.epf;
-  cparams.speed_tier = static_cast<jxl::SpeedTier>(options.speed);
   cparams.near_lossless = options.nearLossless;
   cparams.decoding_speed_tier = options.decodingSpeedTier;
+
+  if (options.noise) {
+    cparams.noise = jxl::Override::kOn;
+  }
 
   if (options.lossyPalette) {
     cparams.lossy_palette = true;
@@ -110,12 +115,13 @@ val encode(std::string image, int width, int height, JXLOptions options) {
 
 EMSCRIPTEN_BINDINGS(my_module) {
   value_object<JXLOptions>("JXLOptions")
-      .field("speed", &JXLOptions::speed)
+      .field("effort", &JXLOptions::effort)
       .field("quality", &JXLOptions::quality)
       .field("progressive", &JXLOptions::progressive)
       .field("nearLossless", &JXLOptions::nearLossless)
       .field("lossyPalette", &JXLOptions::lossyPalette)
       .field("decodingSpeedTier", &JXLOptions::decodingSpeedTier)
+      .field("noise", &JXLOptions::noise)
       .field("epf", &JXLOptions::epf);
 
   function("encode", &encode);
