@@ -1,4 +1,4 @@
-import { canvasEncode } from 'client/lazy-app/util';
+import { canvasEncode } from 'client/lazy-app/util/canvas';
 import WorkerBridge from 'client/lazy-app/worker-bridge';
 import { qualityOption } from 'features/client-utils';
 import { mimeType, EncodeOptions } from '../shared/meta';

@@ -1,5 +1,5 @@
+import { canvasEncode } from 'client/lazy-app/util/canvas';
 import {
-  canvasEncode,
   abortable,
   blobToArrayBuffer,
   inputFieldChecked,

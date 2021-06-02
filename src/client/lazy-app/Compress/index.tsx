@@ -4,7 +4,6 @@ import * as style from './style.css';
 import 'add-css:./style.css';
 import {
   blobToImg,
-  drawableToImageData,
   blobToText,
   builtinDecode,
   sniffMimeType,
@@ -33,6 +32,7 @@ import WorkerBridge from '../worker-bridge';
 import { resize } from 'features/processors/resize/client';
 import type SnackBarElement from 'shared/custom-els/snack-bar';
 import { generateCliInvocation } from '../util/cli';
+import { drawableToImageData } from '../util/canvas';
 
 export type OutputType = EncoderType | 'identity';
 
