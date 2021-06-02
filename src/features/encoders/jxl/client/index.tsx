@@ -29,9 +29,8 @@ interface State {
   slightLoss: boolean;
   autoEdgePreservingFilter: boolean;
   decodingSpeedTier: number;
+  noise: boolean;
 }
-
-const maxSpeed = 7;
 
 export class Options extends Component<Props, State> {
   static getDerivedStateFromProps(
@@ -47,7 +46,7 @@ export class Options extends Component<Props, State> {
     // Create default form state from options
     return {
       options,
-      effort: maxSpeed - options.speed,
+      effort: options.effort,
       quality: options.quality,
       progressive: options.progressive,
       edgePreservingFilter: options.epf === -1 ? 2 : options.epf,
@@ -55,6 +54,7 @@ export class Options extends Component<Props, State> {
       slightLoss: options.lossyPalette,
       autoEdgePreservingFilter: options.epf === -1,
       decodingSpeedTier: options.decodingSpeedTier,
+      noise: options.noise,
     };
   }
 
@@ -87,7 +87,7 @@ export class Options extends Component<Props, State> {
         };
 
         const newOptions: EncodeOptions = {
-          speed: maxSpeed - optionState.effort,
+          effort: optionState.effort,
           quality: optionState.lossless ? 100 : optionState.quality,
           progressive: optionState.progressive,
           epf: optionState.autoEdgePreservingFilter
@@ -96,6 +96,7 @@ export class Options extends Component<Props, State> {
           nearLossless: 0,
           lossyPalette: optionState.lossless ? optionState.slightLoss : false,
           decodingSpeedTier: optionState.decodingSpeedTier,
+          noise: optionState.noise,
         };
 
         // Updating options, so we don't recalculate in getDerivedStateFromProps.
@@ -121,6 +122,7 @@ export class Options extends Component<Props, State> {
       slightLoss,
       autoEdgePreservingFilter,
       decodingSpeedTier,
+      noise,
     }: State,
   ) {
     // I'm rendering both lossy and lossless forms, as it becomes much easier when
@@ -164,7 +166,6 @@ export class Options extends Component<Props, State> {
               <label class={style.optionToggle}>
                 Auto edge filter
                 <Checkbox
-                  name="autoEdgeFilter"
                   checked={autoEdgePreservingFilter}
                   onChange={this._inputChange(
                     'autoEdgePreservingFilter',
@@ -199,6 +200,13 @@ export class Options extends Component<Props, State> {
                   Optimise for decoding speed (worse compression):
                 </Range>
               </div>
+              <label class={style.optionToggle}>
+                Noise synthesis
+                <Checkbox
+                  checked={noise}
+                  onChange={this._inputChange('noise', 'boolean')}
+                />
+              </label>
             </div>
           )}
         </Expander>
@@ -212,8 +220,8 @@ export class Options extends Component<Props, State> {
         </label>
         <div class={style.optionOneCell}>
           <Range
-            min="0"
-            max={maxSpeed - 1}
+            min="3"
+            max="9"
             value={effort}
             onInput={this._inputChange('effort', 'number')}
           >

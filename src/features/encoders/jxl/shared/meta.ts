@@ -18,11 +18,12 @@ export const label = 'JPEG XL (beta)';
 export const mimeType = 'image/jxl';
 export const extension = 'jxl';
 export const defaultOptions: EncodeOptions = {
-  speed: 4,
+  effort: 7,
   quality: 75,
   progressive: false,
   epf: -1,
   nearLossless: 0,
   lossyPalette: false,
   decodingSpeedTier: 0,
+  noise: false,
 };
