@@ -22,7 +22,7 @@ export default async function crop(
   const cols = width * 4;
   const newCols = newWidth * 4;
 
-  const pixels = new Uint8ClampedArray(data.buffer, 0, newHeight * newCols);
+  const pixels = new Uint8ClampedArray(newHeight * newCols);
   for (let y = 0; y < newHeight; y++) {
     const x = left * 4;
     const row = new Uint8ClampedArray(
@@ -33,5 +33,5 @@ export default async function crop(
     pixels.set(row, y * newCols);
   }
 
-  return new ImageData(pixels.slice(), newWidth, newHeight);
+  return new ImageData(pixels, newWidth, newHeight);
 }
