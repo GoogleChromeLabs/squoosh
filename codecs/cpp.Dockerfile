@@ -8,6 +8,7 @@ ENV LDFLAGS "${CFLAGS} \
 -s PTHREAD_POOL_SIZE=navigator.hardwareConcurrency \
 -s ALLOW_MEMORY_GROWTH=1 \
 -s TEXTDECODER=2 \
+-s NODEJS_CATCH_EXIT=0 -s NODEJS_CATCH_REJECTION=0 \
 "
 # Build and cache standard libraries with these flags + Embind.
 RUN emcc ${CXXFLAGS} ${LDFLAGS} --bind -xc++ /dev/null -o /dev/null
