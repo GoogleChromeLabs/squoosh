@@ -3,7 +3,7 @@
   "version": "0.2.3",
   "description": "A Node library for Squoosh",
   "public": true,
-  "main": "/build/index.js",
+  "main": "./build/index.js",
   "files": [
     "/build/*"
   ],
