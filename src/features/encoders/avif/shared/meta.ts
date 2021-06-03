@@ -10,20 +10,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import type { EncodeOptions } from 'codecs/avif/enc/avif_enc';
+import { EncodeOptions, AVIFTune } from 'codecs/avif/enc/avif_enc';
 
-export { EncodeOptions };
+export { EncodeOptions, AVIFTune };
 
 export const label = 'AVIF';
 export const mimeType = 'image/avif';
 export const extension = 'avif';
 export const defaultOptions: EncodeOptions = {
-  minQuantizer: 33,
-  maxQuantizer: 63,
-  minQuantizerAlpha: 33,
-  maxQuantizerAlpha: 63,
+  cqLevel: 33,
+  cqAlphaLevel: -1,
+  denoiseLevel: 0,
   tileColsLog2: 0,
   tileRowsLog2: 0,
-  speed: 8,
+  speed: 6,
   subsample: 1,
+  chromaDeltaQ: false,
+  sharpness: 0,
+  tune: AVIFTune.auto,
 };

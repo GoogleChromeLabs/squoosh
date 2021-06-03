@@ -18,6 +18,7 @@ import commonjs from '@rollup/plugin-commonjs';
 import { terser } from 'rollup-plugin-terser';
 import OMT from '@surma/rollup-plugin-off-main-thread';
 import replace from '@rollup/plugin-replace';
+import { importMetaAssets } from '@web/rollup-plugin-import-meta-assets';
 
 import simpleTS from './lib/simple-ts';
 import clientBundlePlugin from './lib/client-bundle-plugin';
@@ -31,17 +32,22 @@ import featurePlugin from './lib/feature-plugin';
 import initialCssPlugin from './lib/initial-css-plugin';
 import serviceWorkerPlugin from './lib/sw-plugin';
 import dataURLPlugin from './lib/data-url-plugin';
-import entryDataPlugin from './lib/entry-data-plugin';
+import entryDataPlugin, { fileNameToURL } from './lib/entry-data-plugin';
+import dedent from 'dedent';
 
 function resolveFileUrl({ fileName }) {
-  return JSON.stringify(fileName.replace(/^static\//, '/'));
+  return JSON.stringify(fileNameToURL(fileName));
 }
 
-// With AMD output, Rollup always uses document.baseURI, which breaks in workers.
-// This fixes it:
-function resolveImportMeta(property, { chunkId }) {
+function resolveImportMetaUrlInStaticBuild(property, { moduleId }) {
   if (property !== 'url') return;
-  return `new URL(${resolveFileUrl({ fileName: chunkId })}, location).href`;
+  throw new Error(dedent`
+    Attempted to use a \`new URL(..., import.meta.url)\` pattern in ${path.relative(
+      process.cwd(),
+      moduleId,
+    )} for URL that needs to end up in static HTML.
+    This is currently unsupported.
+  `);
 }
 
 const dir = '.tmp/build';
@@ -62,6 +68,7 @@ export default async function ({ watch }) {
     path.join(__dirname, 'lib', 'omt.ejs'),
     'utf-8',
   );
+
   await del('.tmp/build');
 
   const isProduction = !watch;
@@ -83,7 +90,7 @@ export default async function ({ watch }) {
     ]),
     urlPlugin(),
     dataURLPlugin(),
-    cssPlugin(resolveFileUrl),
+    cssPlugin(),
   ];
 
   return {
@@ -105,13 +112,14 @@ export default async function ({ watch }) {
     },
     preserveModules: true,
     plugins: [
-      { resolveFileUrl, resolveImportMeta },
+      { resolveFileUrl, resolveImportMeta: resolveImportMetaUrlInStaticBuild },
       clientBundlePlugin(
         {
           external: ['worker_threads'],
           plugins: [
-            { resolveFileUrl, resolveImportMeta },
+            { resolveFileUrl },
             OMT({ loader: await omtLoaderPromise }),
+            importMetaAssets(),
             serviceWorkerPlugin({
               output: 'static/serviceworker.js',
             }),

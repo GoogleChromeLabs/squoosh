@@ -1,5 +1,6 @@
 CODEC_URL = https://github.com/google/butteraugli/archive/71b18b636b9c7d1ae0c1d3730b85b3c127eb4511.tar.gz
 CODEC_DIR = node_modules/butteraugli
+ENVIRONMENT = node
 
 OUT_JS = visdif.js
 OUT_WASM = $(OUT_JS:.js=.wasm)
@@ -8,19 +9,18 @@ OUT_WASM = $(OUT_JS:.js=.wasm)
 
 all: $(OUT_JS)
 
-%.js: $(CODEC_DIR)
+%.js: visdif.cpp $(CODEC_DIR)/butteraugli/butteraugli.cc
 	$(CXX) \
 		-I $(CODEC_DIR) \
 		${CXXFLAGS} \
 		${LDFLAGS} \
 		--bind \
-		--closure 1 \
-		-s ALLOW_MEMORY_GROWTH=1 \
-		-s MODULARIZE=1 \
-		-s 'EXPORT_NAME="$(basename $(@F))"' \
+		-s ENVIRONMENT=$(ENVIRONMENT) \
+		-s EXPORT_ES6=1 \
 		-o $@ \
-		visdif.cpp \
-		$(CODEC_DIR)/butteraugli/butteraugli.cc
+		$+
+
+$(CODEC_DIR)/butteraugli/butteraugli.cc: $(CODEC_DIR)
 
 $(CODEC_DIR):
 	mkdir -p $@

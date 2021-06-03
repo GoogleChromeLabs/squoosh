@@ -2,8 +2,8 @@
 #include <emscripten/val.h>
 
 #include "lib/jxl/base/thread_pool_internal.h"
+#include "lib/jxl/enc_external_image.h"
 #include "lib/jxl/enc_file.h"
-#include "lib/jxl/external_image.h"
 
 using namespace emscripten;
 
@@ -18,6 +18,7 @@ struct JXLOptions {
   int epf;
   int nearLossless;
   bool lossyPalette;
+  size_t decodingSpeedTier;
 };
 
 val encode(std::string image, int width, int height, JXLOptions options) {
@@ -35,22 +36,12 @@ val encode(std::string image, int width, int height, JXLOptions options) {
   cparams.epf = options.epf;
   cparams.speed_tier = static_cast<jxl::SpeedTier>(options.speed);
   cparams.near_lossless = options.nearLossless;
+  cparams.decoding_speed_tier = options.decodingSpeedTier;
 
   if (options.lossyPalette) {
     cparams.lossy_palette = true;
     cparams.palette_colors = 0;
     cparams.options.predictor = jxl::Predictor::Zero;
-  }
-
-  // Reduce memory usage of tree learning for lossless data.
-  // TODO(veluca93): this is a mitigation for excessive memory usage in the JXL encoder.
-  float megapixels = width * height * 0.000001;
-  if (megapixels > 8) {
-    cparams.options.nb_repeats = 0.1;
-  } else if (megapixels > 4) {
-    cparams.options.nb_repeats = 0.3;
-  } else {
-    // default is OK.
   }
 
   float quality = options.quality;
@@ -99,10 +90,10 @@ val encode(std::string image, int width, int height, JXLOptions options) {
 
   uint8_t* inBuffer = (uint8_t*)image.c_str();
 
-  auto result = jxl::ConvertImage(
+  auto result = jxl::ConvertFromExternal(
       jxl::Span<const uint8_t>(reinterpret_cast<const uint8_t*>(image.data()), image.size()), width,
       height, jxl::ColorEncoding::SRGB(/*is_gray=*/false), /*has_alpha=*/true,
-      /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/8, JXL_LITTLE_ENDIAN,
+      /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/8, /*endiannes=*/JXL_LITTLE_ENDIAN,
       /*flipped_y=*/false, pool_ptr, main);
 
   if (!result) {
@@ -124,6 +115,7 @@ EMSCRIPTEN_BINDINGS(my_module) {
       .field("progressive", &JXLOptions::progressive)
       .field("nearLossless", &JXLOptions::nearLossless)
       .field("lossyPalette", &JXLOptions::lossyPalette)
+      .field("decodingSpeedTier", &JXLOptions::decodingSpeedTier)
       .field("epf", &JXLOptions::epf);
 
   function("encode", &encode);

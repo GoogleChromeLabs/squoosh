@@ -5,7 +5,7 @@ import './custom-els/PinchZoom';
 import './custom-els/TwoUp';
 import * as style from './style.css';
 import 'add-css:./style.css';
-import { shallowEqual, drawDataToCanvas } from '../../util';
+import { shallowEqual } from '../../util';
 import {
   ToggleBackgroundIcon,
   AddIcon,
@@ -19,6 +19,7 @@ import { cleanSet } from '../../util/clean-modify';
 import type { SourceImage } from '../../Compress';
 import { linkRef } from 'shared/prerendered-app/util';
 import Flyout from '../Flyout';
+import { drawDataToCanvas } from 'client/lazy-app/util/canvas';
 
 interface Props {
   source?: SourceImage;

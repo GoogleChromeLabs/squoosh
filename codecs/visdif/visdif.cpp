@@ -7,7 +7,7 @@ using namespace butteraugli;
 
 // Turns an interleaved RGBA buffer into 4 planes for each color channel
 void planarize(std::vector<ImageF>& img,
-               const char* rgba,
+               const uint8_t* rgba,
                int width,
                int height,
                float gamma = 2.2) {
@@ -22,10 +22,10 @@ void planarize(std::vector<ImageF>& img,
     float* const row_b = img[2].Row(y);
     float* const row_a = img[3].Row(y);
     for (int x = 0; x < width; x++) {
-      row_r[x] = 255.0 * pow(rgba[y * width * 4 + x * 4 + 0] / 255.0, gamma);
-      row_g[x] = 255.0 * pow(rgba[y * width * 4 + x * 4 + 1] / 255.0, gamma);
-      row_b[x] = 255.0 * pow(rgba[y * width * 4 + x * 4 + 2] / 255.0, gamma);
-      row_a[x] = 255.0 * pow(rgba[y * width * 4 + x * 4 + 3] / 255.0, gamma);
+      row_r[x] = 255.0 * pow(rgba[(y * width + x) * 4 + 0] / 255.0, gamma);
+      row_g[x] = 255.0 * pow(rgba[(y * width + x) * 4 + 1] / 255.0, gamma);
+      row_b[x] = 255.0 * pow(rgba[(y * width + x) * 4 + 2] / 255.0, gamma);
+      row_a[x] = 255.0 * pow(rgba[(y * width + x) * 4 + 3] / 255.0, gamma);
     }
   }
 }
@@ -37,14 +37,14 @@ class VisDiff {
 
  public:
   VisDiff(std::string ref_img, int width, int height) {
-    planarize(this->ref_img, ref_img.c_str(), width, height);
+    planarize(this->ref_img, (uint8_t*)ref_img.c_str(), width, height);
     this->width = width;
     this->height = height;
   }
 
   double distance(std::string other_img) {
     std::vector<ImageF> img;
-    planarize(img, other_img.c_str(), width, height);
+    planarize(img, (uint8_t*)other_img.c_str(), width, height);
 
     ImageF diffmap;
     double diffvalue;

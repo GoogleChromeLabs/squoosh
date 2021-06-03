@@ -15,6 +15,7 @@ crate-type = ["cdylib"]
 png = "0.16.7"
 wasm-bindgen = "0.2.68"
 web-sys = { version = "0.3.45", features = ["ImageData"] }
+rgb = "0.8.25"
 
 [profile.release]
 lto = true

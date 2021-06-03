@@ -69,7 +69,7 @@ export default class TwoUp extends HTMLElement {
       },
     });
 
-    window.addEventListener('keydown', event => this._onKeyDown(event));
+    window.addEventListener('keydown', (event) => this._onKeyDown(event));
   }
 
   connectedCallback() {
@@ -98,19 +98,24 @@ export default class TwoUp extends HTMLElement {
 
   // KeyDown event handler
   private _onKeyDown(event: KeyboardEvent) {
+    const target = event.target;
+    if (target instanceof HTMLElement && target.closest('input')) return;
+
     if (event.code === 'Digit1' || event.code === 'Numpad1') {
       this._position = 0;
       this._relativePosition = 0;
       this._setPosition();
     } else if (event.code === 'Digit2' || event.code === 'Numpad2') {
-      const dimensionAxis = this.orientation === 'vertical' ? 'height' : 'width';
+      const dimensionAxis =
+        this.orientation === 'vertical' ? 'height' : 'width';
       const bounds = this.getBoundingClientRect();
 
       this._position = bounds[dimensionAxis] / 2;
-      this._relativePosition = (this._position / bounds[dimensionAxis]) / 2;
+      this._relativePosition = this._position / bounds[dimensionAxis] / 2;
       this._setPosition();
     } else if (event.code === 'Digit3' || event.code === 'Numpad3') {
-      const dimensionAxis = this.orientation === 'vertical' ? 'height' : 'width';
+      const dimensionAxis =
+        this.orientation === 'vertical' ? 'height' : 'width';
       const bounds = this.getBoundingClientRect();
 
       this._position = bounds[dimensionAxis];

@@ -17,10 +17,6 @@ $(OUT_JS): $(CODEC_OUT)
 		${CXXFLAGS} \
 		${LDFLAGS} \
 		--bind \
-		--closure 1 \
-		-s ALLOW_MEMORY_GROWTH=1 \
-		-s MODULARIZE=1 \
-		-s TEXTDECODER=2 \
 		-s ENVIRONMENT=$(ENVIRONMENT) \
 		-s EXPORT_ES6=1 \
 		-o $@ \
