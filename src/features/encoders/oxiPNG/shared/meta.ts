@@ -12,6 +12,7 @@
  */
 export interface EncodeOptions {
   level: number;
+  interlace: boolean;
 }
 
 export const label = 'OxiPNG';
@@ -20,4 +21,5 @@ export const extension = 'png';
 
 export const defaultOptions: EncodeOptions = {
   level: 2,
+  interlace: false,
 };

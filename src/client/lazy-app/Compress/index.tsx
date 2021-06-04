@@ -4,7 +4,6 @@ import * as style from './style.css';
 import 'add-css:./style.css';
 import {
   blobToImg,
-  drawableToImageData,
   blobToText,
   builtinDecode,
   sniffMimeType,
@@ -32,8 +31,8 @@ import Results from './Results';
 import WorkerBridge from '../worker-bridge';
 import { resize } from 'features/processors/resize/client';
 import type SnackBarElement from 'shared/custom-els/snack-bar';
-import { Arrow, ExpandIcon } from '../icons';
 import { generateCliInvocation } from '../util/cli';
+import { drawableToImageData } from '../util/canvas';
 
 export type OutputType = EncoderType | 'identity';
 
@@ -70,7 +69,6 @@ interface State {
   sides: [Side, Side];
   /** Source image load */
   loading: boolean;
-  error?: string;
   mobileView: boolean;
   preprocessorState: PreprocessorState;
   encodedPreprocessorState?: PreprocessorState;
@@ -84,6 +82,11 @@ interface MainJob {
 interface SideJob {
   processorState: ProcessorState;
   encoderState?: EncoderState;
+}
+
+interface LoadingFileInfo {
+  loading: boolean;
+  filename?: string;
 }
 
 async function decodeImage(
@@ -112,9 +115,9 @@ async function decodeImage(
       if (mimeType === 'image/webp2') {
         return await workerBridge.wp2Decode(signal, blob);
       }
-      // If it's not one of those types, fall through and try built-in decoding for a laugh.
     }
-    return await abortable(signal, builtinDecode(blob));
+    // Otherwise fall through and try built-in decoding for a laugh.
+    return await builtinDecode(signal, blob, mimeType);
   } catch (err) {
     if (err.name === 'AbortError') throw err;
     console.log(err);
@@ -262,17 +265,17 @@ function processorStateEquivalent(a: ProcessorState, b: ProcessorState) {
   return true;
 }
 
-// These are only used in the mobile view
-const resultTitles = ['Top', 'Bottom'] as const;
-// These are only used in the desktop view
-const buttonPositions = ['download-left', 'download-right'] as const;
+const loadingIndicator = '⏳ ';
 
 const originalDocumentTitle = document.title;
 
-function updateDocumentTitle(filename: string = ''): void {
-  document.title = filename
-    ? `${filename} - ${originalDocumentTitle}`
-    : originalDocumentTitle;
+function updateDocumentTitle(loadingFileInfo: LoadingFileInfo): void {
+  const { loading, filename } = loadingFileInfo;
+  let title = '';
+  if (loading) title += loadingIndicator;
+  if (filename) title += filename + ' - ';
+  title += originalDocumentTitle;
+  document.title = title;
 }
 
 export default class Compress extends Component<Props, State> {
@@ -376,7 +379,7 @@ export default class Compress extends Component<Props, State> {
   }
 
   componentWillUnmount(): void {
-    updateDocumentTitle();
+    updateDocumentTitle({ loading: false });
     this.mainAbortController.abort();
     for (const controller of this.sideAbortControllers) {
       controller.abort();
@@ -384,6 +387,21 @@ export default class Compress extends Component<Props, State> {
   }
 
   componentDidUpdate(prevProps: Props, prevState: State): void {
+    const wasLoading =
+      prevState.loading ||
+      prevState.sides[0].loading ||
+      prevState.sides[1].loading;
+    const isLoading =
+      this.state.loading ||
+      this.state.sides[0].loading ||
+      this.state.sides[1].loading;
+    const sourceChanged = prevState.source !== this.state.source;
+    if (wasLoading !== isLoading || sourceChanged) {
+      updateDocumentTitle({
+        loading: isLoading,
+        filename: this.state.source?.file.name,
+      });
+    }
     this.queueUpdateImage();
   }
 
@@ -679,7 +697,6 @@ export default class Compress extends Component<Props, State> {
             }) as [Side, Side],
           };
           newState = stateForNewSourceData(newState);
-          updateDocumentTitle(source.file.name);
           return newState;
         });
       } catch (err) {

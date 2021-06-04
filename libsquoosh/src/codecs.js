@@ -273,17 +273,19 @@ export const codecs = {
     dec: () => instantiateEmscriptenWasm(avifDec, avifDecWasm),
     enc: () => instantiateEmscriptenWasm(avifEnc, avifEncWasm),
     defaultEncoderOptions: {
-      minQuantizer: 33,
-      maxQuantizer: 63,
-      minQuantizerAlpha: 33,
-      maxQuantizerAlpha: 63,
+      cqLevel: 33,
+      cqAlphaLevel: -1,
+      denoiseLevel: 0,
       tileColsLog2: 0,
       tileRowsLog2: 0,
-      speed: 8,
+      speed: 6,
       subsample: 1,
+      chromaDeltaQ: false,
+      sharpness: 0,
+      tune: 0 /* AVIFTune.auto */,
     },
     autoOptimize: {
-      option: 'maxQuantizer',
+      option: 'cqLevel',
       min: 0,
       max: 62,
     },
@@ -301,6 +303,7 @@ export const codecs = {
       epf: -1,
       nearLossless: 0,
       lossyPalette: false,
+      decodingSpeedTier: 0,
     },
     autoOptimize: {
       option: 'quality',
@@ -344,7 +347,11 @@ export const codecs = {
       await oxipngPromise;
       return {
         encode: (buffer, width, height, opts) => {
-          const simplePng = pngEncDec.encode(new Uint8Array(buffer), width, height);
+          const simplePng = pngEncDec.encode(
+            new Uint8Array(buffer),
+            width,
+            height,
+          );
           return oxipng.optimise(simplePng, opts.level);
         },
       };
