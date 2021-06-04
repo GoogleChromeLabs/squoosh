@@ -12,14 +12,13 @@
  */
 import type { BasisModule } from 'codecs/basis/enc/basis_enc';
 import type { EncodeOptions } from '../shared/meta';
-import wasmUrl from 'url:codecs/basis/enc/basis_enc.wasm';
 import { initEmscriptenModule } from 'features/worker-utils';
 
 let emscriptenModule: Promise<BasisModule>;
 
 async function init() {
   const basisEncoder = await import('codecs/basis/enc/basis_enc.js');
-  return initEmscriptenModule(basisEncoder.default, wasmUrl);
+  return initEmscriptenModule(basisEncoder.default);
 }
 
 export default async function encode(

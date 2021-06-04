@@ -11,7 +11,6 @@
  * limitations under the License.
  */
 import type { BasisModule } from 'codecs/basis/dec/basis_dec';
-import wasmUrl from 'url:codecs/basis/dec/basis_dec.wasm';
 import { initEmscriptenModule, blobToArrayBuffer } from 'features/worker-utils';
 
 let emscriptenModule: Promise<BasisModule>;
@@ -19,7 +18,7 @@ let emscriptenModule: Promise<BasisModule>;
 export default async function decode(blob: Blob): Promise<ImageData> {
   if (!emscriptenModule) {
     const decoder = await import('codecs/basis/dec/basis_dec');
-    emscriptenModule = initEmscriptenModule(decoder.default, wasmUrl);
+    emscriptenModule = initEmscriptenModule(decoder.default);
   }
 
   const [module, data] = await Promise.all([
