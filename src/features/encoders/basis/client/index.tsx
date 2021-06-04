@@ -5,6 +5,7 @@ import {
   inputFieldChecked,
   inputFieldValueAsNumber,
   preventDefault,
+  clamp,
 } from 'client/lazy-app/util';
 import * as style from 'client/lazy-app/Compress/Options/style.css';
 import linkState from 'linkstate';
@@ -43,9 +44,18 @@ export class Options extends Component<Props, State> {
     ) as HTMLFormElement;
     const { options } = this.props;
 
+    const uastc = form.mode.value === '1';
+    let quality = inputFieldValueAsNumber(form.quality, options.quality);
+    if (uastc) {
+      quality = clamp(0, quality, 4);
+    } else {
+      quality = Math.floor(clamp(0, quality, 255));
+    }
+
     const newOptions: EncodeOptions = {
       ...this.props.options,
-      uastc: form.mode.value === '1',
+      uastc,
+      quality,
       y_flip: inputFieldChecked(form.y_flip, options.y_flip),
       perceptual: inputFieldChecked(form.perceptual, options.perceptual),
       mipmap: inputFieldChecked(form.mipmap, options.mipmap),
@@ -60,7 +70,6 @@ export class Options extends Component<Props, State> {
           form.mipmap_min_dimension,
           Math.floor(Math.log2(options.mipmap_min_dimension)),
         ),
-      quality: inputFieldValueAsNumber(form.quality, options.quality),
       compression: inputFieldValueAsNumber(
         form.compression,
         options.compression,
@@ -86,8 +95,9 @@ export class Options extends Component<Props, State> {
         <div class={style.optionOneCell}>
           <Range
             name="quality"
-            min="1"
-            max="255"
+            min={options.uastc ? '0' : '1'}
+            max={options.uastc ? '4' : '255'}
+            step={options.uastc ? '0.1' : '1'}
             value={options.quality}
             onInput={this.onChange}
           >
@@ -152,7 +162,7 @@ export class Options extends Component<Props, State> {
                         )}
                         onInput={this.onChange}
                       >
-                        Smallest mipmap (2^x):
+                        Log2 of smallest mipmap:
                       </Range>
                     </div>
                     <label class={style.optionTextFirst}>

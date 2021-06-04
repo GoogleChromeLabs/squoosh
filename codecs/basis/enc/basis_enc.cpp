@@ -8,7 +8,7 @@ using namespace emscripten;
 using namespace basisu;
 
 struct BasisOptions {
-  uint8_t quality;
+  float quality;
   uint8_t compression;
   bool uastc;
   bool mipmap;
@@ -48,7 +48,6 @@ val encode(std::string image_in, int image_width, int image_height, BasisOptions
   job_pool jpool(1);
   params.m_pJob_pool = &jpool;
 
-  // Needs to be exposed as an option
   params.m_ktx2_uastc_supercompression = basist::KTX2_SS_ZSTANDARD;
 
   params.m_perceptual = opts.perceptual;
@@ -57,9 +56,15 @@ val encode(std::string image_in, int image_width, int image_height, BasisOptions
   params.m_mip_srgb = opts.srgb_mipmap;
   params.m_mip_filter = opts.mipmap_filter;
   params.m_mip_smallest_dimension = opts.mipmap_min_dimension;
-  params.m_quality_level = opts.quality;
   params.m_compression_level = opts.compression;
   params.m_source_images.push_back(img);
+
+  if (opts.uastc) {
+    params.m_rdo_uastc_quality_scalar = opts.quality;
+    params.m_rdo_uastc = opts.quality != 0;
+  } else {
+    params.m_quality_level = static_cast<int>(opts.quality);
+  }
 
   if (!compressor.init(params)) {
     return val(std::string("Well something went wrong during init"));

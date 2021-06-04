@@ -417,3 +417,13 @@ export async function canvasEncodeTest(mimeType: string): Promise<boolean> {
     return false;
   }
 }
+
+export function clamp(min: number, v: number, max: number): number {
+  if (v < min) {
+    return min;
+  }
+  if (v > max) {
+    return max;
+  }
+  return v;
+}
