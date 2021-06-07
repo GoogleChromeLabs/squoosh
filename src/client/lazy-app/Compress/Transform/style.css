@@ -14,25 +14,6 @@
   will-change: initial !important;
 }
 
-.backdrop {
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  transform: none !important;
-  will-change: initial !important;
-  contain: strict;
-
-  & * {
-    contain: strict;
-  }
-}
-
-.backdropArea {
-  fill: rgba(0, 0, 0, 0.25);
-}
-
 .pinch-zoom {
   composes: abs-fill from global;
   outline: none;

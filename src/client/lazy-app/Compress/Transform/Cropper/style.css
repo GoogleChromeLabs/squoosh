@@ -35,15 +35,7 @@
   /* Accept pointer input even though this is unpainted transparent */
   pointer-events: all;
   cursor: move;
-
-  /* animation: ants 1s linear forwards infinite; */
 }
-/*
-@keyframes ants {
-  0% { stroke-dashoffset: 0; }
-  100% { stroke-dashoffset: -12; }
-}
-*/
 
 .edge {
   fill: #aaa;

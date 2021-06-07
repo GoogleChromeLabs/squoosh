@@ -138,7 +138,7 @@ async function preprocessImage(
   let processedData = data;
   const { rotate, flip, crop } = preprocessorState;
 
-  if (flip && (flip.horizontal || flip.vertical)) {
+  if (flip.horizontal || flip.vertical) {
     processedData = await workerBridge.flip(signal, processedData, flip);
   }
 
@@ -146,7 +146,7 @@ async function preprocessImage(
     processedData = await workerBridge.rotate(signal, processedData, rotate);
   }
 
-  if (crop && (crop.left || crop.top || crop.right || crop.bottom)) {
+  if (crop.left || crop.top || crop.right || crop.bottom) {
     processedData = await workerBridge.crop(signal, processedData, crop);
   }
 
@@ -292,8 +292,6 @@ export default class Compress extends Component<Props, State> {
   state: State = {
     source: undefined,
     loading: false,
-    /** @TODO remove this */
-    // transform: true,
     transform: false,
     preprocessorState: defaultPreprocessorState,
     sides: [
@@ -393,7 +391,7 @@ export default class Compress extends Component<Props, State> {
     this.setState({ transform: true });
   };
 
-  private onTransformUpdated = ({
+  private onTransformCommit = ({
     preprocessorState,
   }: { preprocessorState?: PreprocessorState } = {}) => {
     if (preprocessorState) {
@@ -1000,8 +998,8 @@ export default class Compress extends Component<Props, State> {
             mobileView={mobileView}
             source={source!}
             preprocessorState={preprocessorState!}
-            onSave={this.onTransformUpdated}
-            onCancel={this.onTransformUpdated}
+            onSave={this.onTransformCommit}
+            onCancel={this.onTransformCommit}
           />
         )}
       </div>

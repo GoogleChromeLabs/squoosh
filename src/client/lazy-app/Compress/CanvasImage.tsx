@@ -1,5 +1,5 @@
 import { h, Component, createRef } from 'preact';
-import { drawDataToCanvas } from '../util';
+import { drawDataToCanvas } from '../util/canvas';
 
 export interface CanvasImageProps
   extends h.JSX.HTMLAttributes<HTMLCanvasElement> {

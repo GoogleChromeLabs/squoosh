@@ -395,7 +395,6 @@ export default class Transform extends Component<Props, State> {
             onChange={this.onPinchZoomChange}
             ref={this.pinchZoom}
           >
-            {/* <Backdrop width={displayWidth} height={displayHeight} /> */}
             <div
               class={style.wrap}
               style={{
@@ -569,49 +568,3 @@ const SaveButton = ({ onClick }: { onClick: () => void }) => (
     <CheckmarkIcon class={style.icon} />
   </button>
 );
-
-interface BackdropProps {
-  width: number;
-  height: number;
-}
-
-/** @TODO this could at least use clip-path. It's too expensive this way. */
-class Backdrop extends Component<BackdropProps> {
-  shouldComponentUpdate({ width, height }: BackdropProps) {
-    return width !== this.props.width || height !== this.props.height;
-  }
-
-  render({ width, height }: BackdropProps) {
-    const transform =
-      `transform-origin: 50% 50%; transform: translate(var(--x), var(--y)) ` +
-      `translate(-${width / 2}px, -${height / 2}px) ` +
-      `scale(calc(var(--scale, 1) * 0.99999));`;
-    return (
-      <svg
-        class={style.backdrop}
-        preserveAspectRatio="xMidYMid meet"
-        width="100%"
-        height="100%"
-        shape-rendering="optimizeSpeed"
-      >
-        <mask id="bgmask">
-          <rect width="100%" height="100%" fill="white" />
-          <rect
-            style={transform}
-            width={width}
-            height={height}
-            x="50%"
-            y="50%"
-            fill="black"
-          />
-        </mask>
-        <rect
-          class={style.backdropArea}
-          width="100%"
-          height="100%"
-          mask="url(#bgmask)"
-        />
-      </svg>
-    );
-  }
-}

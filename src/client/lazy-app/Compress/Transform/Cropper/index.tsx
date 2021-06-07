@@ -67,7 +67,6 @@ export default class Cropper extends Component<Props, State> {
   componentWillReceiveProps({ crop }: Props, nextState: State) {
     const current = nextState.crop || this.state.crop;
     if (crop !== this.props.crop && !shallowEqual(crop, current)) {
-      // this.setState({ crop: nextProps.crop });
       this.setCrop(crop);
     }
   }
@@ -257,8 +256,8 @@ export default class Cropper extends Component<Props, State> {
   }
 
   componentWillUnmount() {
-    addEventListener('keydown', this.onKeyDown);
-    addEventListener('keyup', this.onKeyUp);
+    removeEventListener('keydown', this.onKeyDown);
+    removeEventListener('keyup', this.onKeyUp);
   }
 
   render({ size }: Props, { crop, pan }: State) {
