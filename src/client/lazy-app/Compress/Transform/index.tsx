@@ -1,11 +1,4 @@
-import {
-  h,
-  Component,
-  Fragment,
-  createRef,
-  FunctionComponent,
-  ComponentChildren,
-} from 'preact';
+import { h, Component, Fragment, createRef } from 'preact';
 import type {
   default as PinchZoom,
   ScaleToOpts,
@@ -29,7 +22,6 @@ import type { SourceImage } from '../../Compress';
 import { PreprocessorState } from 'client/lazy-app/feature-meta';
 import Cropper, { CropBox } from './Cropper';
 import CanvasImage from '../CanvasImage';
-import Expander from '../Options/Expander';
 import Select from '../Options/Select';
 import Checkbox from '../Options/Checkbox';
 
@@ -68,7 +60,6 @@ interface State {
   scale: number;
   editingScale: boolean;
   rotate: typeof ROTATE_ORIENTATIONS[number];
-  // crop: false | CropBox;
   crop: CropBox;
   cropPreset: keyof typeof cropPresets | undefined;
   lockAspect: boolean;
@@ -92,14 +83,6 @@ export default class Transform extends Component<Props, State> {
   };
   pinchZoom = createRef<PinchZoom>();
   scaleInput = createRef<HTMLInputElement>();
-
-  // static getDerivedStateFromProps({ source, preprocessorState }: Props) {
-  //   return {
-  //     rotate: preprocessorState.rotate.rotate || 0,
-  //     crop: preprocessorState.crop || false,
-  //     flip: preprocessorState.flip || { horizontal: false, vertical: false },
-  //   };
-  // }
 
   componentWillReceiveProps(
     { source, preprocessorState }: Props,
