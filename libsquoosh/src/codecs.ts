@@ -1,5 +1,5 @@
 import { promises as fsp } from 'fs';
-import { instantiateEmscriptenWasm, pathify } from './emscripten-utils';
+import { instantiateEmscriptenWasm, pathify } from './emscripten-utils.js';
 
 interface RotateModuleInstance {
   exports: {
@@ -13,6 +13,14 @@ interface ResizeWithAspectParams {
   input_height: number;
   target_width: number;
   target_height: number;
+}
+
+interface ResizeInstantiateOptions {
+  width: number;
+  height: number;
+  method: string;
+  premultiply: boolean;
+  linearRGB: boolean;
 }
 
 declare global {
@@ -147,13 +155,7 @@ export const preprocessors = {
           method,
           premultiply,
           linearRGB,
-        }: {
-          width: number;
-          height: number;
-          method: string;
-          premultiply: boolean;
-          linearRGB: boolean;
-        },
+        }: ResizeInstantiateOptions,
       ) => {
         ({ width, height } = resizeWithAspect({
           input_width,
@@ -161,17 +163,19 @@ export const preprocessors = {
           target_width: width,
           target_height: height,
         }));
+        const resizeResult = resize.resize(
+          buffer,
+          input_width,
+          input_height,
+          width,
+          height,
+          resizeNameToIndex(method),
+          premultiply,
+          linearRGB,
+        );
         return new ImageData(
-          resize.resize(
-            buffer,
-            input_width,
-            input_height,
-            width,
-            height,
-            resizeNameToIndex(method),
-            premultiply,
-            linearRGB,
-          ),
+          // ImageData does not accept Uint8Array so we convert it to a clamped array
+          new Uint8ClampedArray(resizeResult),
           width,
           height,
         );
