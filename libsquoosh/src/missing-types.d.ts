@@ -18,6 +18,11 @@ declare module 'asset-url:../../codecs/oxipng/pkg/squoosh_oxipng_bg.wasm' {
   export default value;
 }
 
+declare module 'asset-url:../../codecs/resize/pkg/squoosh_resize_bg.wasm' {
+  const value: string;
+  export default value;
+}
+
 // These don't exist in NodeJS types so we're not able to use them but they are referenced in some emscripten and codec types
 // Thus, we need to explicitly assign them to be `never`
 // We're also not able to use the APIs that use these types

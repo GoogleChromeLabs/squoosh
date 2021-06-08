@@ -163,19 +163,17 @@ export const preprocessors = {
           target_width: width,
           target_height: height,
         }));
-        const resizeResult = resize.resize(
-          buffer,
-          input_width,
-          input_height,
-          width,
-          height,
-          resizeNameToIndex(method),
-          premultiply,
-          linearRGB,
-        );
         return new ImageData(
-          // ImageData does not accept Uint8Array so we convert it to a clamped array
-          new Uint8ClampedArray(resizeResult),
+          resize.resize(
+            buffer,
+            input_width,
+            input_height,
+            width,
+            height,
+            resizeNameToIndex(method),
+            premultiply,
+            linearRGB,
+          ),
           width,
           height,
         );
