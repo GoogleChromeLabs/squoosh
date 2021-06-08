@@ -1,9 +1,8 @@
-FROM emscripten/emsdk:2.0.21
+FROM emscripten/emsdk:2.0.23
 RUN apt-get update && apt-get install -qqy autoconf libtool pkg-config
 ENV CFLAGS "-O3 -flto"
 ENV CXXFLAGS "${CFLAGS} -std=c++17"
 ENV LDFLAGS "${CFLAGS} \
---closure 1 \
 -s FILESYSTEM=0 \
 -s PTHREAD_POOL_SIZE=navigator.hardwareConcurrency \
 -s ALLOW_MEMORY_GROWTH=1 \
