@@ -25,12 +25,12 @@ interface ResizeInstantiateOptions {
 
 declare global {
   // Needed for being able to use ImageData as type in codec types
-  type ImageData = typeof import('./image_data');
+  type ImageData = typeof import('./image_data.js');
   // Needed for being able to assign to `globalThis.ImageData`
   var ImageData: ImageData['constructor'];
 }
 
-import type { QuantizerModule } from '../../codecs/imagequant/imagequant';
+import type { QuantizerModule } from '../../codecs/imagequant/imagequant.js';
 
 // MozJPEG
 import mozEnc from '../../codecs/mozjpeg/enc/mozjpeg_node_enc.js';
@@ -94,7 +94,7 @@ const imageQuantPromise: Promise<QuantizerModule> = instantiateEmscriptenWasm(
 );
 
 // Our decoders currently rely on a `ImageData` global.
-import ImageData from './image_data';
+import ImageData from './image_data.js';
 globalThis.ImageData = ImageData;
 
 function resizeNameToIndex(name: string) {
