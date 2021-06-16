@@ -180,9 +180,9 @@ class Image {
         encName,
         encConfig,
         optimizerButteraugliTarget: Number(
-          encodeOptions.optimizerButteraugliTarget,
+          encodeOptions.optimizerButteraugliTarget ?? 1.4,
         ),
-        maxOptimizerRounds: Number(encodeOptions.maxOptimizerRounds),
+        maxOptimizerRounds: Number(encodeOptions.maxOptimizerRounds ?? 6),
       });
     }
     await Promise.all(Object.values(this.encodedWith));

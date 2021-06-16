@@ -11,7 +11,7 @@ import visdifWasm from 'asset-url:../../codecs/visdif/visdif.wasm';
 export async function binarySearch(
   measureGoal,
   measure,
-  { min = 0, max = 100, epsilon = 0.1, maxRounds = 8 } = {},
+  { min = 0, max = 100, epsilon = 0.1, maxRounds = 6 } = {},
 ) {
   let parameter = (max - min) / 2 + min;
   let delta = (max - min) / 4;
