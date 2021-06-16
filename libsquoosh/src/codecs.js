@@ -286,8 +286,8 @@ export const codecs = {
     },
     autoOptimize: {
       option: 'cqLevel',
-      min: 0,
-      max: 62,
+      min: 62,
+      max: 0,
     },
   },
   jxl: {
