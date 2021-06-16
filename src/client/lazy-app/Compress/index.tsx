@@ -377,7 +377,6 @@ export default class Compress extends Component<Props, State> {
 
   componentWillUnmount(): void {
     updateDocumentTitle({ loading: false });
-    this.widthQuery.removeListener(this.onMobileWidthChange);
     this.mainAbortController.abort();
     for (const controller of this.sideAbortControllers) {
       controller.abort();

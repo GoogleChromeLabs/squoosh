@@ -34,8 +34,6 @@ export default class TwoUp extends HTMLElement {
    */
   private _everConnected = false;
 
-  private _resizeObserver?: ResizeObserver;
-
   constructor() {
     super();
     this._handle.className = styles.twoUpHandle;
@@ -78,8 +76,7 @@ export default class TwoUp extends HTMLElement {
       `}</div>`;
 
     // Watch for element size changes.
-    this._resizeObserver = new ResizeObserver(() => this._resetPosition());
-    this._resizeObserver.observe(this);
+    new ResizeObserver(() => this._resetPosition()).observe(this);
 
     window.addEventListener('keydown', this._onKeyDown);
 
@@ -87,11 +84,6 @@ export default class TwoUp extends HTMLElement {
       this._resetPosition();
       this._everConnected = true;
     }
-  }
-
-  disconnectedCallback() {
-    window.removeEventListener('keydown', this._onKeyDown);
-    if (this._resizeObserver) this._resizeObserver.disconnect();
   }
 
   attributeChangedCallback(name: string) {
