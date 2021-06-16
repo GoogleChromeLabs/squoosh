@@ -9,9 +9,9 @@
 * @param {number} typ_idx
 * @param {boolean} premultiply
 * @param {boolean} color_space_conversion
-* @returns {Uint8Array}
+* @returns {Uint8ClampedArray}
 */
-export function resize(input_image: Uint8Array, input_width: number, input_height: number, output_width: number, output_height: number, typ_idx: number, premultiply: boolean, color_space_conversion: boolean): Uint8Array;
+export function resize(input_image: Uint8Array, input_width: number, input_height: number, output_width: number, output_height: number, typ_idx: number, premultiply: boolean, color_space_conversion: boolean): Uint8ClampedArray;
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
