@@ -39,9 +39,9 @@ The returned `image` object is a representation of the original image, that you 
 When an image has been ingested, you can start preprocessing it and encoding it to other formats. This example will resize the image and then encode it to a `.jpg` and `.jxl` image:
 
 ```js
-await image.decoded; //Wait until the image is decoded before running preprocessors
+await image.decoded; //Wait until the image is decoded before running preprocessors. 
 
-const preprocessOptions: {
+const preprocessOptions = {
   resize: {
     enabled: true,
     width: 100,
@@ -50,7 +50,7 @@ const preprocessOptions: {
 }
 await image.preprocess(preprocessOptions);
 
-const encodeOptions: {
+const encodeOptions = {
   mozjpeg: {}, //an empty object means 'use default settings'
   jxl: {
     quality: 90,
