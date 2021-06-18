@@ -282,7 +282,7 @@ export const codecs = {
   webp: {
     name: 'WebP',
     extension: 'webp',
-    detectors: [/^RIFF....WEBPVP8[LX ]/],
+    detectors: [/^RIFF....WEBPVP8[LX ]/s],
     dec: () => instantiateEmscriptenWasm(webpDec, webpDecWasm),
     enc: () => instantiateEmscriptenWasm(webpEnc, webpEncWasm),
     defaultEncoderOptions: {
