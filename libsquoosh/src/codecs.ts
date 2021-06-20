@@ -253,6 +253,7 @@ export const codecs = {
     name: 'MozJPEG',
     extension: 'jpg',
     detectors: [/^\xFF\xD8\xFF/],
+    losslessDetector: () => false,
     dec: () => instantiateEmscriptenWasm(mozDec, mozDecWasm),
     enc: () => instantiateEmscriptenWasm(mozEnc, mozEncWasm),
     defaultEncoderOptions: {
@@ -283,6 +284,7 @@ export const codecs = {
     name: 'WebP',
     extension: 'webp',
     detectors: [/^RIFF....WEBPVP8[LX ]/s],
+    losslessDetector: (bufferStart: Uint8Array) => bufferStart[15] === 76,
     dec: () => instantiateEmscriptenWasm(webpDec, webpDecWasm),
     enc: () => instantiateEmscriptenWasm(webpEnc, webpEncWasm),
     defaultEncoderOptions: {
@@ -324,6 +326,7 @@ export const codecs = {
     name: 'AVIF',
     extension: 'avif',
     detectors: [/^\x00\x00\x00 ftypavif\x00\x00\x00\x00/],
+    losslessDetector: (bufferStart: Uint8Array) => bufferStart[31] === 65,
     dec: () => instantiateEmscriptenWasm(avifDec, avifDecWasm),
     enc: () => instantiateEmscriptenWasm(avifEnc, avifEncWasm),
     defaultEncoderOptions: {
@@ -348,6 +351,7 @@ export const codecs = {
     name: 'JPEG-XL',
     extension: 'jxl',
     detectors: [/^\xff\x0a/],
+    losslessDetector: (bufferStart: Uint8Array) => bufferStart[7] === 149,
     dec: () => instantiateEmscriptenWasm(jxlDec, jxlDecWasm),
     enc: () => instantiateEmscriptenWasm(jxlEnc, jxlEncWasm),
     defaultEncoderOptions: {
@@ -369,6 +373,7 @@ export const codecs = {
     name: 'WebP2',
     extension: 'wp2',
     detectors: [/^\xF4\xFF\x6F/],
+    losslessDetector: (bufferStart: Uint8Array) => bufferStart[8] === 241,
     dec: () => instantiateEmscriptenWasm(wp2Dec, wp2DecWasm),
     enc: () => instantiateEmscriptenWasm(wp2Enc, wp2EncWasm),
     defaultEncoderOptions: {
@@ -392,6 +397,7 @@ export const codecs = {
     name: 'OxiPNG',
     extension: 'png',
     detectors: [/^\x89PNG\x0D\x0A\x1A\x0A/],
+    losslessDetector: () => true,
     dec: async () => {
       await pngEncDecPromise;
       return { decode: pngEncDec.decode };

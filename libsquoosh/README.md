@@ -117,6 +117,7 @@ console.log(await image.decoded);
     width: 4606,  //pixels
     height: 2591  //pixels
   },
+  lossless: true,  //whether the source image was encoded losslessly
   size: 2467795  //bytes
 }
 ```
