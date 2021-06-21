@@ -4,6 +4,11 @@
   "description": "A CLI for Squoosh",
   "public": true,
   "type": "module",
+  "homepage": "https://github.com/GoogleChromeLabs/squoosh",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GoogleChromeLabs/squoosh.git"
+  },
   "bin": {
     "squoosh-cli": "src/index.js",
     "@squoosh/cli": "src/index.js"
@@ -14,6 +19,9 @@
   "keywords": [],
   "author": "Google Chrome Developers <chromium-dev@google.com>",
   "license": "Apache-2.0",
+  "engines": {
+    "node": " ^12.20.2 || ^14.13.1 || ^16.0.0 "
+  },
   "dependencies": {
     "@squoosh/lib": "^0.3.1",
     "commander": "^7.2.0",
