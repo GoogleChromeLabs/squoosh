@@ -4,6 +4,11 @@
   "description": "A CLI for Squoosh",
   "public": true,
   "type": "module",
+  "homepage": "https://github.com/GoogleChromeLabs/squoosh",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GoogleChromeLabs/squoosh.git"
+  },
   "bin": {
     "squoosh-cli": "src/index.js",
     "@squoosh/cli": "src/index.js"

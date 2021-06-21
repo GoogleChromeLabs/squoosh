@@ -12,6 +12,11 @@
   },
   "keywords": [],
   "author": "Google Chrome Developers <chromium-dev@google.com>",
+  "homepage": "https://github.com/GoogleChromeLabs/squoosh",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GoogleChromeLabs/squoosh.git"
+  },
   "license": "Apache-2.0",
   "dependencies": {
     "web-streams-polyfill": "^3.0.3"
