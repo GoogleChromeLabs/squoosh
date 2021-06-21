@@ -177,8 +177,8 @@ async function processFiles(files) {
       jobsFinished++;
       const outputPath = path.join(
         program.opts().outputDir,
-        program.opts().suffix +
-          path.basename(originalFile, path.extname(originalFile)),
+        path.basename(originalFile, path.extname(originalFile)) +
+        program.opts().suffix
       );
       for (const output of Object.values(image.encodedWith)) {
         const outputFile = `${outputPath}.${(await output).extension}`;
