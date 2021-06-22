@@ -45,6 +45,11 @@ export default class TwoUp extends HTMLElement {
       childList: true,
     });
 
+    // Watch for element size changes.
+    new ResizeObserver(() => this._resetPosition()).observe(this);
+
+    window.addEventListener('keydown', this._onKeyDown);
+
     // Watch for pointers on the handle.
     const pointerTracker: PointerTracker = new PointerTracker(this._handle, {
       start: (_, event) => {
@@ -74,11 +79,6 @@ export default class TwoUp extends HTMLElement {
           `<path class="${styles.arrowRight}" d="M17 19.2l9.5-9.6L16.9 0z"/>`
         }</svg>
       `}</div>`;
-
-    // Watch for element size changes.
-    new ResizeObserver(() => this._resetPosition()).observe(this);
-
-    window.addEventListener('keydown', this._onKeyDown);
 
     if (!this._everConnected) {
       this._resetPosition();
