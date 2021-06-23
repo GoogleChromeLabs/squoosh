@@ -329,10 +329,11 @@ export function startBlobAnim(canvas: HTMLCanvasElement) {
     hasFocus = false;
   };
 
-  new ResizeObserver(() => {
+  const resizeObserver = new ResizeObserver(() => {
     // Redraw for new canvas size
     if (!animating) drawFrame(0);
-  }).observe(canvas);
+  });
+  resizeObserver.observe(canvas);
 
   addEventListener('focus', focusListener);
   addEventListener('blur', blurListener);
@@ -341,6 +342,7 @@ export function startBlobAnim(canvas: HTMLCanvasElement) {
   function destruct() {
     removeEventListener('focus', focusListener);
     removeEventListener('blur', blurListener);
+    resizeObserver.disconnect();
     document.removeEventListener('visibilitychange', visibilityListener);
   }
 
