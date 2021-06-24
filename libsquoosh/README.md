@@ -60,7 +60,7 @@ await image.encode(encodeOptions);
 
 ```
 
-The default values for each option can be found in the [`codecs.js`][codecs.js] file under `defaultEncoderOptions`. Every unspecified value will use the default value specified there. _Better documentation is needed here._
+The default values for each option can be found in the [`codecs.ts`][codecs.ts] file under `defaultEncoderOptions`. Every unspecified value will use the default value specified there. _Better documentation is needed here._
 
 You can run your own code inbetween the different steps, if, for example, you want to change how much the image should be resized based on its original height. (See [Extracting image information](#extracting-image-information) to learn how to get the image dimensions).
 
@@ -158,6 +158,6 @@ const encodeOptions: {
 ```
 
 [squoosh]: https://squoosh.app
-[codecs.js]: https://github.com/GoogleChromeLabs/squoosh/blob/dev/libsquoosh/src/codecs.js
+[codecs.ts]: https://github.com/GoogleChromeLabs/squoosh/blob/dev/libsquoosh/src/codecs.ts
 [butteraugli]: https://github.com/google/butteraugli
 [readfile]: https://nodejs.org/api/fs.html#fs_fspromises_readfile_path_options
