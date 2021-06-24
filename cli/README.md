@@ -42,7 +42,7 @@ Options:
   -h, --help                                             display help for command
 ```
 
-The default values for each `config` option can be found in the [`codecs.js`][codecs.js] file under `defaultEncoderOptions`. Every unspecified value will use the default value specified here. _Better documentation is needed here._
+The default values for each `config` option can be found in the [`codecs.ts`][codecs.ts] file under `defaultEncoderOptions`. Every unspecified value will use the default value specified here. _Better documentation is needed here._
 
 ## Auto optimizer
 
@@ -55,5 +55,5 @@ $ npx @squoosh/cli --wp2 auto test.png
 ```
 
 [squoosh]: https://squoosh.app
-[codecs.js]: https://github.com/GoogleChromeLabs/squoosh/blob/dev/libsquoosh/src/codecs.js
+[codecs.ts]: https://github.com/GoogleChromeLabs/squoosh/blob/dev/libsquoosh/src/codecs.ts
 [butteraugli]: https://github.com/google/butteraugli
