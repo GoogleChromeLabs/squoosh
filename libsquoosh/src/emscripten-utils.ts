@@ -1,4 +1,4 @@
-import { fileURLToPath } from 'url';
+import { fileURLToPath, URL } from 'url';
 
 export function pathify(path: string): string {
   if (path.startsWith('file://')) {
@@ -10,10 +10,14 @@ export function pathify(path: string): string {
 export function instantiateEmscriptenWasm<T extends EmscriptenWasm.Module>(
   factory: EmscriptenWasm.ModuleFactory<T>,
   path: string,
+  workerWasm: string = '',
 ): Promise<T> {
   return factory({
-    locateFile() {
-      return pathify(path);
+    locateFile(requestPath) {
+      if (requestPath.endsWith('.wasm')) return pathify(path);
+      if (requestPath.endsWith('.worker.js'))
+        return new URL(workerWasm).pathname;
+      return requestPath;
     },
   });
 }

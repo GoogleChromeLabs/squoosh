@@ -1,5 +1,13 @@
 import { promises as fsp } from 'fs';
 import { instantiateEmscriptenWasm, pathify } from './emscripten-utils.js';
+import { threads } from 'wasm-feature-detect';
+import { cpus } from 'os';
+
+// We use `navigator.hardwareConcurrency` for Emscripten’s pthread pool size.
+// This is the only workaround I can get working without crying.
+(globalThis as any).navigator = {
+  hardwareConcurrency: cpus().length,
+};
 
 interface RotateModuleInstance {
   exports: {
@@ -47,6 +55,9 @@ import webpDecWasm from 'asset-url:../../codecs/webp/dec/webp_node_dec.wasm';
 // AVIF
 import avifEnc from '../../codecs/avif/enc/avif_node_enc.js';
 import avifEncWasm from 'asset-url:../../codecs/avif/enc/avif_node_enc.wasm';
+import avifEncMt from '../../codecs/avif/enc/avif_node_enc_mt.js';
+import avifEncMtWorker from 'chunk-url:../../codecs/avif/enc/avif_node_enc_mt.worker.js';
+import avifEncMtWasm from 'asset-url:../../codecs/avif/enc/avif_node_enc_mt.wasm';
 import avifDec from '../../codecs/avif/dec/avif_node_dec.js';
 import avifDecWasm from 'asset-url:../../codecs/avif/dec/avif_node_dec.wasm';
 
@@ -325,7 +336,16 @@ export const codecs = {
     extension: 'avif',
     detectors: [/^\x00\x00\x00 ftypavif\x00\x00\x00\x00/],
     dec: () => instantiateEmscriptenWasm(avifDec, avifDecWasm),
-    enc: () => instantiateEmscriptenWasm(avifEnc, avifEncWasm),
+    enc: async () => {
+      if (await threads()) {
+        return instantiateEmscriptenWasm(
+          avifEncMt,
+          avifEncMtWasm,
+          avifEncMtWorker,
+        );
+      }
+      return instantiateEmscriptenWasm(avifEnc, avifEncWasm);
+    },
     defaultEncoderOptions: {
       cqLevel: 33,
       cqAlphaLevel: -1,
