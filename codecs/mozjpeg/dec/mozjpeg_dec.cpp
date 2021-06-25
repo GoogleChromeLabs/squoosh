@@ -5,9 +5,25 @@
 
 extern "C" {
 #include "cdjpeg.h"
+#include "stdio.h"
+#include "setjmp.h"
 }
 
 using namespace emscripten;
+
+struct my_error_mgr {
+  struct jpeg_error_mgr pub;    /* "public" fields */
+  jmp_buf setjmp_buffer;        /* for return to caller */
+};
+
+METHODDEF(void)
+my_error_exit(j_common_ptr cinfo)
+{
+  /* cinfo->err really points to a my_error_mgr struct, so coerce pointer */
+  struct my_error_mgr* myerr = (struct my_error_mgr*)cinfo->err;
+  /* Return control to the setjmp point */
+  longjmp(myerr->setjmp_buffer, 1);
+}
 
 thread_local const val Uint8ClampedArray = val::global("Uint8ClampedArray");
 thread_local const val ImageData = val::global("ImageData");
@@ -16,9 +32,18 @@ val decode(std::string image_in) {
   uint8_t* image_buffer = (uint8_t*)image_in.c_str();
 
   jpeg_decompress_struct cinfo;
-  jpeg_error_mgr jerr;
-  // Initialize the JPEG decompression object with default error handling.
-  cinfo.err = jpeg_std_error(&jerr);
+  my_error_mgr jerr;
+  // Initialize the JPEG decompression object with custom error handling.
+  cinfo.err = jpeg_std_error(&jerr.pub);
+  jerr.pub.error_exit = my_error_exit;
+  if (setjmp(jerr.setjmp_buffer)) {
+    // The custom error handler jumps to here if an error happens.
+    jpeg_destroy_decompress(&cinfo);
+    char buffer[JMSG_LENGTH_MAX];
+    jerr.pub.format_message((jpeg_common_struct*)&cinfo, buffer);
+    return val(std::string(buffer));
+  }
+
   jpeg_create_decompress(&cinfo);
 
   jpeg_mem_src(&cinfo, image_buffer, image_in.length());

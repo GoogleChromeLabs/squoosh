@@ -35,6 +35,10 @@ async function decodeFile({ file }) {
     throw Error(`${file} has an unsupported format`);
   }
   const rgba = (await encoders[key].dec()).decode(new Uint8Array(buffer));
+  // The C++ code returns a string if there's an error.
+  if (typeof rgba === 'string') {
+    throw new Error(rgba);
+  }
   return {
     bitmap: rgba,
     size: buffer.length,
