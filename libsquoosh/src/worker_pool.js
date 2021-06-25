@@ -15,11 +15,11 @@ function jobPromise(worker, msg) {
       if (rid !== id) {
         return;
       }
+      worker.off('message', f);
       if (error) {
-        reject(error);
+        reject(new Error(error));
         return;
       }
-      worker.off('message', f);
       resolve(result);
     });
   });
