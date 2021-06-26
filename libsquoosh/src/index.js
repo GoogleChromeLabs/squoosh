@@ -8,6 +8,16 @@ import { autoOptimize } from './auto-optimizer.js';
 
 export { ImagePool, encoders, preprocessors };
 
+// The C++ code returns a string when an error occurs.
+// This function is used to evaluate return values from wasm,
+// and throw an error if applicable.
+function handleStringError(operation, value) {
+  if (typeof value === 'string') {
+    throw new Error(`on ${operation}: ${value}`);
+  }
+  return value;
+}
+
 async function decodeFile({ file }) {
   let buffer;
   if (ArrayBuffer.isView(file)) {
@@ -35,10 +45,7 @@ async function decodeFile({ file }) {
     throw Error(`${file} has an unsupported format`);
   }
   const rgba = (await encoders[key].dec()).decode(new Uint8Array(buffer));
-  // The C++ code returns a string if there's an error.
-  if (typeof rgba === 'string') {
-    throw new Error(rgba);
-  }
+  handleStringError('decode', rgba);
   return {
     bitmap: rgba,
     size: buffer.length,
@@ -70,15 +77,15 @@ async function encodeImage({
     const optionToOptimize = encoders[encName].autoOptimize.option;
     const decoder = await encoders[encName].dec();
     const encode = (bitmapIn, quality) =>
-      encoder.encode(
+      handleStringError('encode', encoder.encode(
         bitmapIn.data,
         bitmapIn.width,
         bitmapIn.height,
         Object.assign({}, encoders[encName].defaultEncoderOptions, {
           [optionToOptimize]: quality,
         }),
-      );
-    const decode = (binary) => decoder.decode(binary);
+      ));
+    const decode = (binary) => handleStringError('decode', decoder.decode(binary));
     const { binary: optimizedBinary, quality } = await autoOptimize(
       bitmapIn,
       encode,
@@ -96,12 +103,12 @@ async function encodeImage({
       [optionToOptimize]: Math.round(quality * 10000) / 10000,
     };
   } else {
-    binary = encoder.encode(
+    binary = handleStringError('encode', encoder.encode(
       bitmapIn.data.buffer,
       bitmapIn.width,
       bitmapIn.height,
       encConfig,
-    );
+    ));
   }
   return {
     optionsUsed,
