@@ -204,6 +204,10 @@ async function innerProcessFiles({files, results, imagePool, progress}) {
           .outputs.push(Object.assign(await output, { outputFile }));
       }
       progress.setProgress(jobsFinished, jobsStarted);
+    }).catch(error => {
+      const wrappedError = new Error("Error while encoding " + originalFile);
+      wrappedError.stack += '\nCaused by: ' + error.stack;
+      throw wrappedError;
     });
     jobs.push(job);
   }
