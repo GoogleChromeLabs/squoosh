@@ -8,14 +8,14 @@ import { autoOptimize } from './auto-optimizer.js';
 
 export { ImagePool, encoders, preprocessors };
 
-// The C++ code returns a string when an error occurs.
-// This function is used to evaluate return values from wasm,
-// and throw an error if applicable.
-function handleStringError(operation, value) {
+// When an error occurs in the C++ code, it returns the error
+// message as a string.
+// This function is used to assert that return values from wasm
+// are not errors, and if they are, throw them.
+function assertNoCPPError(value, message) {
   if (typeof value === 'string') {
-    throw new Error(`on ${operation}: ${value}`);
+    throw new Error(`${message}: ${value}`);
   }
-  return value;
 }
 
 async function decodeFile({ file }) {
@@ -45,7 +45,7 @@ async function decodeFile({ file }) {
     throw Error(`${file} has an unsupported format`);
   }
   const rgba = (await encoders[key].dec()).decode(new Uint8Array(buffer));
-  handleStringError('decode', rgba);
+  assertNoCPPError(rgba, 'decode failed');
   return {
     bitmap: rgba,
     size: buffer.length,
@@ -76,16 +76,23 @@ async function encodeImage({
   if (encConfig === 'auto') {
     const optionToOptimize = encoders[encName].autoOptimize.option;
     const decoder = await encoders[encName].dec();
-    const encode = (bitmapIn, quality) =>
-      handleStringError('encode', encoder.encode(
+    const encode = (bitmapIn, quality) => {
+      const encoded = encoder.encode(
         bitmapIn.data,
         bitmapIn.width,
         bitmapIn.height,
         Object.assign({}, encoders[encName].defaultEncoderOptions, {
           [optionToOptimize]: quality,
         }),
-      ));
-    const decode = (binary) => handleStringError('decode', decoder.decode(binary));
+      );
+      assertNoCPPError(encoded, 'encode failed');
+      return encoded;
+    };
+    const decode = (binary) => {
+      const decoded = decoder.decode(binary);
+      assertNoCPPError(decoded, 'decode failed');
+      return decoded;
+    };
     const { binary: optimizedBinary, quality } = await autoOptimize(
       bitmapIn,
       encode,
@@ -103,12 +110,13 @@ async function encodeImage({
       [optionToOptimize]: Math.round(quality * 10000) / 10000,
     };
   } else {
-    binary = handleStringError('encode', encoder.encode(
+    binary = encoder.encode(
       bitmapIn.data.buffer,
       bitmapIn.width,
       bitmapIn.height,
       encConfig,
-    ));
+    );
+    assertNoCPPError(binary, 'encode failed');
   }
   return {
     optionsUsed,
