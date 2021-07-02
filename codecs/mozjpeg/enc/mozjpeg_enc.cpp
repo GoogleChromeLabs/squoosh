@@ -1,7 +1,7 @@
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
+#include <emscripten.h>
 #include <inttypes.h>
-#include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,18 +39,15 @@ struct MozJpegOptions {
   int chroma_quality;
 };
 
-struct my_error_mgr {
-  struct jpeg_error_mgr pub;    /* "public" fields */
-  jmp_buf setjmp_buffer;        /* for return to caller */
-};
-
 METHODDEF(void)
-my_error_exit(j_common_ptr cinfo)
+throw_js_error(j_common_ptr cinfo)
 {
-  /* cinfo->err really points to a my_error_mgr struct, so coerce pointer */
-  struct my_error_mgr* myerr = (struct my_error_mgr*)cinfo->err;
-  /* Return control to the setjmp point */
-  longjmp(myerr->setjmp_buffer, 1);
+  char buffer[JMSG_LENGTH_MAX];
+  cinfo->err->format_message(cinfo, buffer);
+  jpeg_destroy_compress((jpeg_compress_struct*)cinfo);
+  EM_ASM({
+    throw new Error(UTF8ToString($0));
+  }, buffer);
 }
 
 int version() {
@@ -95,23 +92,15 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
    * Note that this struct must live as long as the main JPEG parameter
    * struct, to avoid dangling-pointer problems.
    */
-  my_error_mgr jerr;
+  jpeg_error_mgr jerr;
   /* We have to set up the custom error handler first, in case the
    * initialization step fails.
    * (Unlikely, but it could happen if you are out of memory.)
    * This routine fills in the contents of struct jerr, and returns jerr's
    * address which we place into the link field in cinfo.
-   * The custom error handler longjmps to the error handling block below.
    */
-  cinfo.err = jpeg_std_error(&jerr.pub);
-  jerr.pub.error_exit = my_error_exit;
-  if (setjmp(jerr.setjmp_buffer)) {
-    // The custom error handler jumps to here if an error happens.
-    jpeg_destroy_compress(&cinfo);
-    char buffer[JMSG_LENGTH_MAX];
-    jerr.pub.format_message((jpeg_common_struct*)&cinfo, buffer);
-    return val(std::string(buffer));
-  }
+  cinfo.err = jpeg_std_error(&jerr);
+  jerr.error_exit = throw_js_error;
   /* Now we can initialize the JPEG compression object. */
   jpeg_create_compress(&cinfo);
 

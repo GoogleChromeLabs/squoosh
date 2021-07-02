@@ -8,16 +8,6 @@ import { autoOptimize } from './auto-optimizer.js';
 
 export { ImagePool, encoders, preprocessors };
 
-// When an error occurs in the C++ code, it returns the error
-// message as a string.
-// This function is used to assert that return values from wasm
-// are not errors, and if they are, throw them.
-function assertNoCPPError(value, message) {
-  if (typeof value === 'string') {
-    throw new Error(`${message}: ${value}`);
-  }
-}
-
 async function decodeFile({ file }) {
   let buffer;
   if (ArrayBuffer.isView(file)) {
@@ -45,7 +35,6 @@ async function decodeFile({ file }) {
     throw Error(`${file} has an unsupported format`);
   }
   const rgba = (await encoders[key].dec()).decode(new Uint8Array(buffer));
-  assertNoCPPError(rgba, 'decode failed');
   return {
     bitmap: rgba,
     size: buffer.length,
@@ -76,8 +65,8 @@ async function encodeImage({
   if (encConfig === 'auto') {
     const optionToOptimize = encoders[encName].autoOptimize.option;
     const decoder = await encoders[encName].dec();
-    const encode = (bitmapIn, quality) => {
-      const encoded = encoder.encode(
+    const encode = (bitmapIn, quality) =>
+      encoder.encode(
         bitmapIn.data,
         bitmapIn.width,
         bitmapIn.height,
@@ -85,14 +74,7 @@ async function encodeImage({
           [optionToOptimize]: quality,
         }),
       );
-      assertNoCPPError(encoded, 'encode failed');
-      return encoded;
-    };
-    const decode = (binary) => {
-      const decoded = decoder.decode(binary);
-      assertNoCPPError(decoded, 'decode failed');
-      return decoded;
-    };
+    const decode = (binary) => decoder.decode(binary);
     const { binary: optimizedBinary, quality } = await autoOptimize(
       bitmapIn,
       encode,
@@ -116,7 +98,6 @@ async function encodeImage({
       bitmapIn.height,
       encConfig,
     );
-    assertNoCPPError(binary, 'encode failed');
   }
   return {
     optionsUsed,
