@@ -6,7 +6,6 @@
 
 extern "C" {
 #include "cdjpeg.h"
-#include "stdio.h"
 }
 
 using namespace emscripten;
