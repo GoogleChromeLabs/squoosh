@@ -1,36 +1,33 @@
 # [Squoosh]!
 
-[Squoosh] is an image compression web app that allows you to dive into the advanced options provided
-by various image compressors.
+[Squoosh] is an image compression web app that provides lossless image quality with a significant reduction to file size.
 
 # API & CLI
 
-Squoosh now has [an API](https://github.com/GoogleChromeLabs/squoosh/tree/dev/libsquoosh) and [a CLI](https://github.com/GoogleChromeLabs/squoosh/tree/dev/cli) that allows you to compress many images at once.
+Squoosh has [an API](https://github.com/GoogleChromeLabs/squoosh/tree/dev/libsquoosh) and [a CLI](https://github.com/GoogleChromeLabs/squoosh/tree/dev/cli) to compress many images at once.
 
 # Privacy
 
-Google Analytics is used to record the following:
+Squoosh does not send your image to a server. All image compression processes locally.
 
-- [Basic visit data](https://support.google.com/analytics/answer/6004245?ref_topic=2919631).
-- Before and after image size once an image is downloaded. These values are rounded to the nearest
-  kilobyte.
-- If install is available, when Squoosh is installed, and what method was used to install Squoosh.
+However, Squoosh utilizes Google Analytics to collect the following:
 
-Image compression is handled locally; no additional data is sent to the server.
+- [Basic visitor data](https://support.google.com/analytics/answer/6004245?ref_topic=2919631).
+- The before and after image size value.
+- If Squoosh CLI, the type of Squoosh installation.
+- If Squoosh CLI, the installation time and date.
 
-# Building locally
+# Developing
 
-Clone the repo, and:
+To develop for Squoosh, use the following:
 
-```sh
-npm install
-npm run build
-```
+1. Clone the repository.
+1. To install node packages, run `npm install`.
+1. To build the app, run `npm run build`.
+1. To start the development server, run `npm run dev`.
 
-You can run the development server with:
+# Contributing
 
-```sh
-npm run dev
-```
+Squoosh is an open-source project that appreciates all community involvement. To contribute to the project, follow the [contribute guide](/CONTRIBUTING.md).
 
 [squoosh]: https://squoosh.app
