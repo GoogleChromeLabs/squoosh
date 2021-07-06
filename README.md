@@ -19,18 +19,18 @@ However, Squoosh utilizes Google Analytics to collect the following:
 
 # Developing
 
-To develop for Squoosh, use the following:
+To develop for Squoosh:
 
 1. Clone the repository
-1. Install node packages, by running:
+1. To install node packages, run:
    ```sh
    npm install
    ```
-1. Build the app, by running:
+1. Then build the app by running:
    ```sh
    npm run build
    ```
-1. Start the development server, by running:
+1. After building, start the development server by running:
    ```sh
    npm run dev
    ```
