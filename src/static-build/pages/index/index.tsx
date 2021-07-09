@@ -27,7 +27,19 @@ const Index: FunctionalComponent<Props> = () => (
       <title>Squoosh</title>
       <meta
         name="description"
-        content="Compress and compare images with different codecs, right in your browser"
+        content="Squoosh is the ultimate image optimizer that allows you to compress and compare images with different codecs in your browser."
+      />
+      Optimizilla is the ultimate image optimizer to compress your images in
+      JPEG and PNG formats to the minimum possible size.
+      <meta
+        name="keywords"
+        content="best image optimizer, png to webp, online image compressor, image optimizer, online image optimizer, compress image, jpg to webp, shrink image size"
+      />
+      <meta property="og:title" content="Squoosh" />
+      <meta name="og:site_name" content="Squoosh" />
+      <meta
+        name="og:description"
+        content="Squoosh is the ultimate image optimizer that allows you to compress and compare images with different codecs in your browser."
       />
       <meta
         name="viewport"
