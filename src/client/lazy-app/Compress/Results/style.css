@@ -172,6 +172,7 @@
   display: grid;
   grid-template-columns: auto auto auto;
   line-height: 1;
+  font-size: 2.6rem;
 
   @media (min-width: 600px) {
     background: var(--main-theme-color);
@@ -185,9 +186,8 @@
 }
 
 .size-direction {
-  font-weight: 700;
   align-self: center;
-  font-family: sans-serif;
+  font-family: ui-monospace, monospace;
   opacity: 0.76;
   text-shadow: 0 2px rgba(0, 0, 0, 0.3);
   font-size: 1.5rem;
@@ -197,7 +197,6 @@
 
 .size-value {
   font-family: 'Roboto Mono Numbers';
-  font-size: 2.6rem;
   text-shadow: 0 2px rgba(0, 0, 0, 0.3);
 }
 
@@ -207,6 +206,7 @@
   top: 4px;
   opacity: 0.76;
   margin-left: 0.2rem;
+  font-size: 0.5em;
 }
 
 .download {
