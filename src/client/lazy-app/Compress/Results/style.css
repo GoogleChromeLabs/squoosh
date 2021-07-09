@@ -191,9 +191,7 @@
   font-family: ui-monospace, monospace;
   opacity: 0.76;
   text-shadow: 0 2px rgba(0, 0, 0, 0.3);
-  font-size: 1.5rem;
-  position: relative;
-  top: 3px;
+  font-size: 0.75em;
 }
 
 .size-value {
