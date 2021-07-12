@@ -16,6 +16,7 @@ import baseCss from 'css:./base.css';
 import initialCss from 'initial-css:';
 import { allSrc } from 'client-bundle:client/initial-app';
 import favicon from 'url:static-build/assets/favicon.ico';
+import ogImage from 'url:static-build/assets/icon-large-maskable.png';
 import { escapeStyleScriptContent } from 'static-build/utils';
 import Intro from 'shared/prerendered-app/Intro';
 
@@ -29,14 +30,20 @@ const Index: FunctionalComponent<Props> = () => (
         name="description"
         content="Squoosh is the ultimate image optimizer that allows you to compress and compare images with different codecs in your browser."
       />
-      Optimizilla is the ultimate image optimizer to compress your images in
-      JPEG and PNG formats to the minimum possible size.
       <meta
         name="keywords"
         content="best image optimizer, png to webp, online image compressor, image optimizer, online image optimizer, compress image, jpg to webp, shrink image size"
       />
       <meta property="og:title" content="Squoosh" />
-      <meta name="og:site_name" content="Squoosh" />
+      <meta property="og:type" content="website" />
+      <meta property="og:image" content={ogImage} />
+      <meta property="og:image:type" content="image/png" />
+      <meta property="og:image:width" content="500" />
+      <meta property="og:image:height" content="500" />
+      <meta
+        property="og:image:alt"
+        content="A cartoon of a hand squeezing an image file on a dark background."
+      />
       <meta
         name="og:description"
         content="Squoosh is the ultimate image optimizer that allows you to compress and compare images with different codecs in your browser."
