@@ -32,7 +32,7 @@ const Index: FunctionalComponent<Props> = () => (
       />
       <meta
         name="keywords"
-        content="best image optimizer, png to webp, online image compressor, image optimizer, online image optimizer, compress image, jpg to webp, shrink image size"
+        content="best image optimizer, png to webp, online image compressor, image optimizer, online image optimizer, compress image, jpg to webp, jpg to avif, shrink image size"
       />
       <meta property="og:title" content="Squoosh" />
       <meta property="og:type" content="website" />
