@@ -7,7 +7,7 @@ using namespace butteraugli;
 
 #define GAMMA 2.2
 
-static double SrgbToLinear[256];
+static float SrgbToLinear[256];
 
 inline void gammaLookupTable() {
   SrgbToLinear[0] = 0;
