@@ -5,12 +5,21 @@
 using namespace emscripten;
 using namespace butteraugli;
 
+#define GAMMA 2.2
+
+static double SrgbToLinear[256];
+
+inline void gammaLookupTable() {
+  for (int i = 1; i < 256; ++i) {
+		SrgbToLinear[i] = pow(i / 255.0, GAMMA);
+	}
+}
+
 // Turns an interleaved RGBA buffer into 4 planes for each color channel
 void planarize(std::vector<ImageF>& img,
                const uint8_t* rgba,
                int width,
-               int height,
-               float gamma = 2.2) {
+               int height) {
   assert(img.size() == 0);
   img.push_back(ImageF(width, height));
   img.push_back(ImageF(width, height));
@@ -22,10 +31,10 @@ void planarize(std::vector<ImageF>& img,
     float* const row_b = img[2].Row(y);
     float* const row_a = img[3].Row(y);
     for (int x = 0; x < width; x++) {
-      row_r[x] = 255.0 * pow(rgba[(y * width + x) * 4 + 0] / 255.0, gamma);
-      row_g[x] = 255.0 * pow(rgba[(y * width + x) * 4 + 1] / 255.0, gamma);
-      row_b[x] = 255.0 * pow(rgba[(y * width + x) * 4 + 2] / 255.0, gamma);
-      row_a[x] = 255.0 * pow(rgba[(y * width + x) * 4 + 3] / 255.0, gamma);
+      row_r[x] = static_cast<float>(255.0 * SrgbToLinear[rgba[(y * width + x) * 4 + 0]]);
+      row_g[x] = static_cast<float>(255.0 * SrgbToLinear[rgba[(y * width + x) * 4 + 1]]);
+      row_b[x] = static_cast<float>(255.0 * SrgbToLinear[rgba[(y * width + x) * 4 + 2]]);
+      row_a[x] = static_cast<float>(255.0 * SrgbToLinear[rgba[(y * width + x) * 4 + 3]]);
     }
   }
 }
@@ -37,6 +46,7 @@ class VisDiff {
 
  public:
   VisDiff(std::string ref_img, int width, int height) {
+    gammaLookupTable();
     planarize(this->ref_img, (uint8_t*)ref_img.c_str(), width, height);
     this->width = width;
     this->height = height;
