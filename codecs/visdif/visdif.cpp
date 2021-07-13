@@ -12,7 +12,7 @@ static double SrgbToLinear[256];
 inline void gammaLookupTable() {
   SrgbToLinear[0] = 0;
   for (int i = 1; i < 256; ++i) {
-		SrgbToLinear[i] = pow(i / 255.0, GAMMA);
+		SrgbToLinear[i] = static_cast<float>(255.0 * pow(i / 255.0, GAMMA));
 	}
 }
 
@@ -32,10 +32,10 @@ void planarize(std::vector<ImageF>& img,
     float* const row_b = img[2].Row(y);
     float* const row_a = img[3].Row(y);
     for (int x = 0; x < width; x++) {
-      row_r[x] = static_cast<float>(255.0 * SrgbToLinear[rgba[(y * width + x) * 4 + 0]]);
-      row_g[x] = static_cast<float>(255.0 * SrgbToLinear[rgba[(y * width + x) * 4 + 1]]);
-      row_b[x] = static_cast<float>(255.0 * SrgbToLinear[rgba[(y * width + x) * 4 + 2]]);
-      row_a[x] = static_cast<float>(255.0 * SrgbToLinear[rgba[(y * width + x) * 4 + 3]]);
+      row_r[x] = SrgbToLinear[rgba[(y * width + x) * 4 + 0]];
+      row_g[x] = SrgbToLinear[rgba[(y * width + x) * 4 + 1]];
+      row_b[x] = SrgbToLinear[rgba[(y * width + x) * 4 + 2]];
+      row_a[x] = SrgbToLinear[rgba[(y * width + x) * 4 + 3]];
     }
   }
 }
