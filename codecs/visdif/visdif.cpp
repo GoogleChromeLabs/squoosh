@@ -10,6 +10,7 @@ using namespace butteraugli;
 static double SrgbToLinear[256];
 
 inline void gammaLookupTable() {
+  SrgbToLinear[0] = 0;
   for (int i = 1; i < 256; ++i) {
 		SrgbToLinear[i] = pow(i / 255.0, GAMMA);
 	}
