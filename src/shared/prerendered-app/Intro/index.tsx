@@ -336,13 +336,37 @@ export default class Intro extends Component<Props, State> {
             </ul>
           </div>
         </div>
-        <div class={style.footer}>
+
+        <section class={style.info}>
           <svg viewBox="0 0 1920 79" class={style.topWave}>
             <path
               d="M0 59l64-11c64-11 192-34 320-43s256-5 384 4 256 23 384 34 256 21 384 14 256-30 320-41l64-11v94H0z"
               class={style.footerWave}
             />
           </svg>
+          <div class={style.infoContainer}>
+            <div class={style.infoContent}>
+              <div class={style.infoTextWrapper}>
+                <h2 class={style.infoTitle}>What's Squoosh?</h2>
+                <p>
+                  Squoosh is an image compression web app that provides lossless
+                  image quality with a significant reduction to file size.
+                  Squoosh supports the conversion of
+                </p>
+              </div>
+              <div class={style.infoImgWrapper}>
+                <img
+                  class={style.infoImg}
+                  src="https://images.unsplash.com/photo-1599229526921-4f29d42b0b41?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8cGllcnxlbnwwfHwwfHw%3D&ixlib=rb-1.2.1&w=1000&q=80"
+                  alt="placeholder"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class={style.footer}>
           <div class={style.contentPadding}>
             <footer class={style.footerItems}>
               <a
