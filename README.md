@@ -1,6 +1,6 @@
 # [Squoosh]!
 
-[Squoosh] is an image compression web app that provides lossless image quality with a significant reduction to file size.
+[Squoosh] is an image compression web app that reduces image sizes through numerous formats.
 
 # API & CLI
 
