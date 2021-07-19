@@ -12,15 +12,12 @@ static float SrgbToLinear[256];
 inline void gammaLookupTable() {
   SrgbToLinear[0] = 0;
   for (int i = 1; i < 256; ++i) {
-		SrgbToLinear[i] = static_cast<float>(255.0 * pow(i / 255.0, GAMMA));
-	}
+    SrgbToLinear[i] = static_cast<float>(255.0 * pow(i / 255.0, GAMMA));
+  }
 }
 
 // Turns an interleaved RGBA buffer into 4 planes for each color channel
-void planarize(std::vector<ImageF>& img,
-               const uint8_t* rgba,
-               int width,
-               int height) {
+void planarize(std::vector<ImageF>& img, const uint8_t* rgba, int width, int height) {
   assert(img.size() == 0);
   img.push_back(ImageF(width, height));
   img.push_back(ImageF(width, height));
