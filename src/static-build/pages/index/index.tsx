@@ -36,6 +36,7 @@ const Index: FunctionalComponent<Props> = () => (
       />
       <meta name="twitter:card" content="summary" />
       <meta name="twitter:site" content="@SquooshApp" />
+      <meta name="twitter:image" content={ogImage} />
       <meta property="og:title" content="Squoosh" />
       <meta property="og:type" content="website" />
       <meta property="og:image" content={ogImage} />
