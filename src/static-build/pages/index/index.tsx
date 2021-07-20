@@ -34,6 +34,8 @@ const Index: FunctionalComponent<Props> = () => (
         name="keywords"
         content="best image optimizer, png to webp, online image compressor, image optimizer, online image optimizer, compress image, jpg to webp, jpg to avif, shrink image size"
       />
+      <meta name="twitter:card" content="summary" />
+      <meta name="twitter:site" content="@SquooshApp" />
       <meta property="og:title" content="Squoosh" />
       <meta property="og:type" content="website" />
       <meta property="og:image" content={ogImage} />
