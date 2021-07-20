@@ -2,6 +2,7 @@ import resolve from '@rollup/plugin-node-resolve';
 import cjs from '@rollup/plugin-commonjs';
 import simpleTS from './lib/simple-ts';
 import asset from './lib/asset-plugin.js';
+import chunk from './lib/chunk-plugin.js';
 import json from './lib/json-plugin.js';
 import autojson from './lib/autojson-plugin.js';
 import { getBabelOutputPlugin } from '@rollup/plugin-babel';
@@ -18,6 +19,7 @@ export default {
   plugins: [
     resolve(),
     cjs(),
+    chunk(),
     asset(),
     autojson(),
     json(),
