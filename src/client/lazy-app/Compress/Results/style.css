@@ -222,6 +222,8 @@
   align-items: center;
   justify-items: center;
   align-self: center;
+  user-drag: element;
+  -webkit-user-drag: element;
 
   @media (min-width: 600px) {
     --size: 63px;
