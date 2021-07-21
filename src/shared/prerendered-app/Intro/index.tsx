@@ -312,7 +312,7 @@ export default class Intro extends Component<Props, State> {
               {demos.map((demo, i) => (
                 <li>
                   <button
-                    class="unbutton"
+                    class={'unbutton ' + style.sampleButton}
                     onClick={(event) => this.onDemoClick(i, event)}
                   >
                     <div>
