@@ -34,9 +34,11 @@ async function decodeFile({ file }) {
   if (!key) {
     throw Error(`${file} has an unsupported format`);
   }
+  const lossless = encoders[key].losslessDetector(new Uint8Array(buffer.slice(0, 32)));
   const rgba = (await encoders[key].dec()).decode(new Uint8Array(buffer));
   return {
     bitmap: rgba,
+    lossless,
     size: buffer.length,
   };
 }
