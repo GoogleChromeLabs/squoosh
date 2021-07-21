@@ -15,11 +15,11 @@ function jobPromise(worker, msg) {
       if (rid !== id) {
         return;
       }
+      worker.off('message', f);
       if (error) {
         reject(error);
         return;
       }
-      worker.off('message', f);
       resolve(result);
     });
   });
@@ -97,7 +97,7 @@ export default class WorkerPool {
         const result = await cb(msg);
         parentPort.postMessage({ result, id });
       } catch (e) {
-        parentPort.postMessage({ error: e.message, id });
+        parentPort.postMessage({ error: e, id });
       }
     });
   }
