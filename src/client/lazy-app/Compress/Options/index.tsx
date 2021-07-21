@@ -1,4 +1,4 @@
-import { h, Component } from 'preact';
+import { h, Component, createRef } from 'preact';
 
 import * as style from './style.css';
 import 'add-css:./style.css';
@@ -15,9 +15,10 @@ import {
 import Expander from './Expander';
 import Toggle from './Toggle';
 import Select from './Select';
+import Flyout from '../Flyout';
 import { Options as QuantOptionsComponent } from 'features/processors/quantize/client';
 import { Options as ResizeOptionsComponent } from 'features/processors/resize/client';
-import { CLIIcon, SwapIcon } from 'client/lazy-app/icons';
+import { CLIIcon, MoreIcon, SwapIcon } from 'client/lazy-app/icons';
 
 interface Props {
   index: 0 | 1;
@@ -63,6 +64,8 @@ export default class Options extends Component<Props, State> {
   state: State = {
     supportedEncoderMap: undefined,
   };
+
+  menu = createRef<Flyout>();
 
   constructor() {
     super();
@@ -110,10 +113,12 @@ export default class Options extends Component<Props, State> {
 
   private onCopyCliClick = () => {
     this.props.onCopyCliClick(this.props.index);
+    if (this.menu.current) this.menu.current.hide();
   };
 
   private onCopyToOtherSideClick = () => {
     this.props.onCopyToOtherSideClick(this.props.index);
+    if (this.menu.current) this.menu.current.hide();
   };
 
   render(
@@ -136,23 +141,33 @@ export default class Options extends Component<Props, State> {
           {!encoderState ? null : (
             <div>
               <h3 class={style.optionsTitle}>
-                <div class={style.titleAndButtons}>
-                  Edit
+                Edit
+                <Flyout
+                  ref={this.menu}
+                  class={style.menu}
+                  direction={['up', 'left']}
+                  anchor="right"
+                  toggle={
+                    <button class={style.titleButton}>
+                      <MoreIcon />
+                    </button>
+                  }
+                >
                   <button
-                    class={style.cliButton}
-                    title="Copy npx command"
+                    class={style.menuButton}
                     onClick={this.onCopyCliClick}
                   >
                     <CLIIcon />
+                    Copy npx command
                   </button>
                   <button
-                    class={style.copyOverButton}
-                    title="Copy settings to other side"
+                    class={style.menuButton}
                     onClick={this.onCopyToOtherSideClick}
                   >
                     <SwapIcon />
+                    Copy settings to other side
                   </button>
-                </div>
+                </Flyout>
               </h3>
               <label class={style.sectionEnabler}>
                 Resize

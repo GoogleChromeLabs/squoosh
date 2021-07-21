@@ -75,7 +75,9 @@ async function getInputFiles(paths) {
 
   for (const inputPath of paths) {
     const files = (await fsp.lstat(inputPath)).isDirectory()
-      ? (await fsp.readdir(inputPath, {withFileTypes: true})).filter(dirent => dirent.isFile()).map(dirent => path.join(inputPath, dirent.name))
+      ? (await fsp.readdir(inputPath, { withFileTypes: true }))
+          .filter((dirent) => dirent.isFile())
+          .map((dirent) => path.join(inputPath, dirent.name))
       : [inputPath];
     for (const file of files) {
       try {

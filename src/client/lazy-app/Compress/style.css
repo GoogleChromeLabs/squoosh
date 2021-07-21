@@ -17,6 +17,47 @@
       'header header header'
       'optsLeft viewportOpts optsRight';
   }
+
+  /* darker squares background */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #000;
+    opacity: 0.8;
+    transition: opacity 500ms ease;
+  }
+
+  &.alt-background::before {
+    opacity: 0;
+  }
+
+  /* transformation is modal and we sweep away the comparison UI */
+  &.transforming {
+    & > .options {
+      transform: translateX(-100%);
+    }
+    & > .options + .options {
+      transform: translateX(100%);
+    }
+
+    @media (max-width: 599px) {
+      & > .options {
+        display: none;
+      }
+    }
+
+    & > .back {
+      display: none;
+    }
+
+    & > :first-child {
+      display: none;
+    }
+  }
 }
 
 .options {
@@ -33,6 +74,7 @@
   grid-template-rows: 1fr max-content;
   align-content: end;
   align-self: end;
+  transition: transform 500ms ease;
 
   @media (min-width: 600px) {
     width: 300px;
