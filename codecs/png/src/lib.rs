@@ -53,7 +53,11 @@ where
 #[wasm_bindgen]
 pub fn decode(mut data: &[u8]) -> ImageData {
     let mut decoder = png::Decoder::new(&mut data);
-    decoder.set_transformations(png::Transformations::EXPAND);
+    decoder.set_transformations(
+        png::Transformations::EXPAND | // Turn paletted images into RGB
+        png::Transformations::PACKING | // Turn images <8bit to 8bit
+        png::Transformations::STRIP_16, // Turn 16bit into 8 bit
+    );
     let (info, mut reader) = decoder.read_info().unwrap_throw();
     let num_pixels = (info.width * info.height) as usize;
     let mut buf = vec![0; num_pixels * 4];
