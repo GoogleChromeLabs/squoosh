@@ -100,6 +100,9 @@ async function decodeImage(
 
   try {
     if (!canDecode) {
+      if (mimeType === 'image/ktx2') {
+        return await workerBridge.basisDecode(signal, blob);
+      }
       if (mimeType === 'image/avif') {
         return await workerBridge.avifDecode(signal, blob);
       }
