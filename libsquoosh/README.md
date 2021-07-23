@@ -30,7 +30,7 @@ const imagePath = 'path/to/image.png';
 const image = imagePool.ingestImage(imagePath);
 ```
 
-The `ingestImage` function can take anything the node [`readFile`][readfile] function can take, uncluding a buffer and `FileHandle`.
+The `ingestImage` function can take anything the node [`readFile`][readfile] function can take, including a buffer and `FileHandle`.
 
 The returned `image` object is a representation of the original image, that you can now preprocess, encode, and extract information about.
 
