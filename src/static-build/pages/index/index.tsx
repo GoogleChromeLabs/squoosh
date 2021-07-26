@@ -30,10 +30,6 @@ const Index: FunctionalComponent<Props> = () => (
         name="description"
         content="Squoosh is the ultimate image optimizer that allows you to compress and compare images with different codecs in your browser."
       />
-      <meta
-        name="keywords"
-        content="best image optimizer, png to webp, online image compressor, image optimizer, online image optimizer, compress image, jpg to webp, jpg to avif, shrink image size"
-      />
       <meta name="twitter:card" content="summary" />
       <meta name="twitter:site" content="@SquooshApp" />
       <meta property="og:title" content="Squoosh" />
