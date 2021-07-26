@@ -35,13 +35,15 @@ val encode(std::string image, int width, int height, JXLOptions options) {
 
   cparams.epf = options.epf;
   cparams.speed_tier = static_cast<jxl::SpeedTier>(options.speed);
-  cparams.near_lossless = options.nearLossless;
   cparams.decoding_speed_tier = options.decodingSpeedTier;
 
-  if (options.lossyPalette) {
+  if (options.lossyPalette || options.nearLossless) {
     cparams.lossy_palette = true;
     cparams.palette_colors = 0;
     cparams.options.predictor = jxl::Predictor::Zero;
+    // Near-lossless assumes -R 0
+    cparams.responsive = 0;
+    cparams.modular_mode = true;
   }
 
   float quality = options.quality;
@@ -75,12 +77,6 @@ val encode(std::string image, int width, int height, JXLOptions options) {
     } else {
       cparams.color_transform = jxl::ColorTransform::kNone;
     }
-  }
-
-  if (cparams.near_lossless) {
-    // Near-lossless assumes -R 0
-    cparams.responsive = 0;
-    cparams.modular_mode = true;
   }
 
   io.metadata.m.SetAlphaBits(8);

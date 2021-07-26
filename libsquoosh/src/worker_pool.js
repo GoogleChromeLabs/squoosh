@@ -64,7 +64,7 @@ export default class WorkerPool {
 
   async _nextWorker() {
     const reader = this.workerQueue.readable.getReader();
-    const { value, done } = await reader.read();
+    const { value } = await reader.read();
     reader.releaseLock();
     return value;
   }
