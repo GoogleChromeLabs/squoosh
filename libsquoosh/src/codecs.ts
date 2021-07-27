@@ -257,7 +257,7 @@ export const preprocessors = {
       numRotations: 0,
     },
   },
-};
+} as const;
 
 export const codecs = {
   mozjpeg: {
@@ -444,4 +444,4 @@ export const codecs = {
       max: 1,
     },
   },
-};
+} as const;

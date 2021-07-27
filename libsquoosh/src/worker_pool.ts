@@ -1,5 +1,7 @@
 import { Worker, parentPort } from 'worker_threads';
+// @ts-ignore
 import { TransformStream } from 'web-streams-polyfill';
+import type { JobMessage } from './index';
 
 function uuid() {
   return Array.from({ length: 16 }, () =>
@@ -7,7 +9,7 @@ function uuid() {
   ).join('');
 }
 
-function jobPromise(worker, msg) {
+function jobPromise(worker: Worker, msg: JobMessage) {
   return new Promise((resolve, reject) => {
     const id = uuid();
     worker.postMessage({ msg, id });
@@ -26,7 +28,12 @@ function jobPromise(worker, msg) {
 }
 
 export default class WorkerPool {
-  constructor(numWorkers, workerFile) {
+  public numWorkers: number;
+  public jobQueue: TransformStream;
+  public workerQueue: TransformStream;
+  public done: Promise<void>;
+
+  constructor(numWorkers: number, workerFile: string) {
     this.numWorkers = numWorkers;
     this.jobQueue = new TransformStream();
     this.workerQueue = new TransformStream();
@@ -82,7 +89,7 @@ export default class WorkerPool {
     await this.done;
   }
 
-  dispatchJob(msg) {
+  dispatchJob(msg: JobMessage): Promise<any> {
     return new Promise((resolve, reject) => {
       const writer = this.jobQueue.writable.getWriter();
       writer.write({ msg, resolve, reject });
@@ -90,14 +97,14 @@ export default class WorkerPool {
     });
   }
 
-  static useThisThreadAsWorker(cb) {
-    parentPort.on('message', async (data) => {
+  static useThisThreadAsWorker(cb: (msg: JobMessage) => any) {
+    parentPort!.on('message', async (data) => {
       const { msg, id } = data;
       try {
         const result = await cb(msg);
-        parentPort.postMessage({ result, id });
+        parentPort!.postMessage({ result, id });
       } catch (e) {
-        parentPort.postMessage({ error: e.message, id });
+        parentPort!.postMessage({ error: e.message, id });
       }
     });
   }
