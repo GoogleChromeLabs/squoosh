@@ -9,6 +9,23 @@ import { cpus } from 'os';
   hardwareConcurrency: cpus().length,
 };
 
+interface DecodeModule extends EmscriptenWasm.Module {
+  decode: (data: Uint8Array) => any;
+}
+
+interface EncodeModule extends EmscriptenWasm.Module {
+  encode: (
+    data: Uint8ClampedArray | ArrayBuffer,
+    width: number,
+    height: number,
+    opts: any,
+  ) => Uint8Array;
+}
+
+type DecodeModuleFactory = EmscriptenWasm.ModuleFactory<DecodeModule>;
+
+type EncodeModuleFactory = EmscriptenWasm.ModuleFactory<EncodeModule>;
+
 interface RotateModuleInstance {
   exports: {
     memory: WebAssembly.Memory;
@@ -264,8 +281,10 @@ export const codecs = {
     name: 'MozJPEG',
     extension: 'jpg',
     detectors: [/^\xFF\xD8\xFF/],
-    dec: () => instantiateEmscriptenWasm(mozDec, mozDecWasm),
-    enc: () => instantiateEmscriptenWasm(mozEnc, mozEncWasm),
+    dec: () =>
+      instantiateEmscriptenWasm(mozDec as DecodeModuleFactory, mozDecWasm),
+    enc: () =>
+      instantiateEmscriptenWasm(mozEnc as EncodeModuleFactory, mozEncWasm),
     defaultEncoderOptions: {
       quality: 75,
       baseline: false,
@@ -294,8 +313,10 @@ export const codecs = {
     name: 'WebP',
     extension: 'webp',
     detectors: [/^RIFF....WEBPVP8[LX ]/s],
-    dec: () => instantiateEmscriptenWasm(webpDec, webpDecWasm),
-    enc: () => instantiateEmscriptenWasm(webpEnc, webpEncWasm),
+    dec: () =>
+      instantiateEmscriptenWasm(webpDec as DecodeModuleFactory, webpDecWasm),
+    enc: () =>
+      instantiateEmscriptenWasm(webpEnc as EncodeModuleFactory, webpEncWasm),
     defaultEncoderOptions: {
       quality: 75,
       target_size: 0,
@@ -335,16 +356,20 @@ export const codecs = {
     name: 'AVIF',
     extension: 'avif',
     detectors: [/^\x00\x00\x00 ftypavif\x00\x00\x00\x00/],
-    dec: () => instantiateEmscriptenWasm(avifDec, avifDecWasm),
+    dec: () =>
+      instantiateEmscriptenWasm(avifDec as DecodeModuleFactory, avifDecWasm),
     enc: async () => {
       if (await threads()) {
         return instantiateEmscriptenWasm(
-          avifEncMt,
+          avifEncMt as EncodeModuleFactory,
           avifEncMtWasm,
           avifEncMtWorker,
         );
       }
-      return instantiateEmscriptenWasm(avifEnc, avifEncWasm);
+      return instantiateEmscriptenWasm(
+        avifEnc as EncodeModuleFactory,
+        avifEncWasm,
+      );
     },
     defaultEncoderOptions: {
       cqLevel: 33,
@@ -368,8 +393,10 @@ export const codecs = {
     name: 'JPEG-XL',
     extension: 'jxl',
     detectors: [/^\xff\x0a/],
-    dec: () => instantiateEmscriptenWasm(jxlDec, jxlDecWasm),
-    enc: () => instantiateEmscriptenWasm(jxlEnc, jxlEncWasm),
+    dec: () =>
+      instantiateEmscriptenWasm(jxlDec as DecodeModuleFactory, jxlDecWasm),
+    enc: () =>
+      instantiateEmscriptenWasm(jxlEnc as EncodeModuleFactory, jxlEncWasm),
     defaultEncoderOptions: {
       speed: 4,
       quality: 75,
@@ -389,8 +416,10 @@ export const codecs = {
     name: 'WebP2',
     extension: 'wp2',
     detectors: [/^\xF4\xFF\x6F/],
-    dec: () => instantiateEmscriptenWasm(wp2Dec, wp2DecWasm),
-    enc: () => instantiateEmscriptenWasm(wp2Enc, wp2EncWasm),
+    dec: () =>
+      instantiateEmscriptenWasm(wp2Dec as DecodeModuleFactory, wp2DecWasm),
+    enc: () =>
+      instantiateEmscriptenWasm(wp2Enc as EncodeModuleFactory, wp2EncWasm),
     defaultEncoderOptions: {
       quality: 75,
       alpha_quality: 75,
@@ -421,7 +450,7 @@ export const codecs = {
       await oxipngPromise;
       return {
         encode: (
-          buffer: Uint8Array,
+          buffer: Uint8ClampedArray | ArrayBuffer,
           width: number,
           height: number,
           opts: { level: number },

@@ -79,7 +79,7 @@ async function encodeImage({
 }: {
   bitmap: ImageData;
   encName: EncoderKey;
-  encConfig: string | { [key: string]: any };
+  encConfig: any;
   optimizerButteraugliTarget: number;
   maxOptimizerRounds: number;
 }) {
@@ -94,7 +94,7 @@ async function encodeImage({
         bitmapIn.data,
         bitmapIn.width,
         bitmapIn.height,
-        Object.assign({}, encoders[encName].defaultEncoderOptions, {
+        Object.assign({}, encoders[encName].defaultEncoderOptions as any, {
           [optionToOptimize]: quality,
         }),
       );
