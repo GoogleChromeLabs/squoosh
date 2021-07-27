@@ -17,7 +17,7 @@ import initialCss from 'initial-css:';
 import { allSrc } from 'client-bundle:client/initial-app';
 import favicon from 'url:static-build/assets/favicon.ico';
 import ogImage from 'url:static-build/assets/icon-large-maskable.png';
-import { escapeStyleScriptContent } from 'static-build/utils';
+import { escapeStyleScriptContent, siteOrigin } from 'static-build/utils';
 import Intro from 'shared/prerendered-app/Intro';
 
 interface Props {}
@@ -34,8 +34,11 @@ const Index: FunctionalComponent<Props> = () => (
       <meta name="twitter:site" content="@SquooshApp" />
       <meta property="og:title" content="Squoosh" />
       <meta property="og:type" content="website" />
-      <meta property="og:image" content={ogImage} />
-      <meta property="og:image:secure_url" content={ogImage} />
+      <meta property="og:image" content={`${siteOrigin}${ogImage}`} />
+      <meta
+        property="og:image:secure_url"
+        content={`${siteOrigin}${ogImage}`}
+      />
       <meta property="og:image:type" content="image/png" />
       <meta property="og:image:width" content="500" />
       <meta property="og:image:height" content="500" />
