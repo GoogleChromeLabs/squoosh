@@ -49,6 +49,9 @@ function progressTracker(results) {
   tracker.finish = (text) => {
     spinner.succeed(kleur.bold(text) + getResultsText());
   };
+  tracker.finishError = (text) => {
+    spinner.fail(text);
+  }
   function getResultsText() {
     let out = '';
     for (const result of results.values()) {
@@ -98,13 +101,20 @@ async function getInputFiles(paths) {
   return validFiles;
 }
 
-async function processFiles(files) {
-  files = await getInputFiles(files);
-
-  const imagePool = new ImagePool();
-
+function processFiles(files) {
   const results = new Map();
+  const imagePool = new ImagePool();
   const progress = progressTracker(results);
+  innerProcessFiles({files, results, imagePool, progress}).then(() => {
+    progress.finish("Squoosh results:");
+  }).catch(e => {
+    progress.finishError(e.stack);
+  }).finally(() => imagePool.close())
+    .catch(() => {}); // Ignore errors from imagePool.close().
+}
+
+async function innerProcessFiles({files, results, imagePool, progress}) {
+  files = await getInputFiles(files);
 
   progress.setStatus('Decoding...');
   progress.totalOffset = files.length;
@@ -117,7 +127,13 @@ async function processFiles(files) {
   let decodedFiles = await Promise.all(
     files.map(async (file) => {
       const image = imagePool.ingestImage(file);
-      await image.decoded;
+      try {
+        await image.decoded;
+      } catch (error) {
+        const wrappedError = new Error("Error while decoding " + file);
+        wrappedError.stack += '\nCaused by: ' + error.stack;
+        throw wrappedError;
+      }
       results.set(image, {
         file,
         size: (await image.decoded).size,
@@ -188,6 +204,10 @@ async function processFiles(files) {
           .outputs.push(Object.assign(await output, { outputFile }));
       }
       progress.setProgress(jobsFinished, jobsStarted);
+    }).catch(error => {
+      const wrappedError = new Error("Error while encoding " + originalFile);
+      wrappedError.stack += '\nCaused by: ' + error.stack;
+      throw wrappedError;
     });
     jobs.push(job);
   }
@@ -196,8 +216,6 @@ async function processFiles(files) {
   progress.setProgress(jobsFinished, jobsStarted);
   // Wait for all jobs to finish
   await Promise.all(jobs);
-  await imagePool.close();
-  progress.finish('Squoosh results:');
 }
 
 program

@@ -1,5 +1,6 @@
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
+#include <emscripten.h>
 #include "config.h"
 #include "jpeglib.h"
 
@@ -9,6 +10,17 @@ extern "C" {
 
 using namespace emscripten;
 
+METHODDEF(void)
+throw_js_error(j_common_ptr cinfo)
+{
+  char buffer[JMSG_LENGTH_MAX];
+  cinfo->err->format_message(cinfo, buffer);
+  jpeg_destroy_decompress((jpeg_decompress_struct*)cinfo);
+  EM_ASM({
+    throw new Error(UTF8ToString($0));
+  }, buffer);
+}
+
 thread_local const val Uint8ClampedArray = val::global("Uint8ClampedArray");
 thread_local const val ImageData = val::global("ImageData");
 
@@ -17,8 +29,9 @@ val decode(std::string image_in) {
 
   jpeg_decompress_struct cinfo;
   jpeg_error_mgr jerr;
-  // Initialize the JPEG decompression object with default error handling.
+  // Initialize the JPEG decompression object with custom error handling.
   cinfo.err = jpeg_std_error(&jerr);
+  jerr.error_exit = throw_js_error;
   jpeg_create_decompress(&cinfo);
 
   jpeg_mem_src(&cinfo, image_buffer, image_in.length());

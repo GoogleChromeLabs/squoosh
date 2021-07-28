@@ -1,7 +1,7 @@
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
+#include <emscripten.h>
 #include <inttypes.h>
-#include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,6 +38,17 @@ struct MozJpegOptions {
   bool separate_chroma_quality;
   int chroma_quality;
 };
+
+METHODDEF(void)
+throw_js_error(j_common_ptr cinfo)
+{
+  char buffer[JMSG_LENGTH_MAX];
+  cinfo->err->format_message(cinfo, buffer);
+  jpeg_destroy_compress((jpeg_compress_struct*)cinfo);
+  EM_ASM({
+    throw new Error(UTF8ToString($0));
+  }, buffer);
+}
 
 int version() {
   char buffer[] = xstr(MOZJPEG_VERSION);
@@ -82,12 +93,14 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
    * struct, to avoid dangling-pointer problems.
    */
   jpeg_error_mgr jerr;
-  /* We have to set up the error handler first, in case the initialization
-   * step fails.  (Unlikely, but it could happen if you are out of memory.)
+  /* We have to set up the custom error handler first, in case the
+   * initialization step fails.
+   * (Unlikely, but it could happen if you are out of memory.)
    * This routine fills in the contents of struct jerr, and returns jerr's
    * address which we place into the link field in cinfo.
    */
   cinfo.err = jpeg_std_error(&jerr);
+  jerr.error_exit = throw_js_error;
   /* Now we can initialize the JPEG compression object. */
   jpeg_create_compress(&cinfo);
 
