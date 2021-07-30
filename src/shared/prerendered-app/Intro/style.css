@@ -120,20 +120,24 @@
 
 .info {
   background: var(--light-gray);
-  display: flex;
-  justify-content: center;
   position: relative;
+  padding-bottom: 2em;
+}
+
+.info-container {
+  max-width: 1440px;
+  margin: 0 auto;
 }
 
 .info-content {
   display: grid;
   align-items: center;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   justify-items: center;
 }
 
-.info-container {
-  max-width: 1440px;
+.dir-rtl {
+  direction: rtl;
 }
 
 .info-title {
@@ -143,7 +147,7 @@
 .info-text-wrapper {
   display: flex;
   flex-flow: column wrap;
-  max-width: 70%;
+  max-width: 20em;
 }
 
 .info-img {
