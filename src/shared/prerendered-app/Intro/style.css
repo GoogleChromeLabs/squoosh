@@ -121,7 +121,7 @@
 .info {
   background: var(--light-gray);
   position: relative;
-  padding-bottom: 2em;
+  padding: 5em 0;
 }
 
 .info-container {
@@ -134,6 +134,7 @@
   align-items: center;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   justify-items: center;
+  padding: 0 1em;
 }
 
 .dir-rtl {
@@ -142,12 +143,23 @@
 
 .info-title {
   color: var(--pink);
+  font-size: 3em;
+  margin: 0;
+}
+
+.info-caption {
+  font-size: 1.5em;
+  margin: 1em 0 0.5em 0;
+}
+
+.info-link {
+  font-size: 1.25em;
 }
 
 .info-text-wrapper {
   display: flex;
   flex-flow: column wrap;
-  max-width: 20em;
+  max-width: 39em;
 }
 
 .info-img {
@@ -157,7 +169,7 @@
 }
 
 .info-img-wrapper {
-  max-width: 400px;
+  max-width: 560px;
 }
 
 .footer {

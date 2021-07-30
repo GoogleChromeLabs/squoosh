@@ -348,7 +348,7 @@ export default class Intro extends Component<Props, State> {
             <div class={style.infoContent}>
               <div class={style.infoTextWrapper}>
                 <h2 class={style.infoTitle}>Small</h2>
-                <p>
+                <p class={style.infoCaption}>
                   Smaller images mean faster load times. Squoosh can reduce file
                   size and maintain high quality.
                 </p>
@@ -356,7 +356,7 @@ export default class Intro extends Component<Props, State> {
               <div class={style.infoImgWrapper}>
                 <img
                   class={style.infoImg}
-                  src="https://images.unsplash.com/photo-1599229526921-4f29d42b0b41?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8cGllcnxlbnwwfHwwfHw%3D&ixlib=rb-1.2.1&w=1000&q=80"
+                  src="https://images.unsplash.com/photo-1517329782449-810562a4ec2f?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=2844&q=80"
                   alt="placeholder"
                   loading="lazy"
                 />
@@ -370,18 +370,22 @@ export default class Intro extends Component<Props, State> {
             <div class={`${style.infoContent} ${style.dirRtl}`}>
               <div class={style.infoTextWrapper}>
                 <h2 class={style.infoTitle}>Simple</h2>
-                <p>
+                <p class={style.infoCaption}>
                   Open your image, inspect the differences, then save instantly.
-                  Feeling adventurous? Tailor your images your way.&nbsp;
-                  <a href="#" target="_blank">
-                    Learn more.
-                  </a>
+                  Feeling adventurous? Tailor your images your way.
                 </p>
+                <a
+                  class={style.infoLink}
+                  href="https://github.com/GoogleChromeLabs/squoosh"
+                  target="_blank"
+                >
+                  Learn more.
+                </a>
               </div>
               <div class={style.infoImgWrapper}>
                 <img
                   class={style.infoImg}
-                  src="https://images.unsplash.com/photo-1599229526921-4f29d42b0b41?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8cGllcnxlbnwwfHwwfHw%3D&ixlib=rb-1.2.1&w=1000&q=80"
+                  src="https://images.unsplash.com/photo-1517329782449-810562a4ec2f?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=2844&q=80"
                   alt="placeholder"
                   loading="lazy"
                 />
@@ -395,7 +399,7 @@ export default class Intro extends Component<Props, State> {
             <div class={style.infoContent}>
               <div class={style.infoTextWrapper}>
                 <h2 class={style.infoTitle}>Secure</h2>
-                <p>
+                <p class={style.infoCaption}>
                   Worried about privacy? Squoosh always coverts your images on
                   your computer and they never go to the cloud.
                 </p>
@@ -403,7 +407,7 @@ export default class Intro extends Component<Props, State> {
               <div class={style.infoImgWrapper}>
                 <img
                   class={style.infoImg}
-                  src="https://images.unsplash.com/photo-1599229526921-4f29d42b0b41?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8cGllcnxlbnwwfHwwfHw%3D&ixlib=rb-1.2.1&w=1000&q=80"
+                  src="https://images.unsplash.com/photo-1517329782449-810562a4ec2f?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=2844&q=80"
                   alt="placeholder"
                   loading="lazy"
                 />
