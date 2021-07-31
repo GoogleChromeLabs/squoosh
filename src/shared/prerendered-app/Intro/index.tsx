@@ -1,4 +1,4 @@
-import { h, Component } from 'preact';
+import { h, Component, options } from 'preact';
 
 import { linkRef } from 'shared/prerendered-app/util';
 import '../../custom-els/loading-spinner';
@@ -103,6 +103,8 @@ export default class Intro extends Component<Props, State> {
         );
       });
     }
+
+    this.observeSections();
   }
 
   componentWillUnmount() {
@@ -112,6 +114,30 @@ export default class Intro extends Component<Props, State> {
     );
     window.removeEventListener('appinstalled', this.onAppInstalled);
   }
+
+  private observeSections = (): void => {
+    const infoSections = document.querySelectorAll(`.infos`);
+    const observerOptions = {
+      root: null,
+      threshold: 0,
+      rootMargin: '0px',
+    };
+
+    const observer = new IntersectionObserver((entries, observer) => {
+      entries.forEach((entry) => {
+        console.log(entry);
+        if (!entry.isIntersecting) {
+          return;
+        }
+        entry.target.classList.toggle(style.slideUpFadeIn);
+        observer.unobserve(entry.target);
+      });
+    }, observerOptions);
+
+    infoSections.forEach((section) => {
+      observer.observe(section);
+    });
+  };
 
   private onFileChange = (event: Event): void => {
     const fileInput = event.target as HTMLInputElement;
@@ -337,14 +363,17 @@ export default class Intro extends Component<Props, State> {
           </div>
         </div>
 
-        <section class={style.info}>
+        <div class={style.bottomWave}>
           <svg viewBox="0 0 1920 79" class={style.topWave}>
             <path
               d="M0 59l64-11c64-11 192-34 320-43s256-5 384 4 256 23 384 34 256 21 384 14 256-30 320-41l64-11v94H0z"
               class={style.footerWave}
             />
           </svg>
-          <div class={style.infoContainer}>
+        </div>
+
+        <section class={style.info}>
+          <div class={`${style.infoContainer} infos`}>
             <div class={style.infoContent}>
               <div class={style.infoTextWrapper}>
                 <h2 class={style.infoTitle}>Small</h2>
@@ -366,7 +395,7 @@ export default class Intro extends Component<Props, State> {
         </section>
 
         <section class={style.info}>
-          <div class={style.infoContainer}>
+          <div class={`${style.infoContainer} infos`}>
             <div class={`${style.infoContent} ${style.dirRtl}`}>
               <div class={style.infoTextWrapper}>
                 <h2 class={style.infoTitle}>Simple</h2>
@@ -395,7 +424,7 @@ export default class Intro extends Component<Props, State> {
         </section>
 
         <section class={style.info}>
-          <div class={style.infoContainer}>
+          <div class={`${style.infoContainer} infos`}>
             <div class={style.infoContent}>
               <div class={style.infoTextWrapper}>
                 <h2 class={style.infoTitle}>Secure</h2>

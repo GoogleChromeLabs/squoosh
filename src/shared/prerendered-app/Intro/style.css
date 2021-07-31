@@ -118,6 +118,10 @@
   fill: var(--light-blue);
 }
 
+.bottom-wave {
+  position: relative;
+}
+
 .info {
   background: var(--light-gray);
   position: relative;
@@ -139,6 +143,7 @@
 
 .dir-rtl {
   direction: rtl;
+  text-align: right;
 }
 
 .info-title {
@@ -218,9 +223,22 @@
   }
 }
 
+.slide-up-fade-in {
+  @media screen and (prefers-reduced-motion: no-preference) {
+    animation: slide-up-fade-in ease 600ms;
+  }
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;
+  }
+}
+
+@keyframes slide-up-fade-in {
+  from {
+    opacity: 0;
+    transform: translate(0px, 40px);
   }
 }
 
