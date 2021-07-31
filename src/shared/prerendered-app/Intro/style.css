@@ -129,7 +129,7 @@
 }
 
 .info-container {
-  max-width: 1440px;
+  max-width: 1000px;
   margin: 0 auto;
 }
 
@@ -137,7 +137,6 @@
   display: grid;
   align-items: center;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  justify-items: center;
   padding: 0 1em;
 }
 
@@ -165,6 +164,7 @@
   display: flex;
   flex-flow: column wrap;
   max-width: 39em;
+  justify-self: center;
 }
 
 .info-img {
@@ -174,7 +174,8 @@
 }
 
 .info-img-wrapper {
-  max-width: 560px;
+  max-width: 400px;
+  justify-self: end;
 }
 
 .footer {

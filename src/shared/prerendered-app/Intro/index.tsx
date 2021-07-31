@@ -10,6 +10,9 @@ import deviceScreen from 'url:./imgs/demos/demo-device-screen.png';
 import largePhotoIcon from 'url:./imgs/demos/icon-demo-large-photo.jpg';
 import artworkIcon from 'url:./imgs/demos/icon-demo-artwork.jpg';
 import deviceScreenIcon from 'url:./imgs/demos/icon-demo-device-screen.jpg';
+import smallSectionAsset from 'url:./imgs/info-content/small-after.svg';
+import simpleSectionAsset from 'url:./imgs/info-content/simple-before.svg';
+import secureSectionAsset from 'url:./imgs/info-content/secure.svg';
 import logoIcon from 'url:./imgs/demos/icon-demo-logo.png';
 import logoWithText from 'url:./imgs/logo-with-text.svg';
 import * as style from './style.css';
@@ -117,7 +120,7 @@ export default class Intro extends Component<Props, State> {
 
   private observeSections = (): void => {
     const infoSections = document.querySelectorAll(`.infos`);
-    const observerOptions = {
+    const options = {
       root: null,
       threshold: 0,
       rootMargin: '0px',
@@ -132,7 +135,7 @@ export default class Intro extends Component<Props, State> {
         entry.target.classList.toggle(style.slideUpFadeIn);
         observer.unobserve(entry.target);
       });
-    }, observerOptions);
+    }, options);
 
     infoSections.forEach((section) => {
       observer.observe(section);
@@ -385,7 +388,7 @@ export default class Intro extends Component<Props, State> {
               <div class={style.infoImgWrapper}>
                 <img
                   class={style.infoImg}
-                  src="https://images.unsplash.com/photo-1517329782449-810562a4ec2f?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=2844&q=80"
+                  src={smallSectionAsset}
                   alt="placeholder"
                   loading="lazy"
                 />
@@ -414,7 +417,7 @@ export default class Intro extends Component<Props, State> {
               <div class={style.infoImgWrapper}>
                 <img
                   class={style.infoImg}
-                  src="https://images.unsplash.com/photo-1517329782449-810562a4ec2f?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=2844&q=80"
+                  src={simpleSectionAsset}
                   alt="placeholder"
                   loading="lazy"
                 />
@@ -436,7 +439,7 @@ export default class Intro extends Component<Props, State> {
               <div class={style.infoImgWrapper}>
                 <img
                   class={style.infoImg}
-                  src="https://images.unsplash.com/photo-1517329782449-810562a4ec2f?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=2844&q=80"
+                  src={secureSectionAsset}
                   alt="placeholder"
                   loading="lazy"
                 />
