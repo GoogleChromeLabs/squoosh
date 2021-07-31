@@ -163,8 +163,9 @@
 .info-text-wrapper {
   display: flex;
   flex-flow: column wrap;
-  max-width: 39em;
+  max-width: 30em;
   justify-self: center;
+  direction: ltr;
 }
 
 .info-img {
