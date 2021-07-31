@@ -388,7 +388,7 @@ export default class Intro extends Component<Props, State> {
                 <img
                   class={style.infoImg}
                   src={smallSectionAsset}
-                  alt="placeholder"
+                  alt="silhouette of a large 1.4 megabyte image shrunk into a smaller 80 kilobyte image"
                   loading="lazy"
                   width="400"
                   height="390"
@@ -419,7 +419,7 @@ export default class Intro extends Component<Props, State> {
                 <img
                   class={style.infoImg}
                   src={simpleSectionAsset}
-                  alt="placeholder"
+                  alt="grid of multiple shrunk images displaying various options"
                   loading="lazy"
                   width="400"
                   height="390"
@@ -443,7 +443,7 @@ export default class Intro extends Component<Props, State> {
                 <img
                   class={style.infoImg}
                   src={secureSectionAsset}
-                  alt="placeholder"
+                  alt="silhouette of a cloud with a no symbol on top"
                   loading="lazy"
                   width="400"
                   height="390"
