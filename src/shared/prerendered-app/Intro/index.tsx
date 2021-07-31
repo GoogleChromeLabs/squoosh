@@ -10,8 +10,8 @@ import deviceScreen from 'url:./imgs/demos/demo-device-screen.png';
 import largePhotoIcon from 'url:./imgs/demos/icon-demo-large-photo.jpg';
 import artworkIcon from 'url:./imgs/demos/icon-demo-artwork.jpg';
 import deviceScreenIcon from 'url:./imgs/demos/icon-demo-device-screen.jpg';
-import smallSectionAsset from 'url:./imgs/info-content/small-after.svg';
-import simpleSectionAsset from 'url:./imgs/info-content/simple-before.svg';
+import smallSectionAsset from 'url:./imgs/info-content/small.svg';
+import simpleSectionAsset from 'url:./imgs/info-content/simple.svg';
 import secureSectionAsset from 'url:./imgs/info-content/secure.svg';
 import logoIcon from 'url:./imgs/demos/icon-demo-logo.png';
 import logoWithText from 'url:./imgs/logo-with-text.svg';
@@ -119,10 +119,10 @@ export default class Intro extends Component<Props, State> {
   }
 
   private observeSections = (): void => {
-    const infoSections = document.querySelectorAll(`.infos`);
+    const infoSections = document.querySelectorAll(`.observe`);
     const options = {
       root: null,
-      threshold: 0,
+      threshold: 0.2,
       rootMargin: '0px',
     };
 
@@ -132,7 +132,7 @@ export default class Intro extends Component<Props, State> {
         if (!entry.isIntersecting) {
           return;
         }
-        entry.target.classList.toggle(style.slideUpFadeIn);
+        entry.target.classList.toggle(style.appear);
         observer.unobserve(entry.target);
       });
     }, options);
@@ -376,7 +376,7 @@ export default class Intro extends Component<Props, State> {
         </div>
 
         <section class={style.info}>
-          <div class={`${style.infoContainer} infos`}>
+          <div class={`${style.infoContainer} observe`}>
             <div class={style.infoContent}>
               <div class={style.infoTextWrapper}>
                 <h2 class={style.infoTitle}>Small</h2>
@@ -398,7 +398,7 @@ export default class Intro extends Component<Props, State> {
         </section>
 
         <section class={style.info}>
-          <div class={`${style.infoContainer} infos`}>
+          <div class={`${style.infoContainer} observe`}>
             <div class={`${style.infoContent} ${style.dirRtl}`}>
               <div class={style.infoTextWrapper}>
                 <h2 class={style.infoTitle}>Simple</h2>
@@ -411,7 +411,7 @@ export default class Intro extends Component<Props, State> {
                   href="https://github.com/GoogleChromeLabs/squoosh"
                   target="_blank"
                 >
-                  Learn more.
+                  Learn more
                 </a>
               </div>
               <div class={style.infoImgWrapper}>
@@ -427,7 +427,7 @@ export default class Intro extends Component<Props, State> {
         </section>
 
         <section class={style.info}>
-          <div class={`${style.infoContainer} infos`}>
+          <div class={`${style.infoContainer} observe`}>
             <div class={style.infoContent}>
               <div class={style.infoTextWrapper}>
                 <h2 class={style.infoTitle}>Secure</h2>

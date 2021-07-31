@@ -131,6 +131,18 @@
 .info-container {
   max-width: 1000px;
   margin: 0 auto;
+  @media screen and (prefers-reduced-motion: no-preference) {
+    opacity: 0;
+    transform: translate(0px, 40px);
+    transition: opacity, transform 300ms ease-in;
+  }
+}
+
+.info-container.appear {
+  @media screen and (prefers-reduced-motion: no-preference) {
+    opacity: 1;
+    transform: translate(0px, 0px);
+  }
 }
 
 .info-content {
@@ -158,6 +170,11 @@
 
 .info-link {
   font-size: 1.25em;
+  color: var(--off-black);
+  transition: color 250ms ease-in-out;
+  &:hover {
+    color: var(--dim-blue);
+  }
 }
 
 .info-text-wrapper {
@@ -176,7 +193,11 @@
 
 .info-img-wrapper {
   max-width: 400px;
-  justify-self: end;
+  justify-self: center;
+  padding: 1em;
+  @media (min-width: 768px) {
+    justify-self: end;
+  }
 }
 
 .footer {
@@ -225,22 +246,9 @@
   }
 }
 
-.slide-up-fade-in {
-  @media screen and (prefers-reduced-motion: no-preference) {
-    animation: slide-up-fade-in ease 600ms;
-  }
-}
-
 @keyframes fade-in {
   from {
     opacity: 0;
-  }
-}
-
-@keyframes slide-up-fade-in {
-  from {
-    opacity: 0;
-    transform: translate(0px, 40px);
   }
 }
 
