@@ -174,7 +174,7 @@
 .info-link {
   font-size: 1.25em;
   color: var(--off-black);
-  transition: color 250ms ease-in-out;
+  transition: color 400ms ease-in-out;
   &:hover {
     color: var(--dim-blue);
   }
