@@ -128,7 +128,6 @@ export default class Intro extends Component<Props, State> {
 
     const observer = new IntersectionObserver((entries, observer) => {
       entries.forEach((entry) => {
-        console.log(entry);
         if (!entry.isIntersecting) {
           return;
         }
@@ -391,6 +390,8 @@ export default class Intro extends Component<Props, State> {
                   src={smallSectionAsset}
                   alt="placeholder"
                   loading="lazy"
+                  width="400"
+                  height="390"
                 />
               </div>
             </div>
@@ -420,6 +421,8 @@ export default class Intro extends Component<Props, State> {
                   src={simpleSectionAsset}
                   alt="placeholder"
                   loading="lazy"
+                  width="400"
+                  height="390"
                 />
               </div>
             </div>
@@ -442,6 +445,8 @@ export default class Intro extends Component<Props, State> {
                   src={secureSectionAsset}
                   alt="placeholder"
                   loading="lazy"
+                  width="400"
+                  height="390"
                 />
               </div>
             </div>
