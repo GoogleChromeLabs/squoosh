@@ -299,7 +299,7 @@
 
 .demo-size {
   background: var(--dim-blue);
-  border-radius: 900px;
+  border-radius: 1000px;
   color: var(--white);
   width: max-content;
   padding: 0.5rem 1.2rem;
