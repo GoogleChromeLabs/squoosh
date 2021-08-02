@@ -131,14 +131,12 @@ export default class Intro extends Component<Props, State> {
         if (!entry.isIntersecting) {
           return;
         }
-        entry.target.classList.toggle(style.appear);
+        entry.target.classList.add(style.appear);
         observer.unobserve(entry.target);
       });
     }, options);
 
-    infoSections.forEach((section) => {
-      observer.observe(section);
-    });
+    infoSections.forEach((section) => observer.observe(section));
   };
 
   private onFileChange = (event: Event): void => {

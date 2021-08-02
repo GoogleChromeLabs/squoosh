@@ -123,7 +123,7 @@
 }
 
 .info {
-  background: var(--light-gray);
+  background: var(--white);
   position: relative;
   padding: 5em 2em;
   @media (min-width: 1200px) {
@@ -137,7 +137,7 @@
   opacity: 0;
   @media screen and (prefers-reduced-motion: no-preference) {
     transform: translate(0px, 40px);
-    transition: opacity, transform 300ms ease-in;
+    transition: opacity 0.3s ease, transform 0.3s ease;
   }
 }
 
@@ -151,7 +151,7 @@
 .info-content {
   display: grid;
   align-items: center;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
   gap: 1em;
 }
 
@@ -168,6 +168,7 @@
 
 .info-caption {
   font-size: 1.5em;
+  line-height: 1.75;
   margin: 1em 0 0.5em 0;
 }
 
@@ -211,7 +212,7 @@
 }
 
 .footer-wave {
-  fill: var(--light-gray);
+  fill: var(--white);
 }
 
 .content-padding {
