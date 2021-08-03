@@ -156,8 +156,15 @@
 }
 
 .dir-rtl {
-  direction: rtl;
-  text-align: right;
+  & > .info-text-wrapper {
+    order: 2;
+    justify-self: end;
+    text-align: right;
+  }
+  & > .info-img-wrapper {
+    order: 1;
+    justify-self: start;
+  }
 }
 
 .info-title {
@@ -186,7 +193,6 @@
   flex-flow: column wrap;
   max-width: 30em;
   justify-self: center;
-  direction: ltr;
   @media (min-width: 768px) {
     justify-self: start;
   }

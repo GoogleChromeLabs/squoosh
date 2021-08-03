@@ -127,13 +127,11 @@ export default class Intro extends Component<Props, State> {
     };
 
     const observer = new IntersectionObserver((entries, observer) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) {
-          return;
-        }
-        entry.target.classList.add(style.appear);
-        observer.unobserve(entry.target);
-      });
+      for (let i = 0; i < entries.length; i++) {
+        if (!entries[i].isIntersecting) return;
+        entries[i].target.classList.add(style.appear);
+        observer.unobserve(entries[i].target);
+      }
     }, options);
 
     infoSections.forEach((section) => observer.observe(section));
