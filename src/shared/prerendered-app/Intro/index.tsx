@@ -396,7 +396,7 @@ export default class Intro extends Component<Props, State> {
 
         <section class={style.info}>
           <div class={`${style.infoContainer} observe`}>
-            <div class={`${style.infoContent} ${style.dirRtl}`}>
+            <div class={style.infoContent}>
               <div class={style.infoTextWrapper}>
                 <h2 class={style.infoTitle}>Simple</h2>
                 <p class={style.infoCaption}>

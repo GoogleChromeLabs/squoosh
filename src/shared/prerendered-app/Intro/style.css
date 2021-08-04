@@ -126,6 +126,23 @@
   background: var(--white);
   position: relative;
   padding: 5em 2em;
+  &:nth-of-type(even) {
+    & .info-img-wrapper {
+      order: 1;
+      @media (min-width: 768px) {
+        justify-self: start;
+      }
+    }
+
+    & .info-text-wrapper {
+      order: 2;
+      text-align: right;
+      @media (min-width: 768px) {
+        justify-self: end;
+      }
+    }
+  }
+
   @media (min-width: 1200px) {
     padding: 5em 0;
   }
@@ -153,18 +170,6 @@
   align-items: center;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
   gap: 1em;
-}
-
-.dir-rtl {
-  & > .info-text-wrapper {
-    order: 2;
-    justify-self: end;
-    text-align: right;
-  }
-  & > .info-img-wrapper {
-    order: 1;
-    justify-self: start;
-  }
 }
 
 .info-title {
