@@ -196,9 +196,10 @@ class ImagePool {
   /**
    * Create a new pool.
    * @param {number} [threads] - Number of concurrent image processes to run in the pool. Defaults to the number of CPU cores in the system.
+   * @param {string} - Customize the entry filename for squoosh. 
    */
-  constructor(threads) {
-    this.workerPool = new WorkerPool(threads || cpus().length, __filename);
+  constructor(threads, filename) {
+    this.workerPool = new WorkerPool(threads || cpus().length, typeof filename === 'undefined' ? __filename : filename);
   }
 
   /**
