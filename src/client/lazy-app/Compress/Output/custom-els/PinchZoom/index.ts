@@ -81,6 +81,7 @@ function createPoint(): SVGPoint {
 }
 
 const MIN_SCALE = 0.01;
+const MAX_SCALE = 655.36; // 65536%
 
 export default class PinchZoom extends HTMLElement {
   // The element that we'll transform.
@@ -174,9 +175,19 @@ export default class PinchZoom extends HTMLElement {
    * Update the stage with a given scale/x/y.
    */
   setTransform(opts: SetTransformOpts = {}) {
-    const { scale = this.scale, allowChangeEvent = false } = opts;
+    const { allowChangeEvent = false } = opts;
 
-    let { x = this.x, y = this.y } = opts;
+    let { scale = this.scale, x = this.x, y = this.y } = opts;
+
+
+    if (scale > MAX_SCALE) {
+      if (this.scale === MAX_SCALE) return; // Already at max scale
+      // undo effects of the target scale (NOTE: This code currently produces slightly inaccurate results)
+      const scaleDiff = MAX_SCALE / scale;
+      scale = MAX_SCALE;
+      x = x * scaleDiff;
+      y = y * scaleDiff;
+    }
 
     // If we don't have an element to position, just set the value as given.
     // We'll check bounds later.
