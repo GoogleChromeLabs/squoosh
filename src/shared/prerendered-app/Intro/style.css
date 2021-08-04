@@ -217,17 +217,30 @@
   }
 }
 
+.info-wave {
+  fill: var(--white);
+}
+
 .footer {
+  background: var(--white);
+  padding-top: 5em;
+}
+
+.footer-container {
   position: relative;
   background: var(--light-gray);
 }
 
 .footer-wave {
-  fill: var(--white);
+  fill: var(--light-gray);
 }
 
 .content-padding {
-  padding: 2rem 0;
+  padding: 2em 0;
+}
+
+.footer-padding {
+  padding: 2em;
 }
 
 .footer-items {
