@@ -150,7 +150,8 @@ type DecodeParams = { operation: 'decode' } & Parameters<typeof decodeFile>[0];
 type PreprocessParams = { operation: 'preprocess' } & Parameters<
   typeof preprocessImage
 >[0];
-export type JobMessage = EncodeParams | DecodeParams | PreprocessParams;
+type JobMessage = EncodeParams | DecodeParams | PreprocessParams;
+
 function handleJob(params: JobMessage) {
   switch (params.operation) {
     case 'encode':
