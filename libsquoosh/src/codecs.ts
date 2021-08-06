@@ -278,9 +278,10 @@ export const codecs = {
     dec: () =>
       instantiateEmscriptenWasm(mozDec as DecodeModuleFactory, mozDecWasm),
     enc: () =>
-      instantiateEmscriptenWasm(mozEnc, mozEncWasm) as Promise<
-        MozJPEGEncodeModule
-      >,
+      instantiateEmscriptenWasm(
+        mozEnc as EmscriptenWasm.ModuleFactory<MozJPEGEncodeModule>,
+        mozEncWasm,
+      ),
     defaultEncoderOptions: {
       quality: 75,
       baseline: false,
@@ -312,9 +313,10 @@ export const codecs = {
     dec: () =>
       instantiateEmscriptenWasm(webpDec as DecodeModuleFactory, webpDecWasm),
     enc: () =>
-      instantiateEmscriptenWasm(webpEnc, webpEncWasm) as Promise<
-        WebPEncodeModule
-      >,
+      instantiateEmscriptenWasm(
+        webpEnc as EmscriptenWasm.ModuleFactory<WebPEncodeModule>,
+        webpEncWasm,
+      ),
     defaultEncoderOptions: {
       quality: 75,
       target_size: 0,
@@ -359,14 +361,15 @@ export const codecs = {
     enc: async () => {
       if (await threads()) {
         return instantiateEmscriptenWasm(
-          avifEncMt,
+          avifEncMt as EmscriptenWasm.ModuleFactory<AVIFEncodeModule>,
           avifEncMtWasm,
           avifEncMtWorker,
-        ) as Promise<AVIFEncodeModule>;
+        );
       }
-      return instantiateEmscriptenWasm(avifEnc, avifEncWasm) as Promise<
-        AVIFEncodeModule
-      >;
+      return instantiateEmscriptenWasm(
+        avifEnc as EmscriptenWasm.ModuleFactory<AVIFEncodeModule>,
+        avifEncWasm,
+      );
     },
     defaultEncoderOptions: {
       cqLevel: 33,
@@ -393,7 +396,10 @@ export const codecs = {
     dec: () =>
       instantiateEmscriptenWasm(jxlDec as DecodeModuleFactory, jxlDecWasm),
     enc: () =>
-      instantiateEmscriptenWasm(jxlEnc, jxlEncWasm) as Promise<JXLEncodeModule>,
+      instantiateEmscriptenWasm(
+        jxlEnc as EmscriptenWasm.ModuleFactory<JXLEncodeModule>,
+        jxlEncWasm,
+      ),
     defaultEncoderOptions: {
       speed: 4,
       quality: 75,
@@ -416,7 +422,10 @@ export const codecs = {
     dec: () =>
       instantiateEmscriptenWasm(wp2Dec as DecodeModuleFactory, wp2DecWasm),
     enc: () =>
-      instantiateEmscriptenWasm(wp2Enc, wp2EncWasm) as Promise<WP2EncodeModule>,
+      instantiateEmscriptenWasm(
+        wp2Enc as EmscriptenWasm.ModuleFactory<WP2EncodeModule>,
+        wp2EncWasm,
+      ),
     defaultEncoderOptions: {
       quality: 75,
       alpha_quality: 75,
