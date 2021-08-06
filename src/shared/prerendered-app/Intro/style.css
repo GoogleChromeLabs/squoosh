@@ -137,6 +137,7 @@
     & .info-text-wrapper {
       order: 2;
       text-align: right;
+      align-items: flex-end;
       @media (min-width: 768px) {
         justify-self: end;
       }
@@ -186,8 +187,10 @@
 
 .info-link {
   font-size: 1.25em;
+  text-underline-offset: 0.25em;
   color: var(--off-black);
   transition: color 400ms ease-in-out;
+  margin-top: 1em;
   &:hover {
     color: var(--dim-blue);
   }
