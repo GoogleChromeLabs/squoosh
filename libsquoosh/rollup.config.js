@@ -10,7 +10,7 @@ import { builtinModules } from 'module';
 
 /** @type {import('rollup').RollupOptions} */
 export default {
-  input: 'src/index.js',
+  input: 'src/index.ts',
   output: {
     dir: 'build',
     format: 'cjs',

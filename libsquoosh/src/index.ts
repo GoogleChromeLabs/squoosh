@@ -10,7 +10,7 @@ import type ImageData from './image_data';
 export { ImagePool, encoders, preprocessors };
 type EncoderKey = keyof typeof encoders;
 type PreprocessorKey = keyof typeof preprocessors;
-type FileLike = Buffer | ArrayBuffer | string | { buffer: Buffer };
+type FileLike = Buffer | ArrayBuffer | string | ArrayBufferView;
 
 async function decodeFile({
   file,
@@ -24,8 +24,9 @@ async function decodeFile({
   } else if (file instanceof ArrayBuffer) {
     buffer = Buffer.from(file);
     file = 'Binary blob';
-  } else if (file instanceof Buffer) {
-    buffer = file;
+  } else if ((file as unknown) instanceof Buffer) {
+    // TODO: Check why we need type assertions here.
+    buffer = (file as unknown) as Buffer;
     file = 'Binary blob';
   } else if (typeof file === 'string') {
     buffer = await fsp.readFile(file);
@@ -99,9 +100,16 @@ async function encodeImage({
         }),
       );
     const decode = (binary: Uint8Array) => decoder.decode(binary);
+    const nonNullEncode = (bitmap: ImageData, quality: number): Uint8Array => {
+      const result = encode(bitmap, quality);
+      if (!result) {
+        throw new Error('There was an error while encoding');
+      }
+      return result;
+    };
     const { binary: optimizedBinary, quality } = await autoOptimize(
       bitmapIn,
-      encode,
+      nonNullEncode,
       decode,
       {
         min: encoders[encName].autoOptimize.min,
@@ -116,12 +124,18 @@ async function encodeImage({
       [optionToOptimize]: Math.round(quality * 10000) / 10000,
     };
   } else {
-    binary = encoder.encode(
+    const result = encoder.encode(
       bitmapIn.data.buffer,
       bitmapIn.width,
       bitmapIn.height,
       encConfig,
     );
+
+    if (!result) {
+      throw new Error('There was an error while encoding');
+    }
+
+    binary = result;
   }
   return {
     optionsUsed,
@@ -155,11 +169,11 @@ function handleJob(params: JobMessage) {
  */
 class Image {
   public file: FileLike;
-  public workerPool: WorkerPool;
+  public workerPool: WorkerPool<JobMessage, any>;
   public decoded: Promise<{ bitmap: ImageData }>;
   public encodedWith: { [key: string]: any };
 
-  constructor(workerPool: WorkerPool, file: FileLike) {
+  constructor(workerPool: WorkerPool<JobMessage, any>, file: FileLike) {
     this.file = file;
     this.workerPool = workerPool;
     this.decoded = workerPool.dispatchJob({ operation: 'decode', file });
@@ -201,6 +215,8 @@ class Image {
     encodeOptions: {
       optimizerButteraugliTarget?: number;
       maxOptimizerRounds?: number;
+    } & {
+      [key in EncoderKey]?: any; // any is okay for now
     } = {},
   ): Promise<void> {
     const { bitmap } = await this.decoded;
@@ -233,7 +249,7 @@ class Image {
  * A pool where images can be ingested and squooshed.
  */
 class ImagePool {
-  public workerPool: WorkerPool;
+  public workerPool: WorkerPool<JobMessage, any>;
 
   /**
    * Create a new pool.
