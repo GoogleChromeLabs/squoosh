@@ -52,6 +52,10 @@ function progressTracker(results) {
   function getResultsText() {
     let out = '';
     for (const result of results.values()) {
+      if(result.skipped){
+        out += `\n ${kleur.bold(kleur.yellow('Warning:'))} ${kleur.yellow(result.file)} skipped - ${kleur.yellow(result.error)}`;
+        continue;
+      }
       out += `\n ${kleur.cyan(result.file)}: ${prettyPrintSize(result.size)}`;
       for (const { outputFile, size: outputSize, infoText } of result.outputs) {
         out += `\n  ${kleur.dim('└')} ${kleur.cyan(
@@ -100,15 +104,15 @@ async function getInputFiles(paths) {
 
 async function processFiles(files) {
   files = await getInputFiles(files);
-
+  let filesTotal = files.length;
   const imagePool = new ImagePool();
 
   const results = new Map();
   const progress = progressTracker(results);
 
   progress.setStatus('Decoding...');
-  progress.totalOffset = files.length;
-  progress.setProgress(0, files.length);
+  progress.totalOffset = filesTotal;
+  progress.setProgress(0, filesTotal);
 
   // Create output directory
   await fsp.mkdir(program.opts().outputDir, { recursive: true });
@@ -117,16 +121,32 @@ async function processFiles(files) {
   let decodedFiles = await Promise.all(
     files.map(async (file) => {
       const image = imagePool.ingestImage(file);
-      await image.decoded;
-      results.set(image, {
-        file,
-        size: (await image.decoded).size,
-        outputs: [],
-      });
-      progress.setProgress(++decoded, files.length);
-      return image;
+      try {
+        await image.decoded;
+        results.set(image, {
+          file,
+          size: (await image.decoded).size,
+          outputs: [],
+        });
+        progress.setProgress(++decoded, filesTotal);
+        return image;
+      } catch (err) {
+        results.set(image, {
+          file,
+          skipped: true,
+          error: typeof err === 'string' ? err : err?.message || '',
+        });
+        progress.setProgress(decoded, --filesTotal);
+        return null;
+      }
     }),
   );
+  decodedFiles = decodedFiles.filter(Boolean);
+
+  if(!decodedFiles.length) {
+    progress.finish('Unable to decode given files:');
+    process.exit(1);
+  }
 
   const preprocessOptions = {};
 
@@ -149,7 +169,7 @@ async function processFiles(files) {
   progress.setStatus(
     'Encoding ' + kleur.dim(`(${imagePool.workerPool.numWorkers} threads)`),
   );
-  progress.setProgress(0, files.length);
+  progress.setProgress(0, filesTotal);
 
   const jobs = [];
   let jobsStarted = 0;
