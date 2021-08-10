@@ -10,27 +10,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import initOxiWasmST, {
+  optimise as optimiseST,
+} from 'codecs/oxipng/pkg/squoosh_oxipng';
+import initOxiWasmMT, {
+  initThreadPool,
+  optimise as optimiseMT,
+} from 'codecs/oxipng/pkg-parallel/squoosh_oxipng';
+import oxiWasmUrlST from 'url:codecs/oxipng/pkg/squoosh_oxipng_bg.wasm';
+import oxiWasmUrlMT from 'url:codecs/oxipng/pkg-parallel/squoosh_oxipng_bg.wasm';
 import { EncodeOptions } from '../shared/meta';
 import { threads } from 'wasm-feature-detect';
 
 async function initMT() {
-  const { default: init, initThreadPool, optimise } = await import(
-    'codecs/oxipng/pkg-parallel/squoosh_oxipng'
-  );
-  await init();
+  await initOxiWasmMT(oxiWasmUrlMT);
   await initThreadPool(navigator.hardwareConcurrency);
-  return optimise;
+  return optimiseMT;
 }
 
 async function initST() {
-  const { default: init, optimise } = await import(
-    'codecs/oxipng/pkg/squoosh_oxipng'
-  );
-  await init();
-  return optimise;
+  await initOxiWasmST(oxiWasmUrlST);
+  return optimiseST;
 }
 
-let wasmReady: ReturnType<typeof initMT | typeof initST>;
+let wasmReady: Promise<typeof optimiseMT | typeof optimiseST>;
 
 export default async function encode(
   data: ArrayBuffer,

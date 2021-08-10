@@ -13,46 +13,18 @@ function subtractSets<T extends any>(set1: Set<T>, set2: Set<T>): Set<T> {
 
 // Initial app stuff
 import * as initialApp from 'entry-data:client/initial-app';
-import swUrl from 'service-worker:sw';
 import * as compress from 'entry-data:client/lazy-app/Compress';
 import * as swBridge from 'entry-data:client/lazy-app/sw-bridge';
 import * as blobAnim from 'entry-data:shared/prerendered-app/Intro/blob-anim';
+import logo from 'url:shared/prerendered-app/Intro/imgs/logo.svg';
+import githubLogo from 'url:shared/prerendered-app/Intro/imgs/github-logo.svg';
+import largePhotoIcon from 'url:shared/prerendered-app/Intro/imgs/demos/icon-demo-large-photo.jpg';
+import artworkIcon from 'url:shared/prerendered-app/Intro/imgs/demos/icon-demo-artwork.jpg';
+import deviceScreenIcon from 'url:shared/prerendered-app/Intro/imgs/demos/icon-demo-device-screen.jpg';
+import logoIcon from 'url:shared/prerendered-app/Intro/imgs/demos/icon-demo-logo.png';
+import logoWithText from 'url:shared/prerendered-app/Intro/imgs/logo-with-text.svg';
 
-// The processors and codecs
-// Simple stuff everyone gets:
-import * as featuresWorker from 'entry-data:../features-worker';
-
-// Decoders (some are feature detected)
-import * as avifDec from 'entry-data:codecs/avif/dec/avif_dec';
-import * as webpDec from 'entry-data:codecs/webp/dec/webp_dec';
-
-// AVIF
-import * as avifEncMt from 'entry-data:codecs/avif/enc/avif_enc_mt';
-import * as avifEnc from 'entry-data:codecs/avif/enc/avif_enc';
-
-// JXL
-import * as jxlEncMtSimd from 'entry-data:codecs/jxl/enc/jxl_enc_mt_simd';
-import * as jxlEncMt from 'entry-data:codecs/jxl/enc/jxl_enc_mt';
-import * as jxlEnc from 'entry-data:codecs/jxl/enc/jxl_enc';
-
-// OXI
-import * as oxiMt from 'entry-data:codecs/oxipng/pkg-parallel/squoosh_oxipng';
-import * as oxi from 'entry-data:codecs/oxipng/pkg/squoosh_oxipng';
-
-// WebP
-import * as webpEncSimd from 'entry-data:codecs/webp/enc/webp_enc_simd';
-import * as webpEnc from 'entry-data:codecs/webp/enc/webp_enc';
-
-// WP2
-import * as wp2EncMtSimd from 'entry-data:codecs/wp2/enc/wp2_enc_mt_simd';
-import * as wp2EncMt from 'entry-data:codecs/wp2/enc/wp2_enc_mt';
-import * as wp2Enc from 'entry-data:codecs/wp2/enc/wp2_enc';
-
-export function shouldCacheDynamically(url: string) {
-  return url.startsWith('/c/demo-');
-}
-
-let initialJs = new Set([
+let initalJs = new Set([
   compress.main,
   ...compress.deps,
   swBridge.main,
@@ -60,26 +32,77 @@ let initialJs = new Set([
   blobAnim.main,
   ...blobAnim.deps,
 ]);
-initialJs = subtractSets(
-  initialJs,
-  new Set([
-    initialApp.main,
-    ...initialApp.deps.filter(
-      (item) =>
-        // Exclude JS deps that have been inlined:
-        item.endsWith('.js') ||
-        // As well as large image deps we want to keep dynamic:
-        shouldCacheDynamically(item),
-    ),
-    // Exclude features Worker itself - it's referenced from the main app,
-    // but is meant to be cached lazily.
-    featuresWorker.main,
-    // Also exclude Service Worker itself (we're inside right now).
-    swUrl,
-  ]),
+// But initial app and any deps have already been inlined, so we don't need them:
+initalJs = subtractSets(
+  initalJs,
+  new Set([initialApp.main, ...initialApp.deps]),
 );
 
-export const initial = ['/', ...initialJs];
+export const initial = [
+  '/',
+  ...initalJs,
+  logo,
+  githubLogo,
+  largePhotoIcon,
+  artworkIcon,
+  deviceScreenIcon,
+  logoIcon,
+  logoWithText,
+];
+
+// The processors and codecs
+// Simple stuff everyone gets:
+import * as featuresWorker from 'entry-data:../features-worker';
+import rotateWasm from 'url:codecs/rotate/rotate.wasm';
+import quantWasm from 'url:codecs/imagequant/imagequant.wasm';
+import resizeWasm from 'url:codecs/resize/pkg/squoosh_resize_bg.wasm';
+import hqxWasm from 'url:codecs/hqx/pkg/squooshhqx_bg.wasm';
+import mozjpegWasm from 'url:codecs/mozjpeg/enc/mozjpeg_enc.wasm';
+
+// Decoders (some are feature detected)
+import * as avifDec from 'entry-data:codecs/avif/dec/avif_dec';
+import avifDecWasm from 'url:codecs/avif/dec/avif_dec.wasm';
+import jxlDecWasm from 'url:codecs/jxl/dec/jxl_dec.wasm';
+import * as webpDec from 'entry-data:codecs/webp/dec/webp_dec';
+import webpDecWasm from 'url:codecs/webp/dec/webp_dec.wasm';
+import wp2DecWasm from 'url:codecs/wp2/dec/wp2_dec.wasm';
+
+// AVIF
+import * as avifEncMtWorker from 'entry-data:codecs/avif/enc/avif_enc_mt.worker.js';
+import * as avifEncMt from 'entry-data:codecs/avif/enc/avif_enc_mt';
+import avifEncMtWasm from 'url:codecs/avif/enc/avif_enc_mt.wasm';
+import avifEncWasm from 'url:codecs/avif/enc/avif_enc.wasm';
+import * as avifEnc from 'entry-data:codecs/avif/enc/avif_enc.js';
+
+// JXL
+import * as jxlEncMtSimdWorker from 'entry-data:codecs/jxl/enc/jxl_enc_mt_simd.worker.js';
+import * as jxlEncMtSimd from 'entry-data:codecs/jxl/enc/jxl_enc_mt_simd';
+import jxlEncMtSimdWasm from 'url:codecs/jxl/enc/jxl_enc_mt_simd.wasm';
+import * as jxlEncMtWorker from 'entry-data:codecs/jxl/enc/jxl_enc_mt.worker.js';
+import * as jxlEncMt from 'entry-data:codecs/jxl/enc/jxl_enc_mt';
+import jxlEncMtWasm from 'url:codecs/jxl/enc/jxl_enc_mt.wasm';
+import jxlEncWasm from 'url:codecs/jxl/enc/jxl_enc.wasm';
+import * as jxlEnc from 'entry-data:codecs/jxl/enc/jxl_enc';
+
+// OXI
+import oxiMtWasm from 'url:codecs/oxipng/pkg-parallel/squoosh_oxipng_bg.wasm';
+import oxiWasm from 'url:codecs/oxipng/pkg/squoosh_oxipng_bg.wasm';
+
+// WebP
+import * as webpEncSimd from 'entry-data:codecs/webp/enc/webp_enc_simd';
+import webpEncSimdWasm from 'url:codecs/webp/enc/webp_enc_simd.wasm';
+import * as webpEnc from 'entry-data:codecs/webp/enc/webp_enc';
+import webpEncWasm from 'url:codecs/webp/enc/webp_enc.wasm';
+
+// WP2
+import * as wp2EncMtSimdWorker from 'entry-data:codecs/wp2/enc/wp2_enc_mt_simd.worker.js';
+import * as wp2EncMtSimd from 'entry-data:codecs/wp2/enc/wp2_enc_mt_simd';
+import wp2EncMtSimdWasm from 'url:codecs/wp2/enc/wp2_enc_mt_simd.wasm';
+import * as wp2EncMtWorker from 'entry-data:codecs/wp2/enc/wp2_enc_mt.worker.js';
+import * as wp2EncMt from 'entry-data:codecs/wp2/enc/wp2_enc_mt';
+import wp2EncMtWasm from 'url:codecs/wp2/enc/wp2_enc_mt.wasm';
+import * as wp2Enc from 'entry-data:codecs/wp2/enc/wp2_enc';
+import wp2EncWasm from 'url:codecs/wp2/enc/wp2_enc.wasm';
 
 export const theRest = (async () => {
   const [
@@ -101,54 +124,88 @@ export const theRest = (async () => {
     }),
   ]);
 
-  const items: string[] = [];
+  const items = [
+    featuresWorker.main,
+    ...featuresWorker.deps,
+    rotateWasm,
+    quantWasm,
+    resizeWasm,
+    hqxWasm,
+    mozjpegWasm,
+    jxlDecWasm,
+    wp2DecWasm,
+  ];
 
-  function addWithDeps(entry: typeof import('entry-data:*')) {
-    items.push(entry.main, ...entry.deps);
-  }
-
-  addWithDeps(featuresWorker);
-
-  if (!supportsAvif) addWithDeps(avifDec);
-  if (!supportsWebP) addWithDeps(webpDec);
+  if (!supportsAvif) items.push(avifDec.main, ...avifDec.deps, avifDecWasm);
+  if (!supportsWebP) items.push(webpDec.main, ...webpDec.deps, webpDecWasm);
 
   // AVIF
   if (supportsThreads) {
-    addWithDeps(avifEncMt);
+    items.push(
+      avifEncMtWorker.main,
+      ...avifEncMtWorker.deps,
+      avifEncMt.main,
+      ...avifEncMt.deps,
+      avifEncMtWasm,
+    );
   } else {
-    addWithDeps(avifEnc);
+    items.push(avifEnc.main, ...avifEnc.deps, avifEncWasm);
   }
 
   // JXL
   if (supportsThreads && supportsSimd) {
-    addWithDeps(jxlEncMtSimd);
+    items.push(
+      jxlEncMtSimdWorker.main,
+      ...jxlEncMtSimdWorker.deps,
+      jxlEncMtSimd.main,
+      ...jxlEncMtSimd.deps,
+      jxlEncMtSimdWasm,
+    );
   } else if (supportsThreads) {
-    addWithDeps(jxlEncMt);
+    items.push(
+      jxlEncMtWorker.main,
+      ...jxlEncMtWorker.deps,
+      jxlEncMt.main,
+      ...jxlEncMt.deps,
+      jxlEncMtWasm,
+    );
   } else {
-    addWithDeps(jxlEnc);
+    items.push(jxlEnc.main, ...jxlEnc.deps, jxlEncWasm);
   }
 
   // OXI
   if (supportsThreads) {
-    addWithDeps(oxiMt);
+    items.push(oxiMtWasm);
   } else {
-    addWithDeps(oxi);
+    items.push(oxiWasm);
   }
 
   // WebP
   if (supportsSimd) {
-    addWithDeps(webpEncSimd);
+    items.push(webpEncSimd.main, ...webpEncSimd.deps, webpEncSimdWasm);
   } else {
-    addWithDeps(webpEnc);
+    items.push(webpEnc.main, ...webpEnc.deps, webpEncWasm);
   }
 
   // WP2
   if (supportsThreads && supportsSimd) {
-    addWithDeps(wp2EncMtSimd);
+    items.push(
+      wp2EncMtSimdWorker.main,
+      ...wp2EncMtSimdWorker.deps,
+      wp2EncMtSimd.main,
+      ...wp2EncMtSimd.deps,
+      wp2EncMtSimdWasm,
+    );
   } else if (supportsThreads) {
-    addWithDeps(wp2EncMt);
+    items.push(
+      wp2EncMtWorker.main,
+      ...wp2EncMtWorker.deps,
+      wp2EncMt.main,
+      ...wp2EncMt.deps,
+      wp2EncMtWasm,
+    );
   } else {
-    addWithDeps(wp2Enc);
+    items.push(wp2Enc.main, ...wp2Enc.deps, wp2EncWasm);
   }
 
   return [...new Set(items)];

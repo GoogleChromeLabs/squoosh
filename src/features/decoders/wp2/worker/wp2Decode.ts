@@ -11,13 +11,14 @@
  * limitations under the License.
  */
 import wp2Decoder, { WP2Module } from 'codecs/wp2/dec/wp2_dec';
+import wasmUrl from 'url:codecs/wp2/dec/wp2_dec.wasm';
 import { initEmscriptenModule, blobToArrayBuffer } from 'features/worker-utils';
 
 let emscriptenModule: Promise<WP2Module>;
 
 export default async function decode(blob: Blob): Promise<ImageData> {
   if (!emscriptenModule) {
-    emscriptenModule = initEmscriptenModule(wp2Decoder);
+    emscriptenModule = initEmscriptenModule(wp2Decoder, wasmUrl);
   }
 
   const [module, data] = await Promise.all([
