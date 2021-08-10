@@ -1,6 +1,8 @@
 import type { WorkerResizeOptions } from '../shared/meta';
 import { getContainOffsets } from '../shared/util';
 import initResizeWasm, { resize as wasmResize } from 'codecs/resize/pkg';
+import resizeWasmUrl from 'url:codecs/resize/pkg/squoosh_resize_bg.wasm';
+import hqxWasmUrl from 'url:codecs/hqx/pkg/squooshhqx_bg.wasm';
 import initHqxWasm, { resize as wasmHqx } from 'codecs/hqx/pkg';
 
 interface HqxResizeOptions extends WorkerResizeOptions {
@@ -61,7 +63,7 @@ async function hqx(
   opts: HqxResizeOptions,
 ): Promise<ImageData> {
   if (!hqxWasmReady) {
-    hqxWasmReady = initHqxWasm();
+    hqxWasmReady = initHqxWasm(hqxWasmUrl);
   }
 
   await hqxWasmReady;
@@ -94,7 +96,7 @@ export default async function resize(
   let input = data;
 
   if (!resizeWasmReady) {
-    resizeWasmReady = initResizeWasm();
+    resizeWasmReady = initResizeWasm(resizeWasmUrl);
   }
 
   if (optsIsHqxOpts(opts)) {

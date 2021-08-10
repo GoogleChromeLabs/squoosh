@@ -44,11 +44,6 @@ declare module 'data-url:*' {
   export default url;
 }
 
-declare module 'service-worker:*' {
-  const url: string;
-  export default url;
-}
-
 declare var ga: {
   (...args: any[]): void;
   q: any[];

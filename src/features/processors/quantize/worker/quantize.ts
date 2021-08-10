@@ -11,6 +11,7 @@
  * limitations under the License.
  */
 import imagequant, { QuantizerModule } from 'codecs/imagequant/imagequant';
+import wasmUrl from 'url:codecs/imagequant/imagequant.wasm';
 import { initEmscriptenModule } from 'features/worker-utils';
 import { Options } from '../shared/meta';
 
@@ -21,7 +22,7 @@ export default async function process(
   opts: Options,
 ): Promise<ImageData> {
   if (!emscriptenModule) {
-    emscriptenModule = initEmscriptenModule(imagequant);
+    emscriptenModule = initEmscriptenModule(imagequant, wasmUrl);
   }
 
   const module = await emscriptenModule;

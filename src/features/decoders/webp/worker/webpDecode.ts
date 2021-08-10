@@ -11,6 +11,7 @@
  * limitations under the License.
  */
 import type { WebPModule } from 'codecs/webp/dec/webp_dec';
+import wasmUrl from 'url:codecs/webp/dec/webp_dec.wasm';
 import { initEmscriptenModule, blobToArrayBuffer } from 'features/worker-utils';
 
 let emscriptenModule: Promise<WebPModule>;
@@ -18,7 +19,7 @@ let emscriptenModule: Promise<WebPModule>;
 export default async function decode(blob: Blob): Promise<ImageData> {
   if (!emscriptenModule) {
     const decoder = await import('codecs/webp/dec/webp_dec');
-    emscriptenModule = initEmscriptenModule(decoder.default);
+    emscriptenModule = initEmscriptenModule(decoder.default, wasmUrl);
   }
 
   const [module, data] = await Promise.all([

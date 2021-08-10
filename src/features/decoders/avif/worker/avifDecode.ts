@@ -11,6 +11,7 @@
  * limitations under the License.
  */
 import type { AVIFModule } from 'codecs/avif/dec/avif_dec';
+import wasmUrl from 'url:codecs/avif/dec/avif_dec.wasm';
 import { initEmscriptenModule, blobToArrayBuffer } from 'features/worker-utils';
 
 let emscriptenModule: Promise<AVIFModule>;
@@ -18,7 +19,7 @@ let emscriptenModule: Promise<AVIFModule>;
 export default async function decode(blob: Blob): Promise<ImageData> {
   if (!emscriptenModule) {
     const decoder = await import('codecs/avif/dec/avif_dec');
-    emscriptenModule = initEmscriptenModule(decoder.default);
+    emscriptenModule = initEmscriptenModule(decoder.default, wasmUrl);
   }
 
   const [module, data] = await Promise.all([

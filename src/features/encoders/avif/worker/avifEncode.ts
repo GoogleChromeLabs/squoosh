@@ -12,6 +12,9 @@
  */
 import type { AVIFModule } from 'codecs/avif/enc/avif_enc';
 import type { EncodeOptions } from '../shared/meta';
+import wasmUrlWithoutMT from 'url:codecs/avif/enc/avif_enc.wasm';
+import wasmUrlWithMT from 'url:codecs/avif/enc/avif_enc_mt.wasm';
+import workerUrl from 'omt:codecs/avif/enc/avif_enc_mt.worker.js';
 import { initEmscriptenModule } from 'features/worker-utils';
 import { threads } from 'wasm-feature-detect';
 
@@ -20,10 +23,14 @@ let emscriptenModule: Promise<AVIFModule>;
 async function init() {
   if (await threads()) {
     const avifEncoder = await import('codecs/avif/enc/avif_enc_mt');
-    return initEmscriptenModule<AVIFModule>(avifEncoder.default);
+    return initEmscriptenModule<AVIFModule>(
+      avifEncoder.default,
+      wasmUrlWithMT,
+      workerUrl,
+    );
   }
   const avifEncoder = await import('codecs/avif/enc/avif_enc.js');
-  return initEmscriptenModule(avifEncoder.default);
+  return initEmscriptenModule(avifEncoder.default, wasmUrlWithoutMT);
 }
 
 export default async function encode(

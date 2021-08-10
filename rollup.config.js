@@ -18,7 +18,6 @@ import commonjs from '@rollup/plugin-commonjs';
 import { terser } from 'rollup-plugin-terser';
 import OMT from '@surma/rollup-plugin-off-main-thread';
 import replace from '@rollup/plugin-replace';
-import { importMetaAssets } from '@web/rollup-plugin-import-meta-assets';
 
 import simpleTS from './lib/simple-ts';
 import clientBundlePlugin from './lib/client-bundle-plugin';
@@ -32,11 +31,11 @@ import featurePlugin from './lib/feature-plugin';
 import initialCssPlugin from './lib/initial-css-plugin';
 import serviceWorkerPlugin from './lib/sw-plugin';
 import dataURLPlugin from './lib/data-url-plugin';
-import entryDataPlugin, { fileNameToURL } from './lib/entry-data-plugin';
 import dedent from 'dedent';
+import entryDataPlugin from './lib/entry-data-plugin';
 
 function resolveFileUrl({ fileName }) {
-  return JSON.stringify(fileNameToURL(fileName));
+  return JSON.stringify(fileName.replace(/^static\//, '/'));
 }
 
 function resolveImportMetaUrlInStaticBuild(property, { moduleId }) {
@@ -71,7 +70,7 @@ export default async function ({ watch }) {
 
   await del('.tmp/build');
 
-  const isProduction = !watch;
+  const isProduction = !watch && !process.env.DEBUG;
 
   const tsPluginInstance = simpleTS('.', {
     watch,
@@ -119,7 +118,6 @@ export default async function ({ watch }) {
           plugins: [
             { resolveFileUrl },
             OMT({ loader: await omtLoaderPromise }),
-            importMetaAssets(),
             serviceWorkerPlugin({
               output: 'static/serviceworker.js',
             }),
