@@ -16,7 +16,7 @@ You can start using the libSquoosh by adding these lines to the top of your JS p
 
 ```js
 import { ImagePool } from '@squoosh/lib';
-const imagePool = new ImagePool();
+const imagePool = new ImagePool((url) => fs.readFile(url));
 ```
 
 This will create an image pool with an underlying processing pipeline that you can use to ingest and encode images. The ImagePool constructor takes one argument that defines how many parallel operations it is allowed to run at any given time. By default, this number is set to the amount of CPU cores available in the system it is running on.
@@ -26,11 +26,11 @@ This will create an image pool with an underlying processing pipeline that you c
 You can ingest a new image like so:
 
 ```js
-const imagePath = 'path/to/image.png';
+const imagePath = 'file://path/to/image.png';
 const image = imagePool.ingestImage(imagePath);
 ```
 
-The `ingestImage` function can take anything the node [`readFile`][readfile] function can take, including a buffer and `FileHandle`.
+The `ingestImage` function will accept a URL path and call the `loadFile()` function defined in the `ImagePool`.
 
 The returned `image` object is a representation of the original image, that you can now preprocess, encode, and extract information about.
 
@@ -39,7 +39,7 @@ The returned `image` object is a representation of the original image, that you 
 When an image has been ingested, you can start preprocessing it and encoding it to other formats. This example will resize the image and then encode it to a `.jpg` and `.jxl` image:
 
 ```js
-await image.decoded; //Wait until the image is decoded before running preprocessors. 
+await image.decoded; //Wait until the image is decoded before running preprocessors.
 
 const preprocessOptions = {
   //When both width and height are specified, the image resized to specified size.
@@ -47,7 +47,7 @@ const preprocessOptions = {
     enabled: true,
     width: 100,
     height: 50,
-  }
+  },
   /*
   //When either width or height is specified, the image resized to specified size keeping aspect ratio.
   resize: {
@@ -55,7 +55,7 @@ const preprocessOptions = {
     width: 100,
   }
   */
-}
+};
 await image.preprocess(preprocessOptions);
 
 const encodeOptions = {
@@ -63,9 +63,8 @@ const encodeOptions = {
   jxl: {
     quality: 90,
   },
-}
+};
 await image.encode(encodeOptions);
-
 ```
 
 The default values for each option can be found in the [`codecs.ts`][codecs.ts] file under `defaultEncoderOptions`. Every unspecified value will use the default value specified there. _Better documentation is needed here._

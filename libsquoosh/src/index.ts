@@ -1,5 +1,4 @@
 import { isMainThread } from 'worker_threads';
-import { cpus } from 'os';
 import { promises as fsp } from 'fs';
 
 import { codecs as encoders, preprocessors } from './codecs.js';
@@ -169,12 +168,12 @@ function handleJob(params: JobMessage) {
  * Represents an ingested image.
  */
 class Image {
-  public file: FileLike;
+  public file: ArrayBuffer;
   public workerPool: WorkerPool<JobMessage, any>;
   public decoded: Promise<{ bitmap: ImageData }>;
   public encodedWith: { [key: string]: any };
 
-  constructor(workerPool: WorkerPool<JobMessage, any>, file: FileLike) {
+  constructor(workerPool: WorkerPool<JobMessage, any>, file: ArrayBuffer) {
     this.file = file;
     this.workerPool = workerPool;
     this.decoded = workerPool.dispatchJob({ operation: 'decode', file });
@@ -251,22 +250,26 @@ class Image {
  */
 class ImagePool {
   public workerPool: WorkerPool<JobMessage, any>;
+  public loadFile: (path: URL) => Promise<ArrayBuffer>;
 
   /**
    * Create a new pool.
-   * @param {number} [threads] - Number of concurrent image processes to run in the pool. Defaults to the number of CPU cores in the system.
+   * @param {(path: URL) => Promise<ArrayBuffer>} [loadFile] - A function that loads a file from a URL.
+   * @param {number} [threads] - Number of concurrent image processes to run in the pool.
    */
-  constructor(threads: number) {
-    this.workerPool = new WorkerPool(threads || cpus().length, __filename);
+  constructor(loadFile: (path: URL) => Promise<ArrayBuffer>, threads: number) {
+    this.loadFile = loadFile;
+    this.workerPool = new WorkerPool(threads, __filename);
   }
 
   /**
    * Ingest an image into the image pool.
-   * @param {FileLike} image - The image or path to the image that should be ingested and decoded.
+   * @param {URL} url - The URL path to the image that should be ingested and decoded.
    * @returns {Image} - A custom class reference to the decoded image.
    */
-  ingestImage(image: FileLike): Image {
-    return new Image(this.workerPool, image);
+  ingestImage(url: URL): Image {
+    const file = await this.loadFile(url);
+    return new Image(this.workerPool, file);
   }
 
   /**
