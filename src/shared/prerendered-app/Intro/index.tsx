@@ -431,8 +431,8 @@ export default class Intro extends Component<Props, State> {
               <div class={style.infoTextWrapper}>
                 <h2 class={style.infoTitle}>Secure</h2>
                 <p class={style.infoCaption}>
-                  Worried about privacy? Squoosh always coverts your images on
-                  your computer and they never go to the cloud.
+                  Worried about privacy? Squoosh always converts your images on
+                  your device and they never go to the cloud.
                 </p>
               </div>
               <div class={style.infoImgWrapper}>
