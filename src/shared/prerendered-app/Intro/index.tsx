@@ -19,6 +19,7 @@ import * as style from './style.css';
 import type SnackBarElement from 'shared/custom-els/snack-bar';
 import 'shared/custom-els/snack-bar';
 import { startBlobs } from './blob-anim/meta';
+import SlideOnScroll from './SlideOnScroll';
 
 const demos = [
   {
@@ -106,8 +107,6 @@ export default class Intro extends Component<Props, State> {
         );
       });
     }
-
-    this.observeSections();
   }
 
   componentWillUnmount() {
@@ -117,25 +116,6 @@ export default class Intro extends Component<Props, State> {
     );
     window.removeEventListener('appinstalled', this.onAppInstalled);
   }
-
-  private observeSections = (): void => {
-    const infoSections = document.querySelectorAll(`.observe`);
-    const options = {
-      root: null,
-      threshold: 0.2,
-      rootMargin: '0px',
-    };
-
-    const observer = new IntersectionObserver((entries, observer) => {
-      for (let i = 0; i < entries.length; i++) {
-        if (!entries[i].isIntersecting) return;
-        entries[i].target.classList.add(style.appear);
-        observer.unobserve(entries[i].target);
-      }
-    }, options);
-
-    infoSections.forEach((section) => observer.observe(section));
-  };
 
   private onFileChange = (event: Event): void => {
     const fileInput = event.target as HTMLInputElement;
@@ -371,81 +351,84 @@ export default class Intro extends Component<Props, State> {
         </div>
 
         <section class={style.info}>
-          <div class={`${style.infoContainer} observe`}>
-            <div class={style.infoContent}>
-              <div class={style.infoTextWrapper}>
-                <h2 class={style.infoTitle}>Small</h2>
-                <p class={style.infoCaption}>
-                  Smaller images mean faster load times. Squoosh can reduce file
-                  size and maintain high quality.
-                </p>
+          <div class={style.infoContainer}>
+            <SlideOnScroll>
+              <div class={style.infoContent}>
+                <div class={style.infoTextWrapper}>
+                  <h2 class={style.infoTitle}>Small</h2>
+                  <p class={style.infoCaption}>
+                    Smaller images mean faster load times. Squoosh can reduce
+                    file size and maintain high quality.
+                  </p>
+                </div>
+                <div class={style.infoImgWrapper}>
+                  <img
+                    class={style.infoImg}
+                    src={smallSectionAsset}
+                    alt="silhouette of a large 1.4 megabyte image shrunk into a smaller 80 kilobyte image"
+                    width="536"
+                    height="522"
+                  />
+                </div>
               </div>
-              <div class={style.infoImgWrapper}>
-                <img
-                  class={style.infoImg}
-                  src={smallSectionAsset}
-                  alt="silhouette of a large 1.4 megabyte image shrunk into a smaller 80 kilobyte image"
-                  loading="lazy"
-                  width="400"
-                  height="390"
-                />
-              </div>
-            </div>
+            </SlideOnScroll>
           </div>
         </section>
 
         <section class={style.info}>
-          <div class={`${style.infoContainer} observe`}>
-            <div class={style.infoContent}>
-              <div class={style.infoTextWrapper}>
-                <h2 class={style.infoTitle}>Simple</h2>
-                <p class={style.infoCaption}>
-                  Open your image, inspect the differences, then save instantly.
-                  Feeling adventurous? Tailor your images your way.
-                </p>
-                <a
-                  class={style.infoLink}
-                  href="https://github.com/GoogleChromeLabs/squoosh"
-                  target="_blank"
-                >
-                  Learn more
-                </a>
+          <div class={style.infoContainer}>
+            <SlideOnScroll>
+              <div class={style.infoContent}>
+                <div class={style.infoTextWrapper}>
+                  <h2 class={style.infoTitle}>Simple</h2>
+                  <p class={style.infoCaption}>
+                    Open your image, inspect the differences, then save
+                    instantly. Feeling adventurous? Tailor your images your way.
+                  </p>
+                  <a
+                    class={style.infoLink}
+                    href="https://github.com/GoogleChromeLabs/squoosh"
+                    target="_blank"
+                  >
+                    Learn more
+                  </a>
+                </div>
+                <div class={style.infoImgWrapper}>
+                  <img
+                    class={style.infoImg}
+                    src={simpleSectionAsset}
+                    alt="grid of multiple shrunk images displaying various options"
+                    width="538"
+                    height="384"
+                  />
+                </div>
               </div>
-              <div class={style.infoImgWrapper}>
-                <img
-                  class={style.infoImg}
-                  src={simpleSectionAsset}
-                  alt="grid of multiple shrunk images displaying various options"
-                  loading="lazy"
-                  width="400"
-                  height="390"
-                />
-              </div>
-            </div>
+            </SlideOnScroll>
           </div>
         </section>
 
         <section class={style.info}>
-          <div class={`${style.infoContainer} observe`}>
-            <div class={style.infoContent}>
-              <div class={style.infoTextWrapper}>
-                <h2 class={style.infoTitle}>Secure</h2>
-                <p class={style.infoCaption}>
-                  Worried about privacy? Squoosh always converts your images on
-                  your device and they never go to the cloud.
-                </p>
+          <div class={style.infoContainer}>
+            <SlideOnScroll>
+              <div class={style.infoContent}>
+                <div class={style.infoTextWrapper}>
+                  <h2 class={style.infoTitle}>Secure</h2>
+                  <p class={style.infoCaption}>
+                    Worried about privacy? Squoosh always converts your images
+                    on your device and they never go to the cloud.
+                  </p>
+                </div>
+                <div class={style.infoImgWrapper}>
+                  <img
+                    class={style.infoImg}
+                    src={secureSectionAsset}
+                    alt="silhouette of a cloud with a no symbol on top"
+                    width="498"
+                    height="333"
+                  />
+                </div>
               </div>
-              <div class={style.infoImgWrapper}>
-                <img
-                  class={style.infoImg}
-                  src={secureSectionAsset}
-                  alt="silhouette of a cloud with a no symbol on top"
-                  loading="lazy"
-                  width="400"
-                  height="390"
-                />
-              </div>
-            </div>
+            </SlideOnScroll>
           </div>
         </section>
 
