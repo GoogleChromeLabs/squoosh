@@ -385,13 +385,6 @@ export default class Intro extends Component<Props, State> {
                     Open your image, inspect the differences, then save
                     instantly. Feeling adventurous? Tailor your images your way.
                   </p>
-                  <a
-                    class={style.infoLink}
-                    href="https://github.com/GoogleChromeLabs/squoosh"
-                    target="_blank"
-                  >
-                    Learn more
-                  </a>
                 </div>
                 <div class={style.infoImgWrapper}>
                   <img
