@@ -9,6 +9,12 @@ import { cpus } from 'os';
   hardwareConcurrency: cpus().length,
 };
 
+interface DecodeModule extends EmscriptenWasm.Module {
+  decode: (data: Uint8Array) => ImageData;
+}
+
+type DecodeModuleFactory = EmscriptenWasm.ModuleFactory<DecodeModule>;
+
 interface RotateModuleInstance {
   exports: {
     memory: WebAssembly.Memory;
@@ -33,7 +39,7 @@ interface ResizeInstantiateOptions {
 
 declare global {
   // Needed for being able to use ImageData as type in codec types
-  type ImageData = typeof import('./image_data.js');
+  type ImageData = import('./image_data.js').default;
   // Needed for being able to assign to `globalThis.ImageData`
   var ImageData: ImageData['constructor'];
 }
@@ -41,18 +47,21 @@ declare global {
 import type { QuantizerModule } from '../../codecs/imagequant/imagequant.js';
 
 // MozJPEG
+import type { MozJPEGModule as MozJPEGEncodeModule } from '../../codecs/mozjpeg/enc/mozjpeg_enc';
 import mozEnc from '../../codecs/mozjpeg/enc/mozjpeg_node_enc.js';
 import mozEncWasm from 'asset-url:../../codecs/mozjpeg/enc/mozjpeg_node_enc.wasm';
 import mozDec from '../../codecs/mozjpeg/dec/mozjpeg_node_dec.js';
 import mozDecWasm from 'asset-url:../../codecs/mozjpeg/dec/mozjpeg_node_dec.wasm';
 
 // WebP
+import type { WebPModule as WebPEncodeModule } from '../../codecs/webp/enc/webp_enc';
 import webpEnc from '../../codecs/webp/enc/webp_node_enc.js';
 import webpEncWasm from 'asset-url:../../codecs/webp/enc/webp_node_enc.wasm';
 import webpDec from '../../codecs/webp/dec/webp_node_dec.js';
 import webpDecWasm from 'asset-url:../../codecs/webp/dec/webp_node_dec.wasm';
 
 // AVIF
+import type { AVIFModule as AVIFEncodeModule } from '../../codecs/avif/enc/avif_enc';
 import avifEnc from '../../codecs/avif/enc/avif_node_enc.js';
 import avifEncWasm from 'asset-url:../../codecs/avif/enc/avif_node_enc.wasm';
 import avifEncMt from '../../codecs/avif/enc/avif_node_enc_mt.js';
@@ -62,12 +71,14 @@ import avifDec from '../../codecs/avif/dec/avif_node_dec.js';
 import avifDecWasm from 'asset-url:../../codecs/avif/dec/avif_node_dec.wasm';
 
 // JXL
+import type { JXLModule as JXLEncodeModule } from '../../codecs/jxl/enc/jxl_enc';
 import jxlEnc from '../../codecs/jxl/enc/jxl_node_enc.js';
 import jxlEncWasm from 'asset-url:../../codecs/jxl/enc/jxl_node_enc.wasm';
 import jxlDec from '../../codecs/jxl/dec/jxl_node_dec.js';
 import jxlDecWasm from 'asset-url:../../codecs/jxl/dec/jxl_node_dec.wasm';
 
 // WP2
+import type { WP2Module as WP2EncodeModule } from '../../codecs/wp2/enc/wp2_enc';
 import wp2Enc from '../../codecs/wp2/enc/wp2_node_enc.js';
 import wp2EncWasm from 'asset-url:../../codecs/wp2/enc/wp2_node_enc.wasm';
 import wp2Dec from '../../codecs/wp2/dec/wp2_node_dec.js';
@@ -257,15 +268,20 @@ export const preprocessors = {
       numRotations: 0,
     },
   },
-};
+} as const;
 
 export const codecs = {
   mozjpeg: {
     name: 'MozJPEG',
     extension: 'jpg',
     detectors: [/^\xFF\xD8\xFF/],
-    dec: () => instantiateEmscriptenWasm(mozDec, mozDecWasm),
-    enc: () => instantiateEmscriptenWasm(mozEnc, mozEncWasm),
+    dec: () =>
+      instantiateEmscriptenWasm(mozDec as DecodeModuleFactory, mozDecWasm),
+    enc: () =>
+      instantiateEmscriptenWasm(
+        mozEnc as EmscriptenWasm.ModuleFactory<MozJPEGEncodeModule>,
+        mozEncWasm,
+      ),
     defaultEncoderOptions: {
       quality: 75,
       baseline: false,
@@ -294,8 +310,13 @@ export const codecs = {
     name: 'WebP',
     extension: 'webp',
     detectors: [/^RIFF....WEBPVP8[LX ]/s],
-    dec: () => instantiateEmscriptenWasm(webpDec, webpDecWasm),
-    enc: () => instantiateEmscriptenWasm(webpEnc, webpEncWasm),
+    dec: () =>
+      instantiateEmscriptenWasm(webpDec as DecodeModuleFactory, webpDecWasm),
+    enc: () =>
+      instantiateEmscriptenWasm(
+        webpEnc as EmscriptenWasm.ModuleFactory<WebPEncodeModule>,
+        webpEncWasm,
+      ),
     defaultEncoderOptions: {
       quality: 75,
       target_size: 0,
@@ -335,16 +356,20 @@ export const codecs = {
     name: 'AVIF',
     extension: 'avif',
     detectors: [/^\x00\x00\x00 ftypavif\x00\x00\x00\x00/],
-    dec: () => instantiateEmscriptenWasm(avifDec, avifDecWasm),
+    dec: () =>
+      instantiateEmscriptenWasm(avifDec as DecodeModuleFactory, avifDecWasm),
     enc: async () => {
       if (await threads()) {
         return instantiateEmscriptenWasm(
-          avifEncMt,
+          avifEncMt as EmscriptenWasm.ModuleFactory<AVIFEncodeModule>,
           avifEncMtWasm,
           avifEncMtWorker,
         );
       }
-      return instantiateEmscriptenWasm(avifEnc, avifEncWasm);
+      return instantiateEmscriptenWasm(
+        avifEnc as EmscriptenWasm.ModuleFactory<AVIFEncodeModule>,
+        avifEncWasm,
+      );
     },
     defaultEncoderOptions: {
       cqLevel: 33,
@@ -368,8 +393,13 @@ export const codecs = {
     name: 'JPEG-XL',
     extension: 'jxl',
     detectors: [/^\xff\x0a/],
-    dec: () => instantiateEmscriptenWasm(jxlDec, jxlDecWasm),
-    enc: () => instantiateEmscriptenWasm(jxlEnc, jxlEncWasm),
+    dec: () =>
+      instantiateEmscriptenWasm(jxlDec as DecodeModuleFactory, jxlDecWasm),
+    enc: () =>
+      instantiateEmscriptenWasm(
+        jxlEnc as EmscriptenWasm.ModuleFactory<JXLEncodeModule>,
+        jxlEncWasm,
+      ),
     defaultEncoderOptions: {
       speed: 4,
       quality: 75,
@@ -389,8 +419,13 @@ export const codecs = {
     name: 'WebP2',
     extension: 'wp2',
     detectors: [/^\xF4\xFF\x6F/],
-    dec: () => instantiateEmscriptenWasm(wp2Dec, wp2DecWasm),
-    enc: () => instantiateEmscriptenWasm(wp2Enc, wp2EncWasm),
+    dec: () =>
+      instantiateEmscriptenWasm(wp2Dec as DecodeModuleFactory, wp2DecWasm),
+    enc: () =>
+      instantiateEmscriptenWasm(
+        wp2Enc as EmscriptenWasm.ModuleFactory<WP2EncodeModule>,
+        wp2EncWasm,
+      ),
     defaultEncoderOptions: {
       quality: 75,
       alpha_quality: 75,
@@ -421,7 +456,7 @@ export const codecs = {
       await oxipngPromise;
       return {
         encode: (
-          buffer: Uint8Array,
+          buffer: Uint8ClampedArray | ArrayBuffer,
           width: number,
           height: number,
           opts: { level: number },
@@ -444,4 +479,4 @@ export const codecs = {
       max: 1,
     },
   },
-};
+} as const;
