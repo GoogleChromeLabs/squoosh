@@ -183,7 +183,7 @@
 .info-text-wrapper {
   display: flex;
   flex-flow: column wrap;
-  max-width: 30em;
+  max-width: 27em;
   justify-self: center;
   grid-area: text;
 

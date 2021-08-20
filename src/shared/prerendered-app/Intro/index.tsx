@@ -383,7 +383,8 @@ export default class Intro extends Component<Props, State> {
                   <h2 class={style.infoTitle}>Simple</h2>
                   <p class={style.infoCaption}>
                     Open your image, inspect the differences, then save
-                    instantly. Feeling adventurous? Tailor your images your way.
+                    instantly. Feeling adventurous? Adjust the settings for even
+                    smaller files.
                   </p>
                 </div>
                 <div class={style.infoImgWrapper}>
@@ -407,8 +408,8 @@ export default class Intro extends Component<Props, State> {
                 <div class={style.infoTextWrapper}>
                   <h2 class={style.infoTitle}>Secure</h2>
                   <p class={style.infoCaption}>
-                    Worried about privacy? Squoosh always converts your images
-                    on your device and they never go to the cloud.
+                    Worried about privacy? Images never leave your device since
+                    Squoosh does all the work locally.
                   </p>
                 </div>
                 <div class={style.infoImgWrapper}>
