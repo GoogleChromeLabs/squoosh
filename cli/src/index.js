@@ -4,6 +4,7 @@ import { program } from 'commander/esm.mjs';
 import JSON5 from 'json5';
 import path from 'path';
 import { promises as fsp } from 'fs';
+import { cpus } from 'os';
 import ora from 'ora';
 import kleur from 'kleur';
 
