@@ -1,5 +1,4 @@
 import { isMainThread } from 'worker_threads';
-import { promises as fsp } from 'fs';
 
 import { codecs as encoders, preprocessors } from './codecs.js';
 import WorkerPool from './worker_pool.js';
@@ -9,26 +8,15 @@ import type ImageData from './image_data';
 export { ImagePool, encoders, preprocessors };
 type EncoderKey = keyof typeof encoders;
 type PreprocessorKey = keyof typeof preprocessors;
-type FileLike = Buffer | ArrayBuffer | string | ArrayBufferView;
 
 async function decodeFile({
   file,
 }: {
-  file: FileLike;
+  file: ArrayBuffer;
 }): Promise<{ bitmap: ImageData; size: number }> {
-  let buffer;
-  if (ArrayBuffer.isView(file)) {
-    buffer = Buffer.from(file.buffer);
-    file = 'Binary blob';
-  } else if (file instanceof ArrayBuffer) {
+  let buffer: Buffer;
+  if (file instanceof ArrayBuffer) {
     buffer = Buffer.from(file);
-    file = 'Binary blob';
-  } else if ((file as unknown) instanceof Buffer) {
-    // TODO: Check why we need type assertions here.
-    buffer = (file as unknown) as Buffer;
-    file = 'Binary blob';
-  } else if (typeof file === 'string') {
-    buffer = await fsp.readFile(file);
   } else {
     throw Error('Unexpected input type');
   }
@@ -40,7 +28,7 @@ async function decodeFile({
     detectors.some((detector) => detector.exec(firstChunkString)),
   )?.[0] as EncoderKey | undefined;
   if (!key) {
-    throw Error(`${file} has an unsupported format`);
+    throw Error(`File has an unsupported format`);
   }
   const encoder = encoders[key];
   const mod = await encoder.dec();
@@ -250,25 +238,21 @@ class Image {
  */
 class ImagePool {
   public workerPool: WorkerPool<JobMessage, any>;
-  public loadFile: (path: URL) => Promise<ArrayBuffer>;
 
   /**
    * Create a new pool.
-   * @param {(path: URL) => Promise<ArrayBuffer>} [loadFile] - A function that loads a file from a URL.
    * @param {number} [threads] - Number of concurrent image processes to run in the pool.
    */
-  constructor(loadFile: (path: URL) => Promise<ArrayBuffer>, threads: number) {
-    this.loadFile = loadFile;
+  constructor(threads: number) {
     this.workerPool = new WorkerPool(threads, __filename);
   }
 
   /**
    * Ingest an image into the image pool.
-   * @param {URL} url - The URL path to the image that should be ingested and decoded.
+   * @param {ArrayBuffer} file - The image that should be ingested and decoded.
    * @returns {Image} - A custom class reference to the decoded image.
    */
-  ingestImage(url: URL): Image {
-    const file = await this.loadFile(url);
+  ingestImage(file: ArrayBuffer): Image {
     return new Image(this.workerPool, file);
   }
 

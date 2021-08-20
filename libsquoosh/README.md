@@ -16,7 +16,8 @@ You can start using the libSquoosh by adding these lines to the top of your JS p
 
 ```js
 import { ImagePool } from '@squoosh/lib';
-const imagePool = new ImagePool((url) => fs.readFile(url));
+import { cpus } from 'os';
+const imagePool = new ImagePool(cpus().length);
 ```
 
 This will create an image pool with an underlying processing pipeline that you can use to ingest and encode images. The ImagePool constructor takes one argument that defines how many parallel operations it is allowed to run at any given time. By default, this number is set to the amount of CPU cores available in the system it is running on.
@@ -26,11 +27,12 @@ This will create an image pool with an underlying processing pipeline that you c
 You can ingest a new image like so:
 
 ```js
-const imagePath = 'file://path/to/image.png';
+import fs from 'fs/promises';
+const file = await fs.readFile('./path/to/image.png');
 const image = imagePool.ingestImage(imagePath);
 ```
 
-The `ingestImage` function will accept a URL path and call the `loadFile()` function defined in the `ImagePool`.
+The `ingestImage` function can accept any [ArrayBuffer](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer) whether that is from `readFile()` or `fetch()`.
 
 The returned `image` object is a representation of the original image, that you can now preprocess, encode, and extract information about.
 

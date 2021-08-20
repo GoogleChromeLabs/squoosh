@@ -75,7 +75,9 @@ async function getInputFiles(paths) {
 
   for (const inputPath of paths) {
     const files = (await fsp.lstat(inputPath)).isDirectory()
-      ? (await fsp.readdir(inputPath, {withFileTypes: true})).filter(dirent => dirent.isFile()).map(dirent => path.join(inputPath, dirent.name))
+      ? (await fsp.readdir(inputPath, { withFileTypes: true }))
+          .filter((dirent) => dirent.isFile())
+          .map((dirent) => path.join(inputPath, dirent.name))
       : [inputPath];
     for (const file of files) {
       try {
@@ -101,7 +103,7 @@ async function getInputFiles(paths) {
 async function processFiles(files) {
   files = await getInputFiles(files);
 
-  const imagePool = new ImagePool();
+  const imagePool = new ImagePool(cpus().length);
 
   const results = new Map();
   const progress = progressTracker(results);
@@ -116,7 +118,7 @@ async function processFiles(files) {
   let decoded = 0;
   let decodedFiles = await Promise.all(
     files.map(async (file) => {
-      const image = imagePool.ingestImage(file);
+      const image = imagePool.ingestImage(fsp.readFile(file));
       await image.decoded;
       results.set(image, {
         file,
@@ -178,7 +180,7 @@ async function processFiles(files) {
       const outputPath = path.join(
         program.opts().outputDir,
         path.basename(originalFile, path.extname(originalFile)) +
-        program.opts().suffix
+          program.opts().suffix,
       );
       for (const output of Object.values(image.encodedWith)) {
         const outputFile = `${outputPath}.${(await output).extension}`;
