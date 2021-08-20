@@ -14,13 +14,8 @@ async function decodeFile({
 }: {
   file: ArrayBuffer;
 }): Promise<{ bitmap: ImageData; size: number }> {
-  let buffer: Buffer;
-  if (file instanceof ArrayBuffer) {
-    buffer = Buffer.from(file);
-  } else {
-    throw Error('Unexpected input type');
-  }
-  const firstChunk = buffer.slice(0, 16);
+  const array = new Uint8Array(file);
+  const firstChunk = array.slice(0, 16);
   const firstChunkString = Array.from(firstChunk)
     .map((v) => String.fromCodePoint(v))
     .join('');
@@ -32,10 +27,10 @@ async function decodeFile({
   }
   const encoder = encoders[key];
   const mod = await encoder.dec();
-  const rgba = mod.decode(new Uint8Array(buffer));
+  const rgba = mod.decode(array);
   return {
     bitmap: rgba,
-    size: buffer.length,
+    size: array.length,
   };
 }
 
