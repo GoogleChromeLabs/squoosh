@@ -12,7 +12,7 @@ type PreprocessorKey = keyof typeof preprocessors;
 async function decodeFile({
   file,
 }: {
-  file: ArrayBuffer;
+  file: ArrayBuffer | ArrayLike<number>;
 }): Promise<{ bitmap: ImageData; size: number }> {
   const array = new Uint8Array(file);
   const firstChunk = array.slice(0, 16);
@@ -151,12 +151,15 @@ function handleJob(params: JobMessage) {
  * Represents an ingested image.
  */
 class Image {
-  public file: ArrayBuffer;
+  public file: ArrayBuffer | ArrayLike<number>;
   public workerPool: WorkerPool<JobMessage, any>;
   public decoded: Promise<{ bitmap: ImageData }>;
   public encodedWith: { [key: string]: any };
 
-  constructor(workerPool: WorkerPool<JobMessage, any>, file: ArrayBuffer) {
+  constructor(
+    workerPool: WorkerPool<JobMessage, any>,
+    file: ArrayBuffer | ArrayLike<number>,
+  ) {
     this.file = file;
     this.workerPool = workerPool;
     this.decoded = workerPool.dispatchJob({ operation: 'decode', file });
@@ -244,10 +247,10 @@ class ImagePool {
 
   /**
    * Ingest an image into the image pool.
-   * @param {ArrayBuffer} file - The image that should be ingested and decoded.
+   * @param {ArrayBuffer | ArrayLike<number>} file - The image that should be ingested and decoded.
    * @returns {Image} - A custom class reference to the decoded image.
    */
-  ingestImage(file: ArrayBuffer): Image {
+  ingestImage(file: ArrayBuffer | ArrayLike<number>): Image {
     return new Image(this.workerPool, file);
   }
 
