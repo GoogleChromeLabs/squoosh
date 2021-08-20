@@ -119,7 +119,8 @@ async function processFiles(files) {
   let decoded = 0;
   let decodedFiles = await Promise.all(
     files.map(async (file) => {
-      const image = imagePool.ingestImage(fsp.readFile(file));
+      const buffer = await fsp.readFile(file);
+      const image = imagePool.ingestImage(buffer);
       await image.decoded;
       results.set(image, {
         file,
