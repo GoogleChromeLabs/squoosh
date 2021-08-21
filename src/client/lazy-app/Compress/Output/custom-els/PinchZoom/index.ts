@@ -81,6 +81,7 @@ function createPoint(): SVGPoint {
 }
 
 const MIN_SCALE = 0.01;
+const MAX_SCALE = 1000000;
 
 export default class PinchZoom extends HTMLElement {
   // The element that we'll transform.
@@ -243,6 +244,9 @@ export default class PinchZoom extends HTMLElement {
   ) {
     // Avoid scaling to zero
     if (scale < MIN_SCALE) return;
+
+    // Avoid scaling to very large values
+    if (scale > MAX_SCALE) return;
 
     // Return if there's no change
     if (scale === this.scale && x === this.x && y === this.y) return;
