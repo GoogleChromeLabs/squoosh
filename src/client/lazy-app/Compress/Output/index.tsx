@@ -277,6 +277,8 @@ export default class Output extends Component<Props, State> {
             onTouchEndCapture={this.onRetargetableEvent}
             onTouchMoveCapture={this.onRetargetableEvent}
             onPointerDownCapture={
+              // We avoid pointer events in our PointerTracker due to a Safari bug.
+              // That means we also need to avoid them here too, else we end up preventing the fallback mouse events.
               usePointerEvents ? this.onRetargetableEvent : undefined
             }
             onMouseDownCapture={this.onRetargetableEvent}
