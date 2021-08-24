@@ -1,5 +1,6 @@
-import PointerTracker, { Pointer } from '../PointerTracker';
+import PointerTracker, { Pointer } from 'pointer-tracker';
 import 'add-css:./styles.css';
+import { isSafari } from 'client/lazy-app/util';
 
 interface Point {
   clientX: number;
@@ -117,6 +118,11 @@ export default class PinchZoom extends HTMLElement {
       move: (previousPointers) => {
         this._onPointerMove(previousPointers, pointerTracker.currentPointers);
       },
+      // Unfortunately Safari on iOS has a bug there pointer event capturing
+      // doesn't work in some cases, and we hit those cases due to our event
+      // retargeting in pinch-zoom.
+      // https://bugs.webkit.org/show_bug.cgi?id=220196
+      avoidPointerEvents: isSafari,
     });
 
     this.addEventListener('wheel', (event) => this._onWheel(event));

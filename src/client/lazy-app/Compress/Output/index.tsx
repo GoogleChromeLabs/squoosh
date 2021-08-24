@@ -5,7 +5,7 @@ import './custom-els/PinchZoom';
 import './custom-els/TwoUp';
 import * as style from './style.css';
 import 'add-css:./style.css';
-import { shallowEqual } from '../../util';
+import { isSafari, shallowEqual } from '../../util';
 import {
   ToggleBackgroundIcon,
   AddIcon,
@@ -19,8 +19,6 @@ import { cleanSet } from '../../util/clean-modify';
 import type { SourceImage } from '../../Compress';
 import { linkRef } from 'shared/prerendered-app/util';
 import { drawDataToCanvas } from 'client/lazy-app/util/canvas';
-import { usePointerEvents } from './custom-els/PointerTracker';
-
 interface Props {
   source?: SourceImage;
   preprocessorState?: PreprocessorState;
@@ -277,9 +275,9 @@ export default class Output extends Component<Props, State> {
             onTouchEndCapture={this.onRetargetableEvent}
             onTouchMoveCapture={this.onRetargetableEvent}
             onPointerDownCapture={
-              // We avoid pointer events in our PointerTracker due to a Safari bug.
+              // We avoid pointer events in our PinchZoom due to a Safari bug.
               // That means we also need to avoid them here too, else we end up preventing the fallback mouse events.
-              usePointerEvents ? this.onRetargetableEvent : undefined
+              isSafari ? undefined : this.onRetargetableEvent
             }
             onMouseDownCapture={this.onRetargetableEvent}
             onWheelCapture={this.onRetargetableEvent}
