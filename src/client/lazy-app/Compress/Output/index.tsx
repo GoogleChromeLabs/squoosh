@@ -19,6 +19,7 @@ import { cleanSet } from '../../util/clean-modify';
 import type { SourceImage } from '../../Compress';
 import { linkRef } from 'shared/prerendered-app/util';
 import { drawDataToCanvas } from 'client/lazy-app/util/canvas';
+import { usePointerEvents } from './custom-els/PointerTracker';
 
 interface Props {
   source?: SourceImage;
@@ -275,7 +276,9 @@ export default class Output extends Component<Props, State> {
             onTouchStartCapture={this.onRetargetableEvent}
             onTouchEndCapture={this.onRetargetableEvent}
             onTouchMoveCapture={this.onRetargetableEvent}
-            onPointerDownCapture={this.onRetargetableEvent}
+            onPointerDownCapture={
+              usePointerEvents ? this.onRetargetableEvent : undefined
+            }
             onMouseDownCapture={this.onRetargetableEvent}
             onWheelCapture={this.onRetargetableEvent}
           >

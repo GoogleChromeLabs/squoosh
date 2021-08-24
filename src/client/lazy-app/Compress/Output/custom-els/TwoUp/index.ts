@@ -1,4 +1,4 @@
-import PointerTracker, { Pointer } from 'pointer-tracker';
+import PointerTracker, { Pointer } from '../PointerTracker';
 import * as styles from './styles.css';
 import 'add-css:./styles.css';
 

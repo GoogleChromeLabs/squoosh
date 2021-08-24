@@ -1,4 +1,4 @@
-import PointerTracker, { Pointer } from 'pointer-tracker';
+import PointerTracker, { Pointer } from '../PointerTracker';
 import 'add-css:./styles.css';
 
 interface Point {
@@ -104,13 +104,19 @@ export default class PinchZoom extends HTMLElement {
     // Watch for pointers
     const pointerTracker: PointerTracker = new PointerTracker(this, {
       start: (pointer, event) => {
+        console.log('start');
         // We only want to track 2 pointers at most
-        if (pointerTracker.currentPointers.length === 2 || !this._positioningEl)
+        if (
+          pointerTracker.currentPointers.length === 2 ||
+          !this._positioningEl
+        ) {
           return false;
+        }
         event.preventDefault();
         return true;
       },
       move: (previousPointers) => {
+        console.log('move');
         this._onPointerMove(previousPointers, pointerTracker.currentPointers);
       },
     });
