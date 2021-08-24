@@ -416,7 +416,7 @@ export default class Intro extends Component<Props, State> {
                   <img
                     class={style.infoImg}
                     src={secureSectionAsset}
-                    alt="silhouette of a cloud with a no symbol on top"
+                    alt="silhouette of a cloud with a 'no' symbol on top"
                     width="498"
                     height="333"
                   />
