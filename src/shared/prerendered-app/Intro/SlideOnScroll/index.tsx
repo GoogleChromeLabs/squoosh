@@ -42,7 +42,7 @@ export default class SlideOnScroll extends Component<Props, State> {
     // Have to manually disconnect due to memory leaks in browsers.
     // One day we'll be able to remove this, and the private property.
     // https://twitter.com/jaffathecake/status/1405437361643790337
-    this.observer!.disconnect();
+    if (this.observer) this.observer.disconnect();
   }
 
   render({ children }: RenderableProps<Props>) {
