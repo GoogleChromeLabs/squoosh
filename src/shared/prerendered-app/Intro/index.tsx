@@ -10,12 +10,16 @@ import deviceScreen from 'url:./imgs/demos/demo-device-screen.png';
 import largePhotoIcon from 'url:./imgs/demos/icon-demo-large-photo.jpg';
 import artworkIcon from 'url:./imgs/demos/icon-demo-artwork.jpg';
 import deviceScreenIcon from 'url:./imgs/demos/icon-demo-device-screen.jpg';
+import smallSectionAsset from 'url:./imgs/info-content/small.svg';
+import simpleSectionAsset from 'url:./imgs/info-content/simple.svg';
+import secureSectionAsset from 'url:./imgs/info-content/secure.svg';
 import logoIcon from 'url:./imgs/demos/icon-demo-logo.png';
 import logoWithText from 'url:./imgs/logo-with-text.svg';
 import * as style from './style.css';
 import type SnackBarElement from 'shared/custom-els/snack-bar';
 import 'shared/custom-els/snack-bar';
 import { startBlobs } from './blob-anim/meta';
+import SlideOnScroll from './SlideOnScroll';
 
 const demos = [
   {
@@ -336,37 +340,125 @@ export default class Intro extends Component<Props, State> {
             </ul>
           </div>
         </div>
-        <div class={style.footer}>
+
+        <div class={style.bottomWave}>
           <svg viewBox="0 0 1920 79" class={style.topWave}>
             <path
               d="M0 59l64-11c64-11 192-34 320-43s256-5 384 4 256 23 384 34 256 21 384 14 256-30 320-41l64-11v94H0z"
-              class={style.footerWave}
+              class={style.infoWave}
             />
           </svg>
-          <div class={style.contentPadding}>
-            <footer class={style.footerItems}>
-              <a
-                class={style.footerLink}
-                href="https://github.com/GoogleChromeLabs/squoosh/blob/dev/README.md#privacy"
-              >
-                Privacy
-              </a>
-              <a
-                class={style.footerLink}
-                href="https://github.com/GoogleChromeLabs/squoosh/tree/dev/cli"
-              >
-                Squoosh CLI
-              </a>
-              <a
-                class={style.footerLinkWithLogo}
-                href="https://github.com/GoogleChromeLabs/squoosh"
-              >
-                <img src={githubLogo} alt="" width="10" height="10" />
-                Source on Github
-              </a>
-            </footer>
-          </div>
         </div>
+
+        <section class={style.info}>
+          <div class={style.infoContainer}>
+            <SlideOnScroll>
+              <div class={style.infoContent}>
+                <div class={style.infoTextWrapper}>
+                  <h2 class={style.infoTitle}>Small</h2>
+                  <p class={style.infoCaption}>
+                    Smaller images mean faster load times. Squoosh can reduce
+                    file size and maintain high quality.
+                  </p>
+                </div>
+                <div class={style.infoImgWrapper}>
+                  <img
+                    class={style.infoImg}
+                    src={smallSectionAsset}
+                    alt="silhouette of a large 1.4 megabyte image shrunk into a smaller 80 kilobyte image"
+                    width="536"
+                    height="522"
+                  />
+                </div>
+              </div>
+            </SlideOnScroll>
+          </div>
+        </section>
+
+        <section class={style.info}>
+          <div class={style.infoContainer}>
+            <SlideOnScroll>
+              <div class={style.infoContent}>
+                <div class={style.infoTextWrapper}>
+                  <h2 class={style.infoTitle}>Simple</h2>
+                  <p class={style.infoCaption}>
+                    Open your image, inspect the differences, then save
+                    instantly. Feeling adventurous? Adjust the settings for even
+                    smaller files.
+                  </p>
+                </div>
+                <div class={style.infoImgWrapper}>
+                  <img
+                    class={style.infoImg}
+                    src={simpleSectionAsset}
+                    alt="grid of multiple shrunk images displaying various options"
+                    width="538"
+                    height="384"
+                  />
+                </div>
+              </div>
+            </SlideOnScroll>
+          </div>
+        </section>
+
+        <section class={style.info}>
+          <div class={style.infoContainer}>
+            <SlideOnScroll>
+              <div class={style.infoContent}>
+                <div class={style.infoTextWrapper}>
+                  <h2 class={style.infoTitle}>Secure</h2>
+                  <p class={style.infoCaption}>
+                    Worried about privacy? Images never leave your device since
+                    Squoosh does all the work locally.
+                  </p>
+                </div>
+                <div class={style.infoImgWrapper}>
+                  <img
+                    class={style.infoImg}
+                    src={secureSectionAsset}
+                    alt="silhouette of a cloud with a 'no' symbol on top"
+                    width="498"
+                    height="333"
+                  />
+                </div>
+              </div>
+            </SlideOnScroll>
+          </div>
+        </section>
+
+        <footer class={style.footer}>
+          <div class={style.footerContainer}>
+            <svg viewBox="0 0 1920 79" class={style.topWave}>
+              <path
+                d="M0 59l64-11c64-11 192-34 320-43s256-5 384 4 256 23 384 34 256 21 384 14 256-30 320-41l64-11v94H0z"
+                class={style.footerWave}
+              />
+            </svg>
+            <div class={style.footerPadding}>
+              <footer class={style.footerItems}>
+                <a
+                  class={style.footerLink}
+                  href="https://github.com/GoogleChromeLabs/squoosh/blob/dev/README.md#privacy"
+                >
+                  Privacy
+                </a>
+                <a
+                  class={style.footerLink}
+                  href="https://github.com/GoogleChromeLabs/squoosh/tree/dev/cli"
+                >
+                  Squoosh CLI
+                </a>
+                <a
+                  class={style.footerLinkWithLogo}
+                  href="https://github.com/GoogleChromeLabs/squoosh"
+                >
+                  <img src={githubLogo} alt="" width="10" height="10" />
+                  Source on Github
+                </a>
+              </footer>
+            </div>
+          </div>
+        </footer>
         {beforeInstallEvent && (
           <button class={style.installBtn} onClick={this.onInstallClick}>
             Install
