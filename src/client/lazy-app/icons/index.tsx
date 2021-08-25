@@ -1,5 +1,4 @@
 import { h } from 'preact';
-import aliasIcon from 'url:./imgs/alias-icon.svg';
 
 const Icon = (props: preact.JSX.HTMLAttributes) => (
   // @ts-ignore - TS bug https://github.com/microsoft/TypeScript/issues/16019
