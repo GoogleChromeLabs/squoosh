@@ -118,7 +118,7 @@ export default class PinchZoom extends HTMLElement {
       move: (previousPointers) => {
         this._onPointerMove(previousPointers, pointerTracker.currentPointers);
       },
-      // Unfortunately Safari on iOS has a bug there pointer event capturing
+      // Unfortunately Safari on iOS has a bug where pointer event capturing
       // doesn't work in some cases, and we hit those cases due to our event
       // retargeting in pinch-zoom.
       // https://bugs.webkit.org/show_bug.cgi?id=220196
