@@ -1,6 +1,7 @@
 .options-scroller {
   --horizontal-padding: 15px;
   border-radius: var(--scroller-radius);
+  overflow: hidden;
 
   /* At smaller widths, the multi-panel handles the scrolling */
   @media (min-width: 600px) {
