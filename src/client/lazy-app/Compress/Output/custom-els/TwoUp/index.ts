@@ -34,6 +34,8 @@ export default class TwoUp extends HTMLElement {
    */
   private _everConnected = false;
 
+  private _resizeObserver?: ResizeObserver;
+
   constructor() {
     super();
     this._handle.className = styles.twoUpHandle;
@@ -44,13 +46,6 @@ export default class TwoUp extends HTMLElement {
     new MutationObserver(() => this._childrenChange()).observe(this, {
       childList: true,
     });
-
-    // Watch for element size changes.
-    if ('ResizeObserver' in window) {
-      new ResizeObserver(() => this._resetPosition()).observe(this);
-    } else {
-      window.addEventListener('resize', () => this._resetPosition());
-    }
 
     // Watch for pointers on the handle.
     const pointerTracker: PointerTracker = new PointerTracker(this._handle, {
@@ -68,8 +63,6 @@ export default class TwoUp extends HTMLElement {
         );
       },
     });
-
-    window.addEventListener('keydown', (event) => this._onKeyDown(event));
   }
 
   connectedCallback() {
@@ -84,10 +77,21 @@ export default class TwoUp extends HTMLElement {
         }</svg>
       `}</div>`;
 
+    // Watch for element size changes.
+    this._resizeObserver = new ResizeObserver(() => this._resetPosition());
+    this._resizeObserver.observe(this);
+
+    window.addEventListener('keydown', this._onKeyDown);
+
     if (!this._everConnected) {
       this._resetPosition();
       this._everConnected = true;
     }
+  }
+
+  disconnectedCallback() {
+    window.removeEventListener('keydown', this._onKeyDown);
+    if (this._resizeObserver) this._resizeObserver.disconnect();
   }
 
   attributeChangedCallback(name: string) {
@@ -97,7 +101,7 @@ export default class TwoUp extends HTMLElement {
   }
 
   // KeyDown event handler
-  private _onKeyDown(event: KeyboardEvent) {
+  private _onKeyDown = (event: KeyboardEvent) => {
     const target = event.target;
     if (target instanceof HTMLElement && target.closest('input')) return;
 
@@ -122,7 +126,7 @@ export default class TwoUp extends HTMLElement {
       this._relativePosition = this._position / bounds[dimensionAxis];
       this._setPosition();
     }
-  }
+  };
 
   private _resetPosition() {
     // Set the initial position of the handle.

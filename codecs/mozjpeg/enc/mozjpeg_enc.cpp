@@ -158,6 +158,11 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
   if (!opts.auto_subsample && opts.color_space == JCS_YCbCr) {
     cinfo.comp_info[0].h_samp_factor = opts.chroma_subsample;
     cinfo.comp_info[0].v_samp_factor = opts.chroma_subsample;
+
+    if (opts.chroma_subsample > 2) {
+      // Otherwise encoding fails.
+      jpeg_c_set_int_param(&cinfo, JINT_DC_SCAN_OPT_MODE, 1);
+    }
   }
 
   if (!opts.baseline && opts.progressive) {
