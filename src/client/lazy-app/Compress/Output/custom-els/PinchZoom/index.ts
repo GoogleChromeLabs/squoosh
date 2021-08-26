@@ -1,5 +1,6 @@
 import PointerTracker, { Pointer } from 'pointer-tracker';
 import 'add-css:./styles.css';
+import { isSafari } from 'client/lazy-app/util';
 
 interface Point {
   clientX: number;
@@ -105,14 +106,23 @@ export default class PinchZoom extends HTMLElement {
     const pointerTracker: PointerTracker = new PointerTracker(this, {
       start: (pointer, event) => {
         // We only want to track 2 pointers at most
-        if (pointerTracker.currentPointers.length === 2 || !this._positioningEl)
+        if (
+          pointerTracker.currentPointers.length === 2 ||
+          !this._positioningEl
+        ) {
           return false;
+        }
         event.preventDefault();
         return true;
       },
       move: (previousPointers) => {
         this._onPointerMove(previousPointers, pointerTracker.currentPointers);
       },
+      // Unfortunately Safari on iOS has a bug where pointer event capturing
+      // doesn't work in some cases, and we hit those cases due to our event
+      // retargeting in pinch-zoom.
+      // https://bugs.webkit.org/show_bug.cgi?id=220196
+      avoidPointerEvents: isSafari,
     });
 
     this.addEventListener('wheel', (event) => this._onWheel(event));
