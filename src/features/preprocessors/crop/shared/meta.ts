@@ -10,4 +10,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/// <reference path="../../../../../missing-types.d.ts" />
+export interface Options {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+}
+
+export const defaultOptions: Options = {
+  left: 0,
+  right: 0,
+  top: 0,
+  bottom: 0,
+};

@@ -1,0 +1,41 @@
+.wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-items: center;
+}
+
+.flyout {
+  display: inline-block;
+  position: fixed;
+  z-index: 100;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: column;
+  align-items: flex-start;
+  overflow: visible;
+  outline: none;
+  will-change: transform, opacity;
+  animation: menuOpen 350ms ease forwards 1;
+  --flyout-offset-y: -20px;
+
+  &[hidden] {
+    display: none;
+  }
+
+  &[data-direction*='left'] {
+    align-items: flex-end;
+  }
+
+  &[data-direction*='up'] {
+    --flyout-offset-y: 20px;
+    flex-direction: column-reverse;
+  }
+}
+
+@keyframes menuOpen {
+  0% {
+    transform: translateY(var(--flyout-offset-y, 0));
+    opacity: 0;
+  }
+}

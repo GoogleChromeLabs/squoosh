@@ -38,7 +38,7 @@
     "postcss-nested": "^4.2.3",
     "postcss-simple-vars": "^5.0.2",
     "postcss-url": "^8.0.0",
-    "preact": "^10.5.5",
+    "preact": "^10.5.7",
     "preact-render-to-string": "^5.1.11",
     "prettier": "^2.1.2",
     "rollup": "^2.38.0",

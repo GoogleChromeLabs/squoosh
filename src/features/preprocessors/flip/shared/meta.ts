@@ -10,4 +10,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/// <reference path="../../../../../missing-types.d.ts" />
+export interface Options {
+  horizontal: boolean;
+  vertical: boolean;
+}
+
+export const defaultOptions: Options = {
+  horizontal: false,
+  vertical: false,
+};

@@ -1,4 +1,4 @@
-import { h, Component, Fragment } from 'preact';
+import { h, createRef, Component, Fragment } from 'preact';
 import type PinchZoom from './custom-els/PinchZoom';
 import type { ScaleToOpts } from './custom-els/PinchZoom';
 import './custom-els/PinchZoom';
@@ -10,31 +10,38 @@ import {
   ToggleBackgroundIcon,
   AddIcon,
   RemoveIcon,
-  ToggleBackgroundActiveIcon,
   RotateIcon,
+  MoreIcon,
 } from '../../icons';
 import { twoUpHandle } from './custom-els/TwoUp/styles.css';
 import type { PreprocessorState } from '../../feature-meta';
 import { cleanSet } from '../../util/clean-modify';
 import type { SourceImage } from '../../Compress';
 import { linkRef } from 'shared/prerendered-app/util';
+import Flyout from '../Flyout';
 import { drawDataToCanvas } from 'client/lazy-app/util/canvas';
 
 interface Props {
   source?: SourceImage;
   preprocessorState?: PreprocessorState;
+  hidden?: boolean;
   mobileView: boolean;
   leftCompressed?: ImageData;
   rightCompressed?: ImageData;
   leftImgContain: boolean;
   rightImgContain: boolean;
-  onPreprocessorChange: (newState: PreprocessorState) => void;
+  onPreprocessorChange?: (newState: PreprocessorState) => void;
+  onShowPreprocessorTransforms?: () => void;
+  onToggleBackground?: () => void;
 }
 
 interface State {
   scale: number;
   editingScale: boolean;
   altBackground: boolean;
+  transform: boolean;
+  menuOpen: boolean;
+  smallControls: boolean;
 }
 
 const scaleToOpts: ScaleToOpts = {
@@ -49,12 +56,18 @@ export default class Output extends Component<Props, State> {
     scale: 1,
     editingScale: false,
     altBackground: false,
+    transform: false,
+    menuOpen: false,
+    smallControls:
+      typeof matchMedia === 'function' &&
+      matchMedia('(max-width: 859px)').matches,
   };
   canvasLeft?: HTMLCanvasElement;
   canvasRight?: HTMLCanvasElement;
   pinchZoomLeft?: PinchZoom;
   pinchZoomRight?: PinchZoom;
   scaleInput?: HTMLInputElement;
+  flyout = createRef<Flyout>();
   retargetedEvents = new WeakSet<Event>();
 
   componentDidMount() {
@@ -75,6 +88,12 @@ export default class Output extends Component<Props, State> {
     }
     if (this.canvasRight && rightDraw) {
       drawDataToCanvas(this.canvasRight, rightDraw);
+    }
+
+    if (typeof matchMedia === 'function') {
+      matchMedia('(max-width: 859px)').addEventListener('change', (e) =>
+        this.setState({ smallControls: e.matches }),
+      );
     }
   }
 
@@ -145,12 +164,6 @@ export default class Output extends Component<Props, State> {
     return props.rightCompressed || (props.source && props.source.preprocessed);
   }
 
-  private toggleBackground = () => {
-    this.setState({
-      altBackground: !this.state.altBackground,
-    });
-  };
-
   private zoomIn = () => {
     if (!this.pinchZoomLeft) throw Error('Missing pinch-zoom element');
     this.pinchZoomLeft.scaleTo(this.state.scale * 1.25, scaleToOpts);
@@ -161,17 +174,30 @@ export default class Output extends Component<Props, State> {
     this.pinchZoomLeft.scaleTo(this.state.scale / 1.25, scaleToOpts);
   };
 
-  private onRotateClick = () => {
-    const { preprocessorState: inputProcessorState } = this.props;
-    if (!inputProcessorState) return;
-
-    const newState = cleanSet(
-      inputProcessorState,
-      'rotate.rotate',
-      (inputProcessorState.rotate.rotate + 90) % 360,
+  private fitToViewport = () => {
+    if (!this.pinchZoomLeft) throw Error('Missing pinch-zoom element');
+    const img = this.props.source?.preprocessed;
+    if (!img) return;
+    const scale = Number(
+      Math.min(
+        (window.innerWidth - 20) / img.width,
+        (window.innerHeight - 20) / img.height,
+      ).toFixed(2),
     );
+    this.pinchZoomLeft.scaleTo(Number(scale.toFixed(2)), scaleToOpts);
+    this.recenter();
+    // this.hideMenu();
+  };
 
-    this.props.onPreprocessorChange(newState);
+  private recenter = () => {
+    const img = this.props.source?.preprocessed;
+    if (!img || !this.pinchZoomLeft) return;
+    let scale = this.pinchZoomLeft.scale;
+    this.pinchZoomLeft.setTransform({
+      x: (img.width - img.width * scale) / 2,
+      y: (img.height - img.height * scale) / 2,
+      allowChangeEvent: true,
+    });
   };
 
   private onScaleValueFocus = () => {
@@ -254,8 +280,16 @@ export default class Output extends Component<Props, State> {
   };
 
   render(
-    { mobileView, leftImgContain, rightImgContain, source }: Props,
-    { scale, editingScale, altBackground }: State,
+    {
+      source,
+      mobileView,
+      hidden,
+      leftImgContain,
+      rightImgContain,
+      onShowPreprocessorTransforms,
+      onToggleBackground,
+    }: Props,
+    { scale, editingScale, smallControls }: State,
   ) {
     const leftDraw = this.leftDrawable();
     const rightDraw = this.rightDrawable();
@@ -264,9 +298,7 @@ export default class Output extends Component<Props, State> {
 
     return (
       <Fragment>
-        <div
-          class={`${style.output} ${altBackground ? style.altBackground : ''}`}
-        >
+        <div class={style.output} hidden={hidden}>
           <two-up
             legacy-clip-compat
             class={style.twoUp}
@@ -292,7 +324,7 @@ export default class Output extends Component<Props, State> {
                 style={{
                   width: originalImage ? originalImage.width : '',
                   height: originalImage ? originalImage.height : '',
-                  objectFit: leftImgContain ? 'contain' : '',
+                  objectFit: leftImgContain ? 'contain' : undefined,
                 }}
               />
             </pinch-zoom>
@@ -308,15 +340,16 @@ export default class Output extends Component<Props, State> {
                 style={{
                   width: originalImage ? originalImage.width : '',
                   height: originalImage ? originalImage.height : '',
-                  objectFit: rightImgContain ? 'contain' : '',
+                  objectFit: rightImgContain ? 'contain' : undefined,
                 }}
               />
             </pinch-zoom>
           </two-up>
         </div>
-        <div class={style.controls}>
+
+        <div class={style.controls} hidden={hidden}>
           <div class={style.buttonGroup}>
-            <button class={style.firstButton} onClick={this.zoomOut}>
+            <button class={style.button} onClick={this.zoomOut}>
               <RemoveIcon />
             </button>
             {editingScale ? (
@@ -343,18 +376,34 @@ export default class Output extends Component<Props, State> {
             <button class={style.lastButton} onClick={this.zoomIn}>
               <AddIcon />
             </button>
-          </div>
-          <div class={style.buttonGroup}>
-            <button class={style.firstButton} onClick={this.onRotateClick}>
-              <RotateIcon />
-            </button>
-            <button class={style.lastButton} onClick={this.toggleBackground}>
-              {altBackground ? (
-                <ToggleBackgroundActiveIcon />
-              ) : (
-                <ToggleBackgroundIcon />
-              )}
-            </button>
+
+            <Flyout
+              class={style.menu}
+              showing={hidden ? false : undefined}
+              anchor="right"
+              direction={smallControls ? ['down', 'left'] : 'up'}
+              toggle={
+                <button class={`${style.button} ${style.moreButton}`}>
+                  <MoreIcon />
+                </button>
+              }
+            >
+              <button
+                class={style.button}
+                onClick={onShowPreprocessorTransforms}
+              >
+                <RotateIcon /> Rotate & Transform
+              </button>
+              <button class={style.button} onClick={this.fitToViewport}>
+                Fit to viewport
+              </button>
+              <button class={style.button} onClick={this.recenter}>
+                Re-center
+              </button>
+              <button class={style.button} onClick={onToggleBackground}>
+                <ToggleBackgroundIcon /> Change canvas color
+              </button>
+            </Flyout>
           </div>
         </div>
       </Fragment>

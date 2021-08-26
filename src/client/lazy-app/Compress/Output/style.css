@@ -1,20 +1,8 @@
 .output {
   display: contents;
 
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: #000;
-    opacity: 0.8;
-    transition: opacity 500ms ease;
-  }
-
-  &.alt-background::before {
-    opacity: 0;
+  &[hidden] {
+    display: none;
   }
 }
 
@@ -42,16 +30,21 @@
 .controls {
   display: flex;
   justify-content: center;
-  overflow: hidden;
   flex-wrap: wrap;
-  contain: content;
   grid-area: header;
   align-self: center;
   padding: 9px 66px;
   position: relative;
+  /* Had to disable containment because of the overflow menu. */
+  /*
+  contain: content;
+  overflow: hidden;
+  */
+  transition: transform 500ms ease;
 
   /* Allow clicks to fall through to the pinch zoom area */
   pointer-events: none;
+
   & > * {
     pointer-events: auto;
   }
@@ -62,13 +55,34 @@
     grid-area: viewportOpts;
     align-self: end;
   }
+
+  &[hidden] {
+    visibility: visible;
+    transform: translateY(-200%);
+
+    @media (min-width: 860px) {
+      transform: translateY(200%);
+    }
+  }
 }
 
 .button-group {
   display: flex;
   position: relative;
   z-index: 100;
-  margin: 0 3px;
+
+  & > :not(:first-child) {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    margin-left: 0;
+  }
+
+  & > :not(:nth-last-child(2)) {
+    margin-right: 0;
+    border-right-width: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
 }
 
 .button,
@@ -76,9 +90,10 @@
   display: flex;
   align-items: center;
   box-sizing: border-box;
+  margin: 4px;
   background-color: rgba(29, 29, 29, 0.92);
   border: 1px solid rgba(0, 0, 0, 0.67);
-  border-width: 1px 0 1px 1px;
+  border-radius: 6px;
   line-height: 1.1;
   white-space: nowrap;
   height: 39px;
@@ -159,5 +174,66 @@ input.zoom {
 
   & > * {
     pointer-events: auto;
+  }
+}
+
+/** Three-dot menu */
+.moreButton {
+  padding: 0 4px;
+
+  & > svg {
+    transform-origin: center;
+    transition: transform 200ms ease;
+  }
+}
+
+.controls [data-flyout-open] {
+  .moreButton {
+    background: rgba(82, 82, 82, 0.92);
+
+    & > svg {
+      transform: rotate(180deg);
+    }
+  }
+
+  &:before {
+    content: '';
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(50, 50, 50, 0.4);
+    backdrop-filter: blur(2px) contrast(70%);
+    animation: menuShimFadeIn 350ms ease forwards 1;
+    will-change: opacity;
+    z-index: -1;
+  }
+}
+
+@keyframes menuShimFadeIn {
+  0% {
+    opacity: 0;
+  }
+}
+
+.menu {
+  button {
+    margin: 8px 0;
+    border-radius: 2rem;
+    padding: 0 16px;
+
+    & > svg {
+      position: relative;
+      left: -6px;
+    }
+  }
+
+  h5 {
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    color: #fff;
+    margin: 8px 4px;
+    padding: 10px 0 0;
   }
 }

@@ -10,6 +10,7 @@ import {
   canDecodeImageType,
   abortable,
   assertSignal,
+  shallowEqual,
   ImageMimeTypes,
 } from '../util';
 import {
@@ -31,6 +32,7 @@ import Results from './Results';
 import WorkerBridge from '../worker-bridge';
 import { resize } from 'features/processors/resize/client';
 import type SnackBarElement from 'shared/custom-els/snack-bar';
+import Transform from './Transform';
 import { generateCliInvocation } from '../util/cli';
 import { drawableToImageData } from '../util/canvas';
 
@@ -69,7 +71,11 @@ interface State {
   sides: [Side, Side];
   /** Source image load */
   loading: boolean;
+  /** Showing preprocessor transformations modal */
+  transform: boolean;
+  error?: string;
   mobileView: boolean;
+  altBackground: boolean;
   preprocessorState: PreprocessorState;
   encodedPreprocessorState?: PreprocessorState;
 }
@@ -130,13 +136,18 @@ async function preprocessImage(
 ): Promise<ImageData> {
   assertSignal(signal);
   let processedData = data;
+  const { rotate, flip, crop } = preprocessorState;
 
-  if (preprocessorState.rotate.rotate !== 0) {
-    processedData = await workerBridge.rotate(
-      signal,
-      processedData,
-      preprocessorState.rotate,
-    );
+  if (flip.horizontal || flip.vertical) {
+    processedData = await workerBridge.flip(signal, processedData, flip);
+  }
+
+  if (rotate.rotate !== 0) {
+    processedData = await workerBridge.rotate(signal, processedData, rotate);
+  }
+
+  if (crop.left || crop.top || crop.right || crop.bottom) {
+    processedData = await workerBridge.crop(signal, processedData, crop);
   }
 
   return processedData;
@@ -281,6 +292,7 @@ export default class Compress extends Component<Props, State> {
   state: State = {
     source: undefined,
     loading: false,
+    transform: false,
     preprocessorState: defaultPreprocessorState,
     sides: [
       {
@@ -302,6 +314,7 @@ export default class Compress extends Component<Props, State> {
       },
     ],
     mobileView: this.widthQuery.matches,
+    altBackground: false,
   };
 
   private readonly encodeCache = new ResultCache();
@@ -325,6 +338,12 @@ export default class Compress extends Component<Props, State> {
 
   private onMobileWidthChange = () => {
     this.setState({ mobileView: this.widthQuery.matches });
+  };
+
+  private toggleBackground = () => {
+    this.setState({
+      altBackground: !this.state.altBackground,
+    });
   };
 
   private onEncoderTypeChange = (index: 0 | 1, newType: OutputType): void => {
@@ -366,6 +385,19 @@ export default class Compress extends Component<Props, State> {
         options,
       ),
     });
+  };
+
+  private showPreprocessorTransforms = () => {
+    this.setState({ transform: true });
+  };
+
+  private onTransformCommit = ({
+    preprocessorState,
+  }: { preprocessorState?: PreprocessorState } = {}) => {
+    if (preprocessorState) {
+      this.onPreprocessorChange(preprocessorState);
+    }
+    this.setState({ transform: false });
   };
 
   componentWillReceiveProps(nextProps: Props): void {
@@ -440,25 +472,38 @@ export default class Compress extends Component<Props, State> {
     const newRotate = preprocessorState.rotate.rotate;
     const orientationChanged = oldRotate % 180 !== newRotate % 180;
 
+    const { crop } = preprocessorState;
+    const cropChanged = !shallowEqual(crop, this.state.preprocessorState.crop);
+
     this.setState((state) => ({
       loading: true,
       preprocessorState,
       // Flip resize values if orientation has changed
-      sides: !orientationChanged
-        ? state.sides
-        : (state.sides.map((side) => {
-            const currentResizeSettings =
-              side.latestSettings.processorState.resize;
-            const resizeSettings: Partial<ProcessorState['resize']> = {
-              width: currentResizeSettings.height,
-              height: currentResizeSettings.width,
-            };
-            return cleanMerge(
-              side,
-              'latestSettings.processorState.resize',
-              resizeSettings,
-            );
-          }) as [Side, Side]),
+      sides:
+        !orientationChanged && !cropChanged
+          ? state.sides
+          : (state.sides.map((side) => {
+              const currentResizeSettings =
+                side.latestSettings.processorState.resize;
+              let resizeSettings: Partial<ProcessorState['resize']>;
+              if (cropChanged) {
+                const img = state.source?.decoded;
+                resizeSettings = {
+                  width: img ? img.width - crop.left - crop.right : undefined,
+                  height: img ? img.height - crop.top - crop.bottom : undefined,
+                };
+              } else {
+                resizeSettings = {
+                  width: currentResizeSettings.height,
+                  height: currentResizeSettings.width,
+                };
+              }
+              return cleanMerge(
+                side,
+                'latestSettings.processorState.resize',
+                resizeSettings,
+              );
+            }) as [Side, Side]),
     }));
   };
 
@@ -836,11 +881,21 @@ export default class Compress extends Component<Props, State> {
   }
 
   render(
-    { onBack }: Props,
-    { loading, sides, source, mobileView, preprocessorState }: State,
+    { onBack, showSnack }: Props,
+    {
+      loading,
+      sides,
+      source,
+      mobileView,
+      altBackground,
+      transform,
+      preprocessorState,
+    }: State,
   ) {
     const [leftSide, rightSide] = sides;
     const [leftImageData, rightImageData] = sides.map((i) => i.data);
+
+    transform = (source && source.decoded && transform) || false;
 
     const options = sides.map((side, index) => (
       <Options
@@ -886,8 +941,13 @@ export default class Compress extends Component<Props, State> {
       rightDisplaySettings.processorState.resize.fitMethod === 'contain';
 
     return (
-      <div class={style.compress}>
+      <div
+        class={`${style.compress} ${transform ? style.transforming : ''} ${
+          altBackground ? style.altBackground : ''
+        }`}
+      >
         <Output
+          hidden={transform}
           source={source}
           mobileView={mobileView}
           leftCompressed={leftImageData}
@@ -896,6 +956,8 @@ export default class Compress extends Component<Props, State> {
           rightImgContain={rightImgContain}
           preprocessorState={preprocessorState}
           onPreprocessorChange={this.onPreprocessorChange}
+          onShowPreprocessorTransforms={this.showPreprocessorTransforms}
+          onToggleBackground={this.toggleBackground}
         />
         <button class={style.back} onClick={onBack}>
           <svg viewBox="0 0 61 53.3">
@@ -930,6 +992,16 @@ export default class Compress extends Component<Props, State> {
               {results[1]}
             </div>,
           ]
+        )}
+
+        {transform && (
+          <Transform
+            mobileView={mobileView}
+            source={source!}
+            preprocessorState={preprocessorState!}
+            onSave={this.onTransformCommit}
+            onCancel={this.onTransformCommit}
+          />
         )}
       </div>
     );

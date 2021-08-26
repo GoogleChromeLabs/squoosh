@@ -1,0 +1,335 @@
+.transform {
+  display: block;
+}
+
+.wrap {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  /** can't use transform-origin here, pinch-zoom relies on 0,0 */
+  transform: translate(-50%, -50%) translate(var(--x), var(--y))
+    scale(var(--scale));
+  overflow: visible;
+  contain: layout;
+  will-change: initial !important;
+}
+
+.pinch-zoom {
+  composes: abs-fill from global;
+  outline: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pinch-target {
+  /* This fixes a severe painting bug in Chrome.
+   * We should try to remove this once the issue is fixed.
+   * https://bugs.chromium.org/p/chromium/issues/detail?id=870222#c10 */
+  will-change: auto;
+  /* Prevent the image becoming misshapen due to default flexbox layout. */
+  flex-shrink: 0;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  transform-origin: 50% 50%;
+}
+
+.cancel,
+.save {
+  composes: unbutton from global;
+  position: absolute;
+  padding: 0;
+  z-index: 2;
+}
+
+.save {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  align-items: center;
+  justify-items: center;
+
+  & > * {
+    grid-area: 1/1/1/1;
+    fill: #fff;
+  }
+}
+
+/* @TODO use grid */
+.cancel {
+  fill: rgba(0, 0, 0, 0.7);
+
+  & > svg:not(.icon) {
+    display: block;
+    margin: -8px 0;
+    width: 80px;
+    height: 80px;
+  }
+
+  & > .icon {
+    position: absolute;
+    left: 28px;
+    top: 22px;
+    fill: #fff;
+  }
+
+  & > span {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 1rem;
+    background: rgba(0, 0, 0, 0.7);
+    font-size: 80%;
+    color: #fff;
+  }
+
+  &:hover,
+  &:focus {
+    fill: rgba(0, 0, 0, 0.9);
+
+    & > span {
+      background: rgba(0, 0, 0, 0.9);
+    }
+  }
+}
+
+.options {
+  position: fixed;
+  right: 0;
+  bottom: 78px;
+  color: #fff;
+  font-size: 1.2rem;
+  display: flex;
+  flex-flow: column;
+  max-width: 250px;
+  margin: 0;
+  width: calc(100% - 60px);
+  max-height: 100%;
+  overflow: hidden;
+  align-self: end;
+  border-radius: var(--options-radius) 0 0 var(--options-radius);
+  animation: slideInFromRight 500ms ease-out forwards 1;
+  --horizontal-padding: 15px;
+  --main-theme-color: var(--blue);
+
+  /* Hide on mobile (for now) */
+  @media (max-width: 599px) {
+    display: none;
+  }
+}
+@keyframes slideInFromRight {
+  0% {
+    transform: translateX(100%);
+  }
+}
+
+.options-title {
+  background-color: var(--main-theme-color);
+  color: var(--dark-text);
+  margin: 0;
+  padding: 10px var(--horizontal-padding);
+  font-weight: bold;
+  font-size: 1.4rem;
+  border-bottom: 1px solid var(--off-black);
+}
+
+.options-section {
+  padding: 5px 0;
+  background: var(--off-black);
+}
+
+.options-section-title {
+  font: inherit;
+  margin: 0;
+  padding: 5px var(--horizontal-padding);
+}
+
+.option-base {
+  display: grid;
+  gap: 0.7em;
+  align-items: center;
+  padding: 5px var(--horizontal-padding);
+}
+
+.options-button {
+  composes: unbutton from global;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--dark-gray);
+  color: var(--white);
+
+  &:hover,
+  &:focus {
+    background-color: var(--off-black);
+    border-color: var(--med-gray);
+  }
+
+  &[data-active] {
+    background-color: var(--dark-gray);
+    border-color: var(--med-gray);
+  }
+}
+
+.options-dimensions {
+  composes: option-base;
+  grid-template-columns: 1fr 0fr 1fr;
+
+  input {
+    background: var(--white);
+    color: var(--black);
+    font: inherit;
+    border: none;
+    width: 100%;
+    padding: 4px;
+    box-sizing: border-box;
+    border-radius: 4px;
+  }
+}
+
+.option-one-cell {
+  composes: option-base;
+  grid-template-columns: 1fr;
+}
+
+.option-button-row {
+  composes: option-base;
+  grid-template-columns: 1fr auto auto;
+}
+
+.option-checkbox {
+  composes: option-base;
+  grid-template-columns: auto 1fr;
+}
+
+/** Zoom controls */
+.controls {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 9px 84px;
+  flex-wrap: wrap;
+
+  /* Allow clicks to fall through to the pinch zoom area */
+  pointer-events: none;
+
+  & > * {
+    pointer-events: auto;
+  }
+
+  @media (min-width: 860px) {
+    padding: 9px;
+    top: auto;
+    left: 320px;
+    right: 320px;
+    bottom: 0;
+    flex-wrap: wrap-reverse;
+  }
+}
+
+.zoom-controls {
+  display: flex;
+  position: relative;
+  z-index: 100;
+
+  & > :not(:first-child) {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    margin-left: 0;
+  }
+
+  & > :not(:last-child) {
+    margin-right: 0;
+    border-right-width: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+}
+
+.button,
+.zoom {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  margin: 4px;
+  background-color: rgba(29, 29, 29, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.67);
+  border-radius: 6px;
+  line-height: 1.1;
+  white-space: nowrap;
+  height: 39px;
+  padding: 0 8px;
+  font-size: 1.2rem;
+  cursor: pointer;
+
+  &:focus {
+    box-shadow: 0 0 0 2px #fff;
+    outline: none;
+    z-index: 1;
+  }
+}
+
+.button {
+  color: #fff;
+
+  &:hover {
+    background: rgba(50, 50, 50, 0.92);
+  }
+
+  &.active {
+    background: rgba(72, 72, 72, 0.92);
+    color: #fff;
+  }
+}
+
+.zoom {
+  cursor: text;
+  width: 7rem;
+  font: inherit;
+  text-align: center;
+  justify-content: center;
+
+  &:focus {
+    box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.2), 0 0 0 2px #fff;
+  }
+}
+span.zoom {
+  color: #939393;
+  font-size: 0.8rem;
+  line-height: 1.2;
+  font-weight: 100;
+}
+input.zoom {
+  font-size: 1.2rem;
+  letter-spacing: 0.05rem;
+  font-weight: 700;
+  text-indent: 3px;
+  color: #fff;
+}
+
+.zoom-value {
+  margin: 0 3px 0 0;
+  padding: 0 2px;
+  font-size: 1.2rem;
+  letter-spacing: 0.05rem;
+  font-weight: 700;
+  color: #fff;
+  border-bottom: 1px dashed #999;
+}
+
+.buttons-no-wrap {
+  display: flex;
+  pointer-events: none;
+
+  & > * {
+    pointer-events: auto;
+  }
+}
