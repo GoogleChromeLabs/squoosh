@@ -295,3 +295,7 @@ export async function abortable<T>(
     }),
   ]);
 }
+
+export const isSafari =
+  /Safari\//.test(navigator.userAgent) &&
+  !/Chrom(e|ium)\//.test(navigator.userAgent);
