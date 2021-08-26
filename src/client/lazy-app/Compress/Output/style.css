@@ -86,8 +86,7 @@
   font-size: 1.2rem;
   cursor: pointer;
 
-  &:focus {
-    /* box-shadow: 0 0 0 2px var(--hot-pink); */
+  &:focus-visible {
     box-shadow: 0 0 0 2px #fff;
     outline: none;
     z-index: 1;

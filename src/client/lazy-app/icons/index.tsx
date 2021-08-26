@@ -1,5 +1,4 @@
 import { h } from 'preact';
-import aliasingLogo from 'url:./imgs/aliasing.svg';
 
 const Icon = (props: preact.JSX.HTMLAttributes) => (
   // @ts-ignore - TS bug https://github.com/microsoft/TypeScript/issues/16019
@@ -13,7 +12,22 @@ const Icon = (props: preact.JSX.HTMLAttributes) => (
 );
 
 export const ToggleAliasingIcon = (props: preact.JSX.HTMLAttributes) => (
-  <img src={aliasingLogo} alt="Aliasing" width="24" height="24" />
+  <Icon {...props}>
+    <circle
+      cx="12"
+      cy="12"
+      r="8"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+    />
+  </Icon>
+);
+
+export const ToggleAliasingActiveIcon = (props: preact.JSX.HTMLAttributes) => (
+  <Icon {...props}>
+    <path d="M12 3h5v2h2v2h2v5h-2V9h-2V7h-2V5h-3V3M21 12v5h-2v2h-2v2h-5v-2h3v-2h2v-2h2v-3h2M12 21H7v-2H5v-2H3v-5h2v3h2v2h2v2h3v2M3 12V7h2V5h2V3h5v2H9v2H7v2H5v3H3" />
+  </Icon>
 );
 
 export const ToggleBackgroundIcon = (props: preact.JSX.HTMLAttributes) => (

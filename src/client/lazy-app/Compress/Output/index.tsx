@@ -8,6 +8,7 @@ import 'add-css:./style.css';
 import { shallowEqual, isSafari } from '../../util';
 import {
   ToggleAliasingIcon,
+  ToggleAliasingActiveIcon,
   ToggleBackgroundIcon,
   AddIcon,
   RemoveIcon,
@@ -358,15 +359,31 @@ export default class Output extends Component<Props, State> {
             </button>
           </div>
           <div class={style.buttonGroup}>
-            <button class={style.firstButton} onClick={this.onRotateClick}>
+            <button
+              class={style.firstButton}
+              onClick={this.onRotateClick}
+              title="Rotate"
+            >
               <RotateIcon />
             </button>
             {!isSafari && (
-              <button class={style.button} onClick={this.toggleAliasing}>
-                <ToggleAliasingIcon />
+              <button
+                class={style.button}
+                onClick={this.toggleAliasing}
+                title="Toggle smoothing"
+              >
+                {aliasing ? (
+                  <ToggleAliasingActiveIcon />
+                ) : (
+                  <ToggleAliasingIcon />
+                )}
               </button>
             )}
-            <button class={style.lastButton} onClick={this.toggleBackground}>
+            <button
+              class={style.lastButton}
+              onClick={this.toggleBackground}
+              title="Toggle background"
+            >
               {altBackground ? (
                 <ToggleBackgroundActiveIcon />
               ) : (
