@@ -105,6 +105,7 @@ const magicNumberMapInput = [
   [/^\x00\x00\x00 ftypavif\x00\x00\x00\x00/, 'image/avif'],
   [/^\xff\x0a/, 'image/jxl'],
   [/^\x00\x00\x00\x0cJXL \x0d\x0a\x87\x0a/, 'image/jxl'],
+  [/^«KTX 20»\r\n/, 'image/ktx2'],
 ] as const;
 
 export type ImageMimeTypes = typeof magicNumberMapInput[number][1];
@@ -299,4 +300,17 @@ export async function abortable<T>(
       );
     }),
   ]);
+}
+
+/**
+ * Clamp a value `v` between `min` and `max`.
+ */
+export function clamp(min: number, v: number, max: number): number {
+  if (v < min) {
+    return min;
+  }
+  if (v > max) {
+    return max;
+  }
+  return v;
 }
