@@ -113,7 +113,7 @@ class RangeInputElement extends HTMLElement {
   };
 
   private _getDisplayValue(value: number): string {
-    if (value >= 10000) return `${(value / 1000).toFixed(1)}k`;
+    if (value >= 10000) return (value / 1000).toFixed(1) + 'k';
 
     const labelPrecision =
       Number(this.labelPrecision) || getPrescision(this.step) || 0;
