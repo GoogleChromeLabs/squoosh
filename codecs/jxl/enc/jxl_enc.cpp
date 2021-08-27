@@ -14,10 +14,9 @@ struct JXLOptions {
   float quality;
   bool progressive;
   int epf;
-  int nearLossless;
   bool lossyPalette;
   size_t decodingSpeedTier;
-  bool noise;
+  float photonNoiseIso;
 };
 
 val encode(std::string image, int width, int height, JXLOptions options) {
@@ -36,14 +35,10 @@ val encode(std::string image, int width, int height, JXLOptions options) {
   cparams.speed_tier = jxl::SpeedTier(st);
 
   cparams.epf = options.epf;
-  cparams.near_lossless = options.nearLossless;
   cparams.decoding_speed_tier = options.decodingSpeedTier;
+  cparams.photon_noise_iso = options.photonNoiseIso;
 
-  if (options.noise) {
-    cparams.noise = jxl::Override::kOn;
-  }
-
-  if (options.lossyPalette || options.nearLossless) {
+  if (options.lossyPalette) {
     cparams.lossy_palette = true;
     cparams.palette_colors = 0;
     cparams.options.predictor = jxl::Predictor::Zero;
@@ -115,10 +110,9 @@ EMSCRIPTEN_BINDINGS(my_module) {
       .field("effort", &JXLOptions::effort)
       .field("quality", &JXLOptions::quality)
       .field("progressive", &JXLOptions::progressive)
-      .field("nearLossless", &JXLOptions::nearLossless)
       .field("lossyPalette", &JXLOptions::lossyPalette)
       .field("decodingSpeedTier", &JXLOptions::decodingSpeedTier)
-      .field("noise", &JXLOptions::noise)
+      .field("photonNoiseIso", &JXLOptions::photonNoiseIso)
       .field("epf", &JXLOptions::epf);
 
   function("encode", &encode);

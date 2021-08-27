@@ -22,8 +22,7 @@ export const defaultOptions: EncodeOptions = {
   quality: 75,
   progressive: false,
   epf: -1,
-  nearLossless: 0,
   lossyPalette: false,
   decodingSpeedTier: 0,
-  noise: false,
+  photonNoiseIso: 0,
 };

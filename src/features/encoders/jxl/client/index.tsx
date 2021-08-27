@@ -29,7 +29,7 @@ interface State {
   slightLoss: boolean;
   autoEdgePreservingFilter: boolean;
   decodingSpeedTier: number;
-  noise: boolean;
+  photonNoiseIso: number;
 }
 
 export class Options extends Component<Props, State> {
@@ -54,7 +54,7 @@ export class Options extends Component<Props, State> {
       slightLoss: options.lossyPalette,
       autoEdgePreservingFilter: options.epf === -1,
       decodingSpeedTier: options.decodingSpeedTier,
-      noise: options.noise,
+      photonNoiseIso: options.photonNoiseIso,
     };
   }
 
@@ -93,10 +93,9 @@ export class Options extends Component<Props, State> {
           epf: optionState.autoEdgePreservingFilter
             ? -1
             : optionState.edgePreservingFilter,
-          nearLossless: 0,
           lossyPalette: optionState.lossless ? optionState.slightLoss : false,
           decodingSpeedTier: optionState.decodingSpeedTier,
-          noise: optionState.noise,
+          photonNoiseIso: optionState.photonNoiseIso,
         };
 
         // Updating options, so we don't recalculate in getDerivedStateFromProps.
@@ -122,7 +121,7 @@ export class Options extends Component<Props, State> {
       slightLoss,
       autoEdgePreservingFilter,
       decodingSpeedTier,
-      noise,
+      photonNoiseIso,
     }: State,
   ) {
     // I'm rendering both lossy and lossless forms, as it becomes much easier when
@@ -200,13 +199,16 @@ export class Options extends Component<Props, State> {
                   Optimise for decoding speed (worse compression):
                 </Range>
               </div>
-              <label class={style.optionToggle}>
-                Noise synthesis
-                <Checkbox
-                  checked={noise}
-                  onChange={this._inputChange('noise', 'boolean')}
-                />
-              </label>
+              <div class={style.optionOneCell}>
+                <Range
+                  min="0"
+                  max="50000"
+                  value={photonNoiseIso}
+                  onInput={this._inputChange('photonNoiseIso', 'number')}
+                >
+                  Noise synthesis
+                </Range>
+              </div>
             </div>
           )}
         </Expander>

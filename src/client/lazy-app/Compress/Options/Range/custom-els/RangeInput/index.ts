@@ -112,18 +112,24 @@ class RangeInputElement extends HTMLElement {
     this.dispatchEvent(retargetted);
   };
 
+  private _getDisplayValue(value: number): string {
+    if (value >= 10000) return `${Math.round(value / 100) / 10}k`;
+
+    const labelPrecision =
+      Number(this.labelPrecision) || getPrescision(this.step) || 0;
+    return labelPrecision
+      ? value.toFixed(labelPrecision)
+      : Math.round(value).toString();
+  }
+
   private _update = () => {
     // Not connected?
     if (!this._valueDisplay) return;
     const value = Number(this.value) || 0;
     const min = Number(this.min) || 0;
     const max = Number(this.max) || 100;
-    const labelPrecision =
-      Number(this.labelPrecision) || getPrescision(this.step) || 0;
     const percent = (100 * (value - min)) / (max - min);
-    const displayValue = labelPrecision
-      ? value.toFixed(labelPrecision)
-      : Math.round(value).toString();
+    const displayValue = this._getDisplayValue(value);
 
     this._valueDisplay!.textContent = displayValue;
     this.style.setProperty('--value-percent', percent + '%');
