@@ -203,6 +203,7 @@ export class Options extends Component<Props, State> {
                 <Range
                   min="0"
                   max="50000"
+                  step="100"
                   value={photonNoiseIso}
                   onInput={this._inputChange('photonNoiseIso', 'number')}
                 >
