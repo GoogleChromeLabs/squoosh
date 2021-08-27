@@ -6,10 +6,13 @@ import './custom-els/RangeInput';
 import { linkRef } from 'shared/prerendered-app/util';
 
 interface Props extends preact.JSX.HTMLAttributes {}
-interface State {}
+interface State {
+  textFocused: boolean;
+}
 
 export default class Range extends Component<Props, State> {
   rangeWc?: RangeInputElement;
+  inputEl?: HTMLInputElement;
 
   private onTextInput = (event: Event) => {
     const input = event.target as HTMLInputElement;
@@ -23,10 +26,19 @@ export default class Range extends Component<Props, State> {
     );
   };
 
-  render(props: Props) {
+  private onTextFocus = () => {
+    this.setState({ textFocused: true });
+  };
+
+  private onTextBlur = () => {
+    this.setState({ textFocused: false });
+  };
+
+  render(props: Props, state: State) {
     const { children, ...otherProps } = props;
 
     const { value, min, max, step } = props;
+    const textValue = state.textFocused ? this.inputEl!.value : value;
 
     return (
       <label class={style.range}>
@@ -41,13 +53,16 @@ export default class Range extends Component<Props, State> {
           />
         </div>
         <input
+          ref={linkRef(this, 'inputEl')}
           type="number"
           class={style.textInput}
-          value={value}
+          value={textValue}
           min={min}
           max={max}
           step={step}
           onInput={this.onTextInput}
+          onFocus={this.onTextFocus}
+          onBlur={this.onTextBlur}
         />
       </label>
     );

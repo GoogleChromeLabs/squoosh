@@ -11,14 +11,13 @@
  * limitations under the License.
  */
 import jxlDecoder, { JXLModule } from 'codecs/jxl/dec/jxl_dec';
-import wasmUrl from 'url:codecs/jxl/dec/jxl_dec.wasm';
 import { initEmscriptenModule, blobToArrayBuffer } from 'features/worker-utils';
 
 let emscriptenModule: Promise<JXLModule>;
 
 export default async function decode(blob: Blob): Promise<ImageData> {
   if (!emscriptenModule) {
-    emscriptenModule = initEmscriptenModule(jxlDecoder, wasmUrl);
+    emscriptenModule = initEmscriptenModule(jxlDecoder);
   }
 
   const [module, data] = await Promise.all([

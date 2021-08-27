@@ -11,6 +11,25 @@ const Icon = (props: preact.JSX.HTMLAttributes) => (
   />
 );
 
+export const ToggleAliasingIcon = (props: preact.JSX.HTMLAttributes) => (
+  <Icon {...props}>
+    <circle
+      cx="12"
+      cy="12"
+      r="8"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+    />
+  </Icon>
+);
+
+export const ToggleAliasingActiveIcon = (props: preact.JSX.HTMLAttributes) => (
+  <Icon {...props}>
+    <path d="M12 3h5v2h2v2h2v5h-2V9h-2V7h-2V5h-3V3M21 12v5h-2v2h-2v2h-5v-2h3v-2h2v-2h2v-3h2M12 21H7v-2H5v-2H3v-5h2v3h2v2h2v2h3v2M3 12V7h2V5h2V3h5v2H9v2H7v2H5v3H3" />
+  </Icon>
+);
+
 export const ToggleBackgroundIcon = (props: preact.JSX.HTMLAttributes) => (
   <Icon {...props}>
     <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm2 4v-2H3c0 1.1.9 2 2 2zM3 9h2V7H3v2zm12 12h2v-2h-2v2zm4-18H9a2 2 0 0 0-2 2v10c0 1.1.9 2 2 2h10a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm0 12H9V5h10v10zm-8 6h2v-2h-2v2zm-4 0h2v-2H7v2z" />

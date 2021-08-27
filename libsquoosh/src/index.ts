@@ -5,10 +5,18 @@ import { promises as fsp } from 'fs';
 import { codecs as encoders, preprocessors } from './codecs.js';
 import WorkerPool from './worker_pool.js';
 import { autoOptimize } from './auto-optimizer.js';
+import type ImageData from './image_data';
 
 export { ImagePool, encoders, preprocessors };
+type EncoderKey = keyof typeof encoders;
+type PreprocessorKey = keyof typeof preprocessors;
+type FileLike = Buffer | ArrayBuffer | string | ArrayBufferView;
 
-async function decodeFile({ file }) {
+async function decodeFile({
+  file,
+}: {
+  file: FileLike;
+}): Promise<{ bitmap: ImageData; size: number }> {
   let buffer;
   if (ArrayBuffer.isView(file)) {
     buffer = Buffer.from(file.buffer);
@@ -16,8 +24,9 @@ async function decodeFile({ file }) {
   } else if (file instanceof ArrayBuffer) {
     buffer = Buffer.from(file);
     file = 'Binary blob';
-  } else if (file instanceof Buffer) {
-    buffer = file;
+  } else if ((file as unknown) instanceof Buffer) {
+    // TODO: Check why we need type assertions here.
+    buffer = (file as unknown) as Buffer;
     file = 'Binary blob';
   } else if (typeof file === 'string') {
     buffer = await fsp.readFile(file);
@@ -28,23 +37,33 @@ async function decodeFile({ file }) {
   const firstChunkString = Array.from(firstChunk)
     .map((v) => String.fromCodePoint(v))
     .join('');
-  const key = Object.entries(encoders).find(([name, { detectors }]) =>
+  const key = Object.entries(encoders).find(([_name, { detectors }]) =>
     detectors.some((detector) => detector.exec(firstChunkString)),
-  )?.[0];
+  )?.[0] as EncoderKey | undefined;
   if (!key) {
     throw Error(`${file} has an unsupported format`);
   }
-  const rgba = (await encoders[key].dec()).decode(new Uint8Array(buffer));
+  const encoder = encoders[key];
+  const mod = await encoder.dec();
+  const rgba = mod.decode(new Uint8Array(buffer));
   return {
     bitmap: rgba,
     size: buffer.length,
   };
 }
 
-async function preprocessImage({ preprocessorName, options, image }) {
+async function preprocessImage({
+  preprocessorName,
+  options,
+  image,
+}: {
+  preprocessorName: PreprocessorKey;
+  options: any;
+  image: { bitmap: ImageData };
+}) {
   const preprocessor = await preprocessors[preprocessorName].instantiate();
   image.bitmap = await preprocessor(
-    image.bitmap.data,
+    Uint8Array.from(image.bitmap.data),
     image.bitmap.width,
     image.bitmap.height,
     options,
@@ -58,26 +77,39 @@ async function encodeImage({
   encConfig,
   optimizerButteraugliTarget,
   maxOptimizerRounds,
+}: {
+  bitmap: ImageData;
+  encName: EncoderKey;
+  encConfig: any;
+  optimizerButteraugliTarget: number;
+  maxOptimizerRounds: number;
 }) {
-  let binary;
+  let binary: Uint8Array;
   let optionsUsed = encConfig;
   const encoder = await encoders[encName].enc();
   if (encConfig === 'auto') {
     const optionToOptimize = encoders[encName].autoOptimize.option;
     const decoder = await encoders[encName].dec();
-    const encode = (bitmapIn, quality) =>
+    const encode = (bitmapIn: ImageData, quality: number) =>
       encoder.encode(
         bitmapIn.data,
         bitmapIn.width,
         bitmapIn.height,
-        Object.assign({}, encoders[encName].defaultEncoderOptions, {
+        Object.assign({}, encoders[encName].defaultEncoderOptions as any, {
           [optionToOptimize]: quality,
         }),
       );
-    const decode = (binary) => decoder.decode(binary);
+    const decode = (binary: Uint8Array) => decoder.decode(binary);
+    const nonNullEncode = (bitmap: ImageData, quality: number): Uint8Array => {
+      const result = encode(bitmap, quality);
+      if (!result) {
+        throw new Error('There was an error while encoding');
+      }
+      return result;
+    };
     const { binary: optimizedBinary, quality } = await autoOptimize(
       bitmapIn,
-      encode,
+      nonNullEncode,
       decode,
       {
         min: encoders[encName].autoOptimize.min,
@@ -92,12 +124,18 @@ async function encodeImage({
       [optionToOptimize]: Math.round(quality * 10000) / 10000,
     };
   } else {
-    binary = encoder.encode(
+    const result = encoder.encode(
       bitmapIn.data.buffer,
       bitmapIn.width,
       bitmapIn.height,
       encConfig,
     );
+
+    if (!result) {
+      throw new Error('There was an error while encoding');
+    }
+
+    binary = result;
   }
   return {
     optionsUsed,
@@ -107,10 +145,15 @@ async function encodeImage({
   };
 }
 
-// both decoding and encoding go through the worker pool
-function handleJob(params) {
-  const { operation } = params;
-  switch (operation) {
+type EncodeParams = { operation: 'encode' } & Parameters<typeof encodeImage>[0];
+type DecodeParams = { operation: 'decode' } & Parameters<typeof decodeFile>[0];
+type PreprocessParams = { operation: 'preprocess' } & Parameters<
+  typeof preprocessImage
+>[0];
+type JobMessage = EncodeParams | DecodeParams | PreprocessParams;
+
+function handleJob(params: JobMessage) {
+  switch (params.operation) {
     case 'encode':
       return encodeImage(params);
     case 'decode':
@@ -118,7 +161,7 @@ function handleJob(params) {
     case 'preprocess':
       return preprocessImage(params);
     default:
-      throw Error(`Invalid job "${operation}"`);
+      throw Error(`Invalid job "${(params as any).operation}"`);
   }
 }
 
@@ -126,7 +169,12 @@ function handleJob(params) {
  * Represents an ingested image.
  */
 class Image {
-  constructor(workerPool, file) {
+  public file: FileLike;
+  public workerPool: WorkerPool<JobMessage, any>;
+  public decoded: Promise<{ bitmap: ImageData }>;
+  public encodedWith: { [key: string]: any };
+
+  constructor(workerPool: WorkerPool<JobMessage, any>, file: FileLike) {
     this.file = file;
     this.workerPool = workerPool;
     this.decoded = workerPool.dispatchJob({ operation: 'decode', file });
@@ -143,14 +191,15 @@ class Image {
       if (!Object.keys(preprocessors).includes(name)) {
         throw Error(`Invalid preprocessor "${name}"`);
       }
+      const preprocessorName = name as PreprocessorKey;
       const preprocessorOptions = Object.assign(
         {},
-        preprocessors[name].defaultOptions,
+        preprocessors[preprocessorName].defaultOptions,
         options,
       );
       this.decoded = this.workerPool.dispatchJob({
         operation: 'preprocess',
-        preprocessorName: name,
+        preprocessorName,
         image: await this.decoded,
         options: preprocessorOptions,
       });
@@ -161,14 +210,22 @@ class Image {
   /**
    * Define one or several encoders to use on the image.
    * @param {object} encodeOptions - An object with encoders to use, and their settings.
-   * @returns {Promise<undefined>} - A promise that resolves when the image has been encoded with all the specified encoders.
+   * @returns {Promise<void>} - A promise that resolves when the image has been encoded with all the specified encoders.
    */
-  async encode(encodeOptions = {}) {
+  async encode(
+    encodeOptions: {
+      optimizerButteraugliTarget?: number;
+      maxOptimizerRounds?: number;
+    } & {
+      [key in EncoderKey]?: any; // any is okay for now
+    } = {},
+  ): Promise<void> {
     const { bitmap } = await this.decoded;
-    for (const [encName, options] of Object.entries(encodeOptions)) {
-      if (!Object.keys(encoders).includes(encName)) {
+    for (const [name, options] of Object.entries(encodeOptions)) {
+      if (!Object.keys(encoders).includes(name)) {
         continue;
       }
+      const encName = name as EncoderKey;
       const encRef = encoders[encName];
       const encConfig =
         typeof options === 'string'
@@ -180,9 +237,9 @@ class Image {
         encName,
         encConfig,
         optimizerButteraugliTarget: Number(
-          encodeOptions.optimizerButteraugliTarget,
+          encodeOptions.optimizerButteraugliTarget ?? 1.4,
         ),
-        maxOptimizerRounds: Number(encodeOptions.maxOptimizerRounds),
+        maxOptimizerRounds: Number(encodeOptions.maxOptimizerRounds ?? 6),
       });
     }
     await Promise.all(Object.values(this.encodedWith));
@@ -193,28 +250,30 @@ class Image {
  * A pool where images can be ingested and squooshed.
  */
 class ImagePool {
+  public workerPool: WorkerPool<JobMessage, any>;
+
   /**
    * Create a new pool.
    * @param {number} [threads] - Number of concurrent image processes to run in the pool. Defaults to the number of CPU cores in the system.
    */
-  constructor(threads) {
+  constructor(threads: number) {
     this.workerPool = new WorkerPool(threads || cpus().length, __filename);
   }
 
   /**
    * Ingest an image into the image pool.
-   * @param {string | Buffer | URL | object} image - The image or path to the image that should be ingested and decoded.
+   * @param {FileLike} image - The image or path to the image that should be ingested and decoded.
    * @returns {Image} - A custom class reference to the decoded image.
    */
-  ingestImage(image) {
+  ingestImage(image: FileLike): Image {
     return new Image(this.workerPool, image);
   }
 
   /**
    * Closes the underlying image processing pipeline. The already processed images will still be there, but no new processing can start.
-   * @returns {Promise<undefined>} - A promise that resolves when the underlying pipeline has closed.
+   * @returns {Promise<void>} - A promise that resolves when the underlying pipeline has closed.
    */
-  async close() {
+  async close(): Promise<void> {
     await this.workerPool.join();
   }
 }

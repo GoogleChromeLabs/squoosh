@@ -30,7 +30,7 @@ const imagePath = 'path/to/image.png';
 const image = imagePool.ingestImage(imagePath);
 ```
 
-The `ingestImage` function can take anything the node [`readFile`][readfile] function can take, uncluding a buffer and `FileHandle`.
+The `ingestImage` function can take anything the node [`readFile`][readfile] function can take, including a buffer and `FileHandle`.
 
 The returned `image` object is a representation of the original image, that you can now preprocess, encode, and extract information about.
 
@@ -39,18 +39,26 @@ The returned `image` object is a representation of the original image, that you 
 When an image has been ingested, you can start preprocessing it and encoding it to other formats. This example will resize the image and then encode it to a `.jpg` and `.jxl` image:
 
 ```js
-await image.decoded; //Wait until the image is decoded before running preprocessors
+await image.decoded; //Wait until the image is decoded before running preprocessors. 
 
-const preprocessOptions: {
+const preprocessOptions = {
+  //When both width and height are specified, the image resized to specified size.
   resize: {
     enabled: true,
     width: 100,
     height: 50,
   }
+  /*
+  //When either width or height is specified, the image resized to specified size keeping aspect ratio.
+  resize: {
+    enabled: true,
+    width: 100,
+  }
+  */
 }
 await image.preprocess(preprocessOptions);
 
-const encodeOptions: {
+const encodeOptions = {
   mozjpeg: {}, //an empty object means 'use default settings'
   jxl: {
     quality: 90,
@@ -60,7 +68,7 @@ await image.encode(encodeOptions);
 
 ```
 
-The default values for each option can be found in the [`codecs.js`][codecs.js] file under `defaultEncoderOptions`. Every unspecified value will use the default value specified there. _Better documentation is needed here._
+The default values for each option can be found in the [`codecs.ts`][codecs.ts] file under `defaultEncoderOptions`. Every unspecified value will use the default value specified there. _Better documentation is needed here._
 
 You can run your own code inbetween the different steps, if, for example, you want to change how much the image should be resized based on its original height. (See [Extracting image information](#extracting-image-information) to learn how to get the image dimensions).
 
@@ -158,6 +166,6 @@ const encodeOptions: {
 ```
 
 [squoosh]: https://squoosh.app
-[codecs.js]: https://github.com/GoogleChromeLabs/squoosh/blob/dev/libsquoosh/src/codecs.js
+[codecs.ts]: https://github.com/GoogleChromeLabs/squoosh/blob/dev/libsquoosh/src/codecs.ts
 [butteraugli]: https://github.com/google/butteraugli
 [readfile]: https://nodejs.org/api/fs.html#fs_fspromises_readfile_path_options

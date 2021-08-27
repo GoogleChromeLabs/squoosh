@@ -5,8 +5,10 @@ import './custom-els/PinchZoom';
 import './custom-els/TwoUp';
 import * as style from './style.css';
 import 'add-css:./style.css';
-import { shallowEqual } from '../../util';
+import { shallowEqual, isSafari } from '../../util';
 import {
+  ToggleAliasingIcon,
+  ToggleAliasingActiveIcon,
   ToggleBackgroundIcon,
   AddIcon,
   RemoveIcon,
@@ -19,7 +21,6 @@ import { cleanSet } from '../../util/clean-modify';
 import type { SourceImage } from '../../Compress';
 import { linkRef } from 'shared/prerendered-app/util';
 import { drawDataToCanvas } from 'client/lazy-app/util/canvas';
-
 interface Props {
   source?: SourceImage;
   preprocessorState?: PreprocessorState;
@@ -35,6 +36,7 @@ interface State {
   scale: number;
   editingScale: boolean;
   altBackground: boolean;
+  aliasing: boolean;
 }
 
 const scaleToOpts: ScaleToOpts = {
@@ -49,6 +51,7 @@ export default class Output extends Component<Props, State> {
     scale: 1,
     editingScale: false,
     altBackground: false,
+    aliasing: false,
   };
   canvasLeft?: HTMLCanvasElement;
   canvasRight?: HTMLCanvasElement;
@@ -144,6 +147,12 @@ export default class Output extends Component<Props, State> {
   private rightDrawable(props: Props = this.props): ImageData | undefined {
     return props.rightCompressed || (props.source && props.source.preprocessed);
   }
+
+  private toggleAliasing = () => {
+    this.setState((state) => ({
+      aliasing: !state.aliasing,
+    }));
+  };
 
   private toggleBackground = () => {
     this.setState({
@@ -255,7 +264,7 @@ export default class Output extends Component<Props, State> {
 
   render(
     { mobileView, leftImgContain, rightImgContain, source }: Props,
-    { scale, editingScale, altBackground }: State,
+    { scale, editingScale, altBackground, aliasing }: State,
   ) {
     const leftDraw = this.leftDrawable();
     const rightDraw = this.rightDrawable();
@@ -275,7 +284,11 @@ export default class Output extends Component<Props, State> {
             onTouchStartCapture={this.onRetargetableEvent}
             onTouchEndCapture={this.onRetargetableEvent}
             onTouchMoveCapture={this.onRetargetableEvent}
-            onPointerDownCapture={this.onRetargetableEvent}
+            onPointerDownCapture={
+              // We avoid pointer events in our PinchZoom due to a Safari bug.
+              // That means we also need to avoid them here too, else we end up preventing the fallback mouse events.
+              isSafari ? undefined : this.onRetargetableEvent
+            }
             onMouseDownCapture={this.onRetargetableEvent}
             onWheelCapture={this.onRetargetableEvent}
           >
@@ -285,7 +298,9 @@ export default class Output extends Component<Props, State> {
               ref={linkRef(this, 'pinchZoomLeft')}
             >
               <canvas
-                class={style.pinchTarget}
+                class={`${style.pinchTarget} ${
+                  aliasing ? style.pixelated : ''
+                }`}
                 ref={linkRef(this, 'canvasLeft')}
                 width={leftDraw && leftDraw.width}
                 height={leftDraw && leftDraw.height}
@@ -301,7 +316,9 @@ export default class Output extends Component<Props, State> {
               ref={linkRef(this, 'pinchZoomRight')}
             >
               <canvas
-                class={style.pinchTarget}
+                class={`${style.pinchTarget} ${
+                  aliasing ? style.pixelated : ''
+                }`}
                 ref={linkRef(this, 'canvasRight')}
                 width={rightDraw && rightDraw.width}
                 height={rightDraw && rightDraw.height}
@@ -345,10 +362,31 @@ export default class Output extends Component<Props, State> {
             </button>
           </div>
           <div class={style.buttonGroup}>
-            <button class={style.firstButton} onClick={this.onRotateClick}>
+            <button
+              class={style.firstButton}
+              onClick={this.onRotateClick}
+              title="Rotate"
+            >
               <RotateIcon />
             </button>
-            <button class={style.lastButton} onClick={this.toggleBackground}>
+            {!isSafari && (
+              <button
+                class={style.button}
+                onClick={this.toggleAliasing}
+                title="Toggle smoothing"
+              >
+                {aliasing ? (
+                  <ToggleAliasingActiveIcon />
+                ) : (
+                  <ToggleAliasingIcon />
+                )}
+              </button>
+            )}
+            <button
+              class={style.lastButton}
+              onClick={this.toggleBackground}
+              title="Toggle background"
+            >
               {altBackground ? (
                 <ToggleBackgroundActiveIcon />
               ) : (

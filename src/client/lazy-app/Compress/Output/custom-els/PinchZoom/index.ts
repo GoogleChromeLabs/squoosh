@@ -1,5 +1,6 @@
 import PointerTracker, { Pointer } from 'pointer-tracker';
 import 'add-css:./styles.css';
+import { isSafari } from 'client/lazy-app/util';
 
 interface Point {
   clientX: number;
@@ -81,6 +82,7 @@ function createPoint(): SVGPoint {
 }
 
 const MIN_SCALE = 0.01;
+const MAX_SCALE = 100000;
 
 export default class PinchZoom extends HTMLElement {
   // The element that we'll transform.
@@ -104,14 +106,23 @@ export default class PinchZoom extends HTMLElement {
     const pointerTracker: PointerTracker = new PointerTracker(this, {
       start: (pointer, event) => {
         // We only want to track 2 pointers at most
-        if (pointerTracker.currentPointers.length === 2 || !this._positioningEl)
+        if (
+          pointerTracker.currentPointers.length === 2 ||
+          !this._positioningEl
+        ) {
           return false;
+        }
         event.preventDefault();
         return true;
       },
       move: (previousPointers) => {
         this._onPointerMove(previousPointers, pointerTracker.currentPointers);
       },
+      // Unfortunately Safari on iOS has a bug where pointer event capturing
+      // doesn't work in some cases, and we hit those cases due to our event
+      // retargeting in pinch-zoom.
+      // https://bugs.webkit.org/show_bug.cgi?id=220196
+      avoidPointerEvents: isSafari,
     });
 
     this.addEventListener('wheel', (event) => this._onWheel(event));
@@ -244,6 +255,9 @@ export default class PinchZoom extends HTMLElement {
     // Avoid scaling to zero
     if (scale < MIN_SCALE) return;
 
+    // Avoid scaling to very large values
+    if (scale > MAX_SCALE) return;
+
     // Return if there's no change
     if (scale === this.scale && x === this.x && y === this.y) return;
 
@@ -296,9 +310,13 @@ export default class PinchZoom extends HTMLElement {
       deltaY *= 15;
     }
 
+    const zoomingOut = deltaY > 0;
+
     // ctrlKey is true when pinch-zooming on a trackpad.
     const divisor = ctrlKey ? 100 : 300;
-    const scaleDiff = 1 - deltaY / divisor;
+    // when zooming out, invert the delta and the ratio to keep zoom stable
+    const ratio = 1 - (zoomingOut ? -deltaY : deltaY) / divisor;
+    const scaleDiff = zoomingOut ? 1 / ratio : ratio;
 
     this._applyChange({
       scaleDiff,

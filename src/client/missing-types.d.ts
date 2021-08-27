@@ -19,9 +19,4 @@ interface Navigator {
 
 declare module 'add-css:*' {}
 
-declare module 'service-worker:*' {
-  const url: string;
-  export default url;
-}
-
 declare module 'preact/debug' {}

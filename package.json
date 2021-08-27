@@ -6,18 +6,19 @@
   "scripts": {
     "build": "rollup -c && node lib/move-output.js",
     "debug": "node --inspect-brk node_modules/.bin/rollup -c",
-    "dev": "run-p watch serve",
+    "dev": "DEV_PORT=\"${DEV_PORT:=5000}\" run-p watch serve",
     "watch": "rollup -cw",
-    "serve": "serve --config ../../../serve.json .tmp/build/static"
+    "serve": "serve --listen=$DEV_PORT --config ../../../serve.json .tmp/build/static"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^17.0.0",
     "@rollup/plugin-node-resolve": "^11.1.0",
     "@rollup/plugin-replace": "^2.3.4",
-    "@surma/rollup-plugin-off-main-thread": "^2.2.1",
+    "@surma/rollup-plugin-off-main-thread": "^2.2.2",
     "@types/dedent": "^0.7.0",
     "@types/mime-types": "^2.1.0",
     "@types/node": "^14.14.7",
+    "@web/rollup-plugin-import-meta-assets": "^1.0.6",
     "comlink": "^4.3.0",
     "cssnano": "^4.1.10",
     "dedent": "^0.7.0",
@@ -31,7 +32,7 @@
     "lodash.camelcase": "^4.3.0",
     "mime-types": "^2.1.28",
     "npm-run-all": "^4.1.5",
-    "pointer-tracker": "^2.4.0",
+    "pointer-tracker": "^2.5.2",
     "postcss": "^7.0.35",
     "postcss-modules": "^3.2.2",
     "postcss-nested": "^4.2.3",
@@ -57,6 +58,6 @@
     "*.rs": "rustfmt"
   },
   "dependencies": {
-    "wasm-feature-detect": "^1.2.9"
+    "wasm-feature-detect": "^1.2.11"
   }
 }
