@@ -206,7 +206,7 @@ export class Options extends Component<Props, State> {
                   value={photonNoiseIso}
                   onInput={this._inputChange('photonNoiseIso', 'number')}
                 >
-                  Noise synthesis
+                  Noise equivalent to ISO:
                 </Range>
               </div>
             </div>
