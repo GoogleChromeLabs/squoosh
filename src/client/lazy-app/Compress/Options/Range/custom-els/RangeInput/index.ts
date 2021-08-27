@@ -20,7 +20,7 @@ const REFLECTED_ATTRIBUTES = [
   'disabled',
 ];
 
-function getPrescision(value: string): number {
+function getPrecision(value: string): number {
   const afterDecimal = value.split('.')[1];
   return afterDecimal ? afterDecimal.length : 0;
 }
@@ -116,7 +116,7 @@ class RangeInputElement extends HTMLElement {
     if (value >= 10000) return (value / 1000).toFixed(1) + 'k';
 
     const labelPrecision =
-      Number(this.labelPrecision) || getPrescision(this.step) || 0;
+      Number(this.labelPrecision) || getPrecision(this.step) || 0;
     return labelPrecision
       ? value.toFixed(labelPrecision)
       : Math.round(value).toString();
