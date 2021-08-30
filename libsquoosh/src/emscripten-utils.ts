@@ -19,7 +19,7 @@ export function instantiateEmscriptenWasm<T extends EmscriptenWasm.Module>(
       // These will have changed in the bundling process and
       // we need to inject them here.
       if (requestPath.endsWith('.wasm')) return pathify(path);
-      if (requestPath.endsWith('.worker.js')) return new URL(workerJS).pathname;
+      if (requestPath.endsWith('.worker.js')) return pathify(workerJS);
       return requestPath;
     },
   });
