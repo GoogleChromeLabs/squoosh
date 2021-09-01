@@ -6,9 +6,9 @@
   "scripts": {
     "build": "rollup -c && node lib/move-output.js",
     "debug": "node --inspect-brk node_modules/.bin/rollup -c",
-    "dev": "run-p watch serve",
+    "dev": "DEV_PORT=\"${DEV_PORT:=5000}\" run-p watch serve",
     "watch": "rollup -cw",
-    "serve": "serve --config ../../../serve.json .tmp/build/static"
+    "serve": "serve --listen=$DEV_PORT --config ../../../serve.json .tmp/build/static"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^17.0.0",
@@ -32,7 +32,7 @@
     "lodash.camelcase": "^4.3.0",
     "mime-types": "^2.1.28",
     "npm-run-all": "^4.1.5",
-    "pointer-tracker": "^2.4.0",
+    "pointer-tracker": "^2.5.2",
     "postcss": "^7.0.35",
     "postcss-modules": "^3.2.2",
     "postcss-nested": "^4.2.3",

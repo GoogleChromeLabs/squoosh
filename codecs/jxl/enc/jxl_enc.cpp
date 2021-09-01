@@ -10,15 +10,13 @@ using namespace emscripten;
 thread_local const val Uint8Array = val::global("Uint8Array");
 
 struct JXLOptions {
-  // 1 = slowest
-  // 7 = fastest
-  int speed;
+  int effort;
   float quality;
   bool progressive;
   int epf;
-  int nearLossless;
   bool lossyPalette;
   size_t decodingSpeedTier;
+  float photonNoiseIso;
 };
 
 val encode(std::string image, int width, int height, JXLOptions options) {
@@ -33,15 +31,20 @@ val encode(std::string image, int width, int height, JXLOptions options) {
   pool_ptr = &pool;
 #endif
 
+  size_t st = 10 - options.effort;
+  cparams.speed_tier = jxl::SpeedTier(st);
+
   cparams.epf = options.epf;
-  cparams.speed_tier = static_cast<jxl::SpeedTier>(options.speed);
-  cparams.near_lossless = options.nearLossless;
   cparams.decoding_speed_tier = options.decodingSpeedTier;
+  cparams.photon_noise_iso = options.photonNoiseIso;
 
   if (options.lossyPalette) {
     cparams.lossy_palette = true;
     cparams.palette_colors = 0;
     cparams.options.predictor = jxl::Predictor::Zero;
+    // Near-lossless assumes -R 0
+    cparams.responsive = 0;
+    cparams.modular_mode = true;
   }
 
   float quality = options.quality;
@@ -77,12 +80,6 @@ val encode(std::string image, int width, int height, JXLOptions options) {
     }
   }
 
-  if (cparams.near_lossless) {
-    // Near-lossless assumes -R 0
-    cparams.responsive = 0;
-    cparams.modular_mode = true;
-  }
-
   io.metadata.m.SetAlphaBits(8);
   if (!io.metadata.size.Set(width, height)) {
     return val::null();
@@ -110,12 +107,12 @@ val encode(std::string image, int width, int height, JXLOptions options) {
 
 EMSCRIPTEN_BINDINGS(my_module) {
   value_object<JXLOptions>("JXLOptions")
-      .field("speed", &JXLOptions::speed)
+      .field("effort", &JXLOptions::effort)
       .field("quality", &JXLOptions::quality)
       .field("progressive", &JXLOptions::progressive)
-      .field("nearLossless", &JXLOptions::nearLossless)
       .field("lossyPalette", &JXLOptions::lossyPalette)
       .field("decodingSpeedTier", &JXLOptions::decodingSpeedTier)
+      .field("photonNoiseIso", &JXLOptions::photonNoiseIso)
       .field("epf", &JXLOptions::epf);
 
   function("encode", &encode);

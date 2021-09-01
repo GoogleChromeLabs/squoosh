@@ -8,6 +8,7 @@ use cfg_if::cfg_if;
 use resize::Pixel;
 use resize::Type;
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::Clamped;
 
 mod srgb;
 use srgb::{linear_to_srgb, Clamp};
@@ -66,7 +67,7 @@ pub fn resize(
     typ_idx: usize,
     premultiply: bool,
     color_space_conversion: bool,
-) -> Vec<u8> {
+) -> Clamped<Vec<u8>> {
     let typ = match typ_idx {
         0 => Type::Triangle,
         1 => Type::Catrom,
@@ -91,7 +92,7 @@ pub fn resize(
             typ,
         );
         resizer.resize(input_image.as_slice(), output_image.as_mut_slice());
-        return output_image;
+        return Clamped(output_image);
     }
 
     // Otherwise, we convert to f32 images to keep the
@@ -138,5 +139,5 @@ pub fn resize(
             .clamp(0.0, 255.0) as u8;
     }
 
-    return output_image;
+    return Clamped(output_image);
 }

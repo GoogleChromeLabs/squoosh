@@ -14,6 +14,11 @@
 import * as WebCodecs from '../util/web-codecs';
 import { drawableToImageData } from './canvas';
 
+/** If render engine is Safari */
+export const isSafari =
+  /Safari\//.test(navigator.userAgent) &&
+  !/Chrom(e|ium)\//.test(navigator.userAgent);
+
 /**
  * Compare two objects, returning a boolean indicating if
  * they have the same properties and strictly equal values.
@@ -95,7 +100,7 @@ const magicNumberMapInput = [
   [/^I I/, 'image/tiff'],
   [/^II*/, 'image/tiff'],
   [/^MM\x00*/, 'image/tiff'],
-  [/^RIFF....WEBPVP8[LX ]/, 'image/webp'],
+  [/^RIFF....WEBPVP8[LX ]/s, 'image/webp'],
   [/^\xF4\xFF\x6F/, 'image/webp2'],
   [/^\x00\x00\x00 ftypavif\x00\x00\x00\x00/, 'image/avif'],
   [/^\xff\x0a/, 'image/jxl'],

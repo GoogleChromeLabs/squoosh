@@ -78,12 +78,8 @@ export default class TwoUp extends HTMLElement {
       `}</div>`;
 
     // Watch for element size changes.
-    if ('ResizeObserver' in window) {
-      this._resizeObserver = new ResizeObserver(() => this._resetPosition());
-      this._resizeObserver.observe(this);
-    } else {
-      window.addEventListener('resize', this._onResize);
-    }
+    this._resizeObserver = new ResizeObserver(() => this._resetPosition());
+    this._resizeObserver.observe(this);
 
     window.addEventListener('keydown', this._onKeyDown);
 
@@ -95,7 +91,6 @@ export default class TwoUp extends HTMLElement {
 
   disconnectedCallback() {
     window.removeEventListener('keydown', this._onKeyDown);
-    window.removeEventListener('resize', this._onResize);
     if (this._resizeObserver) this._resizeObserver.disconnect();
   }
 
@@ -132,8 +127,6 @@ export default class TwoUp extends HTMLElement {
       this._setPosition();
     }
   };
-
-  private _onResize = () => this._resetPosition();
 
   private _resetPosition() {
     // Set the initial position of the handle.
