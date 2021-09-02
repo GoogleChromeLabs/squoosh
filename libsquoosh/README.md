@@ -20,7 +20,7 @@ import { cpus } from 'os';
 const imagePool = new ImagePool(cpus().length);
 ```
 
-This will create an image pool with an underlying processing pipeline that you can use to ingest and encode images. The ImagePool constructor takes one argument that defines how many parallel operations it is allowed to run at any given time. By default, this number is set to the amount of CPU cores available in the system it is running on.
+This will create an image pool with an underlying processing pipeline that you can use to ingest and encode images. The ImagePool constructor takes one argument that defines how many parallel operations it is allowed to run at any given time.
 
 ## Ingesting images
 
@@ -29,10 +29,10 @@ You can ingest a new image like so:
 ```js
 import fs from 'fs/promises';
 const file = await fs.readFile('./path/to/image.png');
-const image = imagePool.ingestImage(imagePath);
+const image = imagePool.ingestImage(file);
 ```
 
-The `ingestImage` function can accept any [ArrayBuffer](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer) whether that is from `readFile()` or `fetch()`.
+The `ingestImage` function can accept any [`ArrayBuffer`][arraybuffer] whether that is from `readFile()` or `fetch()`.
 
 The returned `image` object is a representation of the original image, that you can now preprocess, encode, and extract information about.
 
