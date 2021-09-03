@@ -2,7 +2,13 @@ import { isMainThread } from 'worker_threads';
 import { cpus } from 'os';
 import { promises as fsp } from 'fs';
 
-import { codecs as encoders, preprocessors } from './codecs.js';
+import {
+  codecs as encoders,
+  preprocessors,
+  QuantOptions,
+  ResizeOptions,
+  RotateOptions,
+} from './codecs.js';
 import WorkerPool from './worker_pool.js';
 import { autoOptimize } from './auto-optimizer.js';
 import type ImageData from './image_data';
@@ -11,6 +17,12 @@ export { ImagePool, encoders, preprocessors };
 type EncoderKey = keyof typeof encoders;
 type PreprocessorKey = keyof typeof preprocessors;
 type FileLike = Buffer | ArrayBuffer | string | ArrayBufferView;
+
+type PreprocessOptions = {
+  resize?: ResizeOptions;
+  quant?: QuantOptions;
+  rotate?: RotateOptions;
+};
 
 async function decodeFile({
   file,
@@ -183,10 +195,10 @@ class Image {
 
   /**
    * Define one or several preprocessors to use on the image.
-   * @param {object} preprocessOptions - An object with preprocessors to use, and their settings.
+   * @param {PreprocessOptions} preprocessOptions - An object with preprocessors to use, and their settings.
    * @returns {Promise<undefined>} - A promise that resolves when all preprocessors have completed their work.
    */
-  async preprocess(preprocessOptions = {}) {
+  async preprocess(preprocessOptions: PreprocessOptions = {}) {
     for (const [name, options] of Object.entries(preprocessOptions)) {
       if (!Object.keys(preprocessors).includes(name)) {
         throw Error(`Invalid preprocessor "${name}"`);

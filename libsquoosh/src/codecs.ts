@@ -29,12 +29,21 @@ interface ResizeWithAspectParams {
   target_height: number;
 }
 
-interface ResizeInstantiateOptions {
+export interface ResizeOptions {
   width: number;
   height: number;
-  method: string;
+  method: 'triange' | 'catrom' | 'mitchell' | 'lanczos3';
   premultiply: boolean;
   linearRGB: boolean;
+}
+
+export interface QuantOptions {
+  numColors: number;
+  dither: number;
+}
+
+export interface RotateOptions {
+  numRotations: number;
 }
 
 declare global {
@@ -171,13 +180,7 @@ export const preprocessors = {
         buffer: Uint8Array,
         input_width: number,
         input_height: number,
-        {
-          width,
-          height,
-          method,
-          premultiply,
-          linearRGB,
-        }: ResizeInstantiateOptions,
+        { width, height, method, premultiply, linearRGB }: ResizeOptions,
       ) => {
         ({ width, height } = resizeWithAspect({
           input_width,
@@ -218,7 +221,7 @@ export const preprocessors = {
         buffer: Uint8Array,
         width: number,
         height: number,
-        { numColors, dither }: { numColors: number; dither: number },
+        { numColors, dither }: QuantOptions,
       ) =>
         new ImageData(
           imageQuant.quantize(buffer, width, height, numColors, dither),
@@ -239,7 +242,7 @@ export const preprocessors = {
         buffer: Uint8Array,
         width: number,
         height: number,
-        { numRotations }: { numRotations: number },
+        { numRotations }: RotateOptions,
       ) => {
         const degrees = (numRotations * 90) % 360;
         const sameDimensions = degrees == 0 || degrees == 180;
