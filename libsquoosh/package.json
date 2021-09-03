@@ -4,11 +4,12 @@
   "description": "A Node library for Squoosh",
   "public": true,
   "main": "./build/index.js",
+  "types": "./build/index.d.ts",
   "files": [
     "/build/*"
   ],
   "scripts": {
-    "build": "rollup -c"
+    "build": "rollup -c && node lib/move-d-ts.js"
   },
   "keywords": [],
   "author": "Google Chrome Developers <chromium-dev@google.com>",
