@@ -32,7 +32,7 @@ interface ResizeWithAspectParams {
 export interface ResizeOptions {
   width: number;
   height: number;
-  method: 'triange' | 'catrom' | 'mitchell' | 'lanczos3';
+  method: 'triangle' | 'catrom' | 'mitchell' | 'lanczos3';
   premultiply: boolean;
   linearRGB: boolean;
 }
