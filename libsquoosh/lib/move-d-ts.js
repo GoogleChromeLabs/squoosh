@@ -21,5 +21,6 @@ const buildDir = path.resolve('build');
       );
     }
   }
+  // We need to remove `tsconfig.tsbuildinfo` otherwise TS does not emit unchanged `.d.ts` files
   await del([path.join(tsOutputDir, 'tsconfig.tsbuildinfo')], { force: true });
 })();
