@@ -3,11 +3,17 @@ import { cpus } from 'os';
 import { promises as fsp } from 'fs';
 
 import {
+  AvifEncodeOptions,
   codecs as encoders,
+  JxlEncodeOptions,
+  MozJPEGEncodeOptions,
+  OxiPngEncodeOptions,
   preprocessors,
   QuantOptions,
   ResizeOptions,
   RotateOptions,
+  WebPEncodeOptions,
+  WP2EncodeOptions,
 } from './codecs.js';
 import WorkerPool from './worker_pool.js';
 import { autoOptimize } from './auto-optimizer.js';
@@ -229,7 +235,12 @@ class Image {
       optimizerButteraugliTarget?: number;
       maxOptimizerRounds?: number;
     } & {
-      [key in EncoderKey]?: any; // any is okay for now
+      mozjpeg?: Partial<MozJPEGEncodeOptions>;
+      webp?: Partial<WebPEncodeOptions>;
+      avif?: Partial<AvifEncodeOptions>;
+      jxl?: Partial<JxlEncodeOptions>;
+      wp2?: Partial<WP2EncodeOptions>;
+      oxipng?: Partial<OxiPngEncodeOptions>;
     } = {},
   ): Promise<void> {
     const { bitmap } = await this.decoded;
