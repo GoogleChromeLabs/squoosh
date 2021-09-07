@@ -5,5 +5,12 @@
     "types": ["node"],
     "allowJs": true
   },
-  "include": ["src/**/*", "../codecs/**/*"]
+  "include": ["src/**/*", "../codecs/**/*"],
+  "ts-node": {
+    "transpileOnly": true,
+    "compilerOptions": {
+      "module": "commonjs"
+    },
+    "include": ["tests/**/*"]
+  }
 }

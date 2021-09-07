@@ -8,7 +8,8 @@
     "/build/*"
   ],
   "scripts": {
-    "build": "rollup -c"
+    "build": "rollup -c",
+    "test": "uvu -r ts-node/register test"
   },
   "keywords": [],
   "author": "Google Chrome Developers <chromium-dev@google.com>",
@@ -34,7 +35,9 @@
     "@types/node": "^15.6.1",
     "rollup": "^2.46.0",
     "rollup-plugin-terser": "^7.0.2",
+    "ts-node": "^10.2.1",
     "typescript": "^4.1.3",
+    "uvu": "^0.5.1",
     "which": "^2.0.2"
   }
 }
