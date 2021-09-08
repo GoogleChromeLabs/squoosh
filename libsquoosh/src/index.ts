@@ -1,6 +1,4 @@
 import { isMainThread } from 'worker_threads';
-import { cpus } from 'os';
-import { promises as fsp } from 'fs';
 
 import {
   AvifEncodeOptions,
@@ -22,7 +20,6 @@ import type ImageData from './image_data';
 export { ImagePool, encoders, preprocessors };
 type EncoderKey = keyof typeof encoders;
 type PreprocessorKey = keyof typeof preprocessors;
-type FileLike = Buffer | ArrayBuffer | string | ArrayBufferView;
 
 type PreprocessOptions = {
   resize?: ResizeOptions;
@@ -33,25 +30,10 @@ type PreprocessOptions = {
 async function decodeFile({
   file,
 }: {
-  file: FileLike;
+  file: ArrayBuffer | ArrayLike<number>;
 }): Promise<{ bitmap: ImageData; size: number }> {
-  let buffer;
-  if (ArrayBuffer.isView(file)) {
-    buffer = Buffer.from(file.buffer);
-    file = 'Binary blob';
-  } else if (file instanceof ArrayBuffer) {
-    buffer = Buffer.from(file);
-    file = 'Binary blob';
-  } else if ((file as unknown) instanceof Buffer) {
-    // TODO: Check why we need type assertions here.
-    buffer = (file as unknown) as Buffer;
-    file = 'Binary blob';
-  } else if (typeof file === 'string') {
-    buffer = await fsp.readFile(file);
-  } else {
-    throw Error('Unexpected input type');
-  }
-  const firstChunk = buffer.slice(0, 16);
+  const array = new Uint8Array(file);
+  const firstChunk = array.slice(0, 16);
   const firstChunkString = Array.from(firstChunk)
     .map((v) => String.fromCodePoint(v))
     .join('');
@@ -59,14 +41,14 @@ async function decodeFile({
     detectors.some((detector) => detector.exec(firstChunkString)),
   )?.[0] as EncoderKey | undefined;
   if (!key) {
-    throw Error(`${file} has an unsupported format`);
+    throw Error(`File has an unsupported format`);
   }
   const encoder = encoders[key];
   const mod = await encoder.dec();
-  const rgba = mod.decode(new Uint8Array(buffer));
+  const rgba = mod.decode(array);
   return {
     bitmap: rgba,
-    size: buffer.length,
+    size: array.length,
   };
 }
 
@@ -187,12 +169,15 @@ function handleJob(params: JobMessage) {
  * Represents an ingested image.
  */
 class Image {
-  public file: FileLike;
+  public file: ArrayBuffer | ArrayLike<number>;
   public workerPool: WorkerPool<JobMessage, any>;
   public decoded: Promise<{ bitmap: ImageData }>;
   public encodedWith: { [key: string]: any };
 
-  constructor(workerPool: WorkerPool<JobMessage, any>, file: FileLike) {
+  constructor(
+    workerPool: WorkerPool<JobMessage, any>,
+    file: ArrayBuffer | ArrayLike<number>,
+  ) {
     this.file = file;
     this.workerPool = workerPool;
     this.decoded = workerPool.dispatchJob({ operation: 'decode', file });
@@ -277,19 +262,19 @@ class ImagePool {
 
   /**
    * Create a new pool.
-   * @param {number} [threads] - Number of concurrent image processes to run in the pool. Defaults to the number of CPU cores in the system.
+   * @param {number} [threads] - Number of concurrent image processes to run in the pool.
    */
   constructor(threads: number) {
-    this.workerPool = new WorkerPool(threads || cpus().length, __filename);
+    this.workerPool = new WorkerPool(threads, __filename);
   }
 
   /**
    * Ingest an image into the image pool.
-   * @param {FileLike} image - The image or path to the image that should be ingested and decoded.
+   * @param {ArrayBuffer | ArrayLike<number>} file - The image that should be ingested and decoded.
    * @returns {Image} - A custom class reference to the decoded image.
    */
-  ingestImage(image: FileLike): Image {
-    return new Image(this.workerPool, image);
+  ingestImage(file: ArrayBuffer | ArrayLike<number>): Image {
+    return new Image(this.workerPool, file);
   }
 
   /**
