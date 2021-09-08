@@ -1,6 +1,18 @@
 import { isMainThread } from 'worker_threads';
 
-import { codecs as encoders, preprocessors } from './codecs.js';
+import {
+  AvifEncodeOptions,
+  codecs as encoders,
+  JxlEncodeOptions,
+  MozJPEGEncodeOptions,
+  OxiPngEncodeOptions,
+  preprocessors,
+  QuantOptions,
+  ResizeOptions,
+  RotateOptions,
+  WebPEncodeOptions,
+  WP2EncodeOptions,
+} from './codecs.js';
 import WorkerPool from './worker_pool.js';
 import { autoOptimize } from './auto-optimizer.js';
 import type ImageData from './image_data';
@@ -8,6 +20,12 @@ import type ImageData from './image_data';
 export { ImagePool, encoders, preprocessors };
 type EncoderKey = keyof typeof encoders;
 type PreprocessorKey = keyof typeof preprocessors;
+
+type PreprocessOptions = {
+  resize?: ResizeOptions;
+  quant?: QuantOptions;
+  rotate?: RotateOptions;
+};
 
 async function decodeFile({
   file,
@@ -168,10 +186,10 @@ class Image {
 
   /**
    * Define one or several preprocessors to use on the image.
-   * @param {object} preprocessOptions - An object with preprocessors to use, and their settings.
+   * @param {PreprocessOptions} preprocessOptions - An object with preprocessors to use, and their settings.
    * @returns {Promise<undefined>} - A promise that resolves when all preprocessors have completed their work.
    */
-  async preprocess(preprocessOptions = {}) {
+  async preprocess(preprocessOptions: PreprocessOptions = {}) {
     for (const [name, options] of Object.entries(preprocessOptions)) {
       if (!Object.keys(preprocessors).includes(name)) {
         throw Error(`Invalid preprocessor "${name}"`);
@@ -202,7 +220,12 @@ class Image {
       optimizerButteraugliTarget?: number;
       maxOptimizerRounds?: number;
     } & {
-      [key in EncoderKey]?: any; // any is okay for now
+      mozjpeg?: Partial<MozJPEGEncodeOptions>;
+      webp?: Partial<WebPEncodeOptions>;
+      avif?: Partial<AvifEncodeOptions>;
+      jxl?: Partial<JxlEncodeOptions>;
+      wp2?: Partial<WP2EncodeOptions>;
+      oxipng?: Partial<OxiPngEncodeOptions>;
     } = {},
   ): Promise<void> {
     const { bitmap } = await this.decoded;
