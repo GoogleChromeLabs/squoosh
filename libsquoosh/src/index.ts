@@ -32,6 +32,14 @@ type EncodeResult = {
   extension: string;
   size: number;
 };
+type EncoderOptions = {
+  mozjpeg?: Partial<MozJPEGEncodeOptions>;
+  webp?: Partial<WebPEncodeOptions>;
+  avif?: Partial<AvifEncodeOptions>;
+  jxl?: Partial<JxlEncodeOptions>;
+  wp2?: Partial<WP2EncodeOptions>;
+  oxipng?: Partial<OxiPngEncodeOptions>;
+};
 
 async function decodeFile({
   file,
@@ -221,19 +229,12 @@ class Image {
    * @param {object} encodeOptions - An object with encoders to use, and their settings.
    * @returns {Promise<void>} - A promise that resolves when the image has been encoded with all the specified encoders.
    */
-  async encode(
+  async encode<T extends EncoderOptions>(
     encodeOptions: {
       optimizerButteraugliTarget?: number;
       maxOptimizerRounds?: number;
-    } & {
-      mozjpeg?: Partial<MozJPEGEncodeOptions>;
-      webp?: Partial<WebPEncodeOptions>;
-      avif?: Partial<AvifEncodeOptions>;
-      jxl?: Partial<JxlEncodeOptions>;
-      wp2?: Partial<WP2EncodeOptions>;
-      oxipng?: Partial<OxiPngEncodeOptions>;
-    } = {},
-  ): Promise<void> {
+    } & T,
+  ): Promise<{ [key in keyof T]: EncodeResult }> {
     const { bitmap } = await this.decoded;
     for (const [name, options] of Object.entries(encodeOptions)) {
       if (!Object.keys(encoders).includes(name)) {
@@ -257,6 +258,7 @@ class Image {
       });
     }
     await Promise.all(Object.values(this.encodedWith));
+    return this.encodedWith as { [key in keyof T]: EncodeResult };
   }
 }
 
