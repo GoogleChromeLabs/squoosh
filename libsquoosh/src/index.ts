@@ -186,7 +186,7 @@ class Image {
   public file: ArrayBuffer | ArrayLike<number>;
   public workerPool: WorkerPool<JobMessage, any>;
   public decoded: Promise<{ bitmap: ImageData }>;
-  public encodedWith: { [key in EncoderKey]?: Promise<EncodeResult> };
+  public encodedWith: { [key in EncoderKey]?: EncodeResult };
 
   constructor(
     workerPool: WorkerPool<JobMessage, any>,
@@ -227,7 +227,7 @@ class Image {
   /**
    * Define one or several encoders to use on the image.
    * @param {object} encodeOptions - An object with encoders to use, and their settings.
-   * @returns {Promise<void>} - A promise that resolves when the image has been encoded with all the specified encoders.
+   * @returns {Promise<{ [key in keyof T]: EncodeResult }>} - A promise that resolves when the image has been encoded with all the specified encoders.
    */
   async encode<T extends EncoderOptions>(
     encodeOptions: {
@@ -236,6 +236,7 @@ class Image {
     } & T,
   ): Promise<{ [key in keyof T]: EncodeResult }> {
     const { bitmap } = await this.decoded;
+    const setEncodedWithPromises = [];
     for (const [name, options] of Object.entries(encodeOptions)) {
       if (!Object.keys(encoders).includes(name)) {
         continue;
@@ -246,18 +247,25 @@ class Image {
         typeof options === 'string'
           ? options
           : Object.assign({}, encRef.defaultEncoderOptions, options);
-      this.encodedWith[encName] = this.workerPool.dispatchJob({
-        operation: 'encode',
-        bitmap,
-        encName,
-        encConfig,
-        optimizerButteraugliTarget: Number(
-          encodeOptions.optimizerButteraugliTarget ?? 1.4,
-        ),
-        maxOptimizerRounds: Number(encodeOptions.maxOptimizerRounds ?? 6),
-      });
+      setEncodedWithPromises.push(
+        this.workerPool
+          .dispatchJob({
+            operation: 'encode',
+            bitmap,
+            encName,
+            encConfig,
+            optimizerButteraugliTarget: Number(
+              encodeOptions.optimizerButteraugliTarget ?? 1.4,
+            ),
+            maxOptimizerRounds: Number(encodeOptions.maxOptimizerRounds ?? 6),
+          })
+          .then((encodeResult) => {
+            this.encodedWith[encName] = encodeResult;
+          }),
+      );
     }
-    await Promise.all(Object.values(this.encodedWith));
+
+    await Promise.all(setEncodedWithPromises);
     return this.encodedWith as { [key in keyof T]: EncodeResult };
   }
 }
