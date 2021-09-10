@@ -26,6 +26,12 @@ type PreprocessOptions = {
   quant?: QuantOptions;
   rotate?: RotateOptions;
 };
+type EncodeResult = {
+  optionsUsed: object;
+  binary: Uint8Array;
+  extension: string;
+  size: number;
+};
 
 async function decodeFile({
   file,
@@ -83,7 +89,7 @@ async function encodeImage({
   encConfig: any;
   optimizerButteraugliTarget: number;
   maxOptimizerRounds: number;
-}) {
+}): Promise<EncodeResult> {
   let binary: Uint8Array;
   let optionsUsed = encConfig;
   const encoder = await encoders[encName].enc();
@@ -172,7 +178,7 @@ class Image {
   public file: ArrayBuffer | ArrayLike<number>;
   public workerPool: WorkerPool<JobMessage, any>;
   public decoded: Promise<{ bitmap: ImageData }>;
-  public encodedWith: { [key: string]: any };
+  public encodedWith: { [key in EncoderKey]?: Promise<EncodeResult> };
 
   constructor(
     workerPool: WorkerPool<JobMessage, any>,
