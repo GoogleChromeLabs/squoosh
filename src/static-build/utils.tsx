@@ -16,8 +16,19 @@ import { join as joinPath } from 'path';
 import render from 'preact-render-to-string';
 import { VNode } from 'preact';
 
+import { StrictCsp } from './lib-csp';
+
 export function renderPage(vnode: VNode) {
-  return '<!DOCTYPE html>' + render(vnode);
+  const htmlString = '<!DOCTYPE html>' + render(vnode);
+
+  const s = new StrictCsp(htmlString);
+  s.refactorSourcedScriptsForHashBasedCsp();
+  const scriptHashes = s.hashAllInlineScripts();
+  const strictCsp = StrictCsp.getStrictCsp(scriptHashes, false, true);
+  s.addMetaTag(strictCsp);
+  const htmlWithCspMetaTag = s.serializeDom();
+
+  return htmlWithCspMetaTag;
 }
 
 interface OutputMap {
