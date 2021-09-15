@@ -58,6 +58,7 @@
     "*.rs": "rustfmt"
   },
   "dependencies": {
+    "cheerio": "^1.0.0-rc.10",
     "wasm-feature-detect": "^1.2.11"
   }
 }
