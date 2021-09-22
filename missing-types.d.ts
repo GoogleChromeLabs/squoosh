@@ -49,6 +49,11 @@ declare module 'data-url-text:*' {
   export default url;
 }
 
+declare module 'as-text:*' {
+  const text: string;
+  export default text;
+}
+
 declare module 'service-worker:*' {
   const url: string;
   export default url;
