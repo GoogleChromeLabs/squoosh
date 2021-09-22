@@ -14,7 +14,7 @@ import smallSectionAsset from 'url:./imgs/info-content/small.svg';
 import simpleSectionAsset from 'url:./imgs/info-content/simple.svg';
 import secureSectionAsset from 'url:./imgs/info-content/secure.svg';
 import logoIcon from 'url:./imgs/demos/icon-demo-logo.png';
-import logoSVGSource from 'as-text:./logo-svg-include.txt';
+import logoSVGSourceImport from 'as-text:./logo-svg-include.txt';
 import * as style from './style.css';
 import type SnackBarElement from 'shared/custom-els/snack-bar';
 import 'shared/custom-els/snack-bar';
@@ -68,6 +68,12 @@ async function getImageClipboardItem(
     if (type) return item.getType(type);
   }
 }
+
+// The logo SVG source is pretty big, so to avoid it existing in both the HTML
+// and the JS bundle, we pick it up from the HTML.
+const logoSVGSource = __PRERENDER__
+  ? logoSVGSourceImport
+  : document.querySelector('.' + style.logoContainer)!.innerHTML;
 
 interface Props {
   onFile?: (file: File) => void;
