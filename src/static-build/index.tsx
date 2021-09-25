@@ -25,18 +25,6 @@ import { lookup as lookupMime } from 'mime-types';
 const manifestSize = ({ width, height }: { width: number; height: number }) =>
   `${width}x${height}`;
 
-// Set by Netlify
-const branch = process.env.BRANCH;
-
-const branchOriginTrialIds = new Map([
-  [
-    'live',
-    'Aj5GY7W9AHM8di+yvMCajIhLRHoYN7slruwOYXE/Iub5hgmW/r2RQt07vrUuT4eUTkWxcyNCAVkiI+5ugdVW3gAAAABUeyJvcmlnaW4iOiJodHRwczovL3NxdW9vc2guYXBwOjQ0MyIsImZlYXR1cmUiOiJXZWJBc3NlbWJseVNpbWQiLCJleHBpcnkiOjE2MjM4MDE1OTl9',
-  ],
-]);
-
-const originTrialId = branchOriginTrialIds.get(branch || '');
-
 interface Output {
   [outputPath: string]: string;
 }
@@ -110,15 +98,6 @@ const toOutput: Output = {
     /*
       Cross-Origin-Embedder-Policy: require-corp
       Cross-Origin-Opener-Policy: same-origin
-
-    # Origin trial for WebAssembly SIMD.
-    ${
-      originTrialId
-        ? `  Origin-Trial: ${originTrialId}`
-        : `# Cannot find origin trial ID. process.env.BRANCH is: ${JSON.stringify(
-            branch,
-          )}`
-    }
   `,
 };
 
