@@ -18,6 +18,7 @@ struct JXLOptions {
   bool lossyPalette;
   size_t decodingSpeedTier;
   float photonNoiseIso;
+  bool lossyModular;
 };
 
 val encode(std::string image, int width, int height, JXLOptions options) {
@@ -51,11 +52,16 @@ val encode(std::string image, int width, int height, JXLOptions options) {
   float quality = options.quality;
 
   // Quality settings roughly match libjpeg qualities.
-  if (quality < 7 || quality == 100) {
+  if (options.lossyModular || quality == 100) {
     cparams.modular_mode = true;
     // Internal modular quality to roughly match VarDCT size.
-    cparams.quality_pair.first = cparams.quality_pair.second =
-        std::min(35 + (quality - 7) * 3.0f, 100.0f);
+    if (quality < 7) {
+      cparams.quality_pair.first = cparams.quality_pair.second =
+          std::min(35 + (quality - 7) * 3.0f, 100.0f);
+    } else {
+      cparams.quality_pair.first = cparams.quality_pair.second =
+          std::min(35 + (quality - 7) * 65.f / 93.f, 100.0f);
+    }
   } else {
     cparams.modular_mode = false;
     if (quality >= 30) {
@@ -114,6 +120,7 @@ EMSCRIPTEN_BINDINGS(my_module) {
       .field("lossyPalette", &JXLOptions::lossyPalette)
       .field("decodingSpeedTier", &JXLOptions::decodingSpeedTier)
       .field("photonNoiseIso", &JXLOptions::photonNoiseIso)
+      .field("lossyModular", &JXLOptions::lossyModular)
       .field("epf", &JXLOptions::epf);
 
   function("encode", &encode);
