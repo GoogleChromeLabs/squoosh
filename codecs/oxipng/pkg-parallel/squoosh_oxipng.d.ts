@@ -61,3 +61,5 @@ export interface InitOutput {
 * @returns {Promise<InitOutput>}
 */
 export default function init (module_or_path?: InitInput | Promise<InitInput>, maybe_memory?: WebAssembly.Memory): Promise<InitOutput>;
+
+export function cleanup(): void;

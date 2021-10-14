@@ -106,3 +106,7 @@ async function init(input) {
 
 export default init;
 
+export function cleanup() {
+    wasm = null
+    cachegetInt32Memory0 = null
+}

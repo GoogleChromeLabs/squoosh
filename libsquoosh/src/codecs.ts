@@ -101,14 +101,14 @@ import type { EncodeOptions as WP2EncodeOptions } from '../../codecs/wp2/enc/wp2
 // PNG
 import * as pngEncDec from '../../codecs/png/pkg/squoosh_png.js';
 import pngEncDecWasm from 'asset-url:../../codecs/png/pkg/squoosh_png_bg.wasm';
-const pngEncDecPromise = pngEncDec.default(
+const pngEncDecPromise = () => pngEncDec.default(
   fsp.readFile(pathify(pngEncDecWasm)),
 );
 
 // OxiPNG
 import * as oxipng from '../../codecs/oxipng/pkg/squoosh_oxipng.js';
 import oxipngWasm from 'asset-url:../../codecs/oxipng/pkg/squoosh_oxipng_bg.wasm';
-const oxipngPromise = oxipng.default(fsp.readFile(pathify(oxipngWasm)));
+const oxipngPromise = () => oxipng.default(fsp.readFile(pathify(oxipngWasm)));
 interface OxiPngEncodeOptions {
   level: number;
 }
@@ -116,7 +116,7 @@ interface OxiPngEncodeOptions {
 // Resize
 import * as resize from '../../codecs/resize/pkg/squoosh_resize.js';
 import resizeWasm from 'asset-url:../../codecs/resize/pkg/squoosh_resize_bg.wasm';
-const resizePromise = resize.default(fsp.readFile(pathify(resizeWasm)));
+const resizePromise = () => resize.default(fsp.readFile(pathify(resizeWasm)));
 
 // rotate
 import rotateWasm from 'asset-url:../../codecs/rotate/rotate.wasm';
@@ -183,7 +183,7 @@ export const preprocessors = {
     name: 'Resize',
     description: 'Resize the image before compressing',
     instantiate: async () => {
-      await resizePromise;
+      await resizePromise();
       return (
         buffer: Uint8Array,
         input_width: number,
@@ -196,7 +196,7 @@ export const preprocessors = {
           target_width: width,
           target_height: height,
         }));
-        return new ImageData(
+        const imageData = new ImageData(
           resize.resize(
             buffer,
             input_width,
@@ -210,6 +210,8 @@ export const preprocessors = {
           width,
           height,
         );
+        resize.cleanup();
+        return imageData;
       };
     },
     defaultOptions: {
@@ -459,12 +461,18 @@ export const codecs = {
     extension: 'png',
     detectors: [/^\x89PNG\x0D\x0A\x1A\x0A/],
     dec: async () => {
-      await pngEncDecPromise;
-      return { decode: pngEncDec.decode };
+      await pngEncDecPromise();
+      return {
+        decode: (buffer: Uint8Array): ImageData => {
+          const imageData = pngEncDec.decode(buffer)
+          pngEncDec.cleanup()
+          return imageData
+        },
+      } as any;
     },
     enc: async () => {
-      await pngEncDecPromise;
-      await oxipngPromise;
+      await pngEncDecPromise();
+      await oxipngPromise();
       return {
         encode: (
           buffer: Uint8ClampedArray | ArrayBuffer,
@@ -477,7 +485,9 @@ export const codecs = {
             width,
             height,
           );
-          return oxipng.optimise(simplePng, opts.level, false);
+          const imageData = oxipng.optimise(simplePng, opts.level, false);
+          oxipng.cleanup();
+          return imageData;
         },
       };
     },

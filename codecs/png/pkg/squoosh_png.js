@@ -173,3 +173,8 @@ async function init(input) {
 
 export default init;
 
+export function cleanup() {
+    wasm = null
+    cachegetUint8Memory0 = null
+    cachegetInt32Memory0 = null
+}
