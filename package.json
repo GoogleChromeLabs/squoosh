@@ -41,7 +41,7 @@
     "postcss-url": "^8.0.0",
     "preact": "^10.5.5",
     "preact-render-to-string": "^5.1.11",
-    "prettier": "^2.1.2",
+    "prettier": "^2.4.1",
     "rollup": "^2.38.0",
     "rollup-plugin-terser": "^7.0.2",
     "serve": "^11.3.2",
