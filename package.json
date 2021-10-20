@@ -8,7 +8,8 @@
     "debug": "node --inspect-brk node_modules/.bin/rollup -c",
     "dev": "DEV_PORT=\"${DEV_PORT:=5000}\" run-p watch serve",
     "watch": "rollup -cw",
-    "serve": "serve --listen=$DEV_PORT --config ../../../serve.json .tmp/build/static"
+    "serve": "serve --listen=$DEV_PORT --config ../../../serve.json .tmp/build/static",
+    "prepare": "husky install"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^17.0.0",
@@ -24,7 +25,7 @@
     "dedent": "^0.7.0",
     "del": "^5.1.0",
     "file-drop-element": "^1.0.1",
-    "husky": "^4.3.0",
+    "husky": "^7.0.2",
     "idb-keyval": "^3.2.0",
     "image-size": "^0.9.3",
     "linkstate": "^2.0.0",
@@ -46,11 +47,6 @@
     "serve": "^11.3.2",
     "typescript": "^4.1.3",
     "which": "^2.0.2"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
   },
   "lint-staged": {
     "*.{js,css,json,md,ts,tsx}": "prettier --write",
