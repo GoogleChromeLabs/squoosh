@@ -11,9 +11,9 @@
     "serve": "serve --listen=$DEV_PORT --config ../../../serve.json .tmp/build/static"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^17.0.0",
-    "@rollup/plugin-node-resolve": "^11.1.0",
-    "@rollup/plugin-replace": "^2.3.4",
+    "@rollup/plugin-commonjs": "^21.0.1",
+    "@rollup/plugin-node-resolve": "^13.0.6",
+    "@rollup/plugin-replace": "^3.0.0",
     "@surma/rollup-plugin-off-main-thread": "^2.2.2",
     "@types/dedent": "^0.7.0",
     "@types/mime-types": "^2.1.0",
@@ -41,7 +41,7 @@
     "preact": "^10.5.5",
     "preact-render-to-string": "^5.1.11",
     "prettier": "^2.1.2",
-    "rollup": "^2.38.0",
+    "rollup": "^2.58.0",
     "rollup-plugin-terser": "^7.0.2",
     "serve": "^11.3.2",
     "typescript": "^4.1.3",
