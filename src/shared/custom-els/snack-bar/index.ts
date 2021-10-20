@@ -2,9 +2,9 @@ import * as style from './styles.css';
 import 'add-css:./styles.css';
 
 // So it doesn't cause an error when running in node
-const HTMLEl = ((__PRERENDER__
+const HTMLEl = (__PRERENDER__
   ? Object
-  : HTMLElement) as unknown) as typeof HTMLElement;
+  : HTMLElement) as unknown as typeof HTMLElement;
 
 export interface SnackOptions {
   timeout?: number;

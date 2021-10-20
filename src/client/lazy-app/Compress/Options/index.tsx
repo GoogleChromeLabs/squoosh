@@ -40,24 +40,23 @@ type PartialButNotUndefined<T> = {
   [P in keyof T]: T[P];
 };
 
-const supportedEncoderMapP: Promise<PartialButNotUndefined<
-  typeof encoderMap
->> = (async () => {
-  const supportedEncoderMap: PartialButNotUndefined<typeof encoderMap> = {
-    ...encoderMap,
-  };
+const supportedEncoderMapP: Promise<PartialButNotUndefined<typeof encoderMap>> =
+  (async () => {
+    const supportedEncoderMap: PartialButNotUndefined<typeof encoderMap> = {
+      ...encoderMap,
+    };
 
-  // Filter out entries where the feature test fails
-  await Promise.all(
-    Object.entries(encoderMap).map(async ([encoderName, details]) => {
-      if ('featureTest' in details && !(await details.featureTest())) {
-        delete supportedEncoderMap[encoderName as keyof typeof encoderMap];
-      }
-    }),
-  );
+    // Filter out entries where the feature test fails
+    await Promise.all(
+      Object.entries(encoderMap).map(async ([encoderName, details]) => {
+        if ('featureTest' in details && !(await details.featureTest())) {
+          delete supportedEncoderMap[encoderName as keyof typeof encoderMap];
+        }
+      }),
+    );
 
-  return supportedEncoderMap;
-})();
+    return supportedEncoderMap;
+  })();
 
 export default class Options extends Component<Props, State> {
   state: State = {
