@@ -22,6 +22,8 @@ const imagePool = new ImagePool(cpus().length);
 
 This will create an image pool with an underlying processing pipeline that you can use to ingest and encode images. The ImagePool constructor takes one argument that defines how many parallel operations it is allowed to run at any given time.
 
+:warning: Important! Make sure to only create 1 `ImagePool` when performing parallel image processing. If you create multiple pools, the `ImagePool` can run out of memory and crash. By reusing a single `ImagePool`, you can ensure that the backing worker queue and processing pipeline releases memory prior to processing the next image.
+
 ## Ingesting images
 
 You can ingest a new image like so:
