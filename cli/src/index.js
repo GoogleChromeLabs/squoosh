@@ -10,6 +10,8 @@ import kleur from 'kleur';
 
 import { ImagePool, preprocessors, encoders } from '@squoosh/lib';
 
+const spinner = ora();
+
 function clamp(v, min, max) {
   if (v < min) return min;
   if (v > max) return max;
@@ -24,7 +26,6 @@ function prettyPrintSize(size) {
 }
 
 function progressTracker(results) {
-  const spinner = ora();
   const tracker = {};
   tracker.spinner = spinner;
   tracker.progressOffset = 0;
@@ -168,10 +169,13 @@ async function processFiles(files) {
       maxOptimizerRounds: Number(program.opts().maxOptimizerRounds),
     };
     for (const encName of Object.keys(encoders)) {
-      if (!program.opts()[encName]) {
+      const encParam = program.opts()[encName];
+      if (!encParam) {
         continue;
       }
-      const encParam = program.opts()[encName];
+      if (!(typeof encParam === "string")) {
+        throw new Error(`Invalid argument specified for "${encName}". Missing encoding configuration.`)
+      }
       const encConfig =
         encParam.toLowerCase() === 'auto' ? 'auto' : JSON5.parse(encParam);
       encodeOptions[encName] = encConfig;
@@ -233,4 +237,4 @@ for (const [key, value] of Object.entries(encoders)) {
   );
 }
 
-program.parse(process.argv);
+await program.parseAsync(process.argv);
