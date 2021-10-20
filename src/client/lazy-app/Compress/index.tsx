@@ -116,7 +116,7 @@ async function decodeImage(
     // Otherwise fall through and try built-in decoding for a laugh.
     return await builtinDecode(signal, blob, mimeType);
   } catch (err) {
-    if (err.name === 'AbortError') throw err;
+    if (err instanceof Error && err.name === 'AbortError') throw err;
     console.log(err);
     throw Error("Couldn't decode image");
   }
@@ -481,7 +481,7 @@ export default class Compress extends Component<Props, State> {
         open('https://github.com/GoogleChromeLabs/squoosh/tree/dev/cli');
       }
     } catch (e) {
-      this.props.showSnack(e);
+      this.props.showSnack(String(e));
     }
   };
 
@@ -640,7 +640,7 @@ export default class Compress extends Component<Props, State> {
           return { sides };
         });
       } catch (err) {
-        if (err.name === 'AbortError') return;
+        if (err instanceof Error && err.name === 'AbortError') return;
         this.props.showSnack(`Source decoding error: ${err}`);
         throw err;
       }
@@ -698,7 +698,7 @@ export default class Compress extends Component<Props, State> {
           return newState;
         });
       } catch (err) {
-        if (err.name === 'AbortError') return;
+        if (err instanceof Error && err.name === 'AbortError') return;
         this.setState({ loading: false });
         this.props.showSnack(`Preprocessing error: ${err}`);
         throw err;
@@ -822,7 +822,7 @@ export default class Compress extends Component<Props, State> {
 
         this.activeSideJobs[sideIndex] = undefined;
       } catch (err) {
-        if (err.name === 'AbortError') return;
+        if (err instanceof Error && err.name === 'AbortError') return;
         this.setState((currentState) => {
           const sides = cleanMerge(currentState.sides, sideIndex, {
             loading: false,

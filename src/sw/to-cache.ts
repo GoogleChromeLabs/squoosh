@@ -82,24 +82,20 @@ initialJs = subtractSets(
 export const initial = ['/', ...initialJs];
 
 export const theRest = (async () => {
-  const [
-    supportsThreads,
-    supportsSimd,
-    supportsWebP,
-    supportsAvif,
-  ] = await Promise.all([
-    threads(),
-    simd(),
-    ...[webpDataUrl, avifDataUrl].map(async (dataUrl) => {
-      if (!self.createImageBitmap) return false;
-      const response = await fetch(dataUrl);
-      const blob = await response.blob();
-      return createImageBitmap(blob).then(
-        () => true,
-        () => false,
-      );
-    }),
-  ]);
+  const [supportsThreads, supportsSimd, supportsWebP, supportsAvif] =
+    await Promise.all([
+      threads(),
+      simd(),
+      ...[webpDataUrl, avifDataUrl].map(async (dataUrl) => {
+        if (!self.createImageBitmap) return false;
+        const response = await fetch(dataUrl);
+        const blob = await response.blob();
+        return createImageBitmap(blob).then(
+          () => true,
+          () => false,
+        );
+      }),
+    ]);
 
   const items: string[] = [];
 
