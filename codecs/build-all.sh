@@ -1,7 +1,8 @@
 CURRENT_DIRECTORY=$(dirname "$(readlink -f "$0")")
+SUB_DIRECTORIES=$(find "$CURRENT_DIRECTORY" -mindepth 1 -maxdepth 1 -type d)
 
-for codec in "avif" "hqx" "imagequant" "jxl" "mozjpeg" "oxipng" "png" "resize" "rotate" "visdif" "webp" "wp2"
+for codec in $SUB_DIRECTORIES
 do
-  cd $CURRENT_DIRECTORY/$codec/
+  cd $codec
   npm run build
 done
