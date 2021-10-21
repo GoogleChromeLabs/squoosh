@@ -4,7 +4,7 @@ ENV CFLAGS "-O3 -flto"
 ENV CXXFLAGS "${CFLAGS} -std=c++17"
 ENV LDFLAGS "${CFLAGS} \
 -s FILESYSTEM=0 \
--s PTHREAD_POOL_SIZE=navigator.hardwareConcurrency \
+-s PTHREAD_POOL_SIZE=\"ENVIRONMENT_IS_NODE?require('os').cpus().length:navigator.hardwareConcurrency\" \
 -s ALLOW_MEMORY_GROWTH=1 \
 -s TEXTDECODER=2 \
 -s NODEJS_CATCH_EXIT=0 -s NODEJS_CATCH_REJECTION=0 \

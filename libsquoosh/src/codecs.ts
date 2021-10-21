@@ -1,13 +1,6 @@
 import { promises as fsp } from 'fs';
 import { instantiateEmscriptenWasm, pathify } from './emscripten-utils.js';
 import { threads } from 'wasm-feature-detect';
-import { cpus } from 'os';
-
-// We use `navigator.hardwareConcurrency` for Emscripten’s pthread pool size.
-// This is the only workaround I can get working without crying.
-(globalThis as any).navigator = {
-  hardwareConcurrency: cpus().length,
-};
 
 interface DecodeModule extends EmscriptenWasm.Module {
   decode: (data: Uint8Array) => ImageData;
