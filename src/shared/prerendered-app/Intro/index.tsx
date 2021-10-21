@@ -275,6 +275,11 @@ export default class Intro extends Component<Props, State> {
                 ))}
               </svg>
             )}
+            <noscript>
+              <div class={style.javascriptDisabledNotification}>
+                <div>This web application requires JavaScript to be enabled to perform image compression.</div>
+              </div>
+            </noscript>
             <div
               class={style.loadImgContent}
               style={{ visibility: __PRERENDER__ ? 'hidden' : '' }}

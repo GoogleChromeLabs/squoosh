@@ -61,7 +61,7 @@
   }
 }
 
-.load-img-content {
+.load-img-content, .javascript-disabled-notification {
   position: relative;
   --size: 29rem;
   max-width: var(--size);
@@ -75,6 +75,18 @@
 
   @media (min-width: 600px) {
     --size: 36rem;
+  }
+}
+
+.load-img-content {
+  height: var(--size);
+}
+
+.javascript-disabled-notification {
+  height: 100%;
+
+  div {
+    max-width: calc(var(--size) - 10rem);
   }
 }
 
