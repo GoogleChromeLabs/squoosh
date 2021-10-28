@@ -1,5 +1,5 @@
-CODEC_URL = https://gitlab.com/wg1/jpeg-xl.git
-CODEC_VERSION = 739e6cd1305fdec5acfa47ad414189b3d3ecb6a4
+CODEC_URL = https://github.com/libjxl/libjxl.git
+CODEC_VERSION = v0.5
 CODEC_DIR = node_modules/jxl
 CODEC_BUILD_ROOT := $(CODEC_DIR)/build
 CODEC_MT_BUILD_DIR := $(CODEC_BUILD_ROOT)/mt
@@ -28,6 +28,10 @@ enc/jxl_node_enc.js dec/jxl_node_dec.js enc/jxl_enc.js dec/jxl_dec.js: $(CODEC_M
 enc/jxl_enc_mt.js: $(CODEC_MT_BUILD_DIR)/lib/libjxl.a $(CODEC_MT_BUILD_DIR)/lib/libjxl_threads.a
 enc/jxl_enc_mt_simd.js: $(CODEC_MT_SIMD_BUILD_DIR)/lib/libjxl.a $(CODEC_MT_SIMD_BUILD_DIR)/lib/libjxl_threads.a
 
+# Disable errors on deprecated SIMD intrinsics.
+# JPEG-XL & Highway need to catch up, once they do, we can remove this suppression.
+export CXXFLAGS += -Wno-deprecated-declarations
+
 # Compile multithreaded wrappers with -pthread.
 enc/jxl_enc_mt.js enc/jxl_enc_mt_simd.js: CXXFLAGS+=-pthread
 
@@ -41,21 +45,11 @@ $(OUT_JS):
 		-I $(CODEC_BUILD_DIR)/lib/include \
 		-I $(CODEC_DIR)/third_party/highway \
 		-I $(CODEC_DIR)/third_party/skcms \
-		-I $(CODEC_DIR)/third_party/brunsli \
-		-I $(CODEC_DIR)/third_party/brunsli/c/include \
 		--bind \
-		--closure 1 \
-		-s ALLOW_MEMORY_GROWTH=1 \
-		-s MODULARIZE=1 \
-		-s TEXTDECODER=2 \
 		-s ENVIRONMENT=$(ENVIRONMENT) \
 		-s EXPORT_ES6=1 \
-		-s EXPORT_NAME="$(basename $(@F))" \
 		-o $@ \
 		$+ \
-		$(CODEC_BUILD_DIR)/artifacts/libbrunslienc-static.bc \
-		$(CODEC_BUILD_DIR)/artifacts/libbrunslicommon-static.bc \
-		$(CODEC_BUILD_DIR)/artifacts/libbrunslidec-static.bc \
 		$(CODEC_BUILD_DIR)/third_party/brotli/libbrotlidec-static.a \
 		$(CODEC_BUILD_DIR)/third_party/brotli/libbrotlienc-static.a \
 		$(CODEC_BUILD_DIR)/third_party/brotli/libbrotlicommon-static.a \
@@ -78,10 +72,11 @@ $(CODEC_MT_SIMD_BUILD_DIR)/Makefile: CXXFLAGS+=-msimd128
 	-DJPEGXL_ENABLE_BENCHMARK=0 \
 	-DJPEGXL_ENABLE_EXAMPLES=0 \
 	-DBUILD_TESTING=0 \
+	-DCMAKE_CROSSCOMPILING_EMULATOR=node \
 	-B $(@D) \
 	$(<D)
 
-$(CODEC_DIR)/CMakeLists.txt: 
+$(CODEC_DIR)/CMakeLists.txt:
 	$(RM) -r $(@D)
 	git init $(@D)
 	git -C $(@D) fetch $(CODEC_URL) $(CODEC_VERSION) --depth 1

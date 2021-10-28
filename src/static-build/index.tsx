@@ -14,25 +14,16 @@ import { h } from 'preact';
 
 import { renderPage, writeFiles } from './utils';
 import IndexPage from './pages/index';
-import iconLargeMaskable from 'url:static-build/assets/icon-large-maskable.png';
-import iconLarge from 'url:static-build/assets/icon-large.png';
+import * as iconLargeMaskable from 'img-url:static-build/assets/icon-large-maskable.png';
+import * as iconLarge from 'img-url:static-build/assets/icon-large.png';
+import * as screenshot1 from 'img-url:static-build/assets/screenshot1.png';
+import * as screenshot2 from 'img-url:static-build/assets/screenshot2.jpg';
+import * as screenshot3 from 'img-url:static-build/assets/screenshot3.jpg';
 import dedent from 'dedent';
+import { lookup as lookupMime } from 'mime-types';
 
-// Set by Netlify
-const branch = process.env.BRANCH;
-
-const branchOriginTrialIds = new Map([
-  [
-    'dev',
-    'As3b1fXjclhF8ZgvUkIqOo3r1/Jqvx0mNuT6Ilgb7SdpeJnV8lUdYr7i+OKgCmcVTWkqjkF23LJ+xZ111VYMEQIAAABheyJvcmlnaW4iOiJodHRwczovL2Rldi0tc3F1b29zaC5uZXRsaWZ5LmFwcDo0NDMiLCJmZWF0dXJlIjoiV2ViQXNzZW1ibHlTaW1kIiwiZXhwaXJ5IjoxNjA5NDI4Nzk4fQ==',
-  ],
-  [
-    'live',
-    'Ak9YMaDZyWUUZFbVJng8FM2LWWNeBcWaHTtHzzaTAq044kMlQH5/hsMb/90Ii2I7m/lPx8EpgOIUMWkWeoaKfgIAAABUeyJvcmlnaW4iOiJodHRwczovL3NxdW9vc2guYXBwOjQ0MyIsImZlYXR1cmUiOiJXZWJBc3NlbWJseVNpbWQiLCJleHBpcnkiOjE2MTExNTkwNjZ9',
-  ],
-]);
-
-const originTrialId = branchOriginTrialIds.get(branch || '');
+const manifestSize = ({ width, height }: { width: number; height: number }) =>
+  `${width}x${height}`;
 
 interface Output {
   [outputPath: string]: string;
@@ -49,15 +40,36 @@ const toOutput: Output = {
     theme_color: '#ff3385',
     icons: [
       {
-        src: iconLarge,
-        type: 'image/png',
-        sizes: '1024x1024',
+        src: iconLarge.default,
+        type: lookupMime(iconLarge.default),
+        sizes: manifestSize(iconLarge),
       },
       {
-        src: iconLargeMaskable,
-        type: 'image/png',
-        sizes: '1024x1024',
+        src: iconLargeMaskable.default,
+        type: lookupMime(iconLargeMaskable.default),
+        sizes: manifestSize(iconLargeMaskable),
         purpose: 'maskable',
+      },
+    ],
+    description:
+      'Compress and compare images with different codecs, right in your browser.',
+    lang: 'en',
+    categories: ['photo', 'productivity', 'utilities'],
+    screenshots: [
+      {
+        src: screenshot1.default,
+        type: lookupMime(screenshot1.default),
+        sizes: manifestSize(screenshot1),
+      },
+      {
+        src: screenshot2.default,
+        type: lookupMime(screenshot2.default),
+        sizes: manifestSize(screenshot2),
+      },
+      {
+        src: screenshot3.default,
+        type: lookupMime(screenshot3.default),
+        sizes: manifestSize(screenshot3),
       },
     ],
     share_target: {
@@ -78,22 +90,14 @@ const toOutput: Output = {
     /*
       Cache-Control: no-cache
 
-    /c/*
-      Cache-Control: max-age=31536000
+    # I don't think Rollup is cache-busting files correctly.
+    #/c/*
+    #  Cache-Control: max-age=31536000
 
     # COOP+COEP for WebAssembly threads.
     /*
       Cross-Origin-Embedder-Policy: require-corp
       Cross-Origin-Opener-Policy: same-origin
-
-    # Origin trial for WebAssembly SIMD.
-    ${
-      originTrialId
-        ? `  Origin-Trial: ${originTrialId}`
-        : `# Cannot find origin trial ID. process.env.BRANCH is: ${JSON.stringify(
-            branch,
-          )}`
-    }
   `,
 };
 

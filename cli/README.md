@@ -33,6 +33,7 @@ Options:
   --resize [config]                                      Resize the image before compressing
   --quant [config]                                       Reduce the number of colors used (aka. paletting)
   --rotate [config]                                      Rotate image
+  --mozjpeg [config]                                     Use MozJPEG to generate a .jpg file with the given configuration
   --webp [config]                                        Use WebP to generate a .webp file with the given configuration
   --avif [config]                                        Use AVIF to generate a .avif file with the given configuration
   --jxl [config]                                         Use JPEG-XL to generate a .jxl file with the given configuration
@@ -41,7 +42,7 @@ Options:
   -h, --help                                             display help for command
 ```
 
-The default values for each `config` option can be found in the [`codecs.js`][codecs.js] file under `defaultEncoderOptions`. Every unspecified value will use the default value specified here. _Better documentation is needed here._
+The default values for each `config` option can be found in the [`codecs.ts`][codecs.ts] file under `defaultEncoderOptions`. Every unspecified value will use the default value specified here. _Better documentation is needed here._
 
 ## Auto optimizer
 
@@ -54,5 +55,5 @@ $ npx @squoosh/cli --wp2 auto test.png
 ```
 
 [squoosh]: https://squoosh.app
-[codecs.js]: https://github.com/GoogleChromeLabs/squoosh/blob/dev/cli/src/codecs.js
+[codecs.ts]: https://github.com/GoogleChromeLabs/squoosh/blob/dev/libsquoosh/src/codecs.ts
 [butteraugli]: https://github.com/google/butteraugli

@@ -1,6 +1,22 @@
 
 let wasm;
 
+let cachedTextDecoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
+
+cachedTextDecoder.decode();
+
+let cachegetUint8Memory0 = null;
+function getUint8Memory0() {
+    if (cachegetUint8Memory0 === null || cachegetUint8Memory0.buffer !== wasm.memory.buffer) {
+        cachegetUint8Memory0 = new Uint8Array(wasm.memory.buffer);
+    }
+    return cachegetUint8Memory0;
+}
+
+function getStringFromWasm0(ptr, len) {
+    return cachedTextDecoder.decode(getUint8Memory0().subarray(ptr, ptr + len));
+}
+
 let cachegetUint8ClampedMemory0 = null;
 function getUint8ClampedMemory0() {
     if (cachegetUint8ClampedMemory0 === null || cachegetUint8ClampedMemory0.buffer !== wasm.memory.buffer) {
@@ -26,14 +42,6 @@ function addHeapObject(obj) {
 
     heap[idx] = obj;
     return idx;
-}
-
-let cachegetUint8Memory0 = null;
-function getUint8Memory0() {
-    if (cachegetUint8Memory0 === null || cachegetUint8Memory0.buffer !== wasm.memory.buffer) {
-        cachegetUint8Memory0 = new Uint8Array(wasm.memory.buffer);
-    }
-    return cachegetUint8Memory0;
 }
 
 let WASM_VECTOR_LEN = 0;
@@ -64,8 +72,7 @@ function getArrayU8FromWasm0(ptr, len) {
 */
 export function encode(data, width, height) {
     try {
-        const retptr = wasm.__wbindgen_export_1.value - 16;
-        wasm.__wbindgen_export_1.value = retptr;
+        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
         var ptr0 = passArray8ToWasm0(data, wasm.__wbindgen_malloc);
         var len0 = WASM_VECTOR_LEN;
         wasm.encode(retptr, ptr0, len0, width, height);
@@ -75,7 +82,7 @@ export function encode(data, width, height) {
         wasm.__wbindgen_free(r0, r1 * 1);
         return v1;
     } finally {
-        wasm.__wbindgen_export_1.value += 16;
+        wasm.__wbindgen_add_to_stack_pointer(16);
     }
 }
 
@@ -105,7 +112,6 @@ export function decode(data) {
 
 async function load(module, imports) {
     if (typeof Response === 'function' && module instanceof Response) {
-
         if (typeof WebAssembly.instantiateStreaming === 'function') {
             try {
                 return await WebAssembly.instantiateStreaming(module, imports);
@@ -124,7 +130,6 @@ async function load(module, imports) {
         return await WebAssembly.instantiate(bytes, imports);
 
     } else {
-
         const instance = await WebAssembly.instantiate(module, imports);
 
         if (instance instanceof WebAssembly.Instance) {
@@ -138,7 +143,7 @@ async function load(module, imports) {
 
 async function init(input) {
     if (typeof input === 'undefined') {
-        input = import.meta.url.replace(/\.js$/, '_bg.wasm');
+        input = new URL('squoosh_png_bg.wasm', import.meta.url);
     }
     const imports = {};
     imports.wbg = {};
@@ -148,10 +153,15 @@ async function init(input) {
         var ret = new ImageData(v0, arg2 >>> 0, arg3 >>> 0);
         return addHeapObject(ret);
     };
+    imports.wbg.__wbindgen_throw = function(arg0, arg1) {
+        throw new Error(getStringFromWasm0(arg0, arg1));
+    };
 
     if (typeof input === 'string' || (typeof Request === 'function' && input instanceof Request) || (typeof URL === 'function' && input instanceof URL)) {
         input = fetch(input);
     }
+
+
 
     const { instance, module } = await load(await input, imports);
 

@@ -22,6 +22,13 @@ declare module 'url:*' {
   export default value;
 }
 
+declare module 'img-url:*' {
+  const value: string;
+  export default value;
+  export const width: number;
+  export const height: number;
+}
+
 declare module 'omt:*' {
   const value: string;
   export default value;
@@ -33,6 +40,16 @@ declare module 'css:*' {
 }
 
 declare module 'data-url:*' {
+  const url: string;
+  export default url;
+}
+
+declare module 'data-url-text:*' {
+  const url: string;
+  export default url;
+}
+
+declare module 'service-worker:*' {
   const url: string;
   export default url;
 }

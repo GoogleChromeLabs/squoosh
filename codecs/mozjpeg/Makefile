@@ -22,11 +22,7 @@ enc/mozjpeg_node_enc.js dec/mozjpeg_node_dec.js: ENVIRONMENT = node
 		-I $(CODEC_DIR) \
 		${CXXFLAGS} \
 		${LDFLAGS} \
-		--closure 1 \
 		--bind \
-		-s ALLOW_MEMORY_GROWTH=1 \
-		-s MODULARIZE=1 \
-		-s TEXTDECODER=2 \
 		-s ENVIRONMENT=$(ENVIRONMENT) \
 		-s EXPORT_ES6=1 \
 		-o $@ \
@@ -46,7 +42,10 @@ $(CODEC_DIR)/Makefile: $(CODEC_DIR)/configure
 		--without-turbojpeg \
 		--without-simd \
 		--without-arith-enc \
-		--without-arith-dec
+		--without-arith-dec \
+		--with-build-date=squoosh
+		# ^ If not provided with a dummy value, MozJPEG includes a build date in the
+		# binary as part of the version string, making binaries different each time.
 
 $(CODEC_DIR)/configure: $(CODEC_DIR)/configure.ac
 	cd $(CODEC_DIR) && autoreconf -iv

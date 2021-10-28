@@ -5,8 +5,8 @@ export default function autojsonPlugin() {
     name: 'autojson-plugin',
     async load(id) {
       if (id.endsWith('.json') && !id.startsWith('json:')) {
-        return 'export default ' + await fsp.readFile(id, 'utf8');
+        return 'export default ' + (await fsp.readFile(id, 'utf8'));
       }
-    }
+    },
   };
-};
+}

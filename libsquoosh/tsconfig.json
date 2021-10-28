@@ -1,0 +1,9 @@
+{
+  "extends": "../generic-tsconfig.json",
+  "compilerOptions": {
+    "lib": ["esnext"],
+    "types": ["node"],
+    "allowJs": true
+  },
+  "include": ["src/**/*", "../codecs/**/*"]
+}

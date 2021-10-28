@@ -1,6 +1,6 @@
 {
   "name": "hqx",
   "scripts": {
-    "build": "RUST_IMG=rust:1.40 ../build-rust.sh"
+    "build": "../build-rust.sh"
   }
 }

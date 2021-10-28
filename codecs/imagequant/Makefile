@@ -8,7 +8,7 @@ ENVIRONMENT = worker
 
 .PHONY: all clean
 
-all: $(OUT_JS) $(OUT_NODE_JS)
+all: $(OUT_JS)
 
 imagequant_node.js: ENVIRONMENT=node
 $(OUT_JS): $(CODEC_OUT)
@@ -17,26 +17,7 @@ $(OUT_JS): $(CODEC_OUT)
 		${CXXFLAGS} \
 		${LDFLAGS} \
 		--bind \
-		--closure 1 \
-		-s ALLOW_MEMORY_GROWTH=1 \
-		-s MODULARIZE=1 \
-		-s TEXTDECODER=2 \
 		-s ENVIRONMENT=$(ENVIRONMENT) \
-		-s EXPORT_ES6=1 \
-		-o $@ \
-		$+ \
-		imagequant.cpp
-
-	$(CXX) \
-		-I $(CODEC_DIR) \
-		${CXXFLAGS} \
-		${LDFLAGS} \
-		--bind \
-		--closure 1 \
-		-s ALLOW_MEMORY_GROWTH=1 \
-		-s MODULARIZE=1 \
-		-s TEXTDECODER=2 \
-		-s ENVIRONMENT='node' \
 		-s EXPORT_ES6=1 \
 		-o $@ \
 		$+ \
