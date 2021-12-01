@@ -19,7 +19,7 @@
   },
   "license": "Apache-2.0",
   "engines": {
-    "node": " ^12.5.0 || ^14.0.0 || ^16.0.0 "
+    "node": " ^12.5.0 || ^14.0.0 || ^16.0.0 || ^17.0.0"
   },
   "dependencies": {
     "wasm-feature-detect": "^1.2.11",
