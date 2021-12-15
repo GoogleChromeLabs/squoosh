@@ -16,7 +16,7 @@ import { join as joinPath } from 'path';
 import render from 'preact-render-to-string';
 import { VNode } from 'preact';
 
-import { StrictCsp } from './lib-csp';
+import { StrictCsp } from 'strict-csp';
 
 export function renderPage(vnode: VNode) {
   const htmlString = '<!DOCTYPE html>' + render(vnode);
