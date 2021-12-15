@@ -20,16 +20,28 @@ import { StrictCsp } from 'strict-csp';
 
 export function renderPage(vnode: VNode) {
   const htmlString = '<!DOCTYPE html>' + render(vnode);
-
-  const s = new StrictCsp(htmlString);
-  s.refactorSourcedScriptsForHashBasedCsp();
-  const scriptHashes = s.hashAllInlineScripts();
-  const strictCsp = StrictCsp.getStrictCsp(scriptHashes, false, true);
-  s.addMetaTag(strictCsp);
-  const htmlWithCspMetaTag = s.serializeDom();
-
-  return htmlWithCspMetaTag;
+  const htmlStringWithCsp = addCspAsMetaTag(htmlString);
+  return htmlStringWithCsp;
 }
+
+/**
+ * Add to the html string a strict Content-Security-Policy (CSP), as a meta tag.
+ * Details at https://web.dev/strict-csp/
+ */
+function addCspAsMetaTag(htmlString: string) {
+  const s = new StrictCsp(htmlString);
+  // Refactor sourced scripts so that we can set a strict CSP
+  s.refactorSourcedScriptsForHashBasedCsp();
+  // Hash inline scripts from this html file, if there are any
+  const scriptHashes = s.hashAllInlineScripts();
+  // Generate a strict CSP as a string
+  const strictCsp = StrictCsp.getStrictCsp(scriptHashes, false, true);
+  // Set this CSP via a meta tag
+  s.addMetaTag(strictCsp);
+  const htmlStringWithCsp = s.serializeDom();
+  return htmlStringWithCsp;
+}
+
 
 interface OutputMap {
   [path: string]: string;
@@ -81,3 +93,4 @@ export const siteOrigin = (() => {
   );
   return 'https://squoosh.app';
 })();
+
