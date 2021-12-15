@@ -26,6 +26,20 @@ type PreprocessOptions = {
   quant?: QuantOptions;
   rotate?: RotateOptions;
 };
+type EncodeResult = {
+  optionsUsed: object;
+  binary: Uint8Array;
+  extension: string;
+  size: number;
+};
+type EncoderOptions = {
+  mozjpeg?: Partial<MozJPEGEncodeOptions>;
+  webp?: Partial<WebPEncodeOptions>;
+  avif?: Partial<AvifEncodeOptions>;
+  jxl?: Partial<JxlEncodeOptions>;
+  wp2?: Partial<WP2EncodeOptions>;
+  oxipng?: Partial<OxiPngEncodeOptions>;
+};
 
 async function decodeFile({
   file,
@@ -83,7 +97,7 @@ async function encodeImage({
   encConfig: any;
   optimizerButteraugliTarget: number;
   maxOptimizerRounds: number;
-}) {
+}): Promise<EncodeResult> {
   let binary: Uint8Array;
   let optionsUsed = encConfig;
   const encoder = await encoders[encName].enc();
@@ -172,7 +186,7 @@ class Image {
   public file: ArrayBuffer | ArrayLike<number>;
   public workerPool: WorkerPool<JobMessage, any>;
   public decoded: Promise<{ bitmap: ImageData }>;
-  public encodedWith: { [key: string]: any };
+  public encodedWith: { [key in EncoderKey]?: EncodeResult };
 
   constructor(
     workerPool: WorkerPool<JobMessage, any>,
@@ -213,22 +227,16 @@ class Image {
   /**
    * Define one or several encoders to use on the image.
    * @param {object} encodeOptions - An object with encoders to use, and their settings.
-   * @returns {Promise<void>} - A promise that resolves when the image has been encoded with all the specified encoders.
+   * @returns {Promise<{ [key in keyof T]: EncodeResult }>} - A promise that resolves when the image has been encoded with all the specified encoders.
    */
-  async encode(
+  async encode<T extends EncoderOptions>(
     encodeOptions: {
       optimizerButteraugliTarget?: number;
       maxOptimizerRounds?: number;
-    } & {
-      mozjpeg?: Partial<MozJPEGEncodeOptions>;
-      webp?: Partial<WebPEncodeOptions>;
-      avif?: Partial<AvifEncodeOptions>;
-      jxl?: Partial<JxlEncodeOptions>;
-      wp2?: Partial<WP2EncodeOptions>;
-      oxipng?: Partial<OxiPngEncodeOptions>;
-    } = {},
-  ): Promise<void> {
+    } & T,
+  ): Promise<{ [key in keyof T]: EncodeResult }> {
     const { bitmap } = await this.decoded;
+    const setEncodedWithPromises = [];
     for (const [name, options] of Object.entries(encodeOptions)) {
       if (!Object.keys(encoders).includes(name)) {
         continue;
@@ -239,18 +247,26 @@ class Image {
         typeof options === 'string'
           ? options
           : Object.assign({}, encRef.defaultEncoderOptions, options);
-      this.encodedWith[encName] = this.workerPool.dispatchJob({
-        operation: 'encode',
-        bitmap,
-        encName,
-        encConfig,
-        optimizerButteraugliTarget: Number(
-          encodeOptions.optimizerButteraugliTarget ?? 1.4,
-        ),
-        maxOptimizerRounds: Number(encodeOptions.maxOptimizerRounds ?? 6),
-      });
+      setEncodedWithPromises.push(
+        this.workerPool
+          .dispatchJob({
+            operation: 'encode',
+            bitmap,
+            encName,
+            encConfig,
+            optimizerButteraugliTarget: Number(
+              encodeOptions.optimizerButteraugliTarget ?? 1.4,
+            ),
+            maxOptimizerRounds: Number(encodeOptions.maxOptimizerRounds ?? 6),
+          })
+          .then((encodeResult) => {
+            this.encodedWith[encName] = encodeResult;
+          }),
+      );
     }
-    await Promise.all(Object.values(this.encodedWith));
+
+    await Promise.all(setEncodedWithPromises);
+    return this.encodedWith as { [key in keyof T]: EncodeResult };
   }
 }
 
