@@ -42,7 +42,6 @@ function addCspAsMetaTag(htmlString: string) {
   return htmlStringWithCsp;
 }
 
-
 interface OutputMap {
   [path: string]: string;
 }
@@ -93,4 +92,3 @@ export const siteOrigin = (() => {
   );
   return 'https://squoosh.app';
 })();
-
