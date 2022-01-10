@@ -54,7 +54,7 @@
     "*.rs": "rustfmt"
   },
   "dependencies": {
-    "strict-csp": "^1.0.2",
+    "strict-csp": "^1.0.4",
     "wasm-feature-detect": "^1.2.11"
   }
 }

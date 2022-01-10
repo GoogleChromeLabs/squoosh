@@ -35,9 +35,12 @@ function addCspAsMetaTag(htmlString: string) {
   // Hash inline scripts from this html file, if there are any
   const scriptHashes = s.hashAllInlineScripts();
   // Generate a strict CSP as a string
-  // enableTrustedTypes: false, enableBrowserFallbacks: true
-  // enableUnsafeEval: true, to accomodate for uses of eval by emscripten. Enabling eval makes the CSP a bit less secure
-  const strictCsp = StrictCsp.getStrictCsp(scriptHashes, false, true, true);
+  // enableUnsafeEval is set to true, to accomodate for uses of eval by emscripten. This makes the CSP a bit less secure
+  const strictCsp = StrictCsp.getStrictCsp(scriptHashes, {
+    enableBrowserFallbacks: true,
+    enableTrustedTypes: false,
+    enableUnsafeEval: true,
+  });
   // Set this CSP via a meta tag
   s.addMetaTag(strictCsp);
   const htmlStringWithCsp = s.serializeDom();
