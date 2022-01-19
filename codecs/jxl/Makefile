@@ -75,7 +75,7 @@ $(CODEC_MT_SIMD_BUILD_DIR)/Makefile: CXXFLAGS+=-msimd128
 	-DCMAKE_CROSSCOMPILING_EMULATOR=node \
 	-B $(@D) \
 	$(<D)
-	emcc -Wall -o $(CODEC_DIR)/third_party/skcms/skcms.cc.o -I$(CODEC_DIR)/third_party/skcms -c $(CODEC_DIR)/third_party/skcms/skcms.cc
+	emcc -Wall -O3 -o $(CODEC_DIR)/third_party/skcms/skcms.cc.o -I$(CODEC_DIR)/third_party/skcms -c $(CODEC_DIR)/third_party/skcms/skcms.cc
 	llvm-ar rc $(CODEC_BUILD_DIR)/third_party/libskcms.a $(CODEC_DIR)/third_party/skcms/skcms.cc.o
 	rm $(CODEC_DIR)/third_party/skcms/skcms.cc.o
 
