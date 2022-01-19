@@ -91,7 +91,7 @@ val encode(std::string image, int width, int height, JXLOptions options) {
       jxl::Span<const uint8_t>(reinterpret_cast<const uint8_t*>(image.data()), image.size()), width,
       height, jxl::ColorEncoding::SRGB(/*is_gray=*/false), /*has_alpha=*/true,
       /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/8, /*endiannes=*/JXL_LITTLE_ENDIAN,
-      /*flipped_y=*/false, pool_ptr, main);
+      /*flipped_y=*/false, pool_ptr, main, /*(only true if bits_per_sample==32) float_in=*/false);
 
   if (!result) {
     return val::null();
