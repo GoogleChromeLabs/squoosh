@@ -4,6 +4,7 @@
 #include "lib/jxl/base/thread_pool_internal.h"
 #include "lib/jxl/enc_external_image.h"
 #include "lib/jxl/enc_file.h"
+#include "lib/jxl/enc_color_management.h"
 
 using namespace emscripten;
 
@@ -98,7 +99,7 @@ val encode(std::string image, int width, int height, JXLOptions options) {
   }
 
   auto js_result = val::null();
-  if (EncodeFile(cparams, &io, &passes_enc_state, &bytes, /*aux=*/nullptr, pool_ptr)) {
+  if (EncodeFile(cparams, &io, &passes_enc_state, &bytes, jxl::GetJxlCms(), /*aux=*/nullptr, pool_ptr)) {
     js_result = Uint8Array.new_(typed_memory_view(bytes.size(), bytes.data()));
   }
 
