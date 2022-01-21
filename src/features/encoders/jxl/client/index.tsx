@@ -30,6 +30,7 @@ interface State {
   autoEdgePreservingFilter: boolean;
   decodingSpeedTier: number;
   photonNoiseIso: number;
+  alternativeLossy: boolean;
 }
 
 export class Options extends Component<Props, State> {
@@ -55,6 +56,7 @@ export class Options extends Component<Props, State> {
       autoEdgePreservingFilter: options.epf === -1,
       decodingSpeedTier: options.decodingSpeedTier,
       photonNoiseIso: options.photonNoiseIso,
+      alternativeLossy: options.lossyModular,
     };
   }
 
@@ -96,6 +98,7 @@ export class Options extends Component<Props, State> {
           lossyPalette: optionState.lossless ? optionState.slightLoss : false,
           decodingSpeedTier: optionState.decodingSpeedTier,
           photonNoiseIso: optionState.photonNoiseIso,
+          lossyModular: optionState.quality < 7 ? true : optionState.alternativeLossy,
         };
 
         // Updating options, so we don't recalculate in getDerivedStateFromProps.
@@ -122,6 +125,7 @@ export class Options extends Component<Props, State> {
       autoEdgePreservingFilter,
       decodingSpeedTier,
       photonNoiseIso,
+      alternativeLossy,
     }: State,
   ) {
     // I'm rendering both lossy and lossless forms, as it becomes much easier when
@@ -162,6 +166,14 @@ export class Options extends Component<Props, State> {
                   Quality:
                 </Range>
               </div>
+              <label class={style.optionToggle}>
+                Alternative lossy mode
+                <Checkbox
+                  checked={quality < 7 ? true : alternativeLossy}
+                  disabled={quality < 7}
+                  onChange={this._inputChange('alternativeLossy', 'boolean')}
+                />
+              </label>
               <label class={style.optionToggle}>
                 Auto edge filter
                 <Checkbox
@@ -223,7 +235,7 @@ export class Options extends Component<Props, State> {
         </label>
         <div class={style.optionOneCell}>
           <Range
-            min="3"
+            min="1"
             max="9"
             value={effort}
             onInput={this._inputChange('effort', 'number')}

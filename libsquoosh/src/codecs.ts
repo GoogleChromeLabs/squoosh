@@ -419,6 +419,7 @@ export const codecs = {
       lossyPalette: false,
       decodingSpeedTier: 0,
       photonNoiseIso: 0,
+      lossyModular: false,
     },
     autoOptimize: {
       option: 'quality',
