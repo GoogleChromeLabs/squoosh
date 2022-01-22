@@ -1,5 +1,5 @@
 CODEC_URL = https://github.com/libjxl/libjxl.git
-CODEC_VERSION = v0.5
+CODEC_VERSION = 9f544641ec83f6abd9da598bdd08178ee8a003e0
 CODEC_DIR = node_modules/jxl
 CODEC_BUILD_ROOT := $(CODEC_DIR)/build
 CODEC_MT_BUILD_DIR := $(CODEC_BUILD_ROOT)/mt
@@ -75,6 +75,9 @@ $(CODEC_MT_SIMD_BUILD_DIR)/Makefile: CXXFLAGS+=-msimd128
 	-DCMAKE_CROSSCOMPILING_EMULATOR=node \
 	-B $(@D) \
 	$(<D)
+	emcc -Wall -O3 -o $(CODEC_DIR)/third_party/skcms/skcms.cc.o -I$(CODEC_DIR)/third_party/skcms -c $(CODEC_DIR)/third_party/skcms/skcms.cc
+	llvm-ar rc $(CODEC_BUILD_DIR)/third_party/libskcms.a $(CODEC_DIR)/third_party/skcms/skcms.cc.o
+	rm $(CODEC_DIR)/third_party/skcms/skcms.cc.o
 
 $(CODEC_DIR)/CMakeLists.txt:
 	$(RM) -r $(@D)
