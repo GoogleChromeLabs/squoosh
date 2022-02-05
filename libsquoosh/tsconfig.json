@@ -3,7 +3,9 @@
   "compilerOptions": {
     "lib": ["esnext"],
     "types": ["node"],
-    "allowJs": true
+    "allowJs": true,
+    "declaration": true,
+    "declarationDir": "build/typings"
   },
   "include": ["src/**/*", "../codecs/**/*"]
 }
