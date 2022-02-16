@@ -22,9 +22,10 @@ type EncoderKey = keyof typeof encoders;
 type PreprocessorKey = keyof typeof preprocessors;
 
 type PreprocessOptions = {
-  resize?: ResizeOptions;
-  quant?: QuantOptions;
-  rotate?: RotateOptions;
+  resize?: Partial<Omit<ResizeOptions, 'width' | 'height'>> &
+    (Pick<ResizeOptions, 'width'> | Pick<ResizeOptions, 'height'>);
+  quant?: Partial<QuantOptions>;
+  rotate?: Partial<RotateOptions>;
 };
 type EncodeResult = {
   optionsUsed: object;

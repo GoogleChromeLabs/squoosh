@@ -43,19 +43,15 @@ The returned `image` object is a representation of the original image, that you 
 When an image has been ingested, you can start preprocessing it and encoding it to other formats. This example will resize the image and then encode it to a `.jpg` and `.jxl` image:
 
 ```js
-await image.decoded; //Wait until the image is decoded before running preprocessors.
-
 const preprocessOptions = {
   //When both width and height are specified, the image resized to specified size.
   resize: {
-    enabled: true,
     width: 100,
     height: 50,
   },
   /*
   //When either width or height is specified, the image resized to specified size keeping aspect ratio.
   resize: {
-    enabled: true,
     width: 100,
   }
   */
@@ -68,7 +64,7 @@ const encodeOptions = {
     quality: 90,
   },
 };
-await image.encode(encodeOptions);
+const result = await image.encode(encodeOptions);
 ```
 
 The default values for each option can be found in the [`codecs.ts`][codecs.ts] file under `defaultEncoderOptions`. Every unspecified value will use the default value specified there. _Better documentation is needed here._
@@ -92,7 +88,7 @@ When you have encoded an image, you normally want to write it to a file.
 This example takes an image that has been encoded as a `jpg` and writes it to a file:
 
 ```js
-const rawEncodedImage = (await image.encodedWith.mozjpeg).binary;
+const rawEncodedImage = image.encodedWith.mozjpeg.binary;
 
 fs.writeFile('/path/to/new/image.jpg', rawEncodedImage);
 ```
@@ -103,10 +99,7 @@ This example iterates through all encoded versions of the image and writes them 
 const newImagePath = '/path/to/image.'; //extension is added automatically
 
 for (const encodedImage of Object.values(image.encodedWith)) {
-  fs.writeFile(
-    newImagePath + (await encodedImage).extension,
-    (await encodedImage).binary,
-  );
+  fs.writeFile(newImagePath + encodedImage.extension, encodedImage.binary);
 }
 ```
 
@@ -135,7 +128,7 @@ console.log(await image.decoded);
 Information about an encoded image can be found at `Image.encodedWith[encoderName]`. It looks something like this:
 
 ```js
-console.log(await image.encodedWith.jxl);
+console.log(image.encodedWith.jxl);
 // Returns:
 {
   optionsUsed: {
