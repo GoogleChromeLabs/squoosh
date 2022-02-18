@@ -4,7 +4,7 @@
   "description": "A Node library for Squoosh",
   "public": true,
   "main": "./build/index.js",
-  "types": "./build/index.d.ts",
+  "types": "./build/libsquoosh/types/index.d.ts",
   "files": [
     "/build/*"
   ],

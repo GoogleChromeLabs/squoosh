@@ -4,23 +4,51 @@ const path = require('path');
 
 const tsOutputDir = path.resolve('..', '.tmp', 'ts', 'libsquoosh');
 const tsOutputSourceDir = path.join(tsOutputDir, 'src');
-const buildDir = path.resolve('build');
+const libSquooshTypesOutputDir = path.resolve('build', 'libsquoosh', 'types');
 
-(async () => {
-  await del(path.join(buildDir, '*.d.ts'));
-  const files = await fs.promises.readdir(tsOutputSourceDir);
+const codecsDir = path.resolve('..', 'codecs');
+const codecsTypesOutputDir = path.resolve('build', 'codecs');
 
-  const movePromises = [];
+async function getFilesRecursive(from) {
+  const filesOrDirectories = await fs.promises.readdir(from, {
+    withFileTypes: true,
+  });
+
+  const allFiles = await Promise.all(
+    filesOrDirectories.flatMap((fileOrDirectory) => {
+      if (fileOrDirectory.isFile()) {
+        return path.resolve(from, fileOrDirectory.name);
+      }
+
+      return getFilesRecursive(path.resolve(from, fileOrDirectory.name));
+    }),
+  );
+  return allFiles.flatMap((x) => x);
+}
+
+async function copyTypes(from, to) {
+  const files = await getFilesRecursive(from);
   for (const file of files) {
     if (file.endsWith('d.ts') || file.endsWith('d.ts.map')) {
-      movePromises.push(
-        fs.promises.rename(
-          path.join(tsOutputSourceDir, file),
-          path.join(buildDir, file),
-        ),
-      );
+      const currentPath = path.resolve(from, file);
+      const finalPath = path.resolve(to, path.relative(from, file));
+      await fs.promises.mkdir(path.resolve(finalPath, '..'), {
+        recursive: true,
+      });
+      await fs.promises.copyFile(currentPath, finalPath);
     }
   }
-  // We need to remove `tsconfig.tsbuildinfo` otherwise TS does not emit unchanged `.d.ts` files
-  await del([path.join(tsOutputDir, 'tsconfig.tsbuildinfo')], { force: true });
+}
+
+async function copyLibSquooshTypes() {
+  await copyTypes(tsOutputSourceDir, libSquooshTypesOutputDir);
+}
+
+async function copyCodecsTypes() {
+  await copyTypes(codecsDir, codecsTypesOutputDir);
+}
+
+(async () => {
+  await copyLibSquooshTypes();
+  await copyCodecsTypes();
 })();
