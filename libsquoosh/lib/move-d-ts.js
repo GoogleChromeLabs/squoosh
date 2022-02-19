@@ -1,5 +1,4 @@
 const fs = require('fs');
-const del = require('del');
 const path = require('path');
 
 const tsOutputDir = path.resolve('..', '.tmp', 'ts', 'libsquoosh');
@@ -15,15 +14,20 @@ async function getFilesRecursive(from) {
   });
 
   const allFiles = await Promise.all(
-    filesOrDirectories.flatMap((fileOrDirectory) => {
+    filesOrDirectories.map((fileOrDirectory) => {
       if (fileOrDirectory.isFile()) {
         return path.resolve(from, fileOrDirectory.name);
+      } else if (
+        fileOrDirectory.isDirectory() &&
+        fileOrDirectory.name !== 'node_modules'
+      ) {
+        return getFilesRecursive(path.resolve(from, fileOrDirectory.name));
       }
 
-      return getFilesRecursive(path.resolve(from, fileOrDirectory.name));
+      return [];
     }),
   );
-  return allFiles.flatMap((x) => x);
+  return allFiles.flat();
 }
 
 async function copyTypes(from, to) {
