@@ -1,3 +1,5 @@
+/// <reference path="./missing-types.d.ts" />
+
 import { isMainThread } from 'worker_threads';
 
 import {
