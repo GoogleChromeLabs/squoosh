@@ -1,4 +1,5 @@
 /// <reference path="../../missing-types.d.ts" />
+/// <reference path="./WebAssembly.d.ts" />
 
 declare module 'asset-url:*' {
   const value: string;
@@ -40,4 +41,3 @@ type WebGLRenderingContext = never;
 type MessageEvent = never;
 
 type BufferSource = ArrayBufferView | ArrayBuffer;
-type URL = import('url').URL;
