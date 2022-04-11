@@ -37,8 +37,10 @@ main();
   ga('set', 'transport', 'beacon');
   ga('set', 'dimension1', displayMode);
   ga('send', 'pageview', '/index.html', { title: 'Squoosh' });
-  // Load the GA script
-  const script = document.createElement('script');
-  script.src = 'https://www.google-analytics.com/analytics.js';
-  document.head.appendChild(script);
+  // Load the GA script without keeping the browser spinner going.
+  addEventListener('load', () => {
+    const script = document.createElement('script');
+    script.src = 'https://www.google-analytics.com/analytics.js';
+    document.head.appendChild(script);
+  });
 }

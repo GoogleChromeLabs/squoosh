@@ -11,7 +11,11 @@ export default class Checkbox extends Component<Props, State> {
     return (
       <div class={style.checkbox}>
         {props.checked ? (
-          <CheckedIcon class={`${style.icon} ${style.checked}`} />
+          props.disabled ? (
+            <CheckedIcon class={`${style.icon} ${style.disabled}`} />
+          ) : (
+            <CheckedIcon class={`${style.icon} ${style.checked}`} />
+          )
         ) : (
           <UncheckedIcon class={style.icon} />
         )}

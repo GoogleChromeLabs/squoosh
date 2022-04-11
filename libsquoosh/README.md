@@ -16,21 +16,25 @@ You can start using the libSquoosh by adding these lines to the top of your JS p
 
 ```js
 import { ImagePool } from '@squoosh/lib';
-const imagePool = new ImagePool();
+import { cpus } from 'os';
+const imagePool = new ImagePool(cpus().length);
 ```
 
-This will create an image pool with an underlying processing pipeline that you can use to ingest and encode images. The ImagePool constructor takes one argument that defines how many parallel operations it is allowed to run at any given time. By default, this number is set to the amount of CPU cores available in the system it is running on.
+This will create an image pool with an underlying processing pipeline that you can use to ingest and encode images. The ImagePool constructor takes one argument that defines how many parallel operations it is allowed to run at any given time.
+
+:warning: Important! Make sure to only create 1 `ImagePool` when performing parallel image processing. If you create multiple pools, the `ImagePool` can run out of memory and crash. By reusing a single `ImagePool`, you can ensure that the backing worker queue and processing pipeline releases memory prior to processing the next image.
 
 ## Ingesting images
 
 You can ingest a new image like so:
 
 ```js
-const imagePath = 'path/to/image.png';
-const image = imagePool.ingestImage(imagePath);
+import fs from 'fs/promises';
+const file = await fs.readFile('./path/to/image.png');
+const image = imagePool.ingestImage(file);
 ```
 
-The `ingestImage` function can take anything the node [`readFile`][readfile] function can take, uncluding a buffer and `FileHandle`.
+The `ingestImage` function can accept any [`ArrayBuffer`][arraybuffer] whether that is from `readFile()` or `fetch()`.
 
 The returned `image` object is a representation of the original image, that you can now preprocess, encode, and extract information about.
 
@@ -39,15 +43,19 @@ The returned `image` object is a representation of the original image, that you 
 When an image has been ingested, you can start preprocessing it and encoding it to other formats. This example will resize the image and then encode it to a `.jpg` and `.jxl` image:
 
 ```js
-await image.decoded; //Wait until the image is decoded before running preprocessors. 
-
 const preprocessOptions = {
+  //When both width and height are specified, the image resized to specified size.
   resize: {
-    enabled: true,
     width: 100,
     height: 50,
+  },
+  /*
+  //When either width or height is specified, the image resized to specified size keeping aspect ratio.
+  resize: {
+    width: 100,
   }
-}
+  */
+};
 await image.preprocess(preprocessOptions);
 
 const encodeOptions = {
@@ -55,12 +63,11 @@ const encodeOptions = {
   jxl: {
     quality: 90,
   },
-}
-await image.encode(encodeOptions);
-
+};
+const result = await image.encode(encodeOptions);
 ```
 
-The default values for each option can be found in the [`codecs.js`][codecs.js] file under `defaultEncoderOptions`. Every unspecified value will use the default value specified there. _Better documentation is needed here._
+The default values for each option can be found in the [`codecs.ts`][codecs.ts] file under `defaultEncoderOptions`. Every unspecified value will use the default value specified there. _Better documentation is needed here._
 
 You can run your own code inbetween the different steps, if, for example, you want to change how much the image should be resized based on its original height. (See [Extracting image information](#extracting-image-information) to learn how to get the image dimensions).
 
@@ -81,7 +88,7 @@ When you have encoded an image, you normally want to write it to a file.
 This example takes an image that has been encoded as a `jpg` and writes it to a file:
 
 ```js
-const rawEncodedImage = (await image.encodedWith.mozjpeg).binary;
+const rawEncodedImage = image.encodedWith.mozjpeg.binary;
 
 fs.writeFile('/path/to/new/image.jpg', rawEncodedImage);
 ```
@@ -92,10 +99,7 @@ This example iterates through all encoded versions of the image and writes them 
 const newImagePath = '/path/to/image.'; //extension is added automatically
 
 for (const encodedImage of Object.values(image.encodedWith)) {
-  fs.writeFile(
-    newImagePath + (await encodedImage).extension,
-    (await encodedImage).binary,
-  );
+  fs.writeFile(newImagePath + encodedImage.extension, encodedImage.binary);
 }
 ```
 
@@ -124,7 +128,7 @@ console.log(await image.decoded);
 Information about an encoded image can be found at `Image.encodedWith[encoderName]`. It looks something like this:
 
 ```js
-console.log(await image.encodedWith.jxl);
+console.log(image.encodedWith.jxl);
 // Returns:
 {
   optionsUsed: {
@@ -158,6 +162,6 @@ const encodeOptions: {
 ```
 
 [squoosh]: https://squoosh.app
-[codecs.js]: https://github.com/GoogleChromeLabs/squoosh/blob/dev/libsquoosh/src/codecs.js
+[codecs.ts]: https://github.com/GoogleChromeLabs/squoosh/blob/dev/libsquoosh/src/codecs.ts
 [butteraugli]: https://github.com/google/butteraugli
-[readfile]: https://nodejs.org/api/fs.html#fs_fspromises_readfile_path_options
+[arraybuffer]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer

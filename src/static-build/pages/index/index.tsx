@@ -16,7 +16,8 @@ import baseCss from 'css:./base.css';
 import initialCss from 'initial-css:';
 import { allSrc } from 'client-bundle:client/initial-app';
 import favicon from 'url:static-build/assets/favicon.ico';
-import { escapeStyleScriptContent } from 'static-build/utils';
+import ogImage from 'url:static-build/assets/icon-large-maskable.png';
+import { escapeStyleScriptContent, siteOrigin } from 'static-build/utils';
 import Intro from 'shared/prerendered-app/Intro';
 
 interface Props {}
@@ -28,7 +29,27 @@ const Index: FunctionalComponent<Props> = () => (
       <title>Squoosh</title>
       <meta
         name="description"
-        content="Compress and compare images with different codecs, right in your browser"
+        content="Squoosh is the ultimate image optimizer that allows you to compress and compare images with different codecs in your browser."
+      />
+      <meta name="twitter:card" content="summary" />
+      <meta name="twitter:site" content="@SquooshApp" />
+      <meta property="og:title" content="Squoosh" />
+      <meta property="og:type" content="website" />
+      <meta property="og:image" content={`${siteOrigin}${ogImage}`} />
+      <meta
+        property="og:image:secure_url"
+        content={`${siteOrigin}${ogImage}`}
+      />
+      <meta property="og:image:type" content="image/png" />
+      <meta property="og:image:width" content="500" />
+      <meta property="og:image:height" content="500" />
+      <meta
+        property="og:image:alt"
+        content="A cartoon of a hand squeezing an image file on a dark background."
+      />
+      <meta
+        name="og:description"
+        content="Squoosh is the ultimate image optimizer that allows you to compress and compare images with different codecs in your browser."
       />
       <meta
         name="viewport"
@@ -37,8 +58,10 @@ const Index: FunctionalComponent<Props> = () => (
       <meta name="mobile-web-app-capable" content="yes" />
       <meta name="apple-mobile-web-app-capable" content="yes" />
       <link rel="shortcut icon" href={favicon} />
+      <link rel="apple-touch-icon" href={ogImage} />
       <meta name="theme-color" content="#ff3385" />
       <link rel="manifest" href="/manifest.json" />
+      <link rel="canonical" href={siteOrigin} />
       <style
         dangerouslySetInnerHTML={{ __html: escapeStyleScriptContent(baseCss) }}
       />
