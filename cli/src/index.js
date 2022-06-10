@@ -173,7 +173,7 @@ async function processFiles(files) {
       }
       const encParam = program.opts()[encName];
       const encConfig =
-        encParam.toLowerCase() === 'auto' ? 'auto' : JSON5.parse(encParam);
+        encParam.toString().toLowerCase() === 'auto' ? 'auto' : JSON5.parse(encParam);
       encodeOptions[encName] = encConfig;
     }
     jobsStarted++;
