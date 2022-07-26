@@ -20,7 +20,7 @@
   "author": "Google Chrome Developers <chromium-dev@google.com>",
   "license": "Apache-2.0",
   "engines": {
-    "node": " ^12.20.2 || ^14.13.1 || ^16.0.0 "
+    "node": " ^12.20.2 || ^14.13.1 || ^16.0.0 || ^18.0.0 "
   },
   "dependencies": {
     "@squoosh/lib": "^0.4.0",
