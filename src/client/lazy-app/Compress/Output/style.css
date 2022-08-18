@@ -49,6 +49,7 @@
   align-self: center;
   padding: 9px 66px;
   position: relative;
+  gap: 6px;
 
   /* Allow clicks to fall through to the pinch zoom area */
   pointer-events: none;
@@ -68,7 +69,6 @@
   display: flex;
   position: relative;
   z-index: 100;
-  margin: 0 3px;
 }
 
 .button,
