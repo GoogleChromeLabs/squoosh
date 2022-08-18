@@ -95,6 +95,7 @@
 
 .button {
   color: #fff;
+  margin: 0;
 
   &:hover {
     background: rgba(50, 50, 50, 0.92);
