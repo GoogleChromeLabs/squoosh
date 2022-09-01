@@ -40,7 +40,8 @@ two-up[legacy-clip-compat] > :not(.two-up-handle) {
 }
 
 .scrubber {
-  display: flex;
+  display: grid;
+  align-content: center;
   position: absolute;
   top: 50%;
   left: 50%;
@@ -52,10 +53,6 @@ two-up[legacy-clip-compat] > :not(.two-up-handle) {
   color: var(--thumb-color);
   box-sizing: border-box;
   padding: 0 calc(var(--thumb-size) * 0.24);
-}
-
-.scrubber svg {
-  flex: 1;
 }
 
 .arrow-left {
