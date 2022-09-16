@@ -25,35 +25,33 @@ import * as screenshot6 from 'img-url:static-build/assets/screenshot6.jpg';
 import dedent from 'dedent';
 import { lookup as lookupMime } from 'mime-types';
 
-const allScreenshots = [
+interface Dimensions {
+  width: number;
+  height: number;
+}
+
+const manifestSize = ({ width, height }: Dimensions) => `${width}x${height}`;
+const formFactor = ({ width, height }: Dimensions) =>
+  width > height ? 'wide' : 'narrow';
+
+const screenshots = [
   screenshot1,
   screenshot2,
   screenshot3,
   screenshot4,
   screenshot5,
   screenshot6,
-];
-
-const manifestSize = ({ width, height }: { width: number; height: number }) =>
-  `${width}x${height}`;
-
-const formFactor = ({ width, height }: { width: number; height: number }) => {
-  return width > height ? 'wide' : 'narrow';
-};
-
-const screenshots = () =>
-  allScreenshots.map((screenshot) => {
-    return {
-      src: screenshot.default,
-      type: lookupMime(screenshot.default),
-      sizes: manifestSize(screenshot),
-      form_factor: formFactor(screenshot),
-    };
-  });
+].map((screenshot) => ({
+  src: screenshot.default,
+  type: lookupMime(screenshot.default),
+  sizes: manifestSize(screenshot),
+  form_factor: formFactor(screenshot),
+}));
 
 interface Output {
   [outputPath: string]: string;
 }
+
 const toOutput: Output = {
   'index.html': renderPage(<IndexPage />),
   'manifest.json': JSON.stringify({
@@ -81,7 +79,7 @@ const toOutput: Output = {
       'Compress and compare images with different codecs, right in your browser.',
     lang: 'en',
     categories: ['photo', 'productivity', 'utilities'],
-    screenshots: screenshots(),
+    screenshots,
     share_target: {
       action: '/?utm_medium=PWA&utm_source=share-target&share-target',
       method: 'POST',
