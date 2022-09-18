@@ -19,15 +19,39 @@ import * as iconLarge from 'img-url:static-build/assets/icon-large.png';
 import * as screenshot1 from 'img-url:static-build/assets/screenshot1.png';
 import * as screenshot2 from 'img-url:static-build/assets/screenshot2.jpg';
 import * as screenshot3 from 'img-url:static-build/assets/screenshot3.jpg';
+import * as screenshot4 from 'img-url:static-build/assets/screenshot4.png';
+import * as screenshot5 from 'img-url:static-build/assets/screenshot5.jpg';
+import * as screenshot6 from 'img-url:static-build/assets/screenshot6.jpg';
 import dedent from 'dedent';
 import { lookup as lookupMime } from 'mime-types';
 
-const manifestSize = ({ width, height }: { width: number; height: number }) =>
-  `${width}x${height}`;
+interface Dimensions {
+  width: number;
+  height: number;
+}
+
+const manifestSize = ({ width, height }: Dimensions) => `${width}x${height}`;
+const formFactor = ({ width, height }: Dimensions) =>
+  width > height ? 'wide' : 'narrow';
+
+const screenshots = [
+  screenshot1,
+  screenshot2,
+  screenshot3,
+  screenshot4,
+  screenshot5,
+  screenshot6,
+].map((screenshot) => ({
+  src: screenshot.default,
+  type: lookupMime(screenshot.default),
+  sizes: manifestSize(screenshot),
+  form_factor: formFactor(screenshot),
+}));
 
 interface Output {
   [outputPath: string]: string;
 }
+
 const toOutput: Output = {
   'index.html': renderPage(<IndexPage />),
   'manifest.json': JSON.stringify({
@@ -55,23 +79,7 @@ const toOutput: Output = {
       'Compress and compare images with different codecs, right in your browser.',
     lang: 'en',
     categories: ['photo', 'productivity', 'utilities'],
-    screenshots: [
-      {
-        src: screenshot1.default,
-        type: lookupMime(screenshot1.default),
-        sizes: manifestSize(screenshot1),
-      },
-      {
-        src: screenshot2.default,
-        type: lookupMime(screenshot2.default),
-        sizes: manifestSize(screenshot2),
-      },
-      {
-        src: screenshot3.default,
-        type: lookupMime(screenshot3.default),
-        sizes: manifestSize(screenshot3),
-      },
-    ],
+    screenshots,
     share_target: {
       action: '/?utm_medium=PWA&utm_source=share-target&share-target',
       method: 'POST',
