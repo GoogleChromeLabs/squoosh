@@ -44,6 +44,35 @@ Options:
 
 The default values for each `config` option can be found in the [`codecs.ts`][codecs.ts] file under `defaultEncoderOptions`. Every unspecified value will use the default value specified here. _Better documentation is needed here._
 
+## Example
+
+You can specify options like JSON format.
+
+```sh
+$ squoosh-cli --mozjpeg {quality:70,progressive:true} ./images/example.jpg --resize {width:1200} -d ./<distDir>
+...
+1/1 ✔ Squoosh results:
+ ./images/example.jpg: 5.13MB
+  └ images/dist/example.jpg → 266.59KB (5.08%)
+```
+
+But, you should not include space in the option. An `ENOENT` error will occur.
+
+```
+// OK
+$ squoosh-cli --mozjpeg {quality:70,progressive:true}
+
+// NG
+$ squoosh-cli --mozjpeg {quality: 70,progressive:true}
+
+[Error: ENOENT: no such file or directory, lstat 'usr/images/70,progressive:true}'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'lstat',
+  path: 'usr/images/70,progressive:true}'
+}
+```
+
 ## Auto optimizer
 
 Squoosh CLI has an _experimental_ auto optimizer that compresses an image as much as possible, trying to hit a specific [Butteraugli] target value. The higher the Butteraugli target value, the more artifacts can be introduced.
