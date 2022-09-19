@@ -156,8 +156,8 @@ libSquoosh has an _experimental_ auto optimizer that compresses an image as much
 You can make use of the auto optimizer by using “auto” as the config object.
 
 ```js
-const encodeOptions: {
-  mozjpeg: 'auto',
+const encodeOptions = {
+  mozjpeg: 'auto'
 }
 ```
 
