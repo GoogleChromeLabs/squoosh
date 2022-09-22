@@ -16,8 +16,35 @@ import { join as joinPath } from 'path';
 import render from 'preact-render-to-string';
 import { VNode } from 'preact';
 
+import { StrictCsp } from 'strict-csp';
+
 export function renderPage(vnode: VNode) {
-  return '<!DOCTYPE html>' + render(vnode);
+  const htmlString = '<!DOCTYPE html>' + render(vnode);
+  const htmlStringWithCsp = addCspAsMetaTag(htmlString);
+  return htmlStringWithCsp;
+}
+
+/**
+ * Add to the html string a strict Content-Security-Policy (CSP), as a meta tag.
+ * Details at https://web.dev/strict-csp/
+ */
+function addCspAsMetaTag(htmlString: string) {
+  const s = new StrictCsp(htmlString);
+  // Refactor sourced scripts so that we can set a strict CSP
+  s.refactorSourcedScriptsForHashBasedCsp();
+  // Hash inline scripts from this html file, if there are any
+  const scriptHashes = s.hashAllInlineScripts();
+  // Generate a strict CSP as a string
+  // enableUnsafeEval is set to true, to accomodate for uses of eval by emscripten. This makes the CSP a bit less secure
+  const strictCsp = StrictCsp.getStrictCsp(scriptHashes, {
+    enableBrowserFallbacks: true,
+    enableTrustedTypes: false,
+    enableUnsafeEval: true,
+  });
+  // Set this CSP via a meta tag
+  s.addMetaTag(strictCsp);
+  const htmlStringWithCsp = s.serializeDom();
+  return htmlStringWithCsp;
 }
 
 interface OutputMap {
