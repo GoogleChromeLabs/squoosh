@@ -16,11 +16,11 @@ function clamp(v, min, max) {
   return v;
 }
 
-const suffix = ['B', 'KB', 'MB'];
+const suffix = ['B', 'KiB', 'MiB'];
 function prettyPrintSize(size) {
   const base = Math.floor(Math.log2(size) / 10);
   const index = clamp(base, 0, 2);
-  return (size / 2 ** (10 * index)).toFixed(2) + suffix[index];
+  return (size / 2 ** (10 * index)).toFixed(2) + ' ' + suffix[index];
 }
 
 function progressTracker(results) {
