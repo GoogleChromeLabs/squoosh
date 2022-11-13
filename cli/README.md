@@ -42,7 +42,7 @@ Options:
   -h, --help                                             display help for command
 ```
 
-The `config` option should be given as a [JSON5](https://json5.org) string. To avoid whitespace issues, it may be necessary to wrap the argument in single or double quotes.
+The `config` option should be given as a [JSON5][json5] string. To avoid whitespace issues, it may be necessary to wrap the argument in single or double quotes.
 
 The default values for each `config` option can be found in the [`codecs.ts`][codecs.ts] file under `defaultEncoderOptions`. Every unspecified value will use the default value specified there.
 
@@ -58,9 +58,9 @@ Convert all JPEGs in a directory to JXL with effort 9, and add a suffix of "-opt
 npx @squoosh/cli *.jpg --jxl '{ effort: 9 }' --suffix '-optimized'
 ```
 
-Resize all the PNGs in a directory and convert them to WebP with the default settings:
+Resize `image.png` and convert it to WebP with the default settings:
 ```sh
-npx @squoosh/cli logo.png --resize '{ width: 100 }' --webp '{}'
+npx @squoosh/cli image.png --resize '{ width: 100 }' --webp '{}'
 ```
 
 ## Auto optimizer
@@ -76,3 +76,4 @@ $ npx @squoosh/cli --wp2 auto test.png
 [squoosh]: https://squoosh.app
 [codecs.ts]: https://github.com/GoogleChromeLabs/squoosh/blob/dev/libsquoosh/src/codecs.ts
 [butteraugli]: https://github.com/google/butteraugli
+[json5]: https://json5.org
