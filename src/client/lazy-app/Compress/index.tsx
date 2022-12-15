@@ -114,7 +114,7 @@ async function decodeImage(
       }
     }
     // Otherwise fall through and try built-in decoding for a laugh.
-    return await builtinDecode(signal, blob, mimeType);
+    return await builtinDecode(signal, blob);
   } catch (err) {
     if (err instanceof Error && err.name === 'AbortError') throw err;
     console.log(err);
