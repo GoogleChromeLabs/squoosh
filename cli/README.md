@@ -42,7 +42,26 @@ Options:
   -h, --help                                             display help for command
 ```
 
-The default values for each `config` option can be found in the [`codecs.ts`][codecs.ts] file under `defaultEncoderOptions`. Every unspecified value will use the default value specified here. _Better documentation is needed here._
+The `config` option should be given as a [JSON5][json5] string. To avoid whitespace issues, it may be necessary to wrap the argument in single or double quotes.
+
+The default values for each `config` option can be found in the [`codecs.ts`][codecs.ts] file under `defaultEncoderOptions`. Every unspecified value will use the default value specified there.
+
+### Examples
+
+Convert all PNGs in a directory to WebP at optimization level 75, effort 6:
+```sh
+npx @squoosh/cli *.png --webp '{ quality: 75, method: 6 }'
+```
+
+Convert all JPEGs in a directory to JXL with effort 9, and add a suffix of "-optimized" to each optimized image:
+```sh
+npx @squoosh/cli *.jpg --jxl '{ effort: 9 }' --suffix '-optimized'
+```
+
+Resize `image.png` and convert it to WebP with the default settings:
+```sh
+npx @squoosh/cli image.png --resize '{ width: 100 }' --webp '{}'
+```
 
 ## Auto optimizer
 
@@ -57,3 +76,4 @@ $ npx @squoosh/cli --wp2 auto test.png
 [squoosh]: https://squoosh.app
 [codecs.ts]: https://github.com/GoogleChromeLabs/squoosh/blob/dev/libsquoosh/src/codecs.ts
 [butteraugli]: https://github.com/google/butteraugli
+[json5]: https://json5.org
