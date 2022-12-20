@@ -64,7 +64,8 @@ const encodeOptions = {
     quality: 90,
   },
 };
-const result = await image.encode(encodeOptions);
+
+const result = await image.encode(encodeOptions); // You can find the encodings in image.encodedWith[encode], e.g. image.encodedWith.avif
 ```
 
 The default values for each option can be found in the [`codecs.ts`][codecs.ts] file under `defaultEncoderOptions`. Every unspecified value will use the default value specified there. _Better documentation is needed here._
