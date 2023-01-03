@@ -92,17 +92,6 @@ export const DownloadIcon = () => (
   </svg>
 );
 
-export const CLIIcon = () => (
-  <svg viewBox="0 0 81.3 68.8">
-    <path
-      fill="none"
-      stroke-miterlimit="15.6"
-      stroke-width="6.3"
-      d="M3.1 3.1h75v62.5h-75zm18.8 43.8l12.5-12.5-12.5-12.5m18.7 25h18.8"
-    />
-  </svg>
-);
-
 export const SwapIcon = () => (
   <svg viewBox="0 0 18 14">
     <path d="M5.5 3.6v6.8L2.1 7l3.4-3.4M7 0L0 7l7 7V0zm4 0v14l7-7-7-7z" />
