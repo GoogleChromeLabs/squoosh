@@ -1,3 +1,7 @@
+# Project no longer maintained
+
+Unfortunately, due to a few people leaving the team, and staffing issues resulting from the current economic climate (ugh), this package is no longer actively maintained. I know that sucks, but there simply isn't the time & people to work on this. If anyone from the community wants to fork it, you have my blessing. The [squoosh.app](https://squoosh.app) will continue to be supported and improved.
+
 # libSquoosh
 
 libSquoosh is an _experimental_ way to run all the codecs you know from the [Squoosh] web app directly inside your own JavaScript program. libSquoosh uses a worker pool to parallelize processing images. This way you can apply the same codec to many images at once.
