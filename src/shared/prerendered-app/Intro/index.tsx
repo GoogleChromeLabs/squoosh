@@ -443,12 +443,6 @@ export default class Intro extends Component<Props, State> {
                   Privacy
                 </a>
                 <a
-                  class={style.footerLink}
-                  href="https://github.com/GoogleChromeLabs/squoosh/tree/dev/cli"
-                >
-                  Squoosh CLI
-                </a>
-                <a
                   class={style.footerLinkWithLogo}
                   href="https://github.com/GoogleChromeLabs/squoosh"
                 >
