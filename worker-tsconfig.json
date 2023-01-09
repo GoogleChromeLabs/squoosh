@@ -8,6 +8,7 @@
     "src/features/**/shared/**/*",
     "src/features/worker-utils/**/*",
     "src/features-worker/**/*",
+    "src/worker-shared/**/*",
     "src/sw/**/*"
   ]
 }

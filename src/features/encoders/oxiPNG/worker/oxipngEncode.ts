@@ -11,7 +11,7 @@
  * limitations under the License.
  */
 import { EncodeOptions } from '../shared/meta';
-import { threads } from 'wasm-feature-detect';
+import checkThreadsSupport from 'worker-shared/supports-wasm-threads';
 
 async function initMT() {
   const {
@@ -39,7 +39,7 @@ export default async function encode(
   options: EncodeOptions,
 ): Promise<ArrayBuffer> {
   if (!wasmReady) {
-    wasmReady = threads().then((hasThreads: boolean) =>
+    wasmReady = checkThreadsSupport().then((hasThreads: boolean) =>
       hasThreads ? initMT() : initST(),
     );
   }
