@@ -1,6 +1,7 @@
-import { threads, simd } from 'wasm-feature-detect';
+import { simd } from 'wasm-feature-detect';
 import webpDataUrl from 'data-url:./tiny.webp';
 import avifDataUrl from 'data-url:./tiny.avif';
+import checkThreadsSupport from 'worker-shared/supports-wasm-threads';
 
 // Give TypeScript the correct global.
 declare var self: ServiceWorkerGlobalScope;
@@ -84,7 +85,7 @@ export const initial = ['/', ...initialJs];
 export const theRest = (async () => {
   const [supportsThreads, supportsSimd, supportsWebP, supportsAvif] =
     await Promise.all([
-      threads(),
+      checkThreadsSupport(),
       simd(),
       ...[webpDataUrl, avifDataUrl].map(async (dataUrl) => {
         if (!self.createImageBitmap) return false;
