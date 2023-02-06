@@ -1,8 +1,3 @@
-extern crate cfg_if;
-extern crate resize;
-extern crate rgb;
-extern crate wasm_bindgen;
-
 mod utils;
 
 use cfg_if::cfg_if;
@@ -13,7 +8,7 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen::Clamped;
 
 mod srgb;
-use srgb::{linear_to_srgb, Clamp};
+use crate::srgb::{linear_to_srgb, Clamp};
 
 cfg_if! {
     // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
