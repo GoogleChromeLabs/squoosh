@@ -13,8 +13,9 @@ default = ["console_error_panic_hook", "wee_alloc"]
 
 [dependencies]
 cfg-if = "0.1.2"
-wasm-bindgen = "0.2.38"
-resize = "0.5.5"
+wasm-bindgen = "0.2.84"
+resize = "0.7.4"
+rgb = "0.8.33"
 
 # The `console_error_panic_hook` crate provides better debugging of panics by
 # logging them with `console.error`. This is great for development, but requires
@@ -36,3 +37,4 @@ wasm-bindgen-test = "0.2"
 # Tell `rustc` to optimize for small code size.
 opt-level = "s"
 lto = true
+target-feature = "+bulk-memory"

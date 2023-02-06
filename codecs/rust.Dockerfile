@@ -1,8 +1,8 @@
-ARG RUST_IMG=rust:1.47
+ARG RUST_IMG=rust:1.67
 
 FROM emscripten/emsdk:2.0.8 AS wasm-tools
 WORKDIR /opt/wasm-tools
-RUN wget -qO- https://github.com/rustwasm/wasm-pack/releases/download/v0.9.1/wasm-pack-v0.9.1-x86_64-unknown-linux-musl.tar.gz | tar -xzf - --strip 1
+RUN wget -qO- https://github.com/rustwasm/wasm-pack/releases/download/v0.10.3/wasm-pack-v0.10.3-x86_64-unknown-linux-musl.tar.gz | tar -xzf - --strip 1
 
 FROM $RUST_IMG AS rust
 ARG RUST_IMG

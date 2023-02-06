@@ -1,5 +1,6 @@
 extern crate cfg_if;
 extern crate resize;
+extern crate rgb;
 extern crate wasm_bindgen;
 
 mod utils;
@@ -7,6 +8,7 @@ mod utils;
 use cfg_if::cfg_if;
 use resize::Pixel;
 use resize::Type;
+use rgb::FromSlice;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::Clamped;
 
@@ -88,10 +90,14 @@ pub fn resize(
             input_height,
             output_width,
             output_height,
-            Pixel::RGBA,
+            Pixel::RGBA8,
             typ,
+        )
+        .expect("Couldn't create resizer");
+        resizer.resize(
+            input_image.as_slice().as_rgba(),
+            output_image.as_mut_slice().as_rgba_mut(),
         );
-        resizer.resize(input_image.as_slice(), output_image.as_mut_slice());
         return Clamped(output_image);
     }
 
@@ -121,10 +127,11 @@ pub fn resize(
         output_height,
         Pixel::RGBAF32,
         typ,
-    );
+    )
+    .expect("Couldn't create resizer");
     resizer.resize(
-        preprocessed_input_image.as_slice(),
-        unprocessed_output_image.as_mut_slice(),
+        preprocessed_input_image.as_slice().as_rgba(),
+        unprocessed_output_image.as_mut_slice().as_rgba_mut(),
     );
 
     for i in 0..num_output_pixels {
