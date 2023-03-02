@@ -112,6 +112,9 @@
 .copy-over-button {
   composes: title-button;
 
+  /* Make the filled arrow point towards the other options element */
+  transform: rotate(var(--rotate-copyoverbutton-angle));
+
   svg {
     fill: var(--header-text-color);
   }
