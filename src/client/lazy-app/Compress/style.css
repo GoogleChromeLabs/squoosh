@@ -45,9 +45,11 @@
   --hot-theme-color: var(--hot-pink);
   --header-text-color: var(--white);
   --scroller-radius: var(--options-radius) var(--options-radius) 0 0;
+  --rotate-copyoverbutton-angle: 90deg; /* To point down */
 
   @media (min-width: 600px) {
     --scroller-radius: 0 var(--options-radius) var(--options-radius) 0;
+    --rotate-copyoverbutton-angle: 0deg; /* To point right (no change) */
   }
 }
 
@@ -56,9 +58,11 @@
   --hot-theme-color: var(--deep-blue);
   --header-text-color: var(--dark-text);
   --scroller-radius: var(--options-radius) var(--options-radius) 0 0;
+  --rotate-copyoverbutton-angle: -90deg; /* To point up */
 
   @media (min-width: 600px) {
     --scroller-radius: var(--options-radius) 0 0 var(--options-radius);
+    --rotate-copyoverbutton-angle: 180deg; /* To point left */
   }
 }
 
