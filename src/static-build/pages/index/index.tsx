@@ -79,6 +79,9 @@ const Index: FunctionalComponent<Props> = () => (
           __html: escapeStyleScriptContent(allSrc),
         }}
       />
+      <noscript>
+        <div>Sorry! This app will not work with JavaScript disabled.</div>
+      </noscript>
     </body>
   </html>
 );
