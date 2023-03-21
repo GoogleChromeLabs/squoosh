@@ -1,11 +1,12 @@
-import { h, Component, Fragment } from 'preact';
-
-import * as style from './style.css';
 import 'add-css:./style.css';
 import 'shared/custom-els/loading-spinner';
+
+import { Arrow, DownloadIcon } from 'client/lazy-app/icons';
+import { Component, Fragment, h } from 'preact';
+
 import { SourceImage } from '../';
 import prettyBytes from './pretty-bytes';
-import { Arrow, DownloadIcon } from 'client/lazy-app/icons';
+import * as style from './style.css';
 
 interface Props {
   loading: boolean;
@@ -73,6 +74,13 @@ export default class Results extends Component<Props, State> {
       percent = diff > 1 ? absolutePercent - 100 : 100 - absolutePercent;
     }
 
+    const downloadFileName = imageFile
+      ? `${imageFile.name.slice(
+          0,
+          imageFile.name.lastIndexOf('.'),
+        )}_compressed${imageFile.name.slice(imageFile.name.lastIndexOf('.'))}`
+      : '';
+
     return (
       <div
         class={
@@ -122,7 +130,7 @@ export default class Results extends Component<Props, State> {
         <a
           class={showLoadingState ? style.downloadDisable : style.download}
           href={downloadUrl}
-          download={imageFile ? imageFile.name : ''}
+          download={downloadFileName}
           title="Download"
           onClick={this.onDownload}
         >
