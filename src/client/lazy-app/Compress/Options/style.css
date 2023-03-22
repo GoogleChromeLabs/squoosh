@@ -83,11 +83,11 @@
 }
 
 .text-field {
-  background: var(--white);
-  color: var(--black);
+  background-color: var(--black);
+  color: var(--white);
   font: inherit;
   border: none;
-  padding: 6px 0 6px 10px;
+  padding: 6px 6px 6px 10px;
   width: 100%;
   box-sizing: border-box;
   border-radius: 4px;
