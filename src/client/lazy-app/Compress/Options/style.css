@@ -53,6 +53,16 @@
   composes: option-toggle;
   grid-template-columns: auto 1fr;
   gap: 1em;
+
+  border-top: 1px solid #fff4;
+
+  transition-property: background-color;
+  transition-duration: 250ms;
+}
+
+.option-reveal:focus-within,
+.option-reveal:hover {
+  background-color: #fff2;
 }
 
 .option-one-cell {
@@ -117,6 +127,11 @@
 
   svg {
     fill: var(--header-text-color);
+  }
+
+  &:focus {
+    outline: var(--header-text-color) solid 2px;
+    outline-offset: 0.25em;
   }
 }
 
