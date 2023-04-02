@@ -111,6 +111,10 @@
   justify-self: start;
   align-self: start;
 
+  &:hover .back-blob {
+    opacity: 1;
+  }
+
   & > svg {
     width: 47px;
   }
@@ -127,8 +131,34 @@
 .back-blob {
   fill: var(--hot-pink);
   opacity: 0.77;
+  transition: opacity 500ms ease;
 }
 
 .back-x {
   fill: var(--white);
+}
+
+.filename {
+  composes: unbutton from global;
+  position: relative;
+  grid-area: header;
+  margin: 9px;
+  justify-self: end;
+  align-self: start;
+
+  background-color: var(--hot-pink);
+  color: #fff;
+
+  padding: 10px 20px;
+  font-weight: bold;
+  font-size: 1.1rem;
+
+  pointer-events: none;
+
+  border-radius: 9999px;
+
+  @media (min-width: 600px) {
+    margin: 14px;
+    font-size: 1.4rem;
+  }
 }

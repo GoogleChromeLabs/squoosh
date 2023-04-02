@@ -885,6 +885,9 @@ export default class Compress extends Component<Props, State> {
             />
           </svg>
         </button>
+        {!mobileView && this.state.source ? (
+          <span class={style.filename}>{this.state.source.file.name}</span>
+        ) : null}
         {mobileView ? (
           <div class={style.options}>
             <multi-panel class={style.multiPanel} open-one-only>
