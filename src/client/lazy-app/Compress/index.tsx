@@ -885,6 +885,7 @@ export default class Compress extends Component<Props, State> {
             />
           </svg>
         </button>
+        {/* New filename title at top right corner shown only if not in mobileview */}
         {!mobileView && this.state.source ? (
           <span class={style.filename}>{this.state.source.file.name}</span>
         ) : null}

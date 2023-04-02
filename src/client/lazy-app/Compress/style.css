@@ -138,6 +138,8 @@
   fill: var(--white);
 }
 
+/* Adding styles for new filename */
+
 .filename {
   composes: unbutton from global;
   position: relative;
