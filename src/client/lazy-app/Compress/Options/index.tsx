@@ -190,7 +190,9 @@ export default class Options extends Component<Props, State> {
               onChange={this.onEncoderTypeChange}
               large
             >
-              <option value="identity">Original Image</option>
+              <option value="identity">{`Original Image ${
+                this.props.source ? `(${this.props.source.file.name})` : ''
+              }`}</option>
               {Object.entries(supportedEncoderMap).map(([type, encoder]) => (
                 <option value={type}>{encoder.meta.label}</option>
               ))}
