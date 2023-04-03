@@ -321,6 +321,13 @@
   }
 }
 
+.demo-container {
+  transition: scale 400ms ease-in-out;
+  &:hover {
+    scale: 1.05;
+  }
+}
+
 .demo-size {
   background: var(--dim-blue);
   border-radius: 1000px;
