@@ -97,3 +97,27 @@ export const SwapIcon = () => (
     <path d="M5.5 3.6v6.8L2.1 7l3.4-3.4M7 0L0 7l7 7V0zm4 0v14l7-7-7-7z" />
   </svg>
 );
+
+export const SaveIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img">
+    <path
+      data-name="layer2"
+      d="M41.9 30a16 16 0 1 0 16 16 16 16 0 0 0-16-16zm7.4 15.4a2 2 0 0 1-2.8 0l-2.6-2.6V54a2 2 0 0 1-4 0V42.8l-2.6 2.6a2 2 0 1 1-2.8-2.8l7.4-7.4 7.4 7.4a2 2 0 0 1 0 2.8z"
+    ></path>
+    <ellipse data-name="layer1" cx="29.1" cy="10" rx="23" ry="8"></ellipse>
+    <path
+      data-name="layer1"
+      d="M29.1 29h2.6a19.7 19.7 0 0 1 14.7-2.4c3.6-1.2 5.6-2.5 5.6-3.5v-6.3C47 20.4 38 22 29 22s-18-1.7-23-5.2V23c.1 2 9.6 6 23.1 6zm-7 17c0-.5 0-.9.1-1.4-6.9-.7-13-2.6-16.1-5.4V46c0 3.7 7.5 6.9 17.6 7.8a19.9 19.9 0 0 1-1.6-7.8zm.8-5.3a19.9 19.9 0 0 1 4.1-7.8c-8.7-.3-17.2-2.2-20.9-5.8V35c0 1.7 6.7 4.7 16.8 5.7z"
+    ></path>
+  </svg>
+);
+
+export const ImportIcon = () => (
+  <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img">
+    <path
+      d="M49.189 31.052l-4.378-4.104L35 37.414V2h-6v35.066l-9.751-11.05-4.498 3.969 17.182 19.473 17.256-18.406z"
+      data-name="layer2"
+    ></path>
+    <path d="M52 45v11H12V45H6v17h52V45h-6z" data-name="layer1"></path>
+  </svg>
+);
