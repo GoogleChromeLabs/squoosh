@@ -24,28 +24,28 @@ import SlideOnScroll from './SlideOnScroll';
 const demos = [
   {
     description: 'Large photo',
-    size: '2.8MB',
+    size: '2.8mb',
     filename: 'photo.jpg',
     url: largePhoto,
     iconUrl: largePhotoIcon,
   },
   {
     description: 'Artwork',
-    size: '2.9MB',
+    size: '2.9mb',
     filename: 'art.jpg',
     url: artwork,
     iconUrl: artworkIcon,
   },
   {
     description: 'Device screen',
-    size: '1.6MB',
+    size: '1.6mb',
     filename: 'pixel3.png',
     url: deviceScreen,
     iconUrl: deviceScreenIcon,
   },
   {
     description: 'SVG icon',
-    size: '13KB',
+    size: '13k',
     filename: 'squoosh.svg',
     url: logo,
     iconUrl: logoIcon,
