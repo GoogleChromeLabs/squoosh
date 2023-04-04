@@ -119,3 +119,17 @@
     fill: var(--header-text-color);
   }
 }
+
+.paste-from-clipboard-button {
+  padding: 2px;
+  composes: title-button;
+  fill-rule: evenodd;
+  clip-rule: evenodd;
+  stroke-linejoin: round;
+  stroke-miterlimit: 2;
+}
+
+.copy-to-clipboard--button {
+  padding: 2px;
+  composes: title-button;
+}

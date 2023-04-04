@@ -17,7 +17,7 @@ import Toggle from './Toggle';
 import Select from './Select';
 import { Options as QuantOptionsComponent } from 'features/processors/quantize/client';
 import { Options as ResizeOptionsComponent } from 'features/processors/resize/client';
-import { SwapIcon } from 'client/lazy-app/icons';
+import { CopyIcon, PasteIcon, SwapIcon } from 'client/lazy-app/icons';
 
 interface Props {
   index: 0 | 1;
@@ -29,6 +29,8 @@ interface Props {
   onEncoderOptionsChange(index: 0 | 1, newOptions: EncoderOptions): void;
   onProcessorOptionsChange(index: 0 | 1, newOptions: ProcessorState): void;
   onCopyToOtherSideClick(index: 0 | 1): void;
+  onCopyToClipboard(index: 0 | 1): void;
+  onPasteFromClipboard(index: 0 | 1): void;
 }
 
 interface State {
@@ -56,6 +58,9 @@ const supportedEncoderMapP: Promise<PartialButNotUndefined<typeof encoderMap>> =
 
     return supportedEncoderMap;
   })();
+
+const supportsClipboardAPI =
+  !__PRERENDER__ && navigator.clipboard && navigator.clipboard.readText;
 
 export default class Options extends Component<Props, State> {
   state: State = {
@@ -110,6 +115,14 @@ export default class Options extends Component<Props, State> {
     this.props.onCopyToOtherSideClick(this.props.index);
   };
 
+  private onCopyToClipboardClick = () => {
+    this.props.onCopyToClipboard(this.props.index);
+  };
+
+  private onPasteFromClipboardClick = () => {
+    this.props.onPasteFromClipboard(this.props.index);
+  };
+
   render(
     { source, encoderState, processorState }: Props,
     { supportedEncoderMap }: State,
@@ -132,6 +145,23 @@ export default class Options extends Component<Props, State> {
               <h3 class={style.optionsTitle}>
                 <div class={style.titleAndButtons}>
                   Edit
+                  {/* TODO: Check if the buttons should go into the code selection section */}
+                  {supportsClipboardAPI && (
+                    <div>
+                      <button
+                        class={style.copyToClipboardButton}
+                        onClick={this.onCopyToClipboardClick}
+                      >
+                        <CopyIcon />
+                      </button>
+                      <button
+                        class={style.pasteFromClipboardButton}
+                        onClick={this.onPasteFromClipboardClick}
+                      >
+                        <PasteIcon />
+                      </button>
+                    </div>
+                  )}
                   <button
                     class={style.copyOverButton}
                     title="Copy settings to other side"
@@ -204,6 +234,18 @@ export default class Options extends Component<Props, State> {
           )}
         </section>
 
+        <Expander>
+          {EncoderOptionComponent && (
+            <EncoderOptionComponent
+              options={
+                // Casting options, as encoderOptionsComponentMap[encodeData.type] ensures
+                // the correct type, but typescript isn't smart enough.
+                encoderState!.options as any
+              }
+              onChange={this.onEncoderOptionsChange}
+            />
+          )}
+        </Expander>
         <Expander>
           {EncoderOptionComponent && (
             <EncoderOptionComponent

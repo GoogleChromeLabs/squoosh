@@ -402,6 +402,43 @@ export default class Compress extends Component<Props, State> {
     this.queueUpdateImage();
   }
 
+  private onPasteFromClipboard = async (index: 0 | 1) => {
+    const JSONifiedSettings = await navigator.clipboard.readText();
+    const newSettings = JSON.parse(JSONifiedSettings);
+
+    this.setState({
+      sides: cleanSet(this.state.sides, `${index}.latestSettings`, newSettings),
+    });
+
+    this.props.showSnack('Settings updated from clipboard', {
+      timeout: 5000,
+    });
+  };
+
+  private onCopyToClipboard = async (index: 0 | 1) => {
+    const settings = this.state.sides[index];
+
+    try {
+      const JSONifiedSettings = JSON.stringify(settings.encodedSettings);
+
+      await navigator.clipboard.writeText(JSONifiedSettings);
+
+      this.props.showSnack('Settings copied to clipboard', {
+        timeout: 5000,
+      });
+    } catch (e) {
+      if (e instanceof SyntaxError) {
+        this.props.showSnack('Invalid settings in clipboard', {
+          timeout: 2000,
+        });
+      } else {
+        this.props.showSnack('An errror occurred ( check permissions )', {
+          timeout: 5000,
+        });
+      }
+    }
+  };
+
   private onCopyToOtherClick = async (index: 0 | 1) => {
     const otherIndex = index ? 0 : 1;
     const oldSettings = this.state.sides[otherIndex];
@@ -829,6 +866,8 @@ export default class Compress extends Component<Props, State> {
         onEncoderOptionsChange={this.onEncoderOptionsChange}
         onProcessorOptionsChange={this.onProcessorOptionsChange}
         onCopyToOtherSideClick={this.onCopyToOtherClick}
+        onCopyToClipboard={this.onCopyToClipboard}
+        onPasteFromClipboard={this.onPasteFromClipboard}
       />
     ));
 
