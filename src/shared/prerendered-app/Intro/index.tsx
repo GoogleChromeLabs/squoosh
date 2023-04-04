@@ -319,7 +319,7 @@ export default class Intro extends Component<Props, State> {
                     class="unbutton"
                     onClick={(event) => this.onDemoClick(i, event)}
                   >
-                    <div>
+                    <div class={style.demoContainer}>
                       <div class={style.demoIconContainer}>
                         <img
                           class={style.demoIcon}
