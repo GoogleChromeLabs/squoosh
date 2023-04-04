@@ -119,3 +119,20 @@
     fill: var(--header-text-color);
   }
 }
+
+.save-button,
+.import-button {
+  composes: title-button;
+
+  svg {
+    stroke: var(--header-text-color);
+  }
+}
+
+.button-opacity {
+  pointer-events: none;
+  cursor: not-allowed;
+  svg {
+    opacity: 0.5;
+  }
+}
