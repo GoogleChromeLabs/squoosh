@@ -125,7 +125,7 @@
   composes: title-button;
 
   svg {
-    fill: var(--header-text-color);
+    stroke: var(--header-text-color);
   }
 }
 
