@@ -62,7 +62,7 @@ snack-bar {
   position: relative;
   flex: 0 1 auto;
   padding: 8px;
-  height: 36px;
+  height: 100%;
   margin: auto 8px auto -8px;
   min-width: 5em;
   background: none;
@@ -78,6 +78,7 @@ snack-bar {
   overflow: hidden;
   transition: background-color 200ms ease;
   outline: none;
+  text-decoration: none;
 }
 .button:hover {
   background-color: rgba(0, 0, 0, 0.15);
