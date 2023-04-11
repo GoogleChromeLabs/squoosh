@@ -89,8 +89,8 @@ const Index: FunctionalComponent<Props> = () => (
               aria-hidden="false"
             >
               <div class={snackbarStyle.text}>
-                Initialization error: JavaScript is disabled in your browser but
-                it is required for this site to work.
+                Initialization error: This site requires JavaScript, which is
+                disabled in your browser.
               </div>
               <a class={snackbarStyle.button} href="/">
                 reload
