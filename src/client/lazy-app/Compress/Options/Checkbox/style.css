@@ -2,6 +2,26 @@
   display: inline-block;
   position: relative;
   --size: 17px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 200%;
+    height: 200%;
+    background-color: var(--main-theme-color);
+    border-radius: 999px;
+    opacity: 0.25;
+
+    transform: translate(-50%, -50%) scale(0);
+    transition-property: transform;
+    transition-duration: 250ms;
+  }
+
+  &:focus-within::before {
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
 
 .real-checkbox {

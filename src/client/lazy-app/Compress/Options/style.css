@@ -53,6 +53,16 @@
   composes: option-toggle;
   grid-template-columns: auto 1fr;
   gap: 1em;
+
+  border-top: 1px solid #fff4;
+
+  transition-property: background-color;
+  transition-duration: 250ms;
+}
+
+.option-reveal:focus-within,
+.option-reveal:hover {
+  background-color: #fff2;
 }
 
 .option-one-cell {
@@ -73,11 +83,11 @@
 }
 
 .text-field {
-  background: var(--white);
-  color: var(--black);
+  background-color: var(--black);
+  color: var(--white);
   font: inherit;
   border: none;
-  padding: 6px 0 6px 10px;
+  padding: 6px 6px 6px 10px;
   width: 100%;
   box-sizing: border-box;
   border-radius: 4px;
@@ -118,6 +128,11 @@
   svg {
     fill: var(--header-text-color);
   }
+
+  &:focus {
+    outline: var(--header-text-color) solid 2px;
+    outline-offset: 0.25em;
+  }
 }
 
 .save-button,
@@ -126,6 +141,11 @@
 
   svg {
     stroke: var(--header-text-color);
+  }
+
+  &:focus {
+    outline: var(--header-text-color) solid 2px;
+    outline-offset: 0.25em;
   }
 }
 
