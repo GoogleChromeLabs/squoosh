@@ -142,6 +142,11 @@
   svg {
     stroke: var(--header-text-color);
   }
+
+  &:focus {
+    outline: var(--header-text-color) solid 2px;
+    outline-offset: 0.25em;
+  }
 }
 
 .button-opacity {
