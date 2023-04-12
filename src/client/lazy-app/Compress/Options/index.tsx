@@ -197,6 +197,12 @@ export default class Options extends Component<Props, State> {
                     }
                     title="Import saved side settings"
                     onClick={this.onImportSideSettingsClick}
+                    disabled={
+                      // Disabled if this side's settings haven't been saved
+                      (!this.state.leftSideSettings &&
+                        this.props.index === 0) ||
+                      (!this.state.rightSideSettings && this.props.index === 1)
+                    }
                   >
                     <ImportIcon />
                   </button>
