@@ -113,6 +113,13 @@
 
   & > svg {
     width: 47px;
+    overflow: visible;
+  }
+
+  &:focus .back-blob {
+    stroke: var(--deep-blue);
+    stroke-width: 5px;
+    animation: strokePulse 500ms ease forwards;
   }
 
   @media (min-width: 600px) {
@@ -121,6 +128,15 @@
     & > svg {
       width: 58px;
     }
+  }
+}
+
+@keyframes strokePulse {
+  from {
+    stroke-width: 8px;
+  }
+  to {
+    stroke-width: 5px;
   }
 }
 
