@@ -3,6 +3,32 @@
   border-radius: var(--scroller-radius);
   overflow: hidden;
 
+  /* Visualize that the menu is scrollable */
+  background: linear-gradient(var(--off-black) 30%, rgba(255, 255, 255, 0)),
+    linear-gradient(rgba(255, 255, 255, 0), var(--off-black) 70%) 0 100%,
+    radial-gradient(50% 0, farthest-side, var(--light-gray), rgba(0, 0, 0, 0)),
+    radial-gradient(
+        50% 100%,
+        farthest-side,
+        var(--light-gray),
+        rgba(0, 0, 0, 0)
+      )
+      0 100%;
+  background: linear-gradient(var(--off-black) 30%, rgba(255, 255, 255, 0)),
+    linear-gradient(rgba(255, 255, 255, 0), var(--off-black) 70%) 0 100%,
+    radial-gradient(farthest-side at 50% 0, var(--light-gray), rgba(0, 0, 0, 0)),
+    radial-gradient(
+        farthest-side at 50% 100%,
+        var(--light-gray),
+        rgba(0, 0, 0, 0)
+      )
+      0 100%;
+  background-repeat: no-repeat;
+  background-color: var(--off-black);
+  background-size: 100% 40px, 100% 40px, 100% 14px, 100% 14px;
+  /* Opera doesn't support this in the shorthand */
+  background-attachment: local, local, scroll, scroll;
+
   /* At smaller widths, the multi-panel handles the scrolling */
   @media (min-width: 600px) {
     overflow-x: hidden;
@@ -79,7 +105,7 @@
 }
 
 .options-section {
-  background: var(--off-black);
+  /* background: var(--off-black); */
 }
 
 .text-field {
