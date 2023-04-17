@@ -4,7 +4,9 @@ This folder contains a self-contained sub-project for each encoder and decoder t
 
 ## Build
 
-Each subproject can be built using [Docker](https://www.docker.com/) the following commands:
+You need to have [Docker](https://www.docker.com/) and [Node](https://nodejs.org/) (with npm) installed on your system.
+
+Each subproject can be built by going into its folder and running the following commands:
 
 ```
 $ npm install
