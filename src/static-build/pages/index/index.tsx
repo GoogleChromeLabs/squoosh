@@ -66,11 +66,7 @@ const Index: FunctionalComponent<Props> = () => (
       <style
         dangerouslySetInnerHTML={{ __html: escapeStyleScriptContent(baseCss) }}
       />
-      <style
-        dangerouslySetInnerHTML={{
-          __html: escapeStyleScriptContent(initialCss),
-        }}
-      />
+      <link rel="stylesheet" href={initialCss} />
     </head>
     <body>
       <div id="app">
