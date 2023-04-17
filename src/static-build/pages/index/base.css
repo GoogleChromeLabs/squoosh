@@ -43,3 +43,14 @@ body {
   height: 100%;
   overflow: hidden;
 }
+
+noscript div {
+  position: absolute;
+  padding: 1rem;
+  width: 100%;
+  text-align: center;
+  font-weight: bold;
+  font-size: large;
+  background: rgba(255, 0, 0, 0.7);
+  backdrop-filter: contrast(5) blur(20px);
+}
