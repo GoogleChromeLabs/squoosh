@@ -32,6 +32,7 @@ import featurePlugin from './lib/feature-plugin';
 import initialCssPlugin from './lib/initial-css-plugin';
 import serviceWorkerPlugin from './lib/sw-plugin';
 import dataURLPlugin from './lib/data-url-plugin';
+import asTextPlugin from './lib/as-text-plugin';
 import entryDataPlugin, { fileNameToURL } from './lib/entry-data-plugin';
 import dedent from 'dedent';
 
@@ -90,6 +91,7 @@ export default async function ({ watch }) {
       'codecs',
     ]),
     urlPlugin(),
+    asTextPlugin(),
     dataURLPlugin(),
     cssPlugin(),
   ];

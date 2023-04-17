@@ -1,3 +1,11 @@
+/* Just the glyphs needed for the Squoosh logo */
+@font-face {
+  font-family: logofont;
+  font-weight: 700;
+  src: url(data:font/woff;base64,d09GMgABAAAAAASoAA4AAAAACOQAAARUAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGhYbgnYcgXAGYABkEQwKhHiEFgsUAAE2AiQDJAQgBYJaByAbeQfIxId/N/1zb0JJk7qwVQyoSyhM6qJf2zN3wnP5MyX/c6mabKKFAVwk4QDd+3f7Z41FoYvttryoVK6NsWls0wJjfeO38YjNiCJjtHr/1Q8CwAqDCAUBr2QweT2PEoyA1elzSuDRPDnUg8D2odZuRPU0jvQhDaxz5rMh0dmYGFMJs4nu1qE+eGjM/weALmNBwUEBOxTgRXxFMYpg//e8Ci0oLAD5Z/l7jALyz0eIk0p5wwIKMGmoUVDk+I2Voc2UQOpf+V8SHykzsc2YglhhpAxij4qYCCDLLiZGpIxaxGLgdEfA8VXagNHBPOEGN4kdxIwSYCOPFjwtuDxUnqS+IGdGuWtrAgUsQYZRHpDu7Qiw6ukb7cWFrWzAQoFsxEIZPaFS7IAQDQ4cvEx4DjEL+W8XY9w93bi6CVjaTB8XOUO3aIVhv7jXI3UoIVGDVOAYRkFZmv6lSiyebcjPN+BqWJ91Zp43fwUwPxAfFchViYiY6etaTAWH6kKIhE7SgEaAL0DMDnZmf6FCMTrQj0EMY1SW726Rv5Tvki/Jp/KJfCwf5XNoQXWWGi/LsNXQcgvxSnnJ8wFi43KUbaZAdno0JKEudnYudkHOvy6ZysqvkYTtt8jiu2VxJhNZfP99YVuKLLnyTX7rdSy8cT5WkrBgNPL1AkqEuyzOB+WZxXf5LSMoLzmnXHS9/9b7ZNHk7wAjFqQ3hMZy/nbFtQXbNAIRWP4jQ8kUVX7FG8L2Y4VH4/QvOjyltORefuthLJSWBnyUZCKMQBfeEbbfP3h5MvqPEuA12/1Or4a5yB8MYpzmv+DgZ3O9ntK5NjZdTEis7owRG/urcsYir+4JU2+cUdUY36zxbeoo1RsaBsJTkP7a8gPKCq64OCyytqmvKXVZE5mtjskqTmWW8Y3ttF43lZujm57W5+dN63XTObm6qWl9XsDErwGiVhMg/hoY+GugqNEE6n4NxH280sBFFITFZA/oMqby8zKmB3TZMfnqDC5tyrRUm/F7gKhWB4i/Bfj/FiCq1QHi7/643nboYs9I1K/XB/n/4eH+8COPf1aYl6yOya4KiL8ypq8/Qso6O+HoL9pfsL/okJObGJlwoSkkBZds6wfb4pYDYzxCEjIL09ll83QG11IUGgUAAJrLVRQvuOTOlNTbpvzOCcwPZllp+cGK/bUffKT+wRxg/trKyDwPAmVzJTtUmnnR/Ca2bGU0B5hvtjI2u3ZLmoci/IQP0Fz40ipk0Hb402H4k7/hScuRQrJj7rXEg+BR85QaWsDzADqVUNUxBLbRYp0JnCMELkwBnsiOEWgYqDGjYaHCzRoFPPDyyy3gg68goh8DmMQQOtGODoxAhShEIBKx9DgD+tGPdvSgFSrkIAcitEolEz3oIVeRDxy+4lvVSiuGMEbLtUDr97BiNKIPw8hCvzLeYjOefMW4mq5hUSguFWNZnL3D6EQ/+tLPa3ktEYgO08G8O9bbQgkWAA==)
+    format('woff2');
+}
+
 .intro {
   composes: abs-fill from global;
   -webkit-overflow-scrolling: touch;
@@ -35,12 +43,12 @@
 
 .logo-container {
   margin: 5rem 0 1rem;
-}
 
-.logo {
-  transform: translate(-1%, 0);
-  width: 189px;
-  height: auto;
+  & svg {
+    transform: translate(-1%, 0);
+    width: 189px;
+    height: auto;
+  }
 }
 
 .load-img {
