@@ -1,4 +1,8 @@
-import { EncodeOptions, MozJpegColorSpace } from '../shared/meta';
+import {
+  EncodeOptions,
+  MozJpegColorSpace,
+  getParameterDescription,
+} from '../shared/meta';
 import type WorkerBridge from 'client/lazy-app/worker-bridge';
 import { h, Component } from 'preact';
 import {
@@ -106,7 +110,10 @@ export class Options extends Component<Props, State> {
     // gathering the data.
     return (
       <form class={style.optionsSection} onSubmit={preventDefault}>
-        <div class={style.optionOneCell}>
+        <div
+          class={style.optionOneCell}
+          title={getParameterDescription('quality')}
+        >
           <Range
             name="quality"
             min="0"
@@ -127,7 +134,10 @@ export class Options extends Component<Props, State> {
         <Expander>
           {showAdvanced ? (
             <div>
-              <label class={style.optionTextFirst}>
+              <label
+                class={style.optionTextFirst}
+                title={getParameterDescription('color_space')}
+              >
                 Channels:
                 <Select
                   name="color_space"
@@ -142,7 +152,10 @@ export class Options extends Component<Props, State> {
               <Expander>
                 {options.color_space === MozJpegColorSpace.YCbCr ? (
                   <div>
-                    <label class={style.optionToggle}>
+                    <label
+                      class={style.optionToggle}
+                      title={getParameterDescription('auto_subsample')}
+                    >
                       Auto subsample chroma
                       <Checkbox
                         name="auto_subsample"
@@ -152,7 +165,10 @@ export class Options extends Component<Props, State> {
                     </label>
                     <Expander>
                       {options.auto_subsample ? null : (
-                        <div class={style.optionOneCell}>
+                        <div
+                          class={style.optionOneCell}
+                          title={getParameterDescription('chroma_subsample')}
+                        >
                           <Range
                             name="chroma_subsample"
                             min="1"
@@ -165,7 +181,10 @@ export class Options extends Component<Props, State> {
                         </div>
                       )}
                     </Expander>
-                    <label class={style.optionToggle}>
+                    <label
+                      class={style.optionToggle}
+                      title={getParameterDescription('separate_chroma_quality')}
+                    >
                       Separate chroma quality
                       <Checkbox
                         name="separate_chroma_quality"
@@ -175,7 +194,10 @@ export class Options extends Component<Props, State> {
                     </label>
                     <Expander>
                       {options.separate_chroma_quality ? (
-                        <div class={style.optionOneCell}>
+                        <div
+                          class={style.optionOneCell}
+                          title={getParameterDescription('chroma_quality')}
+                        >
                           <Range
                             name="chroma_quality"
                             min="0"
@@ -191,7 +213,10 @@ export class Options extends Component<Props, State> {
                   </div>
                 ) : null}
               </Expander>
-              <label class={style.optionToggle}>
+              <label
+                class={style.optionToggle}
+                title={getParameterDescription('baseline')}
+              >
                 Pointless spec compliance
                 <Checkbox
                   name="baseline"
@@ -201,7 +226,10 @@ export class Options extends Component<Props, State> {
               </label>
               <Expander>
                 {options.baseline ? null : (
-                  <label class={style.optionToggle}>
+                  <label
+                    class={style.optionToggle}
+                    title={getParameterDescription('progressive')}
+                  >
                     Progressive rendering
                     <Checkbox
                       name="progressive"
@@ -213,7 +241,10 @@ export class Options extends Component<Props, State> {
               </Expander>
               <Expander>
                 {options.baseline ? (
-                  <label class={style.optionToggle}>
+                  <label
+                    class={style.optionToggle}
+                    title={getParameterDescription('optimize_coding')}
+                  >
                     Optimize Huffman table
                     <Checkbox
                       name="optimize_coding"
@@ -223,7 +254,10 @@ export class Options extends Component<Props, State> {
                   </label>
                 ) : null}
               </Expander>
-              <div class={style.optionOneCell}>
+              <div
+                class={style.optionOneCell}
+                title={getParameterDescription('smoothing')}
+              >
                 <Range
                   name="smoothing"
                   min="0"
@@ -234,25 +268,87 @@ export class Options extends Component<Props, State> {
                   Smoothing:
                 </Range>
               </div>
-              <label class={style.optionTextFirst}>
+              <label
+                class={style.optionTextFirst}
+                title={getParameterDescription('quant_table')}
+              >
                 Quantization:
                 <Select
                   name="quant_table"
                   value={options.quant_table}
                   onChange={this.onChange}
                 >
-                  <option value="0">JPEG Annex K</option>
-                  <option value="1">Flat</option>
-                  <option value="2">MSSIM-tuned Kodak</option>
-                  <option value="3">ImageMagick</option>
-                  <option value="4">PSNR-HVS-M-tuned Kodak</option>
-                  <option value="5">Klein et al</option>
-                  <option value="6">Watson et al</option>
-                  <option value="7">Ahumada et al</option>
-                  <option value="8">Peterson et al</option>
+                  <option
+                    value="0"
+                    title={
+                      'Standard Quant Tables given in Annex K of the CCITT paper'
+                    }
+                  >
+                    JPEG Annex K
+                  </option>
+                  <option value="1" title={'Flat Quant Tables'}>
+                    Flat
+                  </option>
+                  <option
+                    value="2"
+                    title={
+                      'Tuned for Mean Structural Similarity\nTested on the Kodak Image Set'
+                    }
+                  >
+                    MSSIM-tuned Kodak
+                  </option>
+                  <option
+                    value="3"
+                    title={'Tested on images of buildings (indoor & outdoor)'}
+                  >
+                    ImageMagick
+                  </option>
+                  <option
+                    value="4"
+                    title={
+                      'Tuned for Peak Signal-Noise Ratio\nTested on the Kodak Image Set'
+                    }
+                  >
+                    PSNR-HVS-M-tuned Kodak
+                  </option>
+                  <option
+                    value="5"
+                    title={
+                      'Tables from "Relevance of Human Vision to JPEG-DCT Compression"\n(1992) Klein, Silverstein and Carney'
+                    }
+                  >
+                    Klein et al
+                  </option>
+                  <option
+                    value="6"
+                    title={
+                      'Table from "DCTune Perceptual Optimization of Compressed Dental X-Rays"\n(1997) Watson, Taylor, Borthwick'
+                    }
+                  >
+                    Watson et al
+                  </option>
+                  <option
+                    value="7"
+                    title={
+                      'Table from "A Visual Detection Model for DCT Coefficient Quantization"\n(12/9/93) Ahumada, Watson, Peterson'
+                    }
+                  >
+                    Ahumada et al
+                  </option>
+                  <option
+                    value="8"
+                    title={
+                      'Table from "An Improved Detection Model for DCT Coefficient Quantization"\n(1993) Peterson, Ahumada and Watson'
+                    }
+                  >
+                    Peterson et al
+                  </option>
                 </Select>
               </label>
-              <label class={style.optionToggle}>
+              <label
+                class={style.optionToggle}
+                title={getParameterDescription('trellis_multipass')}
+              >
                 Trellis multipass
                 <Checkbox
                   name="trellis_multipass"
@@ -262,7 +358,10 @@ export class Options extends Component<Props, State> {
               </label>
               <Expander>
                 {options.trellis_multipass ? (
-                  <label class={style.optionToggle}>
+                  <label
+                    class={style.optionToggle}
+                    title={getParameterDescription('trellis_opt_zero')}
+                  >
                     Optimize zero block runs
                     <Checkbox
                       name="trellis_opt_zero"
@@ -272,7 +371,10 @@ export class Options extends Component<Props, State> {
                   </label>
                 ) : null}
               </Expander>
-              <label class={style.optionToggle}>
+              <label
+                class={style.optionToggle}
+                title={getParameterDescription('trellis_opt_table')}
+              >
                 Optimize after trellis quantization
                 <Checkbox
                   name="trellis_opt_table"
@@ -280,7 +382,10 @@ export class Options extends Component<Props, State> {
                   onChange={this.onChange}
                 />
               </label>
-              <div class={style.optionOneCell}>
+              <div
+                class={style.optionOneCell}
+                title={getParameterDescription('trellis_loops')}
+              >
                 <Range
                   name="trellis_loops"
                   min="1"
