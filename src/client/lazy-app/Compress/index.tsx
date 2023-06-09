@@ -32,6 +32,9 @@ import WorkerBridge from '../worker-bridge';
 import { resize } from 'features/processors/resize/client';
 import type SnackBarElement from 'shared/custom-els/snack-bar';
 import { drawableToImageData } from '../util/canvas';
+import Modal, { ModalMessage } from './Modal';
+import ModalContext from './Modal/modal-context';
+import { linkRef } from 'shared/prerendered-app/util';
 
 export type OutputType = EncoderType | 'identity';
 
@@ -323,6 +326,8 @@ export default class Compress extends Component<Props, State> {
   private sideAbortControllers = [new AbortController(), new AbortController()];
   /** For debouncing calls to updateImage for each side. */
   private updateImageTimeout?: number;
+
+  private modal?: Modal;
 
   constructor(props: Props) {
     super(props);
@@ -915,6 +920,12 @@ export default class Compress extends Component<Props, State> {
     });
   }
 
+  private showModal(modalMessage: ModalMessage) {
+    if (!this.modal) return;
+
+    this.modal.showModal(modalMessage);
+  }
+
   render(
     { onBack }: Props,
     { loading, sides, source, mobileView, preprocessorState }: State,
@@ -968,50 +979,55 @@ export default class Compress extends Component<Props, State> {
 
     return (
       <div class={style.compress}>
-        <Output
-          source={source}
-          mobileView={mobileView}
-          leftCompressed={leftImageData}
-          rightCompressed={rightImageData}
-          leftImgContain={leftImgContain}
-          rightImgContain={rightImgContain}
-          preprocessorState={preprocessorState}
-          onPreprocessorChange={this.onPreprocessorChange}
-        />
-        <button class={style.back} onClick={onBack}>
-          <svg viewBox="0 0 61 53.3">
-            <title>Back</title>
-            <path
-              class={style.backBlob}
-              d="M0 25.6c-.5-7.1 4.1-14.5 10-19.1S23.4.1 32.2 0c8.8 0 19 1.6 24.4 8s5.6 17.8 1.7 27a29.7 29.7 0 01-20.5 18c-8.4 1.5-17.3-2.6-24.5-8S.5 32.6.1 25.6z"
-            />
-            <path
-              class={style.backX}
-              d="M41.6 17.1l-2-2.1-8.3 8.2-8.2-8.2-2 2 8.2 8.3-8.3 8.2 2.1 2 8.2-8.1 8.3 8.2 2-2-8.2-8.3z"
-            />
-          </svg>
-        </button>
-        {mobileView ? (
-          <div class={style.options}>
-            <multi-panel class={style.multiPanel} open-one-only>
-              <div class={style.options1Theme}>{results[0]}</div>
-              <div class={style.options1Theme}>{options[0]}</div>
-              <div class={style.options2Theme}>{results[1]}</div>
-              <div class={style.options2Theme}>{options[1]}</div>
-            </multi-panel>
-          </div>
-        ) : (
-          [
-            <div class={style.options1} key="options1">
-              {options[0]}
-              {results[0]}
-            </div>,
-            <div class={style.options2} key="options2">
-              {options[1]}
-              {results[1]}
-            </div>,
-          ]
-        )}
+        <ModalContext.Provider
+          value={(message: ModalMessage) => this.showModal(message)}
+        >
+          <Output
+            source={source}
+            mobileView={mobileView}
+            leftCompressed={leftImageData}
+            rightCompressed={rightImageData}
+            leftImgContain={leftImgContain}
+            rightImgContain={rightImgContain}
+            preprocessorState={preprocessorState}
+            onPreprocessorChange={this.onPreprocessorChange}
+          />
+          <button class={style.back} onClick={onBack}>
+            <svg viewBox="0 0 61 53.3">
+              <title>Back</title>
+              <path
+                class={style.backBlob}
+                d="M0 25.6c-.5-7.1 4.1-14.5 10-19.1S23.4.1 32.2 0c8.8 0 19 1.6 24.4 8s5.6 17.8 1.7 27a29.7 29.7 0 01-20.5 18c-8.4 1.5-17.3-2.6-24.5-8S.5 32.6.1 25.6z"
+              />
+              <path
+                class={style.backX}
+                d="M41.6 17.1l-2-2.1-8.3 8.2-8.2-8.2-2 2 8.2 8.3-8.3 8.2 2.1 2 8.2-8.1 8.3 8.2 2-2-8.2-8.3z"
+              />
+            </svg>
+          </button>
+          {mobileView ? (
+            <div class={style.options}>
+              <multi-panel class={style.multiPanel} open-one-only>
+                <div class={style.options1Theme}>{results[0]}</div>
+                <div class={style.options1Theme}>{options[0]}</div>
+                <div class={style.options2Theme}>{results[1]}</div>
+                <div class={style.options2Theme}>{options[1]}</div>
+              </multi-panel>
+            </div>
+          ) : (
+            [
+              <div class={style.options1} key="options1">
+                {options[0]}
+                {results[0]}
+              </div>,
+              <div class={style.options2} key="options2">
+                {options[1]}
+                {results[1]}
+              </div>,
+            ]
+          )}
+        </ModalContext.Provider>
+        <Modal ref={linkRef(this, 'modal')}></Modal>
       </div>
     );
   }
