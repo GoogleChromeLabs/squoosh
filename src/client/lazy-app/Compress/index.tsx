@@ -32,8 +32,8 @@ import WorkerBridge from '../worker-bridge';
 import { resize } from 'features/processors/resize/client';
 import type SnackBarElement from 'shared/custom-els/snack-bar';
 import { drawableToImageData } from '../util/canvas';
-import Modal, { ModalMessage } from './Modal';
-import ModalContext from './Modal/modal-context';
+import Modal, { ModalMessage } from '../Modal';
+import ModalContext from '../Modal/modal-context';
 import { linkRef } from 'shared/prerendered-app/util';
 
 export type OutputType = EncoderType | 'identity';

@@ -32,7 +32,7 @@
   max-width: 60ch;
   max-height: 70vh;
 
-  border: 4px solid black;
+  box-shadow: 0 0 20px 0 rgba(0, 0, 0, 20%);
 
   display: grid;
   grid-template-rows: auto 1fr auto;
@@ -42,7 +42,8 @@
   border-radius: 10px;
   overflow: hidden;
 
-  background-color: hsl(250deg, 100%, 90%);
+  background-color: var(--off-black);
+  color: var(--light-gray);
 }
 
 @media (max-width: 720px) {
@@ -64,7 +65,7 @@
   max-height: 100%;
   padding: 1em;
 
-  background-color: rgba(0, 0, 0, 6%);
+  background-color: var(--dark-gray);
 }
 
 .header {
@@ -113,8 +114,11 @@
   flex: 0 0 auto;
   height: 1em;
   width: 1em;
-  background-color: rgb(255, 105, 118);
+  background-color: var(--pink);
   border-radius: 5px;
+  outline-color: var(
+    --medium-light-gray
+  ) !important; /* Overwrite default black outline */
 
   path {
     stroke: black;
@@ -141,6 +145,10 @@
 
   padding: 0 1em;
 
+  h1 {
+    color: var(--white);
+  }
+
   img {
     max-width: 100%;
     max-height: 500px;
@@ -154,21 +162,27 @@
 
   a {
     &:link {
-      color: hsl(220, 100%, 50%);
+      color: var(--blue);
     }
     &:visited {
-      color: rgb(255, 0, 103);
+      color: var(--pink);
     }
   }
 
   pre,
   code {
-    background-color: rgba(0, 0, 0, 10%);
+    background-color: var(--black);
     padding: 2px 4px;
     border-radius: 3px;
   }
 
   pre {
     overflow-x: auto;
+    padding: 1rem 2rem;
+  }
+
+  hr {
+    border: none;
+    border-bottom: 1px solid var(--dim-text);
   }
 }
