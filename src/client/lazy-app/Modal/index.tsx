@@ -31,118 +31,107 @@ export default class Modal extends Component<Props, State> {
     shown: false,
   };
 
-  private modal?: HTMLElement;
-  private returnFocusElement?: HTMLElement | null;
+  private modal?: HTMLDialogElement;
 
+  componentDidMount() {
+    // Once a transition ends, check if the modal should be closed (not just hidden)
+    // dialog.close() instantly hides the modal, so we call it AFTER fading it out i.e. on transition end
+    this.modal?.addEventListener(
+      'transitionend',
+      this._closeOnTransitionEnd.bind(this),
+    );
+    this.modal?.setAttribute('inert', 'enabled');
+  }
+
+  private _closeOnTransitionEnd() {
+    // If modal does not exist
+    // Or if it's not being closed at the moment
+    if (!this.modal || !this.modal.classList.contains(style.modalClosing))
+      return;
+
+    this.modal.close();
+    this.modal.classList.remove(style.modalClosing);
+    this.modal.setAttribute('inert', 'enabled');
+  }
+
+  /**
+   * Function to set up the modal and show it
+   */
   showModal(message: ModalMessage) {
-    if (this.state.shown) return;
     if (!this.modal) return;
 
-    // Set element to return focus to after hiding
-    this.returnFocusElement = document.activeElement as HTMLElement;
-
-    this.modal.style.display = '';
     this.setState({
       message: message,
       shown: true,
     });
-    // Wait for the 'display' reset to take place, then focus
-    setTimeout(() => {
-      this.modal?.querySelector('button')?.focus();
-    }, 0);
+
+    // Actually show the modal
+    this.modal.removeAttribute('inert');
+    this.modal.showModal();
   }
 
+  /**
+   * Function to hide the modal with a fade-out transition
+   * Adds the `modal--closing` class which is removed on transition end
+   */
   hideModal() {
+    if (!this.modal || !this.modal.open) return;
+
+    // Make the modal fade out
+    this.modal.classList.add(style.modalClosing);
+
     this.setState({
       message: { ...this.state.message },
       shown: false,
     });
-    setTimeout(() => {
-      this.modal && (this.modal.style.display = 'none');
-      this.returnFocusElement?.focus();
-    }, 250);
-  }
-
-  private _getCloseButton() {
-    return this.modal!.querySelector('button')!;
-  }
-
-  private _getLastFocusable() {
-    const focusables = this.modal!.querySelectorAll('button, a');
-    return focusables[focusables.length - 1] as HTMLElement;
   }
 
   private _onKeyDown(e: KeyboardEvent) {
-    // If Escape, hide modal
+    // Default behaviour of <dialog> closes it instantly when you press Esc
+    // So we hijack it to smoothly hide the modal
     if (e.key === 'Escape' || e.keyCode == 27) {
       this.hideModal();
       e.preventDefault();
       e.stopImmediatePropagation();
-      return;
-    }
-
-    let isTabPressed = e.key === 'Tab' || e.keyCode === 9;
-
-    if (!isTabPressed) return;
-
-    if (e.shiftKey) {
-      // If SHIFT + TAB was pressed on the first focusable element
-      // Move focus to the last focusable element
-      if (document.activeElement === this._getCloseButton()) {
-        this._getLastFocusable().focus();
-        e.preventDefault();
-        e.stopImmediatePropagation();
-      }
-    } else {
-      // If TAB was pressed on the last focusable element
-      // Move focus to the first focusable element
-      if (document.activeElement === this._getLastFocusable()) {
-        this._getCloseButton().focus();
-        e.preventDefault();
-        e.stopImmediatePropagation();
-      }
     }
   }
 
   render({}: Props, { message, shown }: State) {
     return (
-      <div
-        class={`${style.modalOverlay} ${shown && style.modalShown}`}
+      <dialog
+        ref={linkRef(this, 'modal')}
         onKeyDown={(e) => this._onKeyDown(e)}
-        tabIndex={shown ? 0 : -1}
       >
-        <div class={style.modal} ref={linkRef(this, 'modal')}>
-          <header class={style.header}>
-            <span class={style.modalTypeIcon}>
-              {message.type === 'info' ? (
-                <InfoIcon />
-              ) : message.type === 'error' ? (
-                <ModalErrorIcon />
-              ) : (
-                <DiamondStarIcon />
-              )}
-            </span>
-            <span class={style.modalTitle}>{message.title}</span>
-            <button class={style.closeButton} onClick={() => this.hideModal()}>
-              <svg viewBox="0 0 480 480" fill="currentColor">
-                <path
-                  d="M119.356 120L361 361M360.644 120L119 361"
-                  stroke="#fff"
-                  stroke-width="37"
-                  stroke-linecap="round"
-                />
-              </svg>
-            </button>
-          </header>
-          <div class={style.contentContainer}>
-            <article
-              class={style.content}
-              dangerouslySetInnerHTML={{ __html: message.content }}
-            ></article>
-          </div>
-          <footer class={style.footer}></footer>
+        <header class={style.header}>
+          <span class={style.modalTypeIcon}>
+            {message.type === 'info' ? (
+              <InfoIcon />
+            ) : message.type === 'error' ? (
+              <ModalErrorIcon />
+            ) : (
+              <DiamondStarIcon />
+            )}
+          </span>
+          <span class={style.modalTitle}>{message.title}</span>
+          <button class={style.closeButton} onClick={() => this.hideModal()}>
+            <svg viewBox="0 0 480 480" fill="currentColor">
+              <path
+                d="M119.356 120L361 361M360.644 120L119 361"
+                stroke="#fff"
+                stroke-width="37"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+        </header>
+        <div class={style.contentContainer}>
+          <article
+            class={style.content}
+            dangerouslySetInnerHTML={{ __html: message.content }}
+          ></article>
         </div>
-      </div>
+        <footer class={style.footer}></footer>
+      </dialog>
     );
   }
 }
