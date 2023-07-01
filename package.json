@@ -18,7 +18,7 @@
     "@surma/rollup-plugin-off-main-thread": "^2.2.2",
     "@types/dedent": "^0.7.0",
     "@types/mime-types": "^2.1.1",
-    "@types/node": "^16.11.1",
+    "@types/node": "^16.18.38",
     "@web/rollup-plugin-import-meta-assets": "^1.0.6",
     "comlink": "^4.3.0",
     "cssnano": "^4.1.10",
@@ -45,9 +45,9 @@
     "rollup": "^2.38.0",
     "rollup-plugin-terser": "^7.0.2",
     "serve": "^11.3.2",
-    "typescript": "^4.4.4",
-    "which": "^2.0.2",
-    "wasm-feature-detect": "^1.2.11"
+    "typescript": "^4.8.3",
+    "wasm-feature-detect": "^1.2.11",
+    "which": "^2.0.2"
   },
   "lint-staged": {
     "*.{js,css,json,md,ts,tsx}": "prettier --write",
