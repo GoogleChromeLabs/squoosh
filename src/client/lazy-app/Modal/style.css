@@ -107,7 +107,7 @@ dialog.modal--closing {
   white-space: nowrap;
 }
 
-.modal-type-icon {
+.modal-icon {
   display: flex;
   justify-content: center;
   align-items: center;

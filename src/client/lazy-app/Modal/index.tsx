@@ -1,19 +1,14 @@
-import { h, Component } from 'preact';
+import { h, Component, VNode, Fragment } from 'preact';
 import * as style from './style.css';
 import 'add-css:./style.css';
 import { linkRef } from 'shared/prerendered-app/util';
-import {
-  InfoIcon,
-  DiamondStarIcon,
-  ModalErrorIcon,
-} from 'client/lazy-app/icons';
 
 interface Props {}
 
 export interface ModalMessage {
-  type: 'info' | 'error' | 'update';
+  icon: VNode;
   title: string;
-  content: string;
+  content: VNode;
 }
 
 interface State {
@@ -24,9 +19,9 @@ interface State {
 export default class Modal extends Component<Props, State> {
   state: State = {
     message: {
-      type: 'info',
+      icon: <svg></svg>,
       title: 'default',
-      content: 'default',
+      content: <Fragment></Fragment>,
     },
     shown: false,
   };
@@ -103,15 +98,7 @@ export default class Modal extends Component<Props, State> {
         onKeyDown={(e) => this._onKeyDown(e)}
       >
         <header class={style.header}>
-          <span class={style.modalTypeIcon}>
-            {message.type === 'info' ? (
-              <InfoIcon />
-            ) : message.type === 'error' ? (
-              <ModalErrorIcon />
-            ) : (
-              <DiamondStarIcon />
-            )}
-          </span>
+          <span class={style.modalIcon}>{message.icon}</span>
           <span class={style.modalTitle}>{message.title}</span>
           <button class={style.closeButton} onClick={() => this.hideModal()}>
             <svg viewBox="0 0 480 480" fill="currentColor">
@@ -125,10 +112,7 @@ export default class Modal extends Component<Props, State> {
           </button>
         </header>
         <div class={style.contentContainer}>
-          <article
-            class={style.content}
-            dangerouslySetInnerHTML={{ __html: message.content }}
-          ></article>
+          <article class={style.content}>{message.content}</article>
         </div>
         <footer class={style.footer}></footer>
       </dialog>
