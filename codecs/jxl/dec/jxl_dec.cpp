@@ -77,7 +77,11 @@ val decode(std::string data) {
   auto float_pixels = std::make_unique<float[]>(component_count);
   EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderSetImageOutBuffer(dec.get(), &format, float_pixels.get(),
                                                          component_count * sizeof(float)));
-  EXPECT_EQ(JXL_DEC_FULL_IMAGE, JxlDecoderProcessInput(dec.get()));
+
+  if (JXL_DEC_FULL_IMAGE != JxlDecoderProcessInput(dec.get())) {
+    // partial image
+    EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderFlushImage(dec.get()));
+  }
 
   auto byte_pixels = std::make_unique<uint8_t[]>(component_count);
   // Convert to sRGB.
