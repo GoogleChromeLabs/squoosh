@@ -71,11 +71,14 @@ interface State {
   mobileView: boolean;
   preprocessorState: PreprocessorState;
   encodedPreprocessorState?: PreprocessorState;
+  progressivePercent?: number;
+  renderedPercent?: number;
 }
 
 interface MainJob {
   file: File;
   preprocessorState: PreprocessorState;
+  progressivePercent: number;
 }
 
 interface SideJob {
@@ -534,6 +537,10 @@ export default class Compress extends Component<Props, State> {
     }
   };
 
+  private onProgressiveChange = async (percent: number): Promise<void> => {
+    this.setState({ progressivePercent: percent });
+  };
+
   private onPreprocessorChange = async (
     preprocessorState: PreprocessorState,
   ): Promise<void> => {
@@ -603,6 +610,7 @@ export default class Compress extends Component<Props, State> {
     const latestMainJobState: Partial<MainJob> = this.activeMainJob || {
       file: currentState.source && currentState.source.file,
       preprocessorState: currentState.encodedPreprocessorState,
+      progressivePercent: currentState.progressivePercent,
     };
     const latestSideJobStates: Partial<SideJob>[] = currentState.sides.map(
       (side, i) =>
@@ -618,6 +626,7 @@ export default class Compress extends Component<Props, State> {
     const mainJobState: MainJob = {
       file: this.sourceFile,
       preprocessorState: currentState.preprocessorState,
+      progressivePercent: currentState.progressivePercent || 1.0,
     };
     const sideJobStates: SideJob[] = currentState.sides.map((side) => ({
       // If there isn't an encoder selected, we don't process either
@@ -628,7 +637,19 @@ export default class Compress extends Component<Props, State> {
     }));
 
     // Figure out what needs doing:
-    const needsDecoding = latestMainJobState.file != mainJobState.file;
+    const needsDecoding =
+      latestMainJobState.file != mainJobState.file ||
+      latestMainJobState.progressivePercent != currentState.renderedPercent;
+    console.log(
+      'needs decoding? ' +
+        needsDecoding +
+        ' ' +
+        latestMainJobState.progressivePercent +
+        ' ' +
+        mainJobState.progressivePercent +
+        ' ' +
+        currentState.renderedPercent,
+    );
     const needsPreprocessing =
       needsDecoding ||
       latestMainJobState.preprocessorState !== mainJobState.preprocessorState;
@@ -693,6 +714,16 @@ export default class Compress extends Component<Props, State> {
           vectorImage = await processSvg(mainSignal, mainJobState.file);
           decoded = drawableToImageData(vectorImage);
         } else {
+          let slice = mainJobState.progressivePercent
+            ? Math.ceil(
+                mainJobState.file.size * mainJobState.progressivePercent,
+              )
+            : mainJobState.file.size;
+
+          this.setState({ renderedPercent: mainJobState.progressivePercent });
+
+          console.log(`Decode ${mainJobState.file.name}`);
+
           decoded = await decodeImage(
             mainSignal,
             mainJobState.file,
@@ -978,6 +1009,7 @@ export default class Compress extends Component<Props, State> {
           rightImgContain={rightImgContain}
           preprocessorState={preprocessorState}
           onPreprocessorChange={this.onPreprocessorChange}
+          onProgressiveChange={this.onProgressiveChange}
         />
         <button class={style.back} onClick={onBack}>
           <svg viewBox="0 0 61 53.3">

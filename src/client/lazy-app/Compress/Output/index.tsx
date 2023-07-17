@@ -30,6 +30,7 @@ interface Props {
   leftImgContain: boolean;
   rightImgContain: boolean;
   onPreprocessorChange: (newState: PreprocessorState) => void;
+  onProgressiveChange: (newState: number) => void;
 }
 
 interface State {
@@ -220,6 +221,7 @@ export default class Output extends Component<Props, State> {
     if (isNaN(percent)) return;
     console.log('set progressive to ' + percent / 100);
     this.setState({ progressive: percent / 100 });
+    this.props.onProgressiveChange(percent / 100);
   };
 
   private onPinchZoomLeftChange = (event: Event) => {
