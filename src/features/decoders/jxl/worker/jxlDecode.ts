@@ -22,7 +22,7 @@ export default async function decode(blob: Blob): Promise<ImageData> {
 
   const [module, data] = await Promise.all([
     emscriptenModule,
-    blobToArrayBuffer(blob.slice(0, 400000)),
+    blobToArrayBuffer(blob),
   ]);
 
   const result = module.decode(data);
