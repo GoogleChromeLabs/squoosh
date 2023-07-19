@@ -539,6 +539,31 @@ export default class Compress extends Component<Props, State> {
 
   private onProgressiveChange = async (percent: number): Promise<void> => {
     this.setState({ progressivePercent: percent });
+
+    // right side hardcoded for now
+    let sideIndex = 1;
+    const sideSignals = this.sideAbortControllers.map((ac) => ac.signal);
+    const currentSide = this.state.sides[sideIndex];
+
+    if (currentSide.file === undefined) {
+      return;
+    }
+
+    // Note browser-native decodeImage() might be less willing to decode partial data
+    let data = await decodeImage(
+      sideSignals[1],
+      currentSide.file.slice(0, currentSide.file.size * percent),
+      this.workerBridges[0],
+    );
+
+    this.setState((currentState) => {
+      const side: Side = {
+        ...currentSide,
+        data,
+      };
+      const sides = cleanSet(currentState.sides, sideIndex, side);
+      return { sides };
+    });
   };
 
   private onPreprocessorChange = async (
@@ -637,19 +662,7 @@ export default class Compress extends Component<Props, State> {
     }));
 
     // Figure out what needs doing:
-    const needsDecoding =
-      latestMainJobState.file != mainJobState.file ||
-      latestMainJobState.progressivePercent != currentState.renderedPercent;
-    console.log(
-      'needs decoding? ' +
-        needsDecoding +
-        ' ' +
-        latestMainJobState.progressivePercent +
-        ' ' +
-        mainJobState.progressivePercent +
-        ' ' +
-        currentState.renderedPercent,
-    );
+    const needsDecoding = latestMainJobState.file != mainJobState.file;
     const needsPreprocessing =
       needsDecoding ||
       latestMainJobState.preprocessorState !== mainJobState.preprocessorState;
@@ -714,16 +727,6 @@ export default class Compress extends Component<Props, State> {
           vectorImage = await processSvg(mainSignal, mainJobState.file);
           decoded = drawableToImageData(vectorImage);
         } else {
-          let slice = mainJobState.progressivePercent
-            ? Math.ceil(
-                mainJobState.file.size * mainJobState.progressivePercent,
-              )
-            : mainJobState.file.size;
-
-          this.setState({ renderedPercent: mainJobState.progressivePercent });
-
-          console.log(`Decode ${mainJobState.file.name}`);
-
           decoded = await decodeImage(
             mainSignal,
             mainJobState.file,
