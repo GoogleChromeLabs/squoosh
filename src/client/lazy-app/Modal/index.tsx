@@ -56,11 +56,14 @@ export default class Modal extends Component<Props, State> {
       { duration: 250, easing: 'ease' },
     );
     // animate modal::backdrop
-    animateTo(this.dialogElement, [{ opacity: 0 }, { opacity: 1 }], {
-      duration: 250,
-      easing: 'linear',
-      pseudoElement: '::backdrop',
-    });
+    // some browsers don't support ::backdrop, catch those errors
+    try {
+      animateTo(this.dialogElement, [{ opacity: 0 }, { opacity: 1 }], {
+        duration: 250,
+        easing: 'linear',
+        pseudoElement: '::backdrop',
+      });
+    } catch (e) {}
     this.setState({ shown: true });
   }
 
@@ -75,11 +78,14 @@ export default class Modal extends Component<Props, State> {
       { duration: 250, easing: 'ease' },
     );
     // animate modal::backdrop
-    animateTo(this.dialogElement, [{ opacity: 0 }], {
-      duration: 250,
-      easing: 'linear',
-      pseudoElement: '::backdrop',
-    });
+    // some browsers don't support ::backdrop, catch those errors
+    try {
+      animateTo(this.dialogElement, [{ opacity: 0 }], {
+        duration: 250,
+        easing: 'linear',
+        pseudoElement: '::backdrop',
+      });
+    } catch (e) {}
     anim.onfinish = this._closeOnTransitionEnd;
   }
 

@@ -19,8 +19,10 @@ export function animateTo(
 ) {
   const anim = element.animate(to, { ...options, fill: 'both' });
   anim.addEventListener('finish', () => {
-    if (!('pseudoElement' in options && options['pseudoElement']))
+    // pseudo-elements don't support inline styles at the moment, catch those errors
+    try {
       anim.commitStyles();
+    } catch (e) {}
     anim.cancel();
   });
   return anim;
