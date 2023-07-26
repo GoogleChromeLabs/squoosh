@@ -12,6 +12,20 @@
  */
 import { drawableToImageData } from './canvas';
 
+export function animateTo(
+  element: HTMLElement,
+  to: Keyframe[] | PropertyIndexedKeyframes,
+  options: KeyframeAnimationOptions,
+) {
+  const anim = element.animate(to, { ...options, fill: 'both' });
+  anim.addEventListener('finish', () => {
+    if (!('pseudoElement' in options && options['pseudoElement']))
+      anim.commitStyles();
+    anim.cancel();
+  });
+  return anim;
+}
+
 /** If render engine is Safari */
 export const isSafari =
   /Safari\//.test(navigator.userAgent) &&
