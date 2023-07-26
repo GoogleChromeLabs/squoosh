@@ -1,0 +1,31 @@
+span.modal-hint {
+  display: inline-block;
+  vertical-align: bottom;
+}
+
+.modal-button {
+  composes: unbutton from global;
+
+  color: inherit;
+
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  border-radius: 2px;
+}
+
+.modal-button:hover {
+  text-decoration: underline solid 1px currentColor;
+  text-underline-offset: 0.1em;
+}
+
+.modal-button:focus {
+  outline: white solid 1px;
+  outline-offset: 0.25em;
+}
+
+.modal-button > svg {
+  width: 1em;
+  height: 1em;
+}
