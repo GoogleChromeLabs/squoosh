@@ -1,6 +1,6 @@
 import { EncodeOptions, MozJpegColorSpace } from '../shared/meta';
 import type WorkerBridge from 'client/lazy-app/worker-bridge';
-import { h, Component } from 'preact';
+import { h, Component, Fragment } from 'preact';
 import {
   inputFieldChecked,
   inputFieldValueAsNumber,
@@ -13,6 +13,8 @@ import Checkbox from 'client/lazy-app/Compress/Options/Checkbox';
 import Expander from 'client/lazy-app/Compress/Options/Expander';
 import Select from 'client/lazy-app/Compress/Options/Select';
 import Revealer from 'client/lazy-app/Compress/Options/Revealer';
+import ModalHint from 'client/lazy-app/Modal/ModalHint';
+import * as linkImage from 'img-url:static-build/assets/link.jpg';
 
 export function encode(
   signal: AbortSignal,
@@ -21,6 +23,53 @@ export function encode(
   options: EncodeOptions,
 ) {
   return workerBridge.mozjpegEncode(signal, imageData, options);
+}
+
+function sampleContent() {
+  return (
+    <Fragment>
+      <h1>Test Suite (h1)</h1>
+      <p>
+        Let's say, hypothetically, this <span>paragraph</span> links to{' '}
+        <ModalHint modalTitle={'Nested'} content={<h1>WASSUP</h1>}>
+          Trellis Multipass
+        </ModalHint>
+        . Lorem ipsum dolor sit amet consectetur adipisicing elit. Quaerat ad
+        maiores iure suscipit numquam voluptate.
+      </p>
+      <p>
+        This is <i>another</i> paragraph. Notice how <b>another</b> uses
+        italics. Oh wait, I just used the &lt;b&gt; tag. Oh, and escaped HTML
+        unicode thingies. Now I'm just rambling so that this is long enough to
+        be multi-line, and you can see the line-height.
+      </p>
+      <hr />
+      <pre>
+        # Which is the best programming language?
+        <br />
+        print("Python is!")
+        <br />
+        Oh and this is all in &lt;pre&gt;
+      </pre>
+      <p>
+        <strong>This text is strong</strong>. And <code>this</code> is in
+        &lt;code&gt;.
+      </p>
+      <figure>
+        <img src={linkImage.default} alt="Alt Text" />
+        <figcaption>
+          Source: Nintendo EDP / Nintendo (and this is a figcaption)
+        </figcaption>
+      </figure>
+      <p>
+        That's a link.{' '}
+        <a href="https://www.zelda.com/tears-of-the-kingdom/">
+          This is also a link
+        </a>
+        .
+      </p>
+    </Fragment>
+  );
 }
 
 interface Props {
@@ -114,7 +163,9 @@ export class Options extends Component<Props, State> {
             value={options.quality}
             onInput={this.onChange}
           >
-            Quality:
+            <ModalHint modalTitle="mozJPEG - quality" content={sampleContent()}>
+              Quality:
+            </ModalHint>
           </Range>
         </div>
         <label class={style.optionReveal}>
