@@ -32,7 +32,6 @@ import WorkerBridge from '../worker-bridge';
 import { resize } from 'features/processors/resize/client';
 import type SnackBarElement from 'shared/custom-els/snack-bar';
 import { drawableToImageData } from '../util/canvas';
-import Modal from '../Modal';
 
 export type OutputType = EncoderType | 'identity';
 
@@ -1013,7 +1012,6 @@ export default class Compress extends Component<Props, State> {
             </div>,
           ]
         )}
-        <Modal></Modal>
       </div>
     );
   }

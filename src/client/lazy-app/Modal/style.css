@@ -3,13 +3,14 @@ dialog {
   width: 70vw;
   max-width: 60ch;
   max-height: 70vh;
+  cursor: auto;
 
   box-shadow: 0 0 20px 0 rgba(0, 0, 0, 20%);
 
   display: grid;
   grid-template-rows: auto 1fr auto;
 
-  font-size: 1.5em;
+  font-size: 1.5rem;
   color: var(--light-gray);
 
   border: none;
@@ -22,7 +23,7 @@ dialog {
   transform: translateY(50px);
   transition: 250ms ease;
 
-  /* backdrop can't be transitioned easily, so we must   */
+  /* ::backdrop is created when dialog is opened, so animating it needs trickery */
 
   &::backdrop {
     background-color: rgba(0, 0, 0, 30%);
@@ -61,13 +62,13 @@ dialog.modal--closing {
   dialog {
     width: 90%;
     max-width: none;
-    font-size: 1.25em;
+    font-size: 1.25rem;
   }
 }
 
 @media (max-width: 480px) {
   dialog {
-    font-size: 1em;
+    font-size: 1rem;
   }
 }
 
@@ -128,6 +129,7 @@ dialog.modal--closing {
   width: 1em;
   background-color: var(--pink);
   border-radius: 5px;
+  display: grid;
   outline-color: var(
     --medium-light-gray
   ) !important; /* Overwrite default black outline */
