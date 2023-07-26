@@ -17,45 +17,14 @@ dialog {
   border-radius: 10px;
   overflow: hidden;
 
+  opacity: 0;
   background-color: var(--off-black);
 
-  opacity: 0;
-  transform: translateY(50px);
-  transition: 250ms ease;
-
-  /* ::backdrop is created when dialog is opened, so animating it needs trickery */
+  /* Note: dialog and ::backdrop are animated using the Animations API in the component file */
 
   &::backdrop {
     background-color: rgba(0, 0, 0, 30%);
   }
-
-  &[open]::backdrop {
-    animation: backdrop-fade-in 250ms linear;
-
-    @keyframes backdrop-fade-in {
-      from {
-        opacity: 0;
-      }
-      to {
-        opacity: 1;
-      }
-    }
-  }
-
-  &.modal--closing::backdrop {
-    transition: opacity 250ms linear;
-    opacity: 0;
-  }
-}
-
-dialog[open] {
-  opacity: 1;
-  transform: translateY(0px);
-}
-
-dialog.modal--closing {
-  opacity: 0;
-  transform: translateY(50px);
 }
 
 @media (max-width: 720px) {

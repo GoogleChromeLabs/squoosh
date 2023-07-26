@@ -3,6 +3,7 @@ import * as style from './style.css';
 import 'add-css:./style.css';
 import { linkRef } from 'shared/prerendered-app/util';
 import { cleanSet } from '../util/clean-modify';
+import { animateTo } from '../util';
 
 interface Props {
   icon: VNode;
@@ -19,12 +20,8 @@ export default class Modal extends Component<Props, State> {
 
   componentDidMount() {
     if (!this.dialogElement) throw new Error('Modal missing');
-    // Once a transition ends, check if the modal should be closed (not just hidden)
-    // dialog.close() instantly hides the modal, so we call it AFTER fading it out i.e. on transition end
-    this.dialogElement.addEventListener('transitionend', (event) => {
-      event.stopPropagation();
-      this._closeOnTransitionEnd();
-    });
+
+    // Set inert by default
     this.dialogElement.inert = true;
 
     // Prevent events from leaking through the dialog
@@ -36,16 +33,10 @@ export default class Modal extends Component<Props, State> {
 
   private _closeOnTransitionEnd = () => {
     // If modal does not exist
-    // Or if it's not being closed at the moment
-    if (
-      !this.dialogElement ||
-      !this.dialogElement.classList.contains(style.modalClosing)
-    )
-      return;
+    if (!this.dialogElement) return;
 
     this.dialogElement.close();
-    this.dialogElement.classList.remove(style.modalClosing);
-    this.dialogElement.setAttribute('inert', 'enabled');
+    this.dialogElement.inert = true;
     this.setState({ shown: false });
   };
 
@@ -55,6 +46,21 @@ export default class Modal extends Component<Props, State> {
 
     this.dialogElement.inert = false;
     this.dialogElement.showModal();
+    // animate modal opening
+    animateTo(
+      this.dialogElement,
+      [
+        { opacity: 0, transform: 'translateY(50px)' },
+        { opacity: 1, transform: 'translateY(0px)' },
+      ],
+      { duration: 250, easing: 'ease' },
+    );
+    // animate modal::backdrop
+    animateTo(this.dialogElement, [{ opacity: 0 }, { opacity: 1 }], {
+      duration: 250,
+      easing: 'linear',
+      pseudoElement: '::backdrop',
+    });
     this.setState({ shown: true });
   }
 
@@ -62,8 +68,19 @@ export default class Modal extends Component<Props, State> {
     if (!this.dialogElement || !this.dialogElement.open)
       throw Error('Modal missing / hidden');
 
-    // Make the modal fade out
-    this.dialogElement.classList.add(style.modalClosing);
+    // animate modal closing
+    const anim = animateTo(
+      this.dialogElement,
+      { opacity: 0, transform: 'translateY(50px)' },
+      { duration: 250, easing: 'ease' },
+    );
+    // animate modal::backdrop
+    animateTo(this.dialogElement, [{ opacity: 0 }], {
+      duration: 250,
+      easing: 'linear',
+      pseudoElement: '::backdrop',
+    });
+    anim.onfinish = this._closeOnTransitionEnd;
   }
 
   private _onKeyDown(e: KeyboardEvent) {
