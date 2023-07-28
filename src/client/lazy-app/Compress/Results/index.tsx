@@ -58,6 +58,18 @@ export default class Results extends Component<Props, State> {
     });
   };
 
+  private onDragStart = (e: DragEvent) => {
+    if (!e.dataTransfer) {
+      return;
+    }
+    const { imageFile, downloadUrl } = this.props;
+    const name = imageFile ? imageFile.name : '';
+    const type = imageFile ? imageFile.type : '';
+    e.dataTransfer.clearData();
+    e.dataTransfer.setData('DownloadURL', [type, name, downloadUrl].join(':'));
+    this.onDownload();
+  };
+
   render(
     { source, imageFile, downloadUrl, flipSide, typeLabel }: Props,
     { showLoadingState }: State,
@@ -125,6 +137,7 @@ export default class Results extends Component<Props, State> {
           download={imageFile ? imageFile.name : ''}
           title="Download"
           onClick={this.onDownload}
+          onDragStart={this.onDragStart}
         >
           <svg class={style.downloadBlobs} viewBox="0 0 89.6 86.9">
             <title>Download</title>
