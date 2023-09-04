@@ -2,9 +2,9 @@
 #include <emscripten/val.h>
 
 #include "lib/jxl/base/thread_pool_internal.h"
+#include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/enc_external_image.h"
 #include "lib/jxl/enc_file.h"
-#include "lib/jxl/enc_color_management.h"
 
 using namespace emscripten;
 
@@ -22,6 +22,7 @@ struct JXLOptions {
 };
 
 val encode(std::string image, int width, int height, JXLOptions options) {
+  printf("encoding start\n");
   jxl::CompressParams cparams;
   jxl::PassesEncoderState passes_enc_state;
   jxl::CodecInOut io;
@@ -55,13 +56,13 @@ val encode(std::string image, int width, int height, JXLOptions options) {
   if (options.lossyModular || quality == 100) {
     cparams.modular_mode = true;
     // Internal modular quality to roughly match VarDCT size.
-    if (quality < 7) {
-      cparams.quality_pair.first = cparams.quality_pair.second =
-          std::min(35 + (quality - 7) * 3.0f, 100.0f);
-    } else {
-      cparams.quality_pair.first = cparams.quality_pair.second =
-          std::min(35 + (quality - 7) * 65.f / 93.f, 100.0f);
-    }
+    // if (quality < 7) {
+    //   cparams.quality_pair.first = cparams.quality_pair.second =
+    //       std::min(35 + (quality - 7) * 3.0f, 100.0f);
+    // } else {
+    //   cparams.quality_pair.first = cparams.quality_pair.second =
+    //       std::min(35 + (quality - 7) * 65.f / 93.f, 100.0f);
+    // }
   } else {
     cparams.modular_mode = false;
     if (quality >= 30) {
@@ -80,7 +81,7 @@ val encode(std::string image, int width, int height, JXLOptions options) {
   }
 
   if (cparams.modular_mode) {
-    if (cparams.quality_pair.first != 100 || cparams.quality_pair.second != 100) {
+    if (!cparams.IsLossless()) {
       cparams.color_transform = jxl::ColorTransform::kXYB;
     } else {
       cparams.color_transform = jxl::ColorTransform::kNone;
@@ -96,19 +97,24 @@ val encode(std::string image, int width, int height, JXLOptions options) {
 
   auto result = jxl::ConvertFromExternal(
       jxl::Span<const uint8_t>(reinterpret_cast<const uint8_t*>(image.data()), image.size()), width,
-      height, jxl::ColorEncoding::SRGB(/*is_gray=*/false), /*has_alpha=*/true,
-      /*alpha_is_premultiplied=*/false, /*bits_per_sample=*/8, /*endiannes=*/JXL_LITTLE_ENDIAN,
-      /*flipped_y=*/false, pool_ptr, main, /*(only true if bits_per_sample==32) float_in=*/false);
+      height, jxl::ColorEncoding::SRGB(/*is_gray=*/false), 4, /*alpha_is_premultiplied=*/false,
+      /*bits_per_sample=*/8, /*endiannes=*/JXL_LITTLE_ENDIAN, pool_ptr, main,
+      /*(only true if bits_per_sample==32) float_in=*/false, 0);
 
   if (!result) {
     return val::null();
   }
 
   auto js_result = val::null();
-  if (EncodeFile(cparams, &io, &passes_enc_state, &bytes, jxl::GetJxlCms(), /*aux=*/nullptr, pool_ptr)) {
-    js_result = Uint8Array.new_(typed_memory_view(bytes.size(), bytes.data()));
+  if (EncodeFile(cparams, &io, &passes_enc_state, &bytes, jxl::GetJxlCms(), /*aux=*/nullptr,
+                 pool_ptr)) {
+    printf("Number of bytes: %zu\n", bytes.size());  // works
+    auto g = typed_memory_view(bytes.size(), bytes.data());
+    printf("Number of bytes 2: %zu\n", bytes.size());  // works
+    js_result = Uint8Array.new_(g);
   }
 
+  printf("encode end\n");
   return js_result;
 }
 

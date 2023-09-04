@@ -1,5 +1,5 @@
 CODEC_URL = https://github.com/libjxl/libjxl.git
-CODEC_VERSION = 9f544641ec83f6abd9da598bdd08178ee8a003e0
+CODEC_VERSION = f95da131cf7c7ccd4da256356fde2fec1fa23bb5
 CODEC_DIR = node_modules/jxl
 CODEC_BUILD_ROOT := $(CODEC_DIR)/build
 CODEC_MT_BUILD_DIR := $(CODEC_BUILD_ROOT)/mt
@@ -33,7 +33,7 @@ enc/jxl_enc_mt_simd.js: $(CODEC_MT_SIMD_BUILD_DIR)/lib/libjxl.a $(CODEC_MT_SIMD_
 export CXXFLAGS += -Wno-deprecated-declarations
 
 # Compile multithreaded wrappers with -pthread.
-enc/jxl_enc_mt.js enc/jxl_enc_mt_simd.js: CXXFLAGS+=-pthread
+enc/jxl_enc_mt.js enc/jxl_enc_mt_simd.js dec/jxl_dec.js: CXXFLAGS+=-pthread
 
 $(OUT_JS):
 	$(CXX) \
