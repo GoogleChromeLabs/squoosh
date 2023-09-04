@@ -32,6 +32,7 @@ export CXXFLAGS += -Wno-deprecated-declarations
 
 # Compile multithreaded wrappers with -pthread.
 enc/jxl_enc_mt.js enc/jxl_enc_mt_simd.js: CXXFLAGS+=-pthread
+# dec/jxl_dec.js: CXXFLAGS+=-pthread
 
 $(OUT_JS):
 	$(CXX) \
