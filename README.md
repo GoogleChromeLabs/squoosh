@@ -31,6 +31,26 @@ To develop for Squoosh:
    npm run dev
    ```
 
+# Codecs
+
+1. AVIF
+   - [libavif - v0.11.1+](https://github.com/AOMediaCodec/libavif/commit/647c3c208cf152395d777c1bf7240d2ecf7df5a9)
+   - [AOM Library - v3.6.0](https://aomedia.googlesource.com/aom/+/refs/tags/v3.6.0)
+1. Browser JPEG
+   - Uses your browser's native JPEG capabilities
+1. Browser PNG
+   - Uses your browser's native PNG capabilities
+1. JPEGXL
+   - [libjxl - v0.6.1+](https://github.com/libjxl/libjxl/commit/9f544641ec83f6abd9da598bdd08178ee8a003e0)
+1. MozJPEG
+   - [mozjpeg - v3.3.1](https://github.com/mozilla/mozjpeg/releases/v3.3.1)
+1. OxiPNG
+   - [oxipng - v3.0.0](https://github.com/shssoichiro/oxipng/releases/v3.0.0)
+1. WebP
+   - [webmproject/libwebp - v1.1.0+](https://github.com/webmproject/libwebp/commit/d2e245ea9e959a5a79e1db0ed2085206947e98f2)
+1. WebP v2 (experimental)
+   - [chromium/libwebp2 - Jan 7, 2021](https://chromium.googlesource.com/codecs/libwebp2/+/413df7caeca5013fa9a51401660f7efd8572e0ae)
+
 # Contributing
 
 Squoosh is an open-source project that appreciates all community involvement. To contribute to the project, follow the [contribute guide](/CONTRIBUTING.md).
