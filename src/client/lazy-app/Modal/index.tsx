@@ -60,7 +60,7 @@ export default class Modal extends Component<Props, State> {
     try {
       animateTo(this.dialogElement, [{ opacity: 0 }, { opacity: 1 }], {
         duration: 250,
-        easing: 'linear',
+        easing: 'ease',
         pseudoElement: '::backdrop',
       });
     } catch (e) {}
@@ -82,7 +82,7 @@ export default class Modal extends Component<Props, State> {
     try {
       animateTo(this.dialogElement, [{ opacity: 0 }], {
         duration: 250,
-        easing: 'linear',
+        easing: 'ease',
         pseudoElement: '::backdrop',
       });
     } catch (e) {}
