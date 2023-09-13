@@ -99,9 +99,11 @@ dialog {
   background-color: var(--pink);
   border-radius: 5px;
   display: grid;
-  outline-color: var(
-    --medium-light-gray
-  ) !important; /* Overwrite default black outline */
+  outline-color: var(--medium-light-gray);
+
+  &:focus {
+    outline: var(--medium-light-gray); /* Overwrite default black outline */
+  }
 
   path {
     stroke: black;
