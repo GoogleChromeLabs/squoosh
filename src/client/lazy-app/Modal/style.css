@@ -1,4 +1,4 @@
-dialog {
+.modal-dialog {
   padding: 0;
   width: 70vw;
   max-width: 60ch;
@@ -6,9 +6,6 @@ dialog {
   cursor: auto;
 
   box-shadow: 0 0 20px 0 rgba(0, 0, 0, 20%);
-
-  display: grid;
-  grid-template-rows: auto 1fr auto;
 
   font-size: 1.5rem;
   color: var(--light-gray);
@@ -28,7 +25,7 @@ dialog {
 }
 
 @media (max-width: 720px) {
-  dialog {
+  .modal-dialog {
     width: 90%;
     max-width: none;
     font-size: 1.25rem;
@@ -36,9 +33,14 @@ dialog {
 }
 
 @media (max-width: 480px) {
-  dialog {
+  .modal-dialog {
     font-size: 1rem;
   }
+}
+
+.article {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
 }
 
 .header,

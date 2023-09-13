@@ -29,7 +29,15 @@ export default class ModalHint extends Component<Props, State> {
 
   render({ modalTitle, content }: Props) {
     return (
-      <span class={style.modalHint}>
+      <span
+        class={style.modalHint}
+        onClick={(event) => {
+          // When the button is clicked, the event starts bubbling up
+          // which might cause unexpected behaviour
+          event.preventDefault();
+          event.stopImmediatePropagation();
+        }}
+      >
         <button
           class={style.modalButton}
           onClick={this.onclick}

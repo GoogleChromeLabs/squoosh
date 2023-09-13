@@ -11,24 +11,13 @@ interface Props {
   content: VNode;
 }
 
-interface State {
-  shown: boolean;
-}
+interface State {}
 
 export default class Modal extends Component<Props, State> {
   private dialogElement?: HTMLDialogElement;
 
   componentDidMount() {
     if (!this.dialogElement) throw new Error('Modal missing');
-
-    // Set inert by default
-    this.dialogElement.inert = true;
-
-    // Prevent events from leaking through the dialog
-    this.dialogElement.onclick = (event) => {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-    };
   }
 
   private _closeOnTransitionEnd = () => {
@@ -36,15 +25,12 @@ export default class Modal extends Component<Props, State> {
     if (!this.dialogElement) return;
 
     this.dialogElement.close();
-    this.dialogElement.inert = true;
-    this.setState({ shown: false });
   };
 
   showModal() {
-    if (!this.dialogElement || this.dialogElement.open)
-      throw Error('Modal missing / already shown');
+    if (!this.dialogElement) throw Error('Modal missing');
+    if (this.dialogElement.open) return;
 
-    this.dialogElement.inert = false;
     this.dialogElement.showModal();
     // animate modal opening
     animateTo(
@@ -64,12 +50,11 @@ export default class Modal extends Component<Props, State> {
         pseudoElement: '::backdrop',
       });
     } catch (e) {}
-    this.setState({ shown: true });
   }
 
   private _hideModal() {
-    if (!this.dialogElement || !this.dialogElement.open)
-      throw Error('Modal missing / hidden');
+    if (!this.dialogElement) throw Error('Modal missing / hidden');
+    if (!this.dialogElement.open) return;
 
     // animate modal closing
     const anim = animateTo(
@@ -89,47 +74,48 @@ export default class Modal extends Component<Props, State> {
     anim.onfinish = this._closeOnTransitionEnd;
   }
 
-  private _onKeyDown(e: KeyboardEvent) {
+  private _onKeyDown = (event: KeyboardEvent) => {
     // Default behaviour of <dialog> closes it instantly when you press Esc
     // So we hijack it to smoothly hide the modal
-    if (e.key === 'Escape') {
+    if (event.key === 'Escape') {
       this._hideModal();
-      e.preventDefault();
-      e.stopImmediatePropagation();
+      event.preventDefault();
+      event.stopImmediatePropagation();
     }
-  }
+  };
 
-  render({ title, icon, content }: Props, { shown }: State) {
+  render({ title, icon, content }: Props, {}: State) {
     return (
       <dialog
+        class={style['modalDialog']}
         ref={linkRef(this, 'dialogElement')}
-        onKeyDown={(e) => this._onKeyDown(e)}
+        onKeyDown={this._onKeyDown}
+        onClick={(event) => {
+          // Prevent clicks from leaking out of the dialog
+          event.preventDefault();
+          event.stopImmediatePropagation();
+        }}
       >
-        {shown && (
-          <Fragment>
-            <header class={style.header}>
-              <span class={style.modalIcon}>{icon}</span>
-              <span class={style.modalTitle}>{title}</span>
-              <button
-                class={style.closeButton}
-                onClick={() => this._hideModal()}
-              >
-                <svg viewBox="0 0 480 480" fill="currentColor">
-                  <path
-                    d="M119.356 120L361 361M360.644 120L119 361"
-                    stroke="#fff"
-                    stroke-width="37"
-                    stroke-linecap="round"
-                  />
-                </svg>
-              </button>
-            </header>
-            <div class={style.contentContainer}>
-              <article class={style.content}>{content}</article>
-            </div>
-            <footer class={style.footer}></footer>
-          </Fragment>
-        )}
+        <article class={style.article}>
+          <header class={style.header}>
+            <span class={style.modalIcon}>{icon}</span>
+            <span class={style.modalTitle}>{title}</span>
+            <button class={style.closeButton} onClick={() => this._hideModal()}>
+              <svg viewBox="0 0 480 480" fill="currentColor">
+                <path
+                  d="M119.356 120L361 361M360.644 120L119 361"
+                  stroke="#fff"
+                  stroke-width="37"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </button>
+          </header>
+          <div class={style.contentContainer}>
+            <article class={style.content}>{content}</article>
+          </div>
+          <footer class={style.footer}></footer>
+        </article>
       </dialog>
     );
   }
