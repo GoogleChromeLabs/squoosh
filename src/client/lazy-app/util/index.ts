@@ -28,6 +28,17 @@ export function animateTo(
   return anim;
 }
 
+export function animateFrom(
+  element: HTMLElement,
+  from: PropertyIndexedKeyframes,
+  options: KeyframeAnimationOptions,
+) {
+  return element.animate(
+    { ...from, offset: 0 },
+    { ...options, fill: 'backwards' },
+  );
+}
+
 /** If render engine is Safari */
 export const isSafari =
   /Safari\//.test(navigator.userAgent) &&

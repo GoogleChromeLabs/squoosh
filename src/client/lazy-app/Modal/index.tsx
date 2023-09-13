@@ -3,7 +3,7 @@ import * as style from './style.css';
 import 'add-css:./style.css';
 import { linkRef } from 'shared/prerendered-app/util';
 import { cleanSet } from '../util/clean-modify';
-import { animateTo } from '../util';
+import { animateFrom, animateTo } from '../util';
 import { RoundedCrossIcon } from '../icons';
 
 interface Props {
@@ -45,11 +45,15 @@ export default class Modal extends Component<Props, State> {
     // animate modal::backdrop
     // some browsers don't support ::backdrop, catch those errors
     try {
-      animateTo(this.dialogElement, [{ opacity: 0 }, { opacity: 1 }], {
-        duration: 250,
-        easing: 'ease',
-        pseudoElement: '::backdrop',
-      });
+      animateFrom(
+        this.dialogElement,
+        { opacity: 0 },
+        {
+          duration: 250,
+          easing: 'ease',
+          pseudoElement: '::backdrop',
+        },
+      );
     } catch (e) {}
   }
 
