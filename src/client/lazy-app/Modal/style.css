@@ -110,12 +110,10 @@
   }
 
   /* Don't show focus ring on mobile */
-  @media (min-width: 720px) {
-    &:focus {
-      outline-width: 2px;
-      outline-style: solid;
-      outline-offset: 2px;
-    }
+  &:focus-visible {
+    outline-width: 2px;
+    outline-style: solid;
+    outline-offset: 2px;
   }
 }
 

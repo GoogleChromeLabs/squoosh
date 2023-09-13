@@ -8,7 +8,6 @@ import 'add-css:./style.css';
 
 interface Props {
   modalTitle: string;
-  content: VNode;
   text?: string;
 }
 
@@ -27,7 +26,7 @@ export default class ModalHint extends Component<Props, State> {
     this.modalComponent.showModal();
   };
 
-  render({ modalTitle, content }: Props) {
+  render({ modalTitle, text }: Props) {
     return (
       <span
         class={style.modalHint}
@@ -44,13 +43,13 @@ export default class ModalHint extends Component<Props, State> {
           title="Learn more"
         >
           <InfoIcon></InfoIcon>
-          {this.props.children}
+          {text}
         </button>
         <Modal
           ref={linkRef(this, 'modalComponent')}
           icon={<InfoIcon></InfoIcon>}
           title={modalTitle}
-          content={content}
+          content={this.props.children as any}
         ></Modal>
       </span>
     );
