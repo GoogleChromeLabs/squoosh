@@ -31,8 +31,8 @@ function sampleContent() {
       <h1>Test Suite (h1)</h1>
       <p>
         Let's say, hypothetically, this <span>paragraph</span> links to{' '}
-        <ModalHint modalTitle={'Nested'} content={<h1>WASSUP</h1>}>
-          Trellis Multipass
+        <ModalHint modalTitle="Nested" text="Trellis Multipass">
+          <h1>WASSUP</h1>
         </ModalHint>
         . Lorem ipsum dolor sit amet consectetur adipisicing elit. Quaerat ad
         maiores iure suscipit numquam voluptate.
@@ -163,8 +163,8 @@ export class Options extends Component<Props, State> {
             value={options.quality}
             onInput={this.onChange}
           >
-            <ModalHint modalTitle="mozJPEG - quality" content={sampleContent()}>
-              Quality:
+            <ModalHint modalTitle="mozJPEG - quality" text="Quality:">
+              {sampleContent()}
             </ModalHint>
           </Range>
         </div>
@@ -194,7 +194,12 @@ export class Options extends Component<Props, State> {
                 {options.color_space === MozJpegColorSpace.YCbCr ? (
                   <div>
                     <label class={style.optionToggle}>
-                      Auto subsample chroma
+                      <ModalHint
+                        modalTitle={'Nested'}
+                        text={'Auto subsample chroma'}
+                      >
+                        {<h1>WASSUP</h1>}
+                      </ModalHint>
                       <Checkbox
                         name="auto_subsample"
                         checked={options.auto_subsample}
