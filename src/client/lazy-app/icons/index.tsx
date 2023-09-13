@@ -1,4 +1,4 @@
-import { h } from 'preact';
+import preact, { h } from 'preact';
 
 const Icon = (props: preact.JSX.HTMLAttributes) => (
   // @ts-ignore - TS bug https://github.com/microsoft/TypeScript/issues/16019
@@ -11,9 +11,24 @@ const Icon = (props: preact.JSX.HTMLAttributes) => (
   />
 );
 
+/* Cross with rounded linecaps */
+export const RoundedCrossIcon = (props: preact.JSX.HTMLAttributes) => (
+  <svg viewBox="0 0 480 480" fill="currentColor">
+    <path
+      d="M119.356 120L361 361M360.644 120L119 361"
+      stroke="currentColor"
+      stroke-width="37"
+      stroke-linecap="round"
+    />
+  </svg>
+);
+
 export const InfoIcon = (props: preact.JSX.HTMLAttributes) => (
   <svg viewBox="0 0 512 512" fill="currentColor">
-    <path fill-rule="evenodd" d="M64 0C29 0 0 29 0 64v384c0 35 29 64 64 64h384c35 0 64-29 64-64V64c0-35-29-64-64-64H64Zm234 377 3-3c4-5 6-9 4-16-2-8-11-11-19-9-10 4-27 15-27 15l13-64 4-15c6-25 14-53-4-72-15-16-34-12-51 4l-24 25-3 4c-4 5-6 9-4 16s11 11 18 8c11-3 28-14 28-14l-12 56-1 1c-3 12-20 73-1 94 15 16 35 12 51-4l25-26Zm-72-240a43 43 0 1 0 87-8 43 43 0 0 0-87 8Z"/>
+    <path
+      fill-rule="evenodd"
+      d="M64 0C29 0 0 29 0 64v384c0 35 29 64 64 64h384c35 0 64-29 64-64V64c0-35-29-64-64-64H64Zm234 377 3-3c4-5 6-9 4-16-2-8-11-11-19-9-10 4-27 15-27 15l13-64 4-15c6-25 14-53-4-72-15-16-34-12-51 4l-24 25-3 4c-4 5-6 9-4 16s11 11 18 8c11-3 28-14 28-14l-12 56-1 1c-3 12-20 73-1 94 15 16 35 12 51-4l25-26Zm-72-240a43 43 0 1 0 87-8 43 43 0 0 0-87 8Z"
+    />
   </svg>
 );
 
@@ -28,7 +43,7 @@ export const ModalErrorIcon = (props: preact.JSX.HTMLAttributes) => (
 
 export const DiamondStarIcon = (props: preact.JSX.HTMLAttributes) => (
   <svg viewBox="0 0 48 48" fill="currentColor">
-    <path d="M24 48c0-12-12-24-24-24 12 0 24-12 24-24 0 12 12 24 24 24a25.8 25.8 0 0 0-24 24Z"/>
+    <path d="M24 48c0-12-12-24-24-24 12 0 24-12 24-24 0 12 12 24 24 24a25.8 25.8 0 0 0-24 24Z" />
   </svg>
 );
 

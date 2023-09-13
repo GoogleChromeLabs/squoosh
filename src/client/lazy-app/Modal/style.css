@@ -103,12 +103,10 @@
   display: grid;
   outline-color: var(--medium-light-gray);
 
+  color: black; /* Influences currentColor of the icon */
+
   &:focus {
     outline: var(--medium-light-gray); /* Overwrite default black outline */
-  }
-
-  path {
-    stroke: black;
   }
 
   /* Don't show focus ring on mobile */

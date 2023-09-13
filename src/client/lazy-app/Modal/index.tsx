@@ -4,6 +4,7 @@ import 'add-css:./style.css';
 import { linkRef } from 'shared/prerendered-app/util';
 import { cleanSet } from '../util/clean-modify';
 import { animateTo } from '../util';
+import { RoundedCrossIcon } from '../icons';
 
 interface Props {
   icon: VNode;
@@ -101,14 +102,7 @@ export default class Modal extends Component<Props, State> {
             <span class={style.modalIcon}>{icon}</span>
             <span class={style.modalTitle}>{title}</span>
             <button class={style.closeButton} onClick={() => this._hideModal()}>
-              <svg viewBox="0 0 480 480" fill="currentColor">
-                <path
-                  d="M119.356 120L361 361M360.644 120L119 361"
-                  stroke="#fff"
-                  stroke-width="37"
-                  stroke-linecap="round"
-                />
-              </svg>
+              <RoundedCrossIcon></RoundedCrossIcon>
             </button>
           </header>
           <div class={style.contentContainer}>
