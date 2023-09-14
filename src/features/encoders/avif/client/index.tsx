@@ -40,8 +40,15 @@ interface State {
   tune: AVIFTune;
 }
 
-const maxQuant = 63;
-const maxSpeed = 10;
+/**
+ * AVIF quality ranges from 0 (worst) to 100 (lossless).
+ * Since lossless is a separate checkbox, we cap user-inputted quality at 99
+ *
+ * AVIF speed ranges from 0 (slowest) to 10 (fastest).
+ * We display it as 'effort' to the user since it conveys the speed-size tradeoff
+ * much better: speed = 10 - effort
+ */
+const MAX_EFFORT = 10;
 
 export class Options extends Component<Props, State> {
   static getDerivedStateFromProps(
@@ -67,18 +74,18 @@ export class Options extends Component<Props, State> {
     return {
       options,
       lossless,
-      quality: maxQuant - cqLevel,
+      quality: cqLevel,
       separateAlpha,
-      alphaQuality:
-        maxQuant -
-        (separateAlpha ? options.cqAlphaLevel : defaultOptions.cqLevel),
+      alphaQuality: separateAlpha
+        ? options.cqAlphaLevel
+        : defaultOptions.cqLevel,
       subsample:
         options.subsample === 0 || lossless
           ? defaultOptions.subsample
           : options.subsample,
       tileRows: options.tileRowsLog2,
       tileCols: options.tileColsLog2,
-      effort: maxSpeed - options.speed,
+      effort: MAX_EFFORT - options.speed,
       chromaDeltaQ: options.chromaDeltaQ,
       sharpness: options.sharpness,
       denoiseLevel: options.denoiseLevel,
@@ -120,16 +127,16 @@ export class Options extends Component<Props, State> {
         };
 
         const newOptions: EncodeOptions = {
-          cqLevel: optionState.lossless ? 0 : maxQuant - optionState.quality,
+          cqLevel: optionState.lossless ? 100 : optionState.quality,
           cqAlphaLevel:
             optionState.lossless || !optionState.separateAlpha
               ? -1
-              : maxQuant - optionState.alphaQuality,
+              : optionState.alphaQuality,
           // Always set to 4:4:4 if lossless
           subsample: optionState.lossless ? 3 : optionState.subsample,
           tileColsLog2: optionState.tileCols,
           tileRowsLog2: optionState.tileRows,
-          speed: maxSpeed - optionState.effort,
+          speed: MAX_EFFORT - optionState.effort,
           chromaDeltaQ: optionState.chromaDeltaQ,
           sharpness: optionState.sharpness,
           denoiseLevel: optionState.denoiseLevel,
@@ -183,7 +190,7 @@ export class Options extends Component<Props, State> {
             <div class={style.optionOneCell}>
               <Range
                 min="0"
-                max="63"
+                max="99"
                 value={quality}
                 onInput={this._inputChange('quality', 'number')}
               >
@@ -228,7 +235,7 @@ export class Options extends Component<Props, State> {
                         <div class={style.optionOneCell}>
                           <Range
                             min="0"
-                            max="63"
+                            max="99"
                             value={alphaQuality}
                             onInput={this._inputChange(
                               'alphaQuality',

@@ -6,9 +6,9 @@
 using namespace emscripten;
 
 struct AvifOptions {
-  // [0 - 63]
-  // 0 = lossless
-  // 63 = worst quality
+  // [0 - 100]
+  // 0 = worst quality
+  // 100 = lossless
   int cqLevel;
   // As above, but -1 means 'use cqLevel'
   int cqAlphaLevel;
@@ -81,23 +81,16 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
   avifEncoder* encoder = avifEncoderCreate();
 
   if (lossless) {
-    encoder->minQuantizer = AVIF_QUANTIZER_LOSSLESS;
-    encoder->maxQuantizer = AVIF_QUANTIZER_LOSSLESS;
-    encoder->minQuantizerAlpha = AVIF_QUANTIZER_LOSSLESS;
-    encoder->maxQuantizerAlpha = AVIF_QUANTIZER_LOSSLESS;
+    encoder->quality = AVIF_QUALITY_LOSSLESS;
+    encoder->qualityAlpha = AVIF_QUALITY_LOSSLESS;
   } else {
-    encoder->minQuantizer = AVIF_QUANTIZER_BEST_QUALITY;
-    encoder->maxQuantizer = AVIF_QUANTIZER_WORST_QUALITY;
-    encoder->minQuantizerAlpha = AVIF_QUANTIZER_BEST_QUALITY;
-    encoder->maxQuantizerAlpha = AVIF_QUANTIZER_WORST_QUALITY;
     avifEncoderSetCodecSpecificOption(encoder, "end-usage", "q");
-    avifEncoderSetCodecSpecificOption(encoder, "cq-level", std::to_string(options.cqLevel).c_str());
     avifEncoderSetCodecSpecificOption(encoder, "sharpness",
                                       std::to_string(options.sharpness).c_str());
 
+    encoder->quality = options.cqLevel;
     if (options.cqAlphaLevel != -1) {
-      avifEncoderSetCodecSpecificOption(encoder, "alpha:cq-level",
-                                        std::to_string(options.cqAlphaLevel).c_str());
+      encoder->qualityAlpha = options.cqAlphaLevel;
     }
 
     if (options.tune == 2 || (options.tune == 0 && options.cqLevel <= 32)) {
