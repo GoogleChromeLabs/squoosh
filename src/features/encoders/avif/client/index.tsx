@@ -48,6 +48,7 @@ interface State {
  * We display it as 'effort' to the user since it conveys the speed-size tradeoff
  * much better: speed = 10 - effort
  */
+const MAX_QUALITY = 100;
 const MAX_EFFORT = 10;
 
 export class Options extends Component<Props, State> {
@@ -127,10 +128,10 @@ export class Options extends Component<Props, State> {
         };
 
         const newOptions: EncodeOptions = {
-          cqLevel: optionState.lossless ? 100 : optionState.quality,
+          cqLevel: optionState.lossless ? MAX_QUALITY : optionState.quality,
           cqAlphaLevel:
             optionState.lossless || !optionState.separateAlpha
-              ? -1
+              ? -1 // default AVIF alphaLevel
               : optionState.alphaQuality,
           // Always set to 4:4:4 if lossless
           subsample: optionState.lossless ? 3 : optionState.subsample,
@@ -190,7 +191,7 @@ export class Options extends Component<Props, State> {
             <div class={style.optionOneCell}>
               <Range
                 min="0"
-                max="99"
+                max={MAX_QUALITY - 1} // MAX_QUALITY would mean lossless
                 value={quality}
                 onInput={this._inputChange('quality', 'number')}
               >
@@ -314,7 +315,7 @@ export class Options extends Component<Props, State> {
         <div class={style.optionOneCell}>
           <Range
             min="0"
-            max="10"
+            max={MAX_EFFORT}
             value={effort}
             onInput={this._inputChange('effort', 'number')}
           >
