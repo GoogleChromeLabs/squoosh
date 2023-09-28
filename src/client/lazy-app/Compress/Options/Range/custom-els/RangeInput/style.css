@@ -47,6 +47,10 @@ range-input::before {
   height: 12px;
 }
 
+range-input:focus-within .thumb {
+  outline: white solid 2px;
+}
+
 .thumb-wrapper {
   position: absolute;
   left: 6px;

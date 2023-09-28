@@ -11,6 +11,10 @@
   padding: 3px calc(var(--thumb-size) / 2 + 3px);
 }
 
+.checkbox:focus-within .track {
+  outline: white solid 2px;
+}
+
 .thumb {
   position: relative;
   width: var(--thumb-size);

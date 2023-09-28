@@ -19,6 +19,8 @@ import favicon from 'url:static-build/assets/favicon.ico';
 import ogImage from 'url:static-build/assets/icon-large-maskable.png';
 import { escapeStyleScriptContent, siteOrigin } from 'static-build/utils';
 import Intro from 'shared/prerendered-app/Intro';
+import snackbarCss from 'css:../../../shared/custom-els/snack-bar/styles.css';
+import * as snackbarStyle from '../../../shared/custom-els/snack-bar/styles.css';
 
 interface Props {}
 
@@ -73,6 +75,29 @@ const Index: FunctionalComponent<Props> = () => (
     <body>
       <div id="app">
         <Intro />
+        <noscript>
+          <style
+            dangerouslySetInnerHTML={{
+              __html: escapeStyleScriptContent(snackbarCss),
+            }}
+          />
+          <snack-bar>
+            <div
+              class={snackbarStyle.snackbar}
+              aria-live="assertive"
+              aria-atomic="true"
+              aria-hidden="false"
+            >
+              <div class={snackbarStyle.text}>
+                Initialization error: This site requires JavaScript, which is
+                disabled in your browser.
+              </div>
+              <a class={snackbarStyle.button} href="/">
+                reload
+              </a>
+            </div>
+          </snack-bar>
+        </noscript>
       </div>
       <script
         dangerouslySetInnerHTML={{
