@@ -1,9 +1,9 @@
-# libavif and libaom versions are from
-# google3/third_party/libavif/METADATA
-CODEC_URL = https://github.com/AOMediaCodec/libavif/archive/d1c26facaf5a8a97919ceee06814d05d10e25622.tar.gz
+# using libavif from https://github.com/AOMediaCodec/libavif
+CODEC_URL = https://github.com/AOMediaCodec/libavif/archive/refs/tags/v1.0.1.tar.gz
 CODEC_PACKAGE = node_modules/libavif.tar.gz
 
-LIBAOM_URL = https://aomedia.googlesource.com/aom/+archive/v3.6.0.tar.gz
+# using libaom from https://aomedia.googlesource.com/aom
+LIBAOM_URL = https://aomedia.googlesource.com/aom/+archive/v3.7.0.tar.gz
 LIBAOM_PACKAGE = node_modules/libaom.tar.gz
 
 export CODEC_DIR = node_modules/libavif
