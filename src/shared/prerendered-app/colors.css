@@ -18,3 +18,14 @@ html {
   /* Old stuff: */
   --button-fg: rgb(95, 180, 228);
 }
+
+@media (dynamic-range: high) {
+  @supports (color: oklch(0% 0 0)) {
+    html {
+      --pink: oklch(75% 0.3 3);
+      --hot-pink: oklch(65% 0.3 3);
+      --blue: oklch(75% 0.3 248);
+      --deep-blue: oklch(65% 0.3 248);
+    }
+  }
+}
