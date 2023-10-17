@@ -16,9 +16,9 @@ struct AvifOptions {
   // [0 - 100]
   // 0 = worst quality
   // 100 = lossless
-  int cqLevel;
-  // As above, but -1 means 'use cqLevel'
-  int cqAlphaLevel;
+  int quality;
+  // As above, but -1 means 'use quality'
+  int qualityAlpha;
   // [0 - 6]
   // Creates 2^n tiles in that dimension
   int tileRowsLog2;
@@ -67,8 +67,8 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
       break;
   }
 
-  bool lossless = options.cqLevel == AVIF_QUANTIZER_LOSSLESS &&
-                  options.cqAlphaLevel <= AVIF_QUANTIZER_LOSSLESS &&
+  bool lossless = options.quality == AVIF_QUANTIZER_LOSSLESS &&
+                  options.qualityAlpha <= AVIF_QUANTIZER_LOSSLESS &&
                   format == AVIF_PIXEL_FORMAT_YUV444;
 
   avifImage* image = avifImageCreate(width, height, depth, format);
@@ -100,12 +100,12 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
                                                std::to_string(options.sharpness).c_str());
     RETURN_NULL_IF_NOT_EQUALS(status, AVIF_RESULT_OK);
 
-    encoder->quality = options.cqLevel;
-    if (options.cqAlphaLevel != -1) {
-      encoder->qualityAlpha = options.cqAlphaLevel;
+    encoder->quality = options.quality;
+    if (options.qualityAlpha != -1) {
+      encoder->qualityAlpha = options.qualityAlpha;
     }
 
-    if (options.tune == 2 || (options.tune == 0 && options.cqLevel <= 32)) {
+    if (options.tune == 2 || (options.tune == 0 && options.quality <= 32)) {
       status = avifEncoderSetCodecSpecificOption(encoder, "tune", "ssim");
       RETURN_NULL_IF_NOT_EQUALS(status, AVIF_RESULT_OK);
     }
@@ -139,8 +139,8 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
 
 EMSCRIPTEN_BINDINGS(my_module) {
   value_object<AvifOptions>("AvifOptions")
-      .field("cqLevel", &AvifOptions::cqLevel)
-      .field("cqAlphaLevel", &AvifOptions::cqAlphaLevel)
+      .field("quality", &AvifOptions::quality)
+      .field("qualityAlpha", &AvifOptions::qualityAlpha)
       .field("tileRowsLog2", &AvifOptions::tileRowsLog2)
       .field("tileColsLog2", &AvifOptions::tileColsLog2)
       .field("speed", &AvifOptions::speed)

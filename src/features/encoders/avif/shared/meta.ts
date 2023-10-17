@@ -18,8 +18,8 @@ export const label = 'AVIF';
 export const mimeType = 'image/avif';
 export const extension = 'avif';
 export const defaultOptions: EncodeOptions = {
-  cqLevel: 50,
-  cqAlphaLevel: -1,
+  quality: 50,
+  qualityAlpha: -1,
   denoiseLevel: 0,
   tileColsLog2: 0,
   tileRowsLog2: 0,

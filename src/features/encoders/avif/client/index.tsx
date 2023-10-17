@@ -63,23 +63,23 @@ export class Options extends Component<Props, State> {
     const { options } = props;
 
     const lossless =
-      options.cqLevel === 0 &&
-      options.cqAlphaLevel <= 0 &&
+      options.quality === 0 &&
+      options.qualityAlpha <= 0 &&
       options.subsample == 3;
 
-    const separateAlpha = options.cqAlphaLevel !== -1;
+    const separateAlpha = options.qualityAlpha !== -1;
 
-    const cqLevel = lossless ? defaultOptions.cqLevel : options.cqLevel;
+    const quality = lossless ? defaultOptions.quality : options.quality;
 
     // Create default form state from options
     return {
       options,
       lossless,
-      quality: cqLevel,
+      quality: quality,
       separateAlpha,
       alphaQuality: separateAlpha
-        ? options.cqAlphaLevel
-        : defaultOptions.cqLevel,
+        ? options.qualityAlpha
+        : defaultOptions.quality,
       subsample:
         options.subsample === 0 || lossless
           ? defaultOptions.subsample
@@ -128,8 +128,8 @@ export class Options extends Component<Props, State> {
         };
 
         const newOptions: EncodeOptions = {
-          cqLevel: optionState.lossless ? MAX_QUALITY : optionState.quality,
-          cqAlphaLevel:
+          quality: optionState.lossless ? MAX_QUALITY : optionState.quality,
+          qualityAlpha:
             optionState.lossless || !optionState.separateAlpha
               ? -1 // default AVIF alphaLevel
               : optionState.alphaQuality,
