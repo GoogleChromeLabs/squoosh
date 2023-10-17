@@ -10,12 +10,16 @@ thread_local const val Uint8ClampedArray = val::global("Uint8ClampedArray");
 thread_local const val ImageData = val::global("ImageData");
 
 val decode(std::string qoiimage) {
-  val result = val::null();
+  qoi_desc desc;
+  uint8_t* rgba = (uint8_t*)qoi_decode(qoiimage.c_str(), qoiimage.length(), &desc, 4);
 
-  const int N = 1000;
-  int data[N] = {0};
+  // Resultant width and height stored in descriptor
+  int decodedWidth = desc.width;
+  int decodedHeight = desc.height;
 
-  result = ImageData.new_(Uint8ClampedArray.new_(typed_memory_view(N, data)), 20, 50);
+  val result = ImageData.new_(
+      Uint8ClampedArray.new_(typed_memory_view(4 * decodedWidth * decodedHeight, rgba)),
+      decodedWidth, decodedHeight);
 
   return result;
 }

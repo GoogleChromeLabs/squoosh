@@ -16,7 +16,4 @@ export { EncodeOptions };
 export const label = 'QOI';
 export const mimeType = 'image/qoi';
 export const extension = 'qoi';
-export const defaultOptions: EncodeOptions = {
-  quality: 75,
-  randombool: true,
-};
+export const defaultOptions: EncodeOptions = {};

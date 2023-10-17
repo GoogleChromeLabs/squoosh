@@ -1,7 +1,4 @@
-export interface EncodeOptions {
-    quality: number;
-    randombool: boolean;
-}
+export interface EncodeOptions {}
 
 export interface QoiModule extends EmscriptenWasm.Module {
     encode(

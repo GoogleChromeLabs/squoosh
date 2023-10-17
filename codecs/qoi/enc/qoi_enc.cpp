@@ -6,32 +6,29 @@
 
 using namespace emscripten;
 
-struct QoiOptions {
-  int quality;
-  bool randombool;
-};
+struct QoiOptions {};
 
 thread_local const val Uint8Array = val::global("Uint8Array");
 
 val encode(std::string buffer, int width, int height, QoiOptions options) {
-  printf("Starting encode!");
+  int compressedSizeInBytes;
+  qoi_desc desc;
+  desc.width = width;
+  desc.height = height;
+  desc.channels = 4;
+  desc.colorspace = QOI_SRGB;
 
-  printf("quality = %d\n", options.quality);
-  printf("randombool = %s\n", options.randombool ? "true" : "false");
+  void* encodedData = qoi_encode(buffer.c_str(), &desc, &compressedSizeInBytes);
+  if (encodedData == NULL)
+    return val::null();
 
-  auto js_result = val::null();
-
-  const int N = 100;
-  int* data = (int*)malloc(N * sizeof(int));
-
-  js_result = Uint8Array.new_(typed_memory_view(N, data));
+  auto js_result =
+      Uint8Array.new_(typed_memory_view(compressedSizeInBytes, (const uint8_t*)encodedData));
   return js_result;
 }
 
 EMSCRIPTEN_BINDINGS(my_module) {
-  value_object<QoiOptions>("QoiOptions")
-      .field("quality", &QoiOptions::quality)
-      .field("randombool", &QoiOptions::randombool);
+  value_object<QoiOptions>("QoiOptions");
 
   function("encode", &encode);
 }
