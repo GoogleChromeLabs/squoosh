@@ -16,7 +16,6 @@ $(filter dec/%,$(OUT_JS)): dec/qoi_dec.o
 
 # ALL .js FILES
 $(OUT_JS):
-	@echo ">> Making $@"
 	$(LD) \
 		$(LDFLAGS) \
 		--bind \
@@ -27,12 +26,6 @@ $(OUT_JS):
 
 # ALL .o FILES
 %.o: %.cpp $(CODEC_DIR)
-	$(info )
-	$(info Making .o files)
-	$(info $$ + = $+)
-	$(info $$ @ = $@)
-	$(info )
-
 	$(CXX) -c \
 		$(CXXFLAGS) \
 		-I $(CODEC_DIR) \
@@ -47,6 +40,3 @@ $(CODEC_DIR):
 clean:
 	$(RM) $(OUT_JS) $(OUT_WASM)
 	$(MAKE) -C $(CODEC_DIR) clean
-
-test: $(CODEC_BUILD_DIR)/libqoi.a
-	gcc -o bruh.out test.cpp $+
