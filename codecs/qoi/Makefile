@@ -11,10 +11,8 @@ OUT_WASM := $(OUT_JS:.js=.wasm)
 
 all: $(OUT_JS)
 
-# Define dependencies for all variations of build artifacts.
-enc/qoi_enc.js dec/qoi_dec.js: $(CODEC_DIR)/qoi.h
-$(filter enc/%,$(OUT_JS)): enc/qoi_enc.cpp
-$(filter dec/%,$(OUT_JS)): dec/qoi_dec.cpp
+$(filter enc/%,$(OUT_JS)): enc/qoi_enc.o
+$(filter dec/%,$(OUT_JS)): dec/qoi_dec.o
 
 # ALL .js FILES
 $(OUT_JS):
@@ -28,7 +26,7 @@ $(OUT_JS):
 		$+
 
 # ALL .o FILES
-%.o: $(CODEC_DIR)
+%.o: %.cpp $(CODEC_DIR)
 	$(info )
 	$(info Making .o files)
 	$(info $$ + = $+)
