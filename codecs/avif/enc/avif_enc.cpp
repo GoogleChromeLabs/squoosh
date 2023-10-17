@@ -3,6 +3,13 @@
 #include <emscripten/val.h>
 #include "avif/avif.h"
 
+#define RETURN_NULL_IF_NOT_EQUALS(val1, val2) \
+  if (val1 != val2)                           \
+    return val::null();
+#define RETURN_NULL_IF_EQUALS(val1, val2) \
+  if (val1 == val2)                       \
+    return val::null();
+
 using namespace emscripten;
 
 struct AvifOptions {
@@ -40,6 +47,8 @@ struct AvifOptions {
 thread_local const val Uint8Array = val::global("Uint8Array");
 
 val encode(std::string buffer, int width, int height, AvifOptions options) {
+  avifResult status;  // To check the return status for avif API's
+
   avifRWData output = AVIF_DATA_EMPTY;
   int depth = 8;
   avifPixelFormat format;
@@ -63,6 +72,7 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
                   format == AVIF_PIXEL_FORMAT_YUV444;
 
   avifImage* image = avifImageCreate(width, height, depth, format);
+  RETURN_NULL_IF_EQUALS(image, NULL);
 
   if (lossless) {
     image->matrixCoefficients = AVIF_MATRIX_COEFFICIENTS_IDENTITY;
@@ -76,17 +86,19 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
   avifRGBImageSetDefaults(&srcRGB, image);
   srcRGB.pixels = rgba;
   srcRGB.rowBytes = width * 4;
-  avifImageRGBToYUV(image, &srcRGB);
+  status = avifImageRGBToYUV(image, &srcRGB);
+  RETURN_NULL_IF_NOT_EQUALS(status, AVIF_RESULT_OK);
 
   avifEncoder* encoder = avifEncoderCreate();
+  RETURN_NULL_IF_EQUALS(encoder, NULL);
 
   if (lossless) {
     encoder->quality = AVIF_QUALITY_LOSSLESS;
     encoder->qualityAlpha = AVIF_QUALITY_LOSSLESS;
   } else {
-    avifEncoderSetCodecSpecificOption(encoder, "end-usage", "q");
-    avifEncoderSetCodecSpecificOption(encoder, "sharpness",
-                                      std::to_string(options.sharpness).c_str());
+    status = avifEncoderSetCodecSpecificOption(encoder, "sharpness",
+                                               std::to_string(options.sharpness).c_str());
+    RETURN_NULL_IF_NOT_EQUALS(status, AVIF_RESULT_OK);
 
     encoder->quality = options.cqLevel;
     if (options.cqAlphaLevel != -1) {
@@ -94,15 +106,18 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
     }
 
     if (options.tune == 2 || (options.tune == 0 && options.cqLevel <= 32)) {
-      avifEncoderSetCodecSpecificOption(encoder, "tune", "ssim");
+      status = avifEncoderSetCodecSpecificOption(encoder, "tune", "ssim");
+      RETURN_NULL_IF_NOT_EQUALS(status, AVIF_RESULT_OK);
     }
 
     if (options.chromaDeltaQ) {
-      avifEncoderSetCodecSpecificOption(encoder, "enable-chroma-deltaq", "1");
+      status = avifEncoderSetCodecSpecificOption(encoder, "enable-chroma-deltaq", "1");
+      RETURN_NULL_IF_NOT_EQUALS(status, AVIF_RESULT_OK);
     }
 
-    avifEncoderSetCodecSpecificOption(encoder, "color:denoise-noise-level",
-                                      std::to_string(options.denoiseLevel).c_str());
+    status = avifEncoderSetCodecSpecificOption(encoder, "color:denoise-noise-level",
+                                               std::to_string(options.denoiseLevel).c_str());
+    RETURN_NULL_IF_NOT_EQUALS(status, AVIF_RESULT_OK);
   }
 
   encoder->maxThreads = emscripten_num_logical_cores();
