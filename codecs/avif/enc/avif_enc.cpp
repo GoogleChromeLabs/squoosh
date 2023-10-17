@@ -68,7 +68,7 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
   }
 
   bool lossless = options.quality == AVIF_QUANTIZER_LOSSLESS &&
-                  options.qualityAlpha <= AVIF_QUANTIZER_LOSSLESS &&
+                  (options.qualityAlpha == -1 || options.qualityAlpha == AVIF_QUALITY_LOSSLESS) &&
                   format == AVIF_PIXEL_FORMAT_YUV444;
 
   avifImage* image = avifImageCreate(width, height, depth, format);
@@ -100,12 +100,16 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
                                                std::to_string(options.sharpness).c_str());
     RETURN_NULL_IF_NOT_EQUALS(status, AVIF_RESULT_OK);
 
+    // Set base quality
     encoder->quality = options.quality;
-    if (options.qualityAlpha != -1) {
+    // Conditionally set alpha quality
+    if (options.qualityAlpha == -1) {
+      encoder->qualityAlpha = options.quality;
+    } else {
       encoder->qualityAlpha = options.qualityAlpha;
     }
 
-    if (options.tune == 2 || (options.tune == 0 && options.quality <= 32)) {
+    if (options.tune == 2 || (options.tune == 0 && options.quality >= 50)) {
       status = avifEncoderSetCodecSpecificOption(encoder, "tune", "ssim");
       RETURN_NULL_IF_NOT_EQUALS(status, AVIF_RESULT_OK);
     }
