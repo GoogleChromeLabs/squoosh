@@ -78,10 +78,7 @@ export class Options extends Component<Props, State> {
       quality: quality,
       separateAlpha,
       alphaQuality: separateAlpha ? options.qualityAlpha : options.quality,
-      subsample:
-        options.subsample === 0 || lossless
-          ? defaultOptions.subsample
-          : options.subsample,
+      subsample: defaultOptions.subsample,
       tileRows: options.tileRowsLog2,
       tileCols: options.tileColsLog2,
       effort: MAX_EFFORT - options.speed,
@@ -217,9 +214,10 @@ export class Options extends Component<Props, State> {
                         value={subsample}
                         onChange={this._inputChange('subsample', 'number')}
                       >
-                        <option value="1">Half</option>
-                        {/*<option value="2">4:2:2</option>*/}
-                        <option value="3">Off</option>
+                        <option value="0">4:0:0</option>
+                        <option value="1">4:2:0</option>
+                        <option value="2">4:2:2</option>
+                        <option value="3">4:4:4</option>
                       </Select>
                     </label>
                     <label class={style.optionToggle}>
