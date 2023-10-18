@@ -63,8 +63,8 @@ export class Options extends Component<Props, State> {
     const { options } = props;
 
     const lossless =
-      options.quality === 0 &&
-      options.qualityAlpha <= 0 &&
+      options.quality === MAX_QUALITY &&
+      (options.qualityAlpha == -1 || options.qualityAlpha == MAX_QUALITY) &&
       options.subsample == 3;
 
     const separateAlpha = options.qualityAlpha !== -1;
@@ -77,9 +77,7 @@ export class Options extends Component<Props, State> {
       lossless,
       quality: quality,
       separateAlpha,
-      alphaQuality: separateAlpha
-        ? options.qualityAlpha
-        : defaultOptions.quality,
+      alphaQuality: separateAlpha ? options.qualityAlpha : options.quality,
       subsample:
         options.subsample === 0 || lossless
           ? defaultOptions.subsample
@@ -236,7 +234,7 @@ export class Options extends Component<Props, State> {
                         <div class={style.optionOneCell}>
                           <Range
                             min="0"
-                            max="99"
+                            max={MAX_QUALITY - 1} // MAX_QUALITY would mean lossless
                             value={alphaQuality}
                             onInput={this._inputChange(
                               'alphaQuality',

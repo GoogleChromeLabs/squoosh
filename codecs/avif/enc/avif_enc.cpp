@@ -67,7 +67,7 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
       break;
   }
 
-  bool lossless = options.quality == AVIF_QUANTIZER_LOSSLESS &&
+  bool lossless = options.quality == AVIF_QUALITY_LOSSLESS &&
                   (options.qualityAlpha == -1 || options.qualityAlpha == AVIF_QUALITY_LOSSLESS) &&
                   format == AVIF_PIXEL_FORMAT_YUV444;
 
