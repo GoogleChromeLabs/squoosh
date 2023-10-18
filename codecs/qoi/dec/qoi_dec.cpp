@@ -20,6 +20,7 @@ val decode(std::string qoiimage) {
   val result = ImageData.new_(
       Uint8ClampedArray.new_(typed_memory_view(4 * decodedWidth * decodedHeight, rgba)),
       decodedWidth, decodedHeight);
+  free(rgba);
 
   return result;
 }

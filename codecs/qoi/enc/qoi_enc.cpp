@@ -18,12 +18,14 @@ val encode(std::string buffer, int width, int height, QoiOptions options) {
   desc.channels = 4;
   desc.colorspace = QOI_SRGB;
 
-  void* encodedData = qoi_encode(buffer.c_str(), &desc, &compressedSizeInBytes);
+  uint8_t* encodedData = (uint8_t*)qoi_encode(buffer.c_str(), &desc, &compressedSizeInBytes);
   if (encodedData == NULL)
     return val::null();
 
   auto js_result =
       Uint8Array.new_(typed_memory_view(compressedSizeInBytes, (const uint8_t*)encodedData));
+  free(encodedData);
+
   return js_result;
 }
 
