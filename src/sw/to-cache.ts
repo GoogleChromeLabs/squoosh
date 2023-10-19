@@ -26,6 +26,7 @@ import * as featuresWorker from 'entry-data:../features-worker';
 // Decoders (some are feature detected)
 import * as avifDec from 'entry-data:codecs/avif/dec/avif_dec';
 import * as webpDec from 'entry-data:codecs/webp/dec/webp_dec';
+import * as qoiDec from 'entry-data:codecs/qoi/dec/qoi_dec';
 
 // AVIF
 import * as avifEncMt from 'entry-data:codecs/avif/enc/avif_enc_mt';
@@ -39,6 +40,9 @@ import * as jxlEnc from 'entry-data:codecs/jxl/enc/jxl_enc';
 // OXI
 import * as oxiMt from 'entry-data:codecs/oxipng/pkg-parallel/squoosh_oxipng';
 import * as oxi from 'entry-data:codecs/oxipng/pkg/squoosh_oxipng';
+
+// QOI
+import * as qoiEnc from 'entry-data:codecs/qoi/enc/qoi_enc';
 
 // WebP
 import * as webpEncSimd from 'entry-data:codecs/webp/enc/webp_enc_simd';
@@ -108,6 +112,7 @@ export const theRest = (async () => {
 
   if (!supportsAvif) addWithDeps(avifDec);
   if (!supportsWebP) addWithDeps(webpDec);
+  addWithDeps(qoiDec);
 
   // AVIF
   if (supportsThreads) {
@@ -131,6 +136,9 @@ export const theRest = (async () => {
   } else {
     addWithDeps(oxi);
   }
+
+  // QOI
+  addWithDeps(qoiEnc);
 
   // WebP
   if (supportsSimd) {
