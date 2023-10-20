@@ -10,15 +10,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import type { QoiModule } from 'codecs/qoi/enc/qoi_enc';
+import qoiEncoder, { QoiModule } from 'codecs/qoi/enc/qoi_enc';
 import type { EncodeOptions } from '../shared/meta';
 import { initEmscriptenModule } from 'features/worker-utils';
 
 let emscriptenModule: Promise<QoiModule>;
 
 async function init() {
-  const qoiEncoder = await import('codecs/qoi/enc/qoi_enc.js');
-  return initEmscriptenModule(qoiEncoder.default);
+  return initEmscriptenModule(qoiEncoder);
 }
 
 export default async function encode(
