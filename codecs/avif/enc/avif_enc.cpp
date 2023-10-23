@@ -42,6 +42,8 @@ struct AvifOptions {
   int tune;
   // 0-50
   int denoiseLevel;
+  // toggles AVIF_CHROMA_DOWNSAMPLING_SHARP_YUV
+  bool enableSharpDownsampling;
 };
 
 thread_local const val Uint8Array = val::global("Uint8Array");
@@ -86,7 +88,14 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
   avifRGBImageSetDefaults(&srcRGB, image);
   srcRGB.pixels = rgba;
   srcRGB.rowBytes = width * 4;
+  if (options.enableSharpDownsampling) {
+    printf("Enabling AVIF_CHROMA_DOWNSAMPLING_SHARP_YUV\n");
+    srcRGB.chromaDownsampling = AVIF_CHROMA_DOWNSAMPLING_SHARP_YUV;
+  }
   status = avifImageRGBToYUV(image, &srcRGB);
+  if (status == AVIF_RESULT_NOT_IMPLEMENTED) {
+    printf("libsharpyuv not implemented methinks\n");
+  }
   RETURN_NULL_IF_NOT_EQUALS(status, AVIF_RESULT_OK);
 
   avifEncoder* encoder = avifEncoderCreate();
@@ -152,7 +161,8 @@ EMSCRIPTEN_BINDINGS(my_module) {
       .field("sharpness", &AvifOptions::sharpness)
       .field("tune", &AvifOptions::tune)
       .field("denoiseLevel", &AvifOptions::denoiseLevel)
-      .field("subsample", &AvifOptions::subsample);
+      .field("subsample", &AvifOptions::subsample)
+      .field("enableSharpDownsampling", &AvifOptions::enableSharpDownsampling);
 
   function("encode", &encode);
 }

@@ -38,6 +38,7 @@ interface State {
   denoiseLevel: number;
   aqMode: number;
   tune: AVIFTune;
+  enableSharpDownsampling: boolean;
 }
 
 /**
@@ -86,6 +87,7 @@ export class Options extends Component<Props, State> {
       sharpness: options.sharpness,
       denoiseLevel: options.denoiseLevel,
       tune: options.tune,
+      enableSharpDownsampling: options.enableSharpDownsampling,
     };
   }
 
@@ -137,6 +139,7 @@ export class Options extends Component<Props, State> {
           sharpness: optionState.sharpness,
           denoiseLevel: optionState.denoiseLevel,
           tune: optionState.tune,
+          enableSharpDownsampling: optionState.enableSharpDownsampling,
         };
 
         // Updating options, so we don't recalculate in getDerivedStateFromProps.
@@ -170,6 +173,7 @@ export class Options extends Component<Props, State> {
       sharpness,
       denoiseLevel,
       tune,
+      enableSharpDownsampling,
     }: State,
   ) {
     return (
@@ -261,6 +265,16 @@ export class Options extends Component<Props, State> {
                         Sharpness:
                       </Range>
                     </div>
+                    <label class={style.optionToggle}>
+                      Enable Sharp YUV Downsampling
+                      <Checkbox
+                        checked={enableSharpDownsampling}
+                        onChange={this._inputChange(
+                          'enableSharpDownsampling',
+                          'boolean',
+                        )}
+                      />
+                    </label>
                     <div class={style.optionOneCell}>
                       <Range
                         min="0"
