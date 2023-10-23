@@ -24,29 +24,13 @@ export const RoundedCrossIcon = (props: preact.JSX.HTMLAttributes) => (
 );
 
 export const InfoIcon = (props: preact.JSX.HTMLAttributes) => (
-  <svg
-    viewBox="0 0 520 520"
-    fill="currentColor"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <g clip-path="url(#a)">
-      <path
-        fill-rule="evenodd"
-        clip-rule="evenodd"
-        d="M520 0H0v520h520V0ZM230.122 77.186c-8.096 7.7587-12.144 17.3727-12.144 28.842 0 11.469 4.048 21.083 12.144 28.842s17.71 11.638 28.842 11.638c11.132 0 20.578-3.879 28.336-11.638 8.096-7.759 12.144-17.373 12.144-28.842 0-11.4693-4.048-21.0833-12.144-28.842-7.758-8.096-17.204-12.144-28.336-12.144-11.132 0-20.746 4.048-28.842 12.144Zm1.012 106.766h-5.566v199.364c0 10.795 1.856 19.903 5.566 27.324 4.048 7.084 9.108 12.987 15.18 17.71 6.41 4.385 13.325 7.59 20.746 9.614 7.759 2.024 15.518 3.036 23.276 3.036h3.036V243.154c0-20.577-6.072-35.589-18.216-45.034-11.806-9.445-26.48-14.168-44.022-14.168Z"
-        fill="currentColor"
-      />
-    </g>
-    <defs>
-      <clipPath id="a">
-        <rect width="520" height="520" rx="70" fill="currentColor" />
-      </clipPath>
-    </defs>
+  <svg viewBox="0 0 520 520" fill="currentColor" {...props}>
+    <path d="M70 0C31 0 0 31 0 70v380c0 39 31 70 70 70h380c39 0 70-31 70-70V70c0-39-31-70-70-70H70zm189 65c11 0 21 4 28 12 8 8 12 18 12 29s-4 21-12 29c-7 8-17 12-28 12s-21-4-29-12-12-18-12-29 4-21 12-29 18-12 29-12zm-33 119h5c18 0 32 5 44 14 12 10 18 25 18 45v198h-3l-23-3c-7-2-14-5-21-10-6-4-11-10-15-17-4-8-5-17-5-28V184z"/>
   </svg>
 );
 
 export const DiamondStarIcon = (props: preact.JSX.HTMLAttributes) => (
-  <svg viewBox="0 0 48 48" fill="currentColor">
+  <svg viewBox="0 0 48 48" fill="currentColor" {...props}>
     <path d="M24 48c0-12-12-24-24-24 12 0 24-12 24-24 0 12 12 24 24 24a25.8 25.8 0 0 0-24 24Z" />
   </svg>
 );
