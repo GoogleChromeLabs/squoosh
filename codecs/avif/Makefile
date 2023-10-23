@@ -2,6 +2,10 @@
 CODEC_URL = https://github.com/AOMediaCodec/libavif/archive/refs/tags/v1.0.1.tar.gz
 CODEC_PACKAGE = node_modules/libavif.tar.gz
 
+# Take from libavif/ext/libsharpyuv.cmd
+WEBP_URL = https://chromium.googlesource.com/webm/libwebp
+WEBP_COMMIT = e2c85878f6a33f29948b43d3492d9cdaf801aa54
+
 # using libaom from https://aomedia.googlesource.com/aom
 LIBAOM_URL = https://aomedia.googlesource.com/aom/+archive/v3.7.0.tar.gz
 LIBAOM_PACKAGE = node_modules/libaom.tar.gz
@@ -9,9 +13,9 @@ LIBAOM_PACKAGE = node_modules/libaom.tar.gz
 export CODEC_DIR = node_modules/libavif
 export BUILD_DIR = node_modules/build
 export LIBAOM_DIR = node_modules/libaom
+export LIBSHARPYUV_DIR = node_modules/libavif/ext/libwebp
 
 override CFLAGS += "-Wno-unused-macros"
-export
 
 OUT_ENC_JS = enc/avif_enc.js
 OUT_NODE_ENC_JS = enc/avif_node_enc.js
@@ -28,13 +32,9 @@ HELPER_MAKEFLAGS := -f helper.Makefile
 
 .PHONY: buildsharp all clean
 
-all: $(OUT_ENC_JS) $(OUT_DEC_JS) $(OUT_ENC_MT_JS) $(OUT_NODE_ENC_JS) $(OUT_NODE_ENC_MT_JS) $(OUT_NODE_DEC_JS)
+all: $(OUT_ENC_JS) $(OUT_DEC_JS) $(OUT_ENC_MT_JS)
 
-buildsharp:
-	echo "*** Stuff here"
-
-$(OUT_NODE_ENC_JS) $(OUT_NODE_ENC_MT_JS): ENVIRONMENT=node
-$(OUT_NODE_ENC_JS) $(OUT_ENC_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt
+$(OUT_ENC_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt
 	$(MAKE) \
 		$(HELPER_MAKEFLAGS) \
 		OUT_JS=$@ \
@@ -45,9 +45,9 @@ $(OUT_NODE_ENC_JS) $(OUT_ENC_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(L
 			-DCONFIG_AV1_HIGHBITDEPTH=0 \
 		" \
 		ENVIRONMENT=$(ENVIRONMENT) \
-		LIBAVIF_FLAGS="-DAVIF_CODEC_AOM_DECODE=0 -DAVIF_LOCAL_LIBSHARPYUV=ON"
+		LIBAVIF_FLAGS="-DAVIF_CODEC_AOM_DECODE=0 -DAVIF_CHROMA_DOWNSAMPLING_SHARP_YUV=ON"
 
-$(OUT_ENC_MT_JS) $(OUT_NODE_ENC_MT_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt
+$(OUT_ENC_MT_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt
 	$(MAKE) \
 		$(HELPER_MAKEFLAGS) \
 		OUT_JS=$@ \
@@ -57,11 +57,10 @@ $(OUT_ENC_MT_JS) $(OUT_NODE_ENC_MT_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.t
 			-DCONFIG_AV1_HIGHBITDEPTH=0 \
 		" \
 		ENVIRONMENT=$(ENVIRONMENT) \
-		LIBAVIF_FLAGS="-DAVIF_CODEC_AOM_DECODE=0 -DAVIF_LOCAL_LIBSHARPYUV=ON" \
+		LIBAVIF_FLAGS="-DAVIF_CODEC_AOM_DECODE=0 -DAVIF_CHROMA_DOWNSAMPLING_SHARP_YUV=ON" \
 		OUT_FLAGS="-pthread"
 
-$(OUT_NODE_DEC_JS): ENVIRONMENT=node
-$(OUT_NODE_DEC_JS) $(OUT_DEC_JS): $(OUT_DEC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt
+$(OUT_DEC_JS): $(OUT_DEC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt
 	$(MAKE) \
 		$(HELPER_MAKEFLAGS) \
 		OUT_JS=$@ \

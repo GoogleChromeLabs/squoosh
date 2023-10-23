@@ -18,6 +18,9 @@ CODEC_OUT := $(CODEC_BUILD_DIR)/libavif.a
 LIBAOM_BUILD_DIR := $(OUT_BUILD_DIR)/libaom
 LIBAOM_OUT := $(LIBAOM_BUILD_DIR)/libaom.a
 
+LIBSHARPYUV_BUILD_DIR := $(OUT_BUILD_DIR)/libsharpyuvLOLOLOL
+LIBSHARPYUV_OUT := $(LIBSHARPYUV_BUILD_DIR)/libsharpyuv.a
+
 OUT_WASM = $(OUT_JS:.js=.wasm)
 OUT_WORKER=$(OUT_JS:.js=.worker.js)
 
@@ -25,7 +28,7 @@ OUT_WORKER=$(OUT_JS:.js=.worker.js)
 
 all: $(OUT_JS)
 
-$(OUT_JS): $(OUT_CPP) $(LIBAOM_OUT) $(CODEC_OUT)
+$(OUT_JS): $(OUT_CPP) $(LIBAOM_OUT) $(CODEC_OUT) $(LIBSHARPYUV_OUT)
 	$(CXX) \
 		-I $(CODEC_DIR)/include \
 		$(CXXFLAGS) \
@@ -37,8 +40,9 @@ $(OUT_JS): $(OUT_CPP) $(LIBAOM_OUT) $(CODEC_OUT)
 		-o $@ \
 		$+
 
-$(CODEC_OUT): $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_OUT)
+$(CODEC_OUT): $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_OUT) $(LIBSHARPYUV_OUT)
 	emcmake cmake \
+		-DCMAKE_LIBRARY_PATY=$(LIBSHARPYUV_BUILD_DIR) \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DBUILD_SHARED_LIBS=0 \
 		-DAVIF_CODEC_AOM=1 \
@@ -66,6 +70,21 @@ $(LIBAOM_OUT): $(LIBAOM_DIR)/CMakeLists.txt
 		-B $(LIBAOM_BUILD_DIR) \
 		$(LIBAOM_DIR) && \
 	$(MAKE) -C $(LIBAOM_BUILD_DIR)
+
+$(LIBSHARPYUV_OUT): $(LIBSHARPYUV_DIR)/CMakeLists.txt
+		emcmake cmake \
+			-DBUILD_SHARED_LIBS=OFF \
+			-DCMAKE_BUILD_TYPE=Release \
+			-B $(LIBSHARPYUV_BUILD_DIR) \
+			$(LIBSHARPYUV_DIR)
+		$(MAKE) -C $(LIBSHARPYUV_BUILD_DIR) sharpyuv
+
+$(LIBSHARPYUV_DIR)/CMakeLists.txt: $(CODEC_DIR)/CMakeLists.txt
+	cd $(CODEC_DIR)/ext && \
+		git clone $(WEBP_URL) --single-branch libwebp && \
+		cd libwebp && \
+		git checkout $(WEBP_COMMIT)
+
 
 clean:
 	$(RM) $(OUT_JS) $(OUT_WASM) $(OUT_WORKER)
