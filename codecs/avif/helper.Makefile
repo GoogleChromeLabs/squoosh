@@ -10,6 +10,12 @@
 #   $(LIBAVIF_FLAGS)
 #   $(ENVIRONMENT)
 
+# Take from libavif/ext/libsharpyuv.cmd
+WEBP_URL = https://chromium.googlesource.com/webm/libwebp
+WEBP_COMMIT = e2c85878f6a33f29948b43d3492d9cdaf801aa54
+LIBSHARPYUV_DIR = $(CODEC_DIR)/ext/libwebp
+
+# $(OUT_JS) is something like "enc/avif_enc.js" or "enc/avif_enc_mt.js"
 OUT_BUILD_DIR := $(BUILD_DIR)/$(basename $(OUT_JS))
 
 CODEC_BUILD_DIR := $(OUT_BUILD_DIR)/libavif
@@ -28,7 +34,14 @@ OUT_WORKER=$(OUT_JS:.js=.worker.js)
 
 all: $(OUT_JS)
 
-$(OUT_JS): $(OUT_CPP) $(LIBAOM_OUT) $(CODEC_OUT) $(LIBSHARPYUV_OUT)
+# Only add libsharpyuv as a dependency for encoders.
+# Yes, that if statement is true for encoders.
+ifneq (,$(findstring enc/, $(OUT_JS)))
+$(OUT_JS): $(LIBSHARPYUV_OUT)
+$(CODEC_OUT): $(LIBSHARPYUV_OUT)
+endif
+
+$(OUT_JS): $(OUT_CPP) $(LIBAOM_OUT) $(CODEC_OUT)
 	$(CXX) \
 		-I $(CODEC_DIR)/include \
 		$(CXXFLAGS) \
@@ -40,9 +53,9 @@ $(OUT_JS): $(OUT_CPP) $(LIBAOM_OUT) $(CODEC_OUT) $(LIBSHARPYUV_OUT)
 		-o $@ \
 		$+
 
-$(CODEC_OUT): $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_OUT) $(LIBSHARPYUV_OUT)
+$(CODEC_OUT): $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_OUT)
 	emcmake cmake \
-		-DCMAKE_LIBRARY_PATY=$(LIBSHARPYUV_BUILD_DIR) \
+		-DCMAKE_LIBRARY_PATH=$(LIBSHARPYUV_BUILD_DIR) \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DBUILD_SHARED_LIBS=0 \
 		-DAVIF_CODEC_AOM=1 \
