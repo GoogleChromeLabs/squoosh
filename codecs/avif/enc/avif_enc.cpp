@@ -89,7 +89,6 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
   srcRGB.pixels = rgba;
   srcRGB.rowBytes = width * 4;
   if (options.enableSharpDownsampling) {
-    printf("Enabling AVIF_CHROMA_DOWNSAMPLING_SHARP_YUV\n");
     srcRGB.chromaDownsampling = AVIF_CHROMA_DOWNSAMPLING_SHARP_YUV;
   }
   status = avifImageRGBToYUV(image, &srcRGB);

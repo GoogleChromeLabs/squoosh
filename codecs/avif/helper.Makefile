@@ -15,16 +15,19 @@ WEBP_URL = https://chromium.googlesource.com/webm/libwebp
 WEBP_COMMIT = e2c85878f6a33f29948b43d3492d9cdaf801aa54
 LIBSHARPYUV_DIR = $(CODEC_DIR)/ext/libwebp
 
+# $(BUILD_DIR) = node_modules/build
 # $(OUT_JS) is something like "enc/avif_enc.js" or "enc/avif_enc_mt.js"
+# so $(OUT_BUILD_DIR) will be "node_modules/build/enc/avif_enc[_mt]"
 OUT_BUILD_DIR := $(BUILD_DIR)/$(basename $(OUT_JS))
 
+# We're making libavif and libaom for every node_modules/[enc|dec]/
 CODEC_BUILD_DIR := $(OUT_BUILD_DIR)/libavif
 CODEC_OUT := $(CODEC_BUILD_DIR)/libavif.a
 
 LIBAOM_BUILD_DIR := $(OUT_BUILD_DIR)/libaom
 LIBAOM_OUT := $(LIBAOM_BUILD_DIR)/libaom.a
 
-LIBSHARPYUV_BUILD_DIR := $(OUT_BUILD_DIR)/libsharpyuvLOLOLOL
+LIBSHARPYUV_BUILD_DIR := $(OUT_BUILD_DIR)/libsharpyuv
 LIBSHARPYUV_OUT := $(LIBSHARPYUV_BUILD_DIR)/libsharpyuv.a
 
 OUT_WASM = $(OUT_JS:.js=.wasm)
@@ -48,6 +51,7 @@ $(OUT_JS): $(OUT_CPP) $(LIBAOM_OUT) $(CODEC_OUT)
 		$(LDFLAGS) \
 		$(OUT_FLAGS) \
 		--bind \
+		-s ERROR_ON_UNDEFINED_SYMBOLS=0 \
 		-s ENVIRONMENT=$(ENVIRONMENT) \
 		-s EXPORT_ES6=1 \
 		-o $@ \
@@ -84,20 +88,21 @@ $(LIBAOM_OUT): $(LIBAOM_DIR)/CMakeLists.txt
 		$(LIBAOM_DIR) && \
 	$(MAKE) -C $(LIBAOM_BUILD_DIR)
 
-$(LIBSHARPYUV_OUT): $(LIBSHARPYUV_DIR)/CMakeLists.txt
-		emcmake cmake \
-			-DBUILD_SHARED_LIBS=OFF \
-			-DCMAKE_BUILD_TYPE=Release \
-			-B $(LIBSHARPYUV_BUILD_DIR) \
-			$(LIBSHARPYUV_DIR)
-		$(MAKE) -C $(LIBSHARPYUV_BUILD_DIR) sharpyuv
-
+# Checkout the specific libwebp commit
 $(LIBSHARPYUV_DIR)/CMakeLists.txt: $(CODEC_DIR)/CMakeLists.txt
 	cd $(CODEC_DIR)/ext && \
 		git clone $(WEBP_URL) --single-branch libwebp && \
 		cd libwebp && \
 		git checkout $(WEBP_COMMIT)
 
+# Make the sharpyuv library
+$(LIBSHARPYUV_OUT): $(LIBSHARPYUV_DIR)/CMakeLists.txt
+	emcmake cmake \
+		-DBUILD_SHARED_LIBS=OFF \
+		-DCMAKE_BUILD_TYPE=Release \
+		-B $(LIBSHARPYUV_BUILD_DIR) \
+		$(LIBSHARPYUV_DIR)
+	$(MAKE) -C $(LIBSHARPYUV_BUILD_DIR) sharpyuv
 
 clean:
 	$(RM) $(OUT_JS) $(OUT_WASM) $(OUT_WORKER)
