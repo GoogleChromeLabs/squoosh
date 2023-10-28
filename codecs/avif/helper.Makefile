@@ -10,12 +10,6 @@
 #   $(LIBAVIF_FLAGS)
 #   $(ENVIRONMENT)
 
-# Take from libavif/ext/libsharpyuv.cmd
-WEBP_URL = https://chromium.googlesource.com/webm/libwebp
-WEBP_COMMIT = e2c85878f6a33f29948b43d3492d9cdaf801aa54
-LIBSHARPYUV_DIR = $(CODEC_DIR)/ext/libwebp
-
-# $(BUILD_DIR) = node_modules/build
 # $(OUT_JS) is something like "enc/avif_enc.js" or "enc/avif_enc_mt.js"
 # so $(OUT_BUILD_DIR) will be "node_modules/build/enc/avif_enc[_mt]"
 OUT_BUILD_DIR := $(BUILD_DIR)/$(basename $(OUT_JS))
@@ -27,9 +21,6 @@ CODEC_OUT := $(CODEC_BUILD_DIR)/libavif.a
 LIBAOM_BUILD_DIR := $(OUT_BUILD_DIR)/libaom
 LIBAOM_OUT := $(LIBAOM_BUILD_DIR)/libaom.a
 
-LIBSHARPYUV_BUILD_DIR := $(OUT_BUILD_DIR)/libsharpyuv
-LIBSHARPYUV_OUT := $(LIBSHARPYUV_BUILD_DIR)/libsharpyuv.a
-
 OUT_WASM = $(OUT_JS:.js=.wasm)
 OUT_WORKER=$(OUT_JS:.js=.worker.js)
 
@@ -40,8 +31,8 @@ all: $(OUT_JS)
 # Only add libsharpyuv as a dependency for encoders.
 # Yes, that if statement is true for encoders.
 ifneq (,$(findstring enc/, $(OUT_JS)))
-$(OUT_JS): $(LIBSHARPYUV_OUT)
-$(CODEC_OUT): $(LIBSHARPYUV_OUT)
+$(OUT_JS): $(LIBSHARPYUV)
+$(CODEC_OUT): $(LIBSHARPYUV)
 endif
 
 $(OUT_JS): $(OUT_CPP) $(LIBAOM_OUT) $(CODEC_OUT)
@@ -87,22 +78,6 @@ $(LIBAOM_OUT): $(LIBAOM_DIR)/CMakeLists.txt
 		-B $(LIBAOM_BUILD_DIR) \
 		$(LIBAOM_DIR) && \
 	$(MAKE) -C $(LIBAOM_BUILD_DIR)
-
-# Checkout the specific libwebp commit
-$(LIBSHARPYUV_DIR)/CMakeLists.txt: $(CODEC_DIR)/CMakeLists.txt
-	cd $(CODEC_DIR)/ext && \
-		git clone $(WEBP_URL) --single-branch libwebp && \
-		cd libwebp && \
-		git checkout $(WEBP_COMMIT)
-
-# Make the sharpyuv library
-$(LIBSHARPYUV_OUT): $(LIBSHARPYUV_DIR)/CMakeLists.txt
-	emcmake cmake \
-		-DBUILD_SHARED_LIBS=OFF \
-		-DCMAKE_BUILD_TYPE=Release \
-		-B $(LIBSHARPYUV_BUILD_DIR) \
-		$(LIBSHARPYUV_DIR)
-	$(MAKE) -C $(LIBSHARPYUV_BUILD_DIR) sharpyuv
 
 clean:
 	$(RM) $(OUT_JS) $(OUT_WASM) $(OUT_WORKER)
