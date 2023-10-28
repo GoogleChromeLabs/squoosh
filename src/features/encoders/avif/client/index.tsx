@@ -224,6 +224,20 @@ export class Options extends Component<Props, State> {
                         <option value="3">4:4:4</option>
                       </Select>
                     </label>
+                    <Expander>
+                      {subsample === 1 && (
+                        <label class={style.optionToggle}>
+                          Enable Sharp YUV Downsampling
+                          <Checkbox
+                            checked={enableSharpDownsampling}
+                            onChange={this._inputChange(
+                              'enableSharpDownsampling',
+                              'boolean',
+                            )}
+                          />
+                        </label>
+                      )}
+                    </Expander>
                     <label class={style.optionToggle}>
                       Separate alpha quality
                       <Checkbox
@@ -265,16 +279,6 @@ export class Options extends Component<Props, State> {
                         Sharpness:
                       </Range>
                     </div>
-                    <label class={style.optionToggle}>
-                      Enable Sharp YUV Downsampling
-                      <Checkbox
-                        checked={enableSharpDownsampling}
-                        onChange={this._inputChange(
-                          'enableSharpDownsampling',
-                          'boolean',
-                        )}
-                      />
-                    </label>
                     <div class={style.optionOneCell}>
                       <Range
                         min="0"
