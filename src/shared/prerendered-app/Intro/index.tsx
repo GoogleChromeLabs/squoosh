@@ -148,14 +148,6 @@ export default class Intro extends Component<Props, State> {
 
     // Save the beforeinstallprompt event so it can be called later.
     this.setState({ beforeInstallEvent: event });
-
-    // Log the event.
-    const gaEventInfo = {
-      eventCategory: 'pwa-install',
-      eventAction: 'promo-shown',
-      nonInteraction: true,
-    };
-    ga('send', 'event', gaEventInfo);
   };
 
   private onInstallClick = async (event: Event) => {
@@ -171,14 +163,6 @@ export default class Intro extends Component<Props, State> {
 
     // Wait for the user to accept or dismiss the install prompt
     const { outcome } = await beforeInstallEvent.userChoice;
-    // Send the analytics data
-    const gaEventInfo = {
-      eventCategory: 'pwa-install',
-      eventAction: 'promo-clicked',
-      eventLabel: installButtonSource,
-      eventValue: outcome === 'accepted' ? 1 : 0,
-    };
-    ga('send', 'event', gaEventInfo);
 
     // If the prompt was dismissed, we aren't going to install via the button.
     if (outcome === 'dismissed') {
@@ -190,12 +174,7 @@ export default class Intro extends Component<Props, State> {
     // We don't need the install button, if it's shown
     this.setState({ beforeInstallEvent: undefined });
 
-    // Don't log analytics if page is not visible
     if (document.hidden) return;
-
-    // Try to get the install, if it's not set, use 'browser'
-    const source = this.installingViaButton ? installButtonSource : 'browser';
-    ga('send', 'event', 'pwa-install', 'installed', source);
 
     // Clear the install method property
     this.installingViaButton = false;
@@ -357,8 +336,8 @@ export default class Intro extends Component<Props, State> {
                 <div class={style.infoTextWrapper}>
                   <h2 class={style.infoTitle}>Small</h2>
                   <p class={style.infoCaption}>
-                    Smaller images mean faster load times. Squoosh can reduce
-                    file size and maintain high quality.
+                    Smaller images mean faster load times. LibreSquoosh can
+                    reduce file size and maintain high quality.
                   </p>
                 </div>
                 <div class={style.infoImgWrapper}>
@@ -409,7 +388,7 @@ export default class Intro extends Component<Props, State> {
                   <h2 class={style.infoTitle}>Secure</h2>
                   <p class={style.infoCaption}>
                     Worried about privacy? Images never leave your device since
-                    Squoosh does all the work locally.
+                    LibreSquoosh does all the work locally.
                   </p>
                 </div>
                 <div class={style.infoImgWrapper}>

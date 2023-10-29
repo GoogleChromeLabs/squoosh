@@ -1,17 +1,12 @@
-# [Squoosh]!
+# [LibreSquoosh]!
 
-[Squoosh] is an image compression web app that reduces image sizes through numerous formats.
+[LibreSquoosh] is an image compression web app that reduces image sizes through numerous formats. It is a fork of the upstream project [Squoosh](https://github.com/GoogleChromeLabs/squoosh).
 
 # Privacy
 
-Squoosh does not send your image to a server. All image compression processes locally.
+LibreSquoosh does not send your image to a server. All image compression processes locally.
 
-However, Squoosh utilizes Google Analytics to collect the following:
-
-- [Basic visitor data](https://support.google.com/analytics/answer/6004245?ref_topic=2919631).
-- The before and after image size value.
-- If Squoosh PWA, the type of Squoosh installation.
-- If Squoosh PWA, the installation time and date.
+LibreSquoosh collects no analytics about your activity or application usage.
 
 # Developing
 
@@ -33,6 +28,6 @@ To develop for Squoosh:
 
 # Contributing
 
-Squoosh is an open-source project that appreciates all community involvement. To contribute to the project, follow the [contribute guide](/CONTRIBUTING.md).
+LibreSquoosh is an open-source project that appreciates all community involvement. To contribute to the project, follow the [contribute guide](/CONTRIBUTING.md).
 
 [squoosh]: https://squoosh.app
