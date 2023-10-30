@@ -3,12 +3,18 @@
 #include <emscripten/val.h>
 #include "avif/avif.h"
 
+#include <string>
+
 #define RETURN_NULL_IF_NOT_EQUALS(val1, val2) \
-  if (val1 != val2)                           \
-    return val::null();
+  do {                                        \
+    if (val1 != val2)                         \
+      return val::null();                     \
+  } while (false)
 #define RETURN_NULL_IF_EQUALS(val1, val2) \
-  if (val1 == val2)                       \
-    return val::null();
+  do {                                    \
+    if (val1 == val2)                     \
+      return val::null();                 \
+  } while (false)
 
 using namespace emscripten;
 
@@ -74,7 +80,7 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
                   format == AVIF_PIXEL_FORMAT_YUV444;
 
   avifImage* image = avifImageCreate(width, height, depth, format);
-  RETURN_NULL_IF_EQUALS(image, NULL);
+  RETURN_NULL_IF_EQUALS(image, nullptr);
 
   if (lossless) {
     image->matrixCoefficients = AVIF_MATRIX_COEFFICIENTS_IDENTITY;
@@ -92,13 +98,10 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
     srcRGB.chromaDownsampling = AVIF_CHROMA_DOWNSAMPLING_SHARP_YUV;
   }
   status = avifImageRGBToYUV(image, &srcRGB);
-  if (status == AVIF_RESULT_NOT_IMPLEMENTED) {
-    printf("libsharpyuv not implemented methinks\n");
-  }
   RETURN_NULL_IF_NOT_EQUALS(status, AVIF_RESULT_OK);
 
   avifEncoder* encoder = avifEncoderCreate();
-  RETURN_NULL_IF_EQUALS(encoder, NULL);
+  RETURN_NULL_IF_EQUALS(encoder, nullptr);
 
   if (lossless) {
     encoder->quality = AVIF_QUALITY_LOSSLESS;
@@ -123,7 +126,7 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
     }
 
     if (options.chromaDeltaQ) {
-      status = avifEncoderSetCodecSpecificOption(encoder, "enable-chroma-deltaq", "1");
+      status = avifEncoderSetCodecSpecificOption(encoder, "color:enable-chroma-deltaq", "1");
       RETURN_NULL_IF_NOT_EQUALS(status, AVIF_RESULT_OK);
     }
 
