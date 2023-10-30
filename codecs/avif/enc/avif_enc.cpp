@@ -49,7 +49,7 @@ struct AvifOptions {
   // 0-50
   int denoiseLevel;
   // toggles AVIF_CHROMA_DOWNSAMPLING_SHARP_YUV
-  bool enableSharpDownsampling;
+  bool enableSharpYUV;
 };
 
 thread_local const val Uint8Array = val::global("Uint8Array");
@@ -94,7 +94,7 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
   avifRGBImageSetDefaults(&srcRGB, image);
   srcRGB.pixels = rgba;
   srcRGB.rowBytes = width * 4;
-  if (options.enableSharpDownsampling) {
+  if (options.enableSharpYUV) {
     srcRGB.chromaDownsampling = AVIF_CHROMA_DOWNSAMPLING_SHARP_YUV;
   }
   status = avifImageRGBToYUV(image, &srcRGB);
@@ -164,7 +164,7 @@ EMSCRIPTEN_BINDINGS(my_module) {
       .field("tune", &AvifOptions::tune)
       .field("denoiseLevel", &AvifOptions::denoiseLevel)
       .field("subsample", &AvifOptions::subsample)
-      .field("enableSharpDownsampling", &AvifOptions::enableSharpDownsampling);
+      .field("enableSharpYUV", &AvifOptions::enableSharpYUV);
 
   function("encode", &encode);
 }

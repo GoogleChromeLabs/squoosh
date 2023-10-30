@@ -14,7 +14,7 @@ export interface EncodeOptions {
   subsample: number;
   chromaDeltaQ: boolean;
   sharpness: number;
-  enableSharpDownsampling: boolean;
+  enableSharpYUV: boolean;
   tune: AVIFTune;
 }
 

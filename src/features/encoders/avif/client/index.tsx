@@ -1,4 +1,4 @@
-import { EncodeOptions, defaultOptions, AVIFTune } from '../shared/meta';
+import { EncodeOptions, AVIFTune } from '../shared/meta';
 import type WorkerBridge from 'client/lazy-app/worker-bridge';
 import { h, Component } from 'preact';
 import { preventDefault, shallowEqual } from 'client/lazy-app/util';
@@ -36,9 +36,8 @@ interface State {
   effort: number;
   sharpness: number;
   denoiseLevel: number;
-  aqMode: number;
   tune: AVIFTune;
-  enableSharpDownsampling: boolean;
+  enableSharpYUV: boolean;
 }
 
 /**
@@ -70,16 +69,14 @@ export class Options extends Component<Props, State> {
 
     const separateAlpha = options.qualityAlpha !== -1;
 
-    const quality = lossless ? defaultOptions.quality : options.quality;
-
     // Create default form state from options
     return {
       options,
       lossless,
-      quality: quality,
+      quality: options.quality,
       separateAlpha,
       alphaQuality: separateAlpha ? options.qualityAlpha : options.quality,
-      subsample: defaultOptions.subsample,
+      subsample: options.subsample,
       tileRows: options.tileRowsLog2,
       tileCols: options.tileColsLog2,
       effort: MAX_EFFORT - options.speed,
@@ -87,7 +84,7 @@ export class Options extends Component<Props, State> {
       sharpness: options.sharpness,
       denoiseLevel: options.denoiseLevel,
       tune: options.tune,
-      enableSharpDownsampling: options.enableSharpDownsampling,
+      enableSharpYUV: options.enableSharpYUV,
     };
   }
 
@@ -128,7 +125,7 @@ export class Options extends Component<Props, State> {
           quality: optionState.lossless ? MAX_QUALITY : optionState.quality,
           qualityAlpha:
             optionState.lossless || !optionState.separateAlpha
-              ? -1 // default AVIF alphaLevel
+              ? -1 // Set qualityAlpha to quality
               : optionState.alphaQuality,
           // Always set to 4:4:4 if lossless
           subsample: optionState.lossless ? 3 : optionState.subsample,
@@ -139,7 +136,7 @@ export class Options extends Component<Props, State> {
           sharpness: optionState.sharpness,
           denoiseLevel: optionState.denoiseLevel,
           tune: optionState.tune,
-          enableSharpDownsampling: optionState.enableSharpDownsampling,
+          enableSharpYUV: optionState.enableSharpYUV,
         };
 
         // Updating options, so we don't recalculate in getDerivedStateFromProps.
@@ -173,7 +170,7 @@ export class Options extends Component<Props, State> {
       sharpness,
       denoiseLevel,
       tune,
-      enableSharpDownsampling,
+      enableSharpYUV,
     }: State,
   ) {
     return (
@@ -227,11 +224,11 @@ export class Options extends Component<Props, State> {
                     <Expander>
                       {subsample === 1 && (
                         <label class={style.optionToggle}>
-                          Enable Sharp YUV Downsampling
+                          Sharp YUV Downsampling
                           <Checkbox
-                            checked={enableSharpDownsampling}
+                            checked={enableSharpYUV}
                             onChange={this._inputChange(
-                              'enableSharpDownsampling',
+                              'enableSharpYUV',
                               'boolean',
                             )}
                           />

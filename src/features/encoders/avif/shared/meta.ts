@@ -28,5 +28,5 @@ export const defaultOptions: EncodeOptions = {
   chromaDeltaQ: false,
   sharpness: 0,
   tune: AVIFTune.auto,
-  enableSharpDownsampling: false,
+  enableSharpYUV: false,
 };
