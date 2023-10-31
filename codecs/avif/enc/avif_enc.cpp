@@ -18,6 +18,9 @@
 
 using namespace emscripten;
 
+using AvifImagePtr = std::unique_ptr<avifImage, decltype(&avifImageDestroy)>;
+using AvifEncoderPtr = std::unique_ptr<avifEncoder, decltype(&avifEncoderDestroy)>;
+
 struct AvifOptions {
   // [0 - 100]
   // 0 = worst quality
@@ -79,7 +82,8 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
                   (options.qualityAlpha == -1 || options.qualityAlpha == AVIF_QUALITY_LOSSLESS) &&
                   format == AVIF_PIXEL_FORMAT_YUV444;
 
-  avifImage* image = avifImageCreate(width, height, depth, format);
+  // Smart pointer for the generated image
+  AvifImagePtr image(avifImageCreate(width, height, depth, format), avifImageDestroy);
   RETURN_NULL_IF_EQUALS(image, nullptr);
 
   if (lossless) {
@@ -91,23 +95,24 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
   uint8_t* rgba = reinterpret_cast<uint8_t*>(const_cast<char*>(buffer.data()));
 
   avifRGBImage srcRGB;
-  avifRGBImageSetDefaults(&srcRGB, image);
+  avifRGBImageSetDefaults(&srcRGB, image.get());
   srcRGB.pixels = rgba;
   srcRGB.rowBytes = width * 4;
   if (options.enableSharpYUV) {
     srcRGB.chromaDownsampling = AVIF_CHROMA_DOWNSAMPLING_SHARP_YUV;
   }
-  status = avifImageRGBToYUV(image, &srcRGB);
+  status = avifImageRGBToYUV(image.get(), &srcRGB);
   RETURN_NULL_IF_NOT_EQUALS(status, AVIF_RESULT_OK);
 
-  avifEncoder* encoder = avifEncoderCreate();
+  // Create a smart pointer for the encoder
+  AvifEncoderPtr encoder(avifEncoderCreate(), avifEncoderDestroy);
   RETURN_NULL_IF_EQUALS(encoder, nullptr);
 
   if (lossless) {
     encoder->quality = AVIF_QUALITY_LOSSLESS;
     encoder->qualityAlpha = AVIF_QUALITY_LOSSLESS;
   } else {
-    status = avifEncoderSetCodecSpecificOption(encoder, "sharpness",
+    status = avifEncoderSetCodecSpecificOption(encoder.get(), "sharpness",
                                                std::to_string(options.sharpness).c_str());
     RETURN_NULL_IF_NOT_EQUALS(status, AVIF_RESULT_OK);
 
@@ -121,16 +126,16 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
     }
 
     if (options.tune == 2 || (options.tune == 0 && options.quality >= 50)) {
-      status = avifEncoderSetCodecSpecificOption(encoder, "tune", "ssim");
+      status = avifEncoderSetCodecSpecificOption(encoder.get(), "tune", "ssim");
       RETURN_NULL_IF_NOT_EQUALS(status, AVIF_RESULT_OK);
     }
 
     if (options.chromaDeltaQ) {
-      status = avifEncoderSetCodecSpecificOption(encoder, "color:enable-chroma-deltaq", "1");
+      status = avifEncoderSetCodecSpecificOption(encoder.get(), "color:enable-chroma-deltaq", "1");
       RETURN_NULL_IF_NOT_EQUALS(status, AVIF_RESULT_OK);
     }
 
-    status = avifEncoderSetCodecSpecificOption(encoder, "color:denoise-noise-level",
+    status = avifEncoderSetCodecSpecificOption(encoder.get(), "color:denoise-noise-level",
                                                std::to_string(options.denoiseLevel).c_str());
     RETURN_NULL_IF_NOT_EQUALS(status, AVIF_RESULT_OK);
   }
@@ -140,14 +145,12 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
   encoder->tileColsLog2 = options.tileColsLog2;
   encoder->speed = options.speed;
 
-  avifResult encodeResult = avifEncoderWrite(encoder, image, &output);
+  avifResult encodeResult = avifEncoderWrite(encoder.get(), image.get(), &output);
   auto js_result = val::null();
   if (encodeResult == AVIF_RESULT_OK) {
     js_result = Uint8Array.new_(typed_memory_view(output.size, output.data));
   }
 
-  avifImageDestroy(image);
-  avifEncoderDestroy(encoder);
   avifRWDataFree(&output);
   return js_result;
 }
