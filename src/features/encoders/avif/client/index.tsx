@@ -1,4 +1,4 @@
-import { EncodeOptions, AVIFTune } from '../shared/meta';
+import { EncodeOptions, AVIFTune, defaultOptions } from '../shared/meta';
 import type WorkerBridge from 'client/lazy-app/worker-bridge';
 import { h, Component } from 'preact';
 import { preventDefault, shallowEqual } from 'client/lazy-app/util';
@@ -73,7 +73,7 @@ export class Options extends Component<Props, State> {
     return {
       options,
       lossless,
-      quality: options.quality,
+      quality: lossless ? defaultOptions.quality : options.quality,
       separateAlpha,
       alphaQuality: separateAlpha ? options.qualityAlpha : options.quality,
       subsample: options.subsample,
