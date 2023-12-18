@@ -436,6 +436,9 @@ export default class Intro extends Component<Props, State> {
             </svg>
             <div class={style.footerPadding}>
               <footer class={style.footerItems}>
+                <a class={style.footerNetlifyLink} href="https://netlify.com">
+                  This site is powered by Netlify.
+                </a>
                 <a
                   class={style.footerLink}
                   href="https://github.com/GoogleChromeLabs/squoosh/blob/dev/README.md#privacy"
