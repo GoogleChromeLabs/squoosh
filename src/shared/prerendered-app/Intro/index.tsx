@@ -441,13 +441,13 @@ export default class Intro extends Component<Props, State> {
                 </a>
                 <a
                   class={style.footerLink}
-                  href="https://github.com/GoogleChromeLabs/squoosh/blob/dev/README.md#privacy"
+                  href="https://github.com/squoosh-app/squoosh/blob/dev/README.md#privacy"
                 >
                   Privacy
                 </a>
                 <a
                   class={style.footerLinkWithLogo}
-                  href="https://github.com/GoogleChromeLabs/squoosh"
+                  href="https://github.com/squoosh-app/squoosh"
                 >
                   <img src={githubLogo} alt="" width="10" height="10" />
                   Source on Github
