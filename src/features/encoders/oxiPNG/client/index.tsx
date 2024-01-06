@@ -56,7 +56,7 @@ export class Options extends Component<Props, {}> {
           <Range
             name="level"
             min="0"
-            max="3"
+            max="6"
             step="1"
             value={options.level}
             onInput={this.onChange}
