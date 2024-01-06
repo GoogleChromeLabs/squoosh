@@ -11,5 +11,7 @@
   ],
   "module": "squoosh_oxipng.js",
   "types": "squoosh_oxipng.d.ts",
-  "sideEffects": false
+  "sideEffects": [
+    "./snippets/*"
+  ]
 }

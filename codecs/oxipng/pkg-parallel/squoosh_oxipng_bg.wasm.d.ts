@@ -1,6 +1,5 @@
 /* tslint:disable */
 /* eslint-disable */
-export function __wasm_init_memory(): void;
 export function optimise(a: number, b: number, c: number, d: number, e: number): void;
 export function __wbg_wbg_rayon_poolbuilder_free(a: number): void;
 export function wbg_rayon_poolbuilder_numThreads(a: number): number;
