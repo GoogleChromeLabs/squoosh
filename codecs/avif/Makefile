@@ -1,9 +1,9 @@
-# libavif and libaom versions are from
-# google3/third_party/libavif/METADATA
-CODEC_URL = https://github.com/AOMediaCodec/libavif/archive/647c3c208cf152395d777c1bf7240d2ecf7df5a9.tar.gz
-CODEC_PACKAGE = node_modules/libavif.tar.gz
+# using libavif from https://github.com/AOMediaCodec/libavif
+LIBAVIF_URL = https://github.com/AOMediaCodec/libavif/archive/refs/tags/v1.0.1.tar.gz
+LIBAVIF_PACKAGE = node_modules/libavif.tar.gz
 
-LIBAOM_URL = https://aomedia.googlesource.com/aom/+archive/v3.6.0.tar.gz
+# using libaom from https://aomedia.googlesource.com/aom
+LIBAOM_URL = https://aomedia.googlesource.com/aom/+archive/v3.7.0.tar.gz
 LIBAOM_PACKAGE = node_modules/libaom.tar.gz
 
 export CODEC_DIR = node_modules/libavif
@@ -11,7 +11,12 @@ export BUILD_DIR = node_modules/build
 export LIBAOM_DIR = node_modules/libaom
 
 override CFLAGS += "-Wno-unused-macros"
-export
+
+# We must build libsharpyuv from a specific libwebp commit
+# See libavif/ext/libsharpyuv.cmd for more detail
+LIBWEBP_URL_WITH_SHARPYUV = https://chromium.googlesource.com/webm/libwebp/+archive/e2c85878f6a33f29948b43d3492d9cdaf801aa54.tar.gz
+LIBWEBP_DIR := $(CODEC_DIR)/ext/libwebp
+export LIBSHARPYUV := $(LIBWEBP_DIR)/build/libsharpyuv.a
 
 OUT_ENC_JS = enc/avif_enc.js
 OUT_NODE_ENC_JS = enc/avif_node_enc.js
@@ -28,10 +33,10 @@ HELPER_MAKEFLAGS := -f helper.Makefile
 
 .PHONY: all clean
 
-all: $(OUT_ENC_JS) $(OUT_DEC_JS) $(OUT_ENC_MT_JS) $(OUT_NODE_ENC_JS) $(OUT_NODE_ENC_MT_JS) $(OUT_NODE_DEC_JS)
+all: $(OUT_ENC_JS) $(OUT_DEC_JS) $(OUT_ENC_MT_JS)
 
-$(OUT_NODE_ENC_JS) $(OUT_NODE_ENC_MT_JS): ENVIRONMENT=node
-$(OUT_NODE_ENC_JS) $(OUT_ENC_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt
+# ST-Encoding
+$(OUT_ENC_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt $(LIBSHARPYUV)
 	$(MAKE) \
 		$(HELPER_MAKEFLAGS) \
 		OUT_JS=$@ \
@@ -42,9 +47,10 @@ $(OUT_NODE_ENC_JS) $(OUT_ENC_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(L
 			-DCONFIG_AV1_HIGHBITDEPTH=0 \
 		" \
 		ENVIRONMENT=$(ENVIRONMENT) \
-		LIBAVIF_FLAGS="-DAVIF_CODEC_AOM_DECODE=0"
+		LIBAVIF_FLAGS="-DAVIF_CODEC_AOM_DECODE=0 -DAVIF_LOCAL_LIBSHARPYUV=ON"
 
-$(OUT_ENC_MT_JS) $(OUT_NODE_ENC_MT_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt
+# MT-Encoding
+$(OUT_ENC_MT_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt $(LIBSHARPYUV)
 	$(MAKE) \
 		$(HELPER_MAKEFLAGS) \
 		OUT_JS=$@ \
@@ -54,11 +60,11 @@ $(OUT_ENC_MT_JS) $(OUT_NODE_ENC_MT_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.t
 			-DCONFIG_AV1_HIGHBITDEPTH=0 \
 		" \
 		ENVIRONMENT=$(ENVIRONMENT) \
-		LIBAVIF_FLAGS="-DAVIF_CODEC_AOM_DECODE=0" \
+		LIBAVIF_FLAGS="-DAVIF_CODEC_AOM_DECODE=0 -DAVIF_LOCAL_LIBSHARPYUV=ON" \
 		OUT_FLAGS="-pthread"
 
-$(OUT_NODE_DEC_JS): ENVIRONMENT=node
-$(OUT_NODE_DEC_JS) $(OUT_DEC_JS): $(OUT_DEC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt
+# Decoding
+$(OUT_DEC_JS): $(OUT_DEC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt
 	$(MAKE) \
 		$(HELPER_MAKEFLAGS) \
 		OUT_JS=$@ \
@@ -70,21 +76,55 @@ $(OUT_NODE_DEC_JS) $(OUT_DEC_JS): $(OUT_DEC_CPP) $(CODEC_DIR)/CMakeLists.txt $(L
 		ENVIRONMENT=$(ENVIRONMENT) \
 		LIBAVIF_FLAGS="-DAVIF_CODEC_AOM_ENCODE=0"
 
-$(CODEC_PACKAGE):
-	mkdir -p $(@D)
-	curl -sL $(CODEC_URL) -o $@
+# LIBAOM EXTRACTION SECTION
 
+# Download the libaom tarball
 $(LIBAOM_PACKAGE):
 	mkdir -p $(@D)
 	curl -sL $(LIBAOM_URL) -o $@
 
-$(CODEC_DIR)/CMakeLists.txt: $(CODEC_PACKAGE)
-	mkdir -p $(@D)
-	tar xzm --strip 1 -C $(@D) -f $(CODEC_PACKAGE)
-
+# Extract libaom from the tarball
 $(LIBAOM_DIR)/CMakeLists.txt: $(LIBAOM_PACKAGE)
 	mkdir -p $(@D)
 	tar xzm -C $(@D) -f $(LIBAOM_PACKAGE)
+
+# LIBAVIF EXTRACTION SECTION
+
+# Download the libavif tarball
+$(LIBAVIF_PACKAGE):
+	mkdir -p $(@D)
+	curl -sL $(LIBAVIF_URL) -o $@
+
+# Extract libavif from the tarball
+$(CODEC_DIR)/CMakeLists.txt: $(LIBAVIF_PACKAGE)
+	mkdir -p $(@D)
+	tar xzm --strip 1 -C $(@D) -f $(LIBAVIF_PACKAGE)
+
+# Create libavif/ext/libwebp
+$(LIBWEBP_DIR)/CMakeLists.txt: $(CODEC_DIR)/CMakeLists.txt
+	mkdir -p $(LIBWEBP_DIR)
+	curl -sL $(LIBWEBP_URL_WITH_SHARPYUV) \
+		| tar xzm -C $(LIBWEBP_DIR)
+
+# Make libsharpyuv.a
+$(LIBSHARPYUV): $(LIBWEBP_DIR)/CMakeLists.txt
+	mkdir -p $(@D)
+	emcmake cmake \
+		-DWEBP_BUILD_ANIM_UTILS=OFF \
+		-DWEBP_BUILD_CWEBP=OFF \
+		-DWEBP_BUILD_DWEBP=OFF \
+		-DWEBP_BUILD_GIF2WEBP=OFF \
+		-DWEBP_BUILD_IMG2WEBP=OFF \
+		-DWEBP_BUILD_VWEBP=OFF \
+		-DWEBP_BUILD_WEBPINFO=OFF \
+		-DWEBP_BUILD_LIBWEBPMUX=OFF \
+		-DWEBP_BUILD_WEBPMUX=OFF \
+		-DWEBP_BUILD_EXTRAS=OFF \
+		-DBUILD_SHARED_LIBS=OFF \
+		-DCMAKE_BUILD_TYPE=Release \
+		-S $(LIBWEBP_DIR) \
+		-B $(@D)
+	$(MAKE) -C $(@D) sharpyuv
 
 clean:
 	$(MAKE) $(HELPER_MAKEFLAGS) OUT_JS=$(OUT_ENC_JS) clean

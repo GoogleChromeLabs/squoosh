@@ -1,4 +1,4 @@
-import { EncodeOptions, defaultOptions, AVIFTune } from '../shared/meta';
+import { EncodeOptions, AVIFTune, defaultOptions } from '../shared/meta';
 import type WorkerBridge from 'client/lazy-app/worker-bridge';
 import { h, Component } from 'preact';
 import { preventDefault, shallowEqual } from 'client/lazy-app/util';
@@ -36,12 +36,20 @@ interface State {
   effort: number;
   sharpness: number;
   denoiseLevel: number;
-  aqMode: number;
   tune: AVIFTune;
+  enableSharpYUV: boolean;
 }
 
-const maxQuant = 63;
-const maxSpeed = 10;
+/**
+ * AVIF quality ranges from 0 (worst) to 100 (lossless).
+ * Since lossless is a separate checkbox, we cap user-inputted quality at 99
+ *
+ * AVIF speed ranges from 0 (slowest) to 10 (fastest).
+ * We display it as 'effort' to the user since it conveys the speed-size tradeoff
+ * much better: speed = 10 - effort
+ */
+const MAX_QUALITY = 100;
+const MAX_EFFORT = 10;
 
 export class Options extends Component<Props, State> {
   static getDerivedStateFromProps(
@@ -55,34 +63,28 @@ export class Options extends Component<Props, State> {
     const { options } = props;
 
     const lossless =
-      options.cqLevel === 0 &&
-      options.cqAlphaLevel <= 0 &&
+      options.quality === MAX_QUALITY &&
+      (options.qualityAlpha == -1 || options.qualityAlpha == MAX_QUALITY) &&
       options.subsample == 3;
 
-    const separateAlpha = options.cqAlphaLevel !== -1;
-
-    const cqLevel = lossless ? defaultOptions.cqLevel : options.cqLevel;
+    const separateAlpha = options.qualityAlpha !== -1;
 
     // Create default form state from options
     return {
       options,
       lossless,
-      quality: maxQuant - cqLevel,
+      quality: lossless ? defaultOptions.quality : options.quality,
       separateAlpha,
-      alphaQuality:
-        maxQuant -
-        (separateAlpha ? options.cqAlphaLevel : defaultOptions.cqLevel),
-      subsample:
-        options.subsample === 0 || lossless
-          ? defaultOptions.subsample
-          : options.subsample,
+      alphaQuality: separateAlpha ? options.qualityAlpha : options.quality,
+      subsample: options.subsample,
       tileRows: options.tileRowsLog2,
       tileCols: options.tileColsLog2,
-      effort: maxSpeed - options.speed,
+      effort: MAX_EFFORT - options.speed,
       chromaDeltaQ: options.chromaDeltaQ,
       sharpness: options.sharpness,
       denoiseLevel: options.denoiseLevel,
       tune: options.tune,
+      enableSharpYUV: options.enableSharpYUV,
     };
   }
 
@@ -120,20 +122,21 @@ export class Options extends Component<Props, State> {
         };
 
         const newOptions: EncodeOptions = {
-          cqLevel: optionState.lossless ? 0 : maxQuant - optionState.quality,
-          cqAlphaLevel:
+          quality: optionState.lossless ? MAX_QUALITY : optionState.quality,
+          qualityAlpha:
             optionState.lossless || !optionState.separateAlpha
-              ? -1
-              : maxQuant - optionState.alphaQuality,
+              ? -1 // Set qualityAlpha to quality
+              : optionState.alphaQuality,
           // Always set to 4:4:4 if lossless
           subsample: optionState.lossless ? 3 : optionState.subsample,
           tileColsLog2: optionState.tileCols,
           tileRowsLog2: optionState.tileRows,
-          speed: maxSpeed - optionState.effort,
+          speed: MAX_EFFORT - optionState.effort,
           chromaDeltaQ: optionState.chromaDeltaQ,
           sharpness: optionState.sharpness,
           denoiseLevel: optionState.denoiseLevel,
           tune: optionState.tune,
+          enableSharpYUV: optionState.enableSharpYUV,
         };
 
         // Updating options, so we don't recalculate in getDerivedStateFromProps.
@@ -167,6 +170,7 @@ export class Options extends Component<Props, State> {
       sharpness,
       denoiseLevel,
       tune,
+      enableSharpYUV,
     }: State,
   ) {
     return (
@@ -183,7 +187,7 @@ export class Options extends Component<Props, State> {
             <div class={style.optionOneCell}>
               <Range
                 min="0"
-                max="63"
+                max={MAX_QUALITY - 1} // MAX_QUALITY would mean lossless
                 value={quality}
                 onInput={this._inputChange('quality', 'number')}
               >
@@ -211,11 +215,26 @@ export class Options extends Component<Props, State> {
                         value={subsample}
                         onChange={this._inputChange('subsample', 'number')}
                       >
-                        <option value="1">Half</option>
-                        {/*<option value="2">4:2:2</option>*/}
-                        <option value="3">Off</option>
+                        <option value="0">4:0:0</option>
+                        <option value="1">4:2:0</option>
+                        <option value="2">4:2:2</option>
+                        <option value="3">4:4:4</option>
                       </Select>
                     </label>
+                    <Expander>
+                      {subsample === 1 && (
+                        <label class={style.optionToggle}>
+                          Sharp YUV Downsampling
+                          <Checkbox
+                            checked={enableSharpYUV}
+                            onChange={this._inputChange(
+                              'enableSharpYUV',
+                              'boolean',
+                            )}
+                          />
+                        </label>
+                      )}
+                    </Expander>
                     <label class={style.optionToggle}>
                       Separate alpha quality
                       <Checkbox
@@ -228,7 +247,7 @@ export class Options extends Component<Props, State> {
                         <div class={style.optionOneCell}>
                           <Range
                             min="0"
-                            max="63"
+                            max={MAX_QUALITY - 1} // MAX_QUALITY would mean lossless
                             value={alphaQuality}
                             onInput={this._inputChange(
                               'alphaQuality',
@@ -307,7 +326,7 @@ export class Options extends Component<Props, State> {
         <div class={style.optionOneCell}>
           <Range
             min="0"
-            max="10"
+            max={MAX_EFFORT}
             value={effort}
             onInput={this._inputChange('effort', 'number')}
           >

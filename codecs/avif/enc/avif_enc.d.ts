@@ -5,15 +5,16 @@ export const enum AVIFTune {
 }
 
 export interface EncodeOptions {
-  cqLevel: number;
+  quality: number;
+  qualityAlpha: number;
   denoiseLevel: number;
-  cqAlphaLevel: number;
   tileRowsLog2: number;
   tileColsLog2: number;
   speed: number;
   subsample: number;
   chromaDeltaQ: boolean;
   sharpness: number;
+  enableSharpYUV: boolean;
   tune: AVIFTune;
 }
 

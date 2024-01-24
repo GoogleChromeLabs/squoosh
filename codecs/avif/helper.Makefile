@@ -10,8 +10,11 @@
 #   $(LIBAVIF_FLAGS)
 #   $(ENVIRONMENT)
 
+# $(OUT_JS) is something like "enc/avif_enc.js" or "enc/avif_enc_mt.js"
+# so $(OUT_BUILD_DIR) will be "node_modules/build/enc/avif_enc[_mt]"
 OUT_BUILD_DIR := $(BUILD_DIR)/$(basename $(OUT_JS))
 
+# We're making libavif and libaom for every node_modules/[enc|dec]/
 CODEC_BUILD_DIR := $(OUT_BUILD_DIR)/libavif
 CODEC_OUT := $(CODEC_BUILD_DIR)/libavif.a
 
@@ -25,6 +28,13 @@ OUT_WORKER=$(OUT_JS:.js=.worker.js)
 
 all: $(OUT_JS)
 
+# Only add libsharpyuv as a dependency for encoders.
+# Yes, that if statement is true for encoders.
+ifneq (,$(findstring enc/, $(OUT_JS)))
+$(OUT_JS): $(LIBSHARPYUV)
+$(CODEC_OUT): $(LIBSHARPYUV)
+endif
+
 $(OUT_JS): $(OUT_CPP) $(LIBAOM_OUT) $(CODEC_OUT)
 	$(CXX) \
 		-I $(CODEC_DIR)/include \
@@ -32,6 +42,7 @@ $(OUT_JS): $(OUT_CPP) $(LIBAOM_OUT) $(CODEC_OUT)
 		$(LDFLAGS) \
 		$(OUT_FLAGS) \
 		--bind \
+		-s ERROR_ON_UNDEFINED_SYMBOLS=0 \
 		-s ENVIRONMENT=$(ENVIRONMENT) \
 		-s EXPORT_ES6=1 \
 		-o $@ \
@@ -39,6 +50,7 @@ $(OUT_JS): $(OUT_CPP) $(LIBAOM_OUT) $(CODEC_OUT)
 
 $(CODEC_OUT): $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_OUT)
 	emcmake cmake \
+		-DCMAKE_LIBRARY_PATH=$(LIBSHARPYUV_BUILD_DIR) \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DBUILD_SHARED_LIBS=0 \
 		-DAVIF_CODEC_AOM=1 \
