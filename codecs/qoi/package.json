@@ -1,0 +1,7 @@
+{
+    "name": "qoi",
+    "scripts": {
+      "build": "../build-cpp.sh"
+    }
+  }
+  
