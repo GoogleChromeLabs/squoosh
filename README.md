@@ -34,8 +34,8 @@ To develop for Squoosh:
 # Codecs
 
 1. AVIF
-   - [libavif - v0.11.1+](https://github.com/AOMediaCodec/libavif/commit/647c3c208cf152395d777c1bf7240d2ecf7df5a9)
-   - [AOM Library - v3.6.0](https://aomedia.googlesource.com/aom/+/refs/tags/v3.6.0)
+   - [libavif - v1.0.1](https://github.com/AOMediaCodec/libavif/releases/tag/v1.0.1)
+   - [AOM Library - v3.7.0](https://aomedia.googlesource.com/aom/+/refs/tags/v3.7.0)
 1. Browser JPEG
    - Uses your browser's native JPEG capabilities
 1. Browser PNG
