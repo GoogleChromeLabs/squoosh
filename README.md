@@ -46,6 +46,8 @@ To develop for Squoosh:
    - [mozjpeg - v3.3.1](https://github.com/mozilla/mozjpeg/releases/v3.3.1)
 1. OxiPNG
    - [oxipng - v3.0.0](https://github.com/shssoichiro/oxipng/releases/v3.0.0)
+1. QOI
+   - [phoboslab/qoi - Sep 11, 2023](https://github.com/phoboslab/qoi/commit/8d35d93cdca85d2868246c2a8a80a1e2c16ba2a8)
 1. WebP
    - [webmproject/libwebp - v1.1.0+](https://github.com/webmproject/libwebp/commit/d2e245ea9e959a5a79e1db0ed2085206947e98f2)
 1. WebP v2 (experimental)
