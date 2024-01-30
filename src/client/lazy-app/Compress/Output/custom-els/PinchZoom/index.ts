@@ -173,11 +173,27 @@ export default class PinchZoom extends HTMLElement {
       originY -= currentRect.top;
     }
 
+    //Apply scaling
     this._applyChange({
       allowChangeEvent,
       originX,
       originY,
       scaleDiff: scale / this.scale,
+    });
+
+    //Center image
+    const rectAfterScale = this._positioningEl.getBoundingClientRect();
+    this._applyChange({
+      allowChangeEvent,
+      originX,
+      originY,
+      panX:
+        this.getBoundingClientRect().width / 2 -
+        (rectAfterScale.left + rectAfterScale.width / 2),
+      panY:
+        this.getBoundingClientRect().height / 2 -
+        (rectAfterScale.top + rectAfterScale.height / 2),
+      scaleDiff: 1,
     });
   }
 
