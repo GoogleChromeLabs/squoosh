@@ -1,0 +1,35 @@
+From add3a91a2cafdba74b6fa65fb525007909a69b7c Mon Sep 17 00:00:00 2001
+From: andylizi <andylizi666@gmail.com>
+Date: Sat, 3 Feb 2024 01:04:17 -0400
+Subject: [PATCH] Remove `fprintf` call
+
+---
+ jerror.c | 14 +-------------
+ 1 file changed, 1 insertion(+), 13 deletions(-)
+
+diff --git a/jerror.c b/jerror.c
+index d0ab5b8..ef745df 100644
+--- a/jerror.c
++++ b/jerror.c
+@@ -97,17 +97,5 @@ METHODDEF(void)
+ output_message(j_common_ptr cinfo)
+ {
+-  char buffer[JMSG_LENGTH_MAX];
+-
+-  /* Create the message */
+-  (*cinfo->err->format_message) (cinfo, buffer);
+-
+-#ifdef USE_WINDOWS_MESSAGEBOX
+-  /* Display it in a message dialog box */
+-  MessageBox(GetActiveWindow(), buffer, "JPEG Library Error",
+-             MB_OK | MB_ICONERROR);
+-#else
+-  /* Send it to stderr, adding a newline */
+-  fprintf(stderr, "%s\n", buffer);
+-#endif
++  (void)cinfo;
+ }
+
+--
+2.43.0
+
