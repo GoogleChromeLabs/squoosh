@@ -2,7 +2,6 @@ import { h, Component } from 'preact';
 import { Options as QuantizeOptions } from '../shared/meta';
 import * as style from 'client/lazy-app/Compress/Options/style.css';
 import {
-  inputFieldChecked,
   inputFieldValueAsNumber,
   konami,
   preventDefault,
@@ -10,7 +9,6 @@ import {
 import Expander from 'client/lazy-app/Compress/Options/Expander';
 import Select from 'client/lazy-app/Compress/Options/Select';
 import Range from 'client/lazy-app/Compress/Options/Range';
-import Checkbox from 'client/lazy-app/Compress/Options/Checkbox';
 
 const konamiPromise = konami();
 
@@ -45,7 +43,6 @@ export class Options extends Component<Props, State> {
         options.maxNumColors,
       ),
       dither: inputFieldValueAsNumber(form.dither),
-      alphaOnly: inputFieldChecked(form.alphaOnly)
     };
     this.props.onChange(newOptions);
   };
@@ -94,15 +91,7 @@ export class Options extends Component<Props, State> {
           >
             Dithering:
           </Range>
-        </div>                         
-        <label class={style.optionToggle}>
-          Alpha only
-          <Checkbox
-            name="alphaOnly"
-            checked={options.alphaOnly}
-            onChange={this.onChange}
-          />
-        </label>
+        </div>
       </form>
     );
   }
