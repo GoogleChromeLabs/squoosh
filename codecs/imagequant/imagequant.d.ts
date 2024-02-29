@@ -11,7 +11,7 @@ export interface QuantizerModule extends EmscriptenWasm.Module {
     width: number,
     height: number,
     dither: number,
-  ): Uint8ClampedArray;
+  ): Uint8ClampedArray;  
 }
 
 declare var moduleFactory: EmscriptenWasm.ModuleFactory<QuantizerModule>;
