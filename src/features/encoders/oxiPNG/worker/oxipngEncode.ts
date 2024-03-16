@@ -35,7 +35,7 @@ async function initST() {
 let wasmReady: ReturnType<typeof initMT | typeof initST>;
 
 export default async function encode(
-  data: ArrayBuffer,
+  data: ImageData,
   options: EncodeOptions,
 ): Promise<ArrayBuffer> {
   if (!wasmReady) {
@@ -45,6 +45,11 @@ export default async function encode(
   }
 
   const optimise = await wasmReady;
-  return optimise(new Uint8Array(data), options.level, options.interlace)
-    .buffer;
+  return optimise(
+    data.data,
+    data.width,
+    data.height,
+    options.level,
+    options.interlace,
+  ).buffer;
 }
