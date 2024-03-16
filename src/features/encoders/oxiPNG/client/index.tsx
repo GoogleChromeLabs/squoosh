@@ -1,9 +1,4 @@
-import { canvasEncode } from 'client/lazy-app/util/canvas';
-import {
-  abortable,
-  blobToArrayBuffer,
-  inputFieldChecked,
-} from 'client/lazy-app/util';
+import { inputFieldChecked } from 'client/lazy-app/util';
 import { EncodeOptions } from '../shared/meta';
 import type WorkerBridge from 'client/lazy-app/worker-bridge';
 import { h, Component } from 'preact';
