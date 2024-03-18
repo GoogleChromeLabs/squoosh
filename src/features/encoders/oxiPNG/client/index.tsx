@@ -1,9 +1,4 @@
-import { canvasEncode } from 'client/lazy-app/util/canvas';
-import {
-  abortable,
-  blobToArrayBuffer,
-  inputFieldChecked,
-} from 'client/lazy-app/util';
+import { inputFieldChecked } from 'client/lazy-app/util';
 import { EncodeOptions } from '../shared/meta';
 import type WorkerBridge from 'client/lazy-app/worker-bridge';
 import { h, Component } from 'preact';
@@ -18,9 +13,7 @@ export async function encode(
   imageData: ImageData,
   options: EncodeOptions,
 ) {
-  const pngBlob = await abortable(signal, canvasEncode(imageData, 'image/png'));
-  const pngBuffer = await abortable(signal, blobToArrayBuffer(pngBlob));
-  return workerBridge.oxipngEncode(signal, pngBuffer, options);
+  return workerBridge.oxipngEncode(signal, imageData, options);
 }
 
 type Props = {
@@ -56,7 +49,7 @@ export class Options extends Component<Props, {}> {
           <Range
             name="level"
             min="0"
-            max="3"
+            max="6"
             step="1"
             value={options.level}
             onInput={this.onChange}

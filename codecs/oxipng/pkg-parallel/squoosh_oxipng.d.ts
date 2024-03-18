@@ -1,12 +1,14 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
-* @param {Uint8Array} data
+* @param {Uint8ClampedArray} data
+* @param {number} width
+* @param {number} height
 * @param {number} level
 * @param {boolean} interlace
 * @returns {Uint8Array}
 */
-export function optimise(data: Uint8Array, level: number, interlace: boolean): Uint8Array;
+export function optimise(data: Uint8ClampedArray, width: number, height: number, level: number, interlace: boolean): Uint8Array;
 /**
 * @param {number} num_threads
 * @returns {Promise<any>}
@@ -36,8 +38,7 @@ export class wbg_rayon_PoolBuilder {
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
-  readonly __wasm_init_memory: () => void;
-  readonly optimise: (a: number, b: number, c: number, d: number, e: number) => void;
+  readonly optimise: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
   readonly __wbg_wbg_rayon_poolbuilder_free: (a: number) => void;
   readonly wbg_rayon_poolbuilder_numThreads: (a: number) => number;
   readonly wbg_rayon_poolbuilder_receiver: (a: number) => number;
