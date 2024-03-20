@@ -1,0 +1,47 @@
+From 3a36794496e595f2a9883630c7c6f7acb3a53493 Mon Sep 17 00:00:00 2001
+From: andylizi <andylizi666@gmail.com>
+Date: Sat, 3 Feb 2024 01:36:05 -0400
+Subject: [PATCH] Remove setjmp/longjmp
+
+---
+ libtiff/tif_jpeg.c  | 7 +++----
+ libtiff/tif_ojpeg.c | 7 +++----
+ 2 files changed, 6 insertions(+), 8 deletions(-)
+
+diff --git a/libtiff/tif_jpeg.c b/libtiff/tif_jpeg.c
+index 39bd813..15dcdce 100644
+--- a/libtiff/tif_jpeg.c
++++ b/libtiff/tif_jpeg.c
+@@ -44,3 +44,2 @@
+  */
+-#include <setjmp.h>
+
+@@ -143,5 +142,5 @@ int TIFFJPEGIsFullStripRequired_12(TIFF *tif);
+  */
+-#define SETJMP(jbuf) setjmp(jbuf)
+-#define LONGJMP(jbuf, code) longjmp(jbuf, code)
+-#define JMP_BUF jmp_buf
++#define SETJMP(jbuf) 0
++#define LONGJMP(jbuf, code) exit(1)
++#define JMP_BUF int
+
+diff --git a/libtiff/tif_ojpeg.c b/libtiff/tif_ojpeg.c
+index e4547cf..28b0f3e 100644
+--- a/libtiff/tif_ojpeg.c
++++ b/libtiff/tif_ojpeg.c
+@@ -154,5 +154,5 @@
+ /* define LIBJPEG_ENCAP_EXTERNAL */
+-#define SETJMP(jbuf) setjmp(jbuf)
+-#define LONGJMP(jbuf, code) longjmp(jbuf, code)
+-#define JMP_BUF jmp_buf
++#define SETJMP(jbuf) 0
++#define LONGJMP(jbuf, code) exit(1)
++#define JMP_BUF int
+ #define OJPEG_BUFFER 2048
+@@ -206,3 +206,2 @@ static const TIFFField ojpegFields[] = {
+ #ifndef LIBJPEG_ENCAP_EXTERNAL
+-#include <setjmp.h>
+ #endif
+--
+2.43.0
+
