@@ -1,0 +1,58 @@
+variable-prefix: "$"
+headers:
+  # on every resource
+  all:
+    Strict-Transport-Security: max-age=315360000; includeSubdomains; preload
+    Cache-Control: public, max-age=31536000
+
+  # only on the document
+  document:
+    Content-Security-Policy: >-
+      default-src 'none';
+
+      script-src 'self' 'sha256-ASLOheG06d3Ki7JdH/cJOYqOpoHDbrabbcTjIgbYpRI=';
+                  
+      style-src 'self' 
+      'sha256-r4w0Hpmqa9mzXpgsvu8FwnGj4j7CpbrS5vHVS6QzpEM=' 
+      'sha256-OTdQIZNeJ+u2K6P+da06j73k5B+WYvb3m+/iO94IM2g=' 
+      'sha256-2EA12+9d+s6rrc0rkdIjfmjbh6p2o0ZSXs4wbZuk/tA='
+      'sha256-2EA12+9d+s6rrc0rkdIjfmjbh6p2o0ZSXs4wbZuk/tA='
+      'sha256-Yh8FYUptAjJ9w67MZdihL5MxhHHFuUbmmVNtqv9dQIY='
+      'sha256-oLLn19wHxgxFjhnaXa7h53+82py1urmj+GLI9l8f3Hk='
+      'sha256-9evHuqQFjXHYY7YA6nY/QiE2LirkInU7XLaP5zAIvHo='
+      'sha256-A8nHJN5YWO+4jO+ZeY8xltCtVoyLfDWnSe48ryLZOCY='
+      'sha256-liEU77wR4daMgOSAR1H2fAFLSXSkEu4dnPDhCqcelLo='
+      'sha256-GVyimAn1ggnl+BaVLxUjr+8SwPeE1kq+0thgkN0jtSU='
+      'sha256-uAs0frDVS//Iu5waeAtb5A6Sz5FZADGyD+AZTNeSY+w='
+      'sha256-Ai4JUKXRnnXcz+H7stqljIVWduLotmteoB88DbxTO+A='
+      'sha256-799QTmFVuWkl0fc8JG6jR2OuzGx3afsDzi7pMEOEO7k='
+      'sha256-zvQhkGoQkBBGjGdcB76GGWz81eg5axo+PReFhjLdVbk='
+      'sha256-1ng4AeWRMP0bs+7IaEbB0DNX2F9Av+eD1dSqyMMFAuU='
+      'sha256-iO447mRdvm5tpy+fqguCUl79fo6ilHjcSwe3cljtZVk='
+      'sha256-/fxbSamZmZ1BIKBfZOFgD/BxdLUwLIpHDzYYEM09kLg='
+      'sha256-bk853qrHABhngEzMFAasEjb4D5gz4c+ZEyWjdDSOpPA='
+      'sha256-kGofphy1PwA1DnHMUuv78Em7CX7jz6HGap3Cid9q1jQ='
+      'sha256-gha80ipHIH77jevbt1lzKT+8selhjAe9wGSIhwzZs1o='
+      'sha256-b2a6Jl/gFoWK5tuG6scjMDt4GnYRKRz7Qah9GKi6P38='
+      'sha256-2EA12+9d+s6rrc0rkdIjfmjbh6p2o0ZSXs4wbZuk/tA='
+      'unsafe-hashes'; 
+
+      manifest-src 'self';
+
+      img-src 'self' data:; 
+
+      font-src 'self' data:; 
+
+      base-uri 'none'; 
+
+      form-action 'none'; 
+
+      frame-ancestors 'none';
+    x-frame-options: DENY
+    x-content-type-options: nosniff
+    x-permitted-cross-domain-policies: none
+    x-download-options: noopen
+    x-xss-protection: 1; mode=block
+    referrer-policy: no-referrer
+    permissions-policy: accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), cross-origin-isolated=(), display-capture=(), document-domain=(), encrypted-media=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=(), geolocation=(), gyroscope=(), keyboard-map=(), magnetometer=(), microphone=(), midi=(), navigation-override=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=(), clipboard-read=(), clipboard-write=(), gamepad=(), speaker-selection=(), conversion-measurement=(), focus-without-user-activation=(), hid=(), idle-detection=(), interest-cohort=(), serial=(), sync-script=(), trust-token-redemption=(), window-placement=(), vertical-scroll=()
+no-memory: [".jpg",".png",".jpeg"]
