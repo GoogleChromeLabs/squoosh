@@ -71,11 +71,14 @@ interface State {
   mobileView: boolean;
   preprocessorState: PreprocessorState;
   encodedPreprocessorState?: PreprocessorState;
+  progressivePercent?: number;
+  renderedPercent?: number;
 }
 
 interface MainJob {
   file: File;
   preprocessorState: PreprocessorState;
+  progressivePercent: number;
 }
 
 interface SideJob {
@@ -106,6 +109,7 @@ async function decodeImage(
         return await workerBridge.webpDecode(signal, blob);
       }
       if (mimeType === 'image/jxl') {
+        console.log('decode jxl');
         return await workerBridge.jxlDecode(signal, blob);
       }
       if (mimeType === 'image/webp2') {
@@ -536,6 +540,35 @@ export default class Compress extends Component<Props, State> {
     }
   };
 
+  private onProgressiveChange = async (percent: number): Promise<void> => {
+    this.setState({ progressivePercent: percent });
+
+    // right side hardcoded for now
+    let sideIndex = 1;
+    const sideSignals = this.sideAbortControllers.map((ac) => ac.signal);
+    const currentSide = this.state.sides[sideIndex];
+
+    if (currentSide.file === undefined) {
+      return;
+    }
+
+    // Note browser-native decodeImage() might be less willing to decode partial data
+    let data = await decodeImage(
+      sideSignals[1],
+      currentSide.file.slice(0, currentSide.file.size * percent),
+      this.workerBridges[0],
+    );
+
+    this.setState((currentState) => {
+      const side: Side = {
+        ...currentSide,
+        data,
+      };
+      const sides = cleanSet(currentState.sides, sideIndex, side);
+      return { sides };
+    });
+  };
+
   private onPreprocessorChange = async (
     preprocessorState: PreprocessorState,
   ): Promise<void> => {
@@ -605,6 +638,7 @@ export default class Compress extends Component<Props, State> {
     const latestMainJobState: Partial<MainJob> = this.activeMainJob || {
       file: currentState.source && currentState.source.file,
       preprocessorState: currentState.encodedPreprocessorState,
+      progressivePercent: currentState.progressivePercent,
     };
     const latestSideJobStates: Partial<SideJob>[] = currentState.sides.map(
       (side, i) =>
@@ -620,6 +654,7 @@ export default class Compress extends Component<Props, State> {
     const mainJobState: MainJob = {
       file: this.sourceFile,
       preprocessorState: currentState.preprocessorState,
+      progressivePercent: currentState.progressivePercent || 1.0,
     };
     const sideJobStates: SideJob[] = currentState.sides.map((side) => ({
       // If there isn't an encoder selected, we don't process either
@@ -980,6 +1015,7 @@ export default class Compress extends Component<Props, State> {
           rightImgContain={rightImgContain}
           preprocessorState={preprocessorState}
           onPreprocessorChange={this.onPreprocessorChange}
+          onProgressiveChange={this.onProgressiveChange}
         />
         <button class={style.back} onClick={onBack}>
           <svg viewBox="0 0 61 53.3">

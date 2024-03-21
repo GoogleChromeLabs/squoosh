@@ -30,6 +30,7 @@ interface Props {
   leftImgContain: boolean;
   rightImgContain: boolean;
   onPreprocessorChange: (newState: PreprocessorState) => void;
+  onProgressiveChange: (newState: number) => void;
 }
 
 interface State {
@@ -37,6 +38,7 @@ interface State {
   editingScale: boolean;
   altBackground: boolean;
   aliasing: boolean;
+  progressive: number;
 }
 
 const scaleToOpts: ScaleToOpts = {
@@ -52,6 +54,7 @@ export default class Output extends Component<Props, State> {
     editingScale: false,
     altBackground: false,
     aliasing: false,
+    progressive: 1,
   };
   canvasLeft?: HTMLCanvasElement;
   canvasRight?: HTMLCanvasElement;
@@ -208,6 +211,19 @@ export default class Output extends Component<Props, State> {
     this.pinchZoomLeft.scaleTo(percent / 100, scaleToOpts);
   };
 
+  private onProgressiveInputBlur = (event: Event) => {
+    console.log('re-render progressiveness?');
+  };
+
+  private onProgressiveInputChanged = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    const percent = parseFloat(target.value);
+    if (isNaN(percent)) return;
+    console.log('set progressive to ' + percent / 100);
+    this.setState({ progressive: percent / 100 });
+    this.props.onProgressiveChange(percent / 100);
+  };
+
   private onPinchZoomLeftChange = (event: Event) => {
     if (!this.pinchZoomRight || !this.pinchZoomLeft) {
       throw Error('Missing pinch-zoom element');
@@ -264,7 +280,7 @@ export default class Output extends Component<Props, State> {
 
   render(
     { mobileView, leftImgContain, rightImgContain, source }: Props,
-    { scale, editingScale, altBackground, aliasing }: State,
+    { scale, editingScale, altBackground, aliasing, progressive }: State,
   ) {
     const leftDraw = this.leftDrawable();
     const rightDraw = this.rightDrawable();
@@ -392,6 +408,22 @@ export default class Output extends Component<Props, State> {
               ) : (
                 <ToggleBackgroundIcon />
               )}
+            </button>
+          </div>
+
+          <div class={style.buttonGroup}>
+            <button title="Progressive percent">
+              <input
+                type="number"
+                step="1"
+                min="1"
+                max="1000000"
+                ref={linkRef(this, 'limitProgressive')}
+                class={style.zoom}
+                value={Math.round(progressive * 100)}
+                onInput={this.onProgressiveInputChanged}
+                onBlur={this.onProgressiveInputBlur}
+              />
             </button>
           </div>
         </div>
