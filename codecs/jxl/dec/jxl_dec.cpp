@@ -43,6 +43,8 @@ thread_local const val ImageData = val::global("ImageData");
 #endif
 
 val decode(std::string data) {
+  printf("JXL Decode start\n");
+  // printf("Length of data: %lu\n", data.length());
   std::unique_ptr<JxlDecoder,
                   std::integral_constant<decltype(&JxlDecoderDestroy), JxlDecoderDestroy>>
       dec(JxlDecoderCreate(nullptr));
@@ -50,6 +52,7 @@ val decode(std::string data) {
             JxlDecoderSubscribeEvents(
                 dec.get(), JXL_DEC_BASIC_INFO | JXL_DEC_COLOR_ENCODING | JXL_DEC_FULL_IMAGE));
 
+  // printf("decode 1\n");
   auto next_in = (const uint8_t*)data.c_str();
   auto avail_in = data.size();
   JxlDecoderSetInput(dec.get(), next_in, avail_in);
@@ -58,7 +61,9 @@ val decode(std::string data) {
   EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderGetBasicInfo(dec.get(), &info));
   size_t pixel_count = info.xsize * info.ysize;
   size_t component_count = pixel_count * COMPONENTS_PER_PIXEL;
+  // printf("Component count = %zu\n", component_count);
 
+  // printf("decode 2\n");
   EXPECT_EQ(JXL_DEC_COLOR_ENCODING, JxlDecoderProcessInput(dec.get()));
   static const JxlPixelFormat format = {COMPONENTS_PER_PIXEL, JXL_TYPE_FLOAT, JXL_LITTLE_ENDIAN, 0};
   size_t icc_size;
@@ -69,6 +74,7 @@ val decode(std::string data) {
             JxlDecoderGetColorAsICCProfile(dec.get(), &format, JXL_COLOR_PROFILE_TARGET_DATA,
                                            icc_profile.data(), icc_profile.size()));
 
+  // printf("decode 3\n");
   EXPECT_EQ(JXL_DEC_NEED_IMAGE_OUT_BUFFER, JxlDecoderProcessInput(dec.get()));
   size_t buffer_size;
   EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderImageOutBufferSize(dec.get(), &format, &buffer_size));
@@ -89,6 +95,8 @@ val decode(std::string data) {
       &jxl_profile, byte_pixels.get(), skcms_PixelFormat_RGBA_8888, skcms_AlphaFormat_Unpremul,
       skcms_sRGB_profile(), pixel_count));
 
+  printf("JXL Decode end\n");
+  // printf("info: xsize=%d ysize=%d\n", info.xsize, info.ysize);
   return ImageData.new_(
       Uint8ClampedArray.new_(typed_memory_view(component_count, byte_pixels.get())), info.xsize,
       info.ysize);
