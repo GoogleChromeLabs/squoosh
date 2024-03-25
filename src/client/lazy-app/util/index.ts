@@ -12,6 +12,33 @@
  */
 import { drawableToImageData } from './canvas';
 
+export function animateTo(
+  element: HTMLElement,
+  to: Keyframe[] | PropertyIndexedKeyframes,
+  options: KeyframeAnimationOptions,
+) {
+  const anim = element.animate(to, { ...options, fill: 'both' });
+  anim.addEventListener('finish', () => {
+    // pseudo-elements don't support inline styles at the moment, catch those errors
+    try {
+      anim.commitStyles();
+    } catch (e) {}
+    anim.cancel();
+  });
+  return anim;
+}
+
+export function animateFrom(
+  element: HTMLElement,
+  from: PropertyIndexedKeyframes,
+  options: KeyframeAnimationOptions,
+) {
+  return element.animate(
+    { ...from, offset: 0 },
+    { ...options, fill: 'backwards' },
+  );
+}
+
 /** If render engine is Safari */
 export const isSafari =
   /Safari\//.test(navigator.userAgent) &&
