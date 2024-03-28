@@ -44,7 +44,7 @@
     "prettier": "^2.4.1",
     "rollup": "^2.38.0",
     "rollup-plugin-terser": "^7.0.2",
-    "serve": "^11.3.2",
+    "serve": "^14.1.2",
     "typescript": "^4.4.4",
     "which": "^2.0.2",
     "wasm-feature-detect": "^1.2.11"
