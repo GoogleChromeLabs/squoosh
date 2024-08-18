@@ -1,0 +1,171 @@
+.modal-dialog {
+  padding: 0;
+  width: 70vw;
+  max-width: 60ch;
+  max-height: 70vh;
+  cursor: auto;
+
+  box-shadow: 0 0 20px 0 rgba(0, 0, 0, 20%);
+
+  font-size: 1.5rem;
+  color: var(--light-gray);
+
+  border: none;
+  border-radius: 10px;
+  overflow: hidden;
+
+  opacity: 0;
+  background-color: var(--off-black);
+
+  /* Note: dialog and ::backdrop are animated using the Animations API in the component file */
+
+  &::backdrop {
+    background-color: rgba(0, 0, 0, 30%);
+  }
+}
+
+@media (max-width: 720px) {
+  .modal-dialog {
+    width: 90%;
+    max-width: none;
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-dialog {
+    font-size: 1rem;
+  }
+}
+
+.article {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+.header,
+.footer {
+  max-height: 100%;
+  padding: 1em;
+
+  background-color: var(--dark-gray);
+}
+
+.header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.5em;
+  border-bottom: 1px solid rgba(0, 0, 0, 8%);
+  align-content: stretch;
+
+  /* Apply font size only to children so that padding is unaffected */
+  & > * {
+    font-size: 1.5em;
+  }
+}
+
+.footer {
+  border-top: 1px solid rgba(0, 0, 0, 8%);
+}
+
+.modal-title {
+  text-align: center;
+
+  /* Overflowing text gets ellipse-d */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  white-space: nowrap;
+}
+
+.modal-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  opacity: 0.5;
+
+  svg {
+    font-size: 1em;
+    height: 1em;
+    width: 1em;
+  }
+}
+
+.close-button {
+  composes: unbutton from global;
+  flex: 0 0 auto;
+  height: 1em;
+  width: 1em;
+  background-color: var(--pink);
+  border-radius: 5px;
+  display: grid;
+  outline-color: var(--medium-light-gray);
+
+  color: black; /* Influences currentColor of the icon */
+
+  &:focus {
+    outline: var(--medium-light-gray); /* Overwrite default black outline */
+  }
+
+  /* Don't show focus ring on mobile */
+  &:focus-visible {
+    outline-width: 2px;
+    outline-style: solid;
+    outline-offset: 2px;
+  }
+}
+
+.content-container {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.content {
+  font-size: 1em;
+  line-height: 1.5;
+
+  padding: 0 1em;
+
+  h1 {
+    color: var(--white);
+  }
+
+  img {
+    max-width: 100%;
+    max-height: 500px;
+  }
+
+  figcaption {
+    font-size: 0.8em;
+    text-align: center;
+    font-style: italic;
+  }
+
+  a {
+    &:link {
+      color: var(--blue);
+    }
+    &:visited {
+      color: var(--pink);
+    }
+  }
+
+  pre,
+  code {
+    background-color: var(--black);
+    padding: 2px 4px;
+    border-radius: 3px;
+  }
+
+  pre {
+    overflow-x: auto;
+    padding: 1rem 2rem;
+  }
+
+  hr {
+    border: none;
+    border-bottom: 1px solid var(--dim-text);
+  }
+}

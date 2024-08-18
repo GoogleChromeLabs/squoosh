@@ -1,4 +1,4 @@
-import { h } from 'preact';
+import preact, { h } from 'preact';
 
 const Icon = (props: preact.JSX.HTMLAttributes) => (
   // @ts-ignore - TS bug https://github.com/microsoft/TypeScript/issues/16019
@@ -9,6 +9,30 @@ const Icon = (props: preact.JSX.HTMLAttributes) => (
     fill="currentColor"
     {...props}
   />
+);
+
+/* Cross with rounded linecaps */
+export const RoundedCrossIcon = (props: preact.JSX.HTMLAttributes) => (
+  <svg viewBox="0 0 480 480" fill="currentColor">
+    <path
+      d="M119.356 120L361 361M360.644 120L119 361"
+      stroke="currentColor"
+      stroke-width="37"
+      stroke-linecap="round"
+    />
+  </svg>
+);
+
+export const InfoIcon = (props: preact.JSX.HTMLAttributes) => (
+  <svg viewBox="0 0 520 520" fill="currentColor" {...props}>
+    <path d="M70 0C31 0 0 31 0 70v380c0 39 31 70 70 70h380c39 0 70-31 70-70V70c0-39-31-70-70-70H70zm189 65c11 0 21 4 28 12 8 8 12 18 12 29s-4 21-12 29c-7 8-17 12-28 12s-21-4-29-12-12-18-12-29 4-21 12-29 18-12 29-12zm-33 119h5c18 0 32 5 44 14 12 10 18 25 18 45v198h-3l-23-3c-7-2-14-5-21-10-6-4-11-10-15-17-4-8-5-17-5-28V184z"/>
+  </svg>
+);
+
+export const DiamondStarIcon = (props: preact.JSX.HTMLAttributes) => (
+  <svg viewBox="0 0 48 48" fill="currentColor" {...props}>
+    <path d="M24 48c0-12-12-24-24-24 12 0 24-12 24-24 0 12 12 24 24 24a25.8 25.8 0 0 0-24 24Z" />
+  </svg>
 );
 
 export const ToggleAliasingIcon = (props: preact.JSX.HTMLAttributes) => (
