@@ -1,4 +1,4 @@
-import { h, Component } from 'preact';
+import { h, Component, Fragment } from 'preact';
 
 import { linkRef } from 'shared/prerendered-app/util';
 import '../../custom-els/loading-spinner';
@@ -285,13 +285,14 @@ export default class Intro extends Component<Props, State> {
                 </svg>
               </button>
               <div>
-                <span class={style.dropText}>Drop </span>OR{' '}
-                {supportsClipboardAPI ? (
-                  <button class={style.pasteBtn} onClick={this.onPasteClick}>
-                    Paste
-                  </button>
-                ) : (
-                  'Paste'
+                <span class={style.dropText}>Drop</span>
+                {supportsClipboardAPI && (
+                  <Fragment>
+                    <span> OR </span>
+                    <button class={style.pasteBtn} onClick={this.onPasteClick}>
+                      Paste
+                    </button>
+                  </Fragment>
                 )}
               </div>
             </div>
