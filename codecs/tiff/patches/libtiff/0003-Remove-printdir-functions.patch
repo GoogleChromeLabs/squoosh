@@ -1,0 +1,51 @@
+From da302a2fd48aac7c67e7382ead1ed59d603071a5 Mon Sep 17 00:00:00 2001
+From: andylizi <andylizi666@gmail.com>
+Date: Sat, 3 Feb 2024 01:11:38 -0400
+Subject: [PATCH] Remove printdir functions
+
+---
+ libtiff/tif_fax3.c    | 2 +-
+ libtiff/tif_jpeg.c    | 2 +-
+ libtiff/tif_ojpeg.c   | 2 +-
+ libtiff/tif_predict.c | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/libtiff/tif_fax3.c b/libtiff/tif_fax3.c
+index 668e96a..59a6b74 100644
+--- a/libtiff/tif_fax3.c
++++ b/libtiff/tif_fax3.c
+@@ -1471,3 +1471,3 @@ static int InitCCITTFax3(TIFF *tif)
+     sp->printdir = tif->tif_tagmethods.printdir;
+-    tif->tif_tagmethods.printdir = Fax3PrintDir; /* hook for codec tags */
++    tif->tif_tagmethods.printdir = NULL; /* hook for codec tags */
+     sp->groupoptions = 0;
+diff --git a/libtiff/tif_jpeg.c b/libtiff/tif_jpeg.c
+index 39bd813..35a14f8 100644
+--- a/libtiff/tif_jpeg.c
++++ b/libtiff/tif_jpeg.c
+@@ -2772,3 +2772,3 @@ static void TIFFInitJPEGCommon(TIFF *tif)
+     tif->tif_tagmethods.vsetfield = JPEGVSetField; /* hook for codec tags */
+-    tif->tif_tagmethods.printdir = JPEGPrintDir;   /* hook for codec tags */
++    tif->tif_tagmethods.printdir = NULL;   /* hook for codec tags */
+
+diff --git a/libtiff/tif_ojpeg.c b/libtiff/tif_ojpeg.c
+index e4547cf..6b433ba 100644
+--- a/libtiff/tif_ojpeg.c
++++ b/libtiff/tif_ojpeg.c
+@@ -510,3 +510,3 @@ int TIFFInitOJPEG(TIFF *tif, int scheme)
+     sp->printdir = tif->tif_tagmethods.printdir;
+-    tif->tif_tagmethods.printdir = OJPEGPrintDir;
++    tif->tif_tagmethods.printdir = NULL;
+     /* Some OJPEG files don't have strip or tile offsets or bytecounts tags.
+diff --git a/libtiff/tif_predict.c b/libtiff/tif_predict.c
+index 386b5fe..c756f30 100644
+--- a/libtiff/tif_predict.c
++++ b/libtiff/tif_predict.c
+@@ -1019,3 +1019,3 @@ int TIFFPredictorInit(TIFF *tif)
+     tif->tif_tagmethods.printdir =
+-        PredictorPrintDir; /* hook for predictor tag */
++        NULL; /* hook for predictor tag */
+
+--
+2.43.0
+

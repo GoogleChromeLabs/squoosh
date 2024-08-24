@@ -1,0 +1,38 @@
+From 28d63c1d49bea0c3d50889508ea60550e4fc9843 Mon Sep 17 00:00:00 2001
+From: andylizi <andylizi666@gmail.com>
+Date: Fri, 2 Feb 2024 23:16:05 -0400
+Subject: [PATCH] Do not print error for disabled printscan feature
+
+Previously functions such as `sprintf`, even though
+they do not perform I/O themselves, will cause
+I/O-related machinery to be included in the final wasm binary.
+This is undesirable for minimizing code size and WASI imports.
+---
+ libc-top-half/headers/private/printscan.h | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/libc-top-half/headers/private/printscan.h b/libc-top-half/headers/private/printscan.h
+index 7c21f99..690fce3 100644
+--- a/libc-top-half/headers/private/printscan.h
++++ b/libc-top-half/headers/private/printscan.h
+@@ -5,8 +5,6 @@
+ __attribute__((__cold__, __noreturn__))
+ static void floating_point_not_supported(void) {
+     void abort(void) __attribute__((__noreturn__));
+-    fputs("Support for floating-point formatting is currently disabled.\n"
+-          "To enable it, " __wasilibc_printscan_floating_point_support_option ".\n", stderr);
+     abort();
+ }
+
+@@ -46,8 +44,6 @@ typedef double long_double;
+ __attribute__((__cold__, __noreturn__))
+ static void long_double_not_supported(void) {
+     void abort(void) __attribute__((__noreturn__));
+-    fputs("Support for formatting long double values is currently disabled.\n"
+-          "To enable it, " __wasilibc_printscan_full_support_option ".\n", &__stderr_FILE);
+     abort();
+ }
+
+--
+2.43.0
+

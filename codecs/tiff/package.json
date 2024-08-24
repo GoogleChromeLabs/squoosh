@@ -1,0 +1,6 @@
+{
+  "name": "tiff",
+  "scripts": {
+    "build": "./build.sh make"
+  }
+}

@@ -1,0 +1,24 @@
+From c3ad67265b045f9a0b266d2137bc06043a34d207 Mon Sep 17 00:00:00 2001
+From: andylizi <andylizi666@gmail.com>
+Date: Sat, 3 Feb 2024 01:07:15 -0400
+Subject: [PATCH] Remove default error handler
+
+This removes the reference to `fprintf(stderr)`.
+---
+ libtiff/tif_unix.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/libtiff/tif_unix.c b/libtiff/tif_unix.c
+index d9254d4..a9bc588 100644
+--- a/libtiff/tif_unix.c
++++ b/libtiff/tif_unix.c
+@@ -356,2 +356,3 @@ int _TIFFmemcmp(const void *p1, const void *p2, tmsize_t c)
+
++/*
+ static void unixWarningHandler(const char *module, const char *fmt, va_list ap)
+@@ -374 +375,2 @@ static void unixErrorHandler(const char *module, const char *fmt, va_list ap)
+ TIFFErrorHandler _TIFFerrorHandler = unixErrorHandler;
++*/
+--
+2.43.0
+
