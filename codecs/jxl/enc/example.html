@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<!-- <script src="jxl_enc.js" type="module"></script> -->
+<script type="module">
+  async function loadImage(src) {
+    // Load image
+    const img = document.createElement("img");
+    img.src = src;
+    await new Promise((resolve) => (img.onload = resolve));
+    // Make canvas same size as image
+    const canvas = document.createElement("canvas");
+    [canvas.width, canvas.height] = [img.width, img.height];
+    // Draw image onto canvas
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0);
+    return ctx.getImageData(0, 0, img.width, img.height);
+  }
+
+  import jxl_enc from "./jxl_enc.js" 
+  jxl_enc().then(async (module) => {
+    const image = await loadImage("../../example_palette.png");
+    let result = null;
+    result = module.encode(image.data, image.width, image.height, {
+      effort: 7,
+      quality: 75,
+      progressive: false,
+      epf: -1,
+      lossyPalette: false,
+      decodingSpeedTier: 0,
+      photonNoiseIso: 0,
+      lossyModular: false,
+    });
+    console.log("size", result.length);
+    const blob = new Blob([result], { type: "image/jxl" });
+
+    const blobURL = URL.createObjectURL(blob);
+    const img = document.createElement("img");
+    img.src = blobURL;
+    document.body.appendChild(img);
+});
+</script>
