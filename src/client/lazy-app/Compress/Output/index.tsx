@@ -332,6 +332,16 @@ export default class Output extends Component<Props, State> {
           </two-up>
         </div>
         <div class={style.controls}>
+           <div class={style.displayResolution}>
+            {originalImage ? (
+              <span class={style.displayResolutionValue}>
+                <span>{Math.round(scale * originalImage.width)}</span>px
+                <span>{Math.round(scale * originalImage.height)}</span>px
+              </span>
+            ) : (
+              '...'
+            )}
+          </div>
           <div class={style.buttonGroup}>
             <button class={style.firstButton} onClick={this.zoomOut}>
               <RemoveIcon />
