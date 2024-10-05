@@ -36,3 +36,27 @@ To develop for Squoosh:
 Squoosh is an open-source project that appreciates all community involvement. To contribute to the project, follow the [contribute guide](/CONTRIBUTING.md).
 
 [squoosh]: https://squoosh.app
+
+
+
+
+As for new users like me who is using windows the script is not working so i made changes so that windows user can easily run this project on their machine
+
+you just have to change the script to
+
+"scripts": {
+    "build": "rollup -c && node lib\\move-output.js",
+    "debug": "node --inspect-brk node_modules\\.bin\\rollup -c",
+    "dev": "set DEV_PORT=5000 && run-p watch serve",
+    "watch": "rollup -cw",
+    "serve": "serve --listen=%DEV_PORT% --config ../../../serve.json .tmp\\build\\static",
+    "prepare": "husky install"
+  },
+
+in package.json and after that run as mentioned
+npm i
+then npm run build
+then npm run dev
+then go to http://localhost:5000
+
+and after few seconds refresh it
