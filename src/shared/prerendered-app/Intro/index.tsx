@@ -64,8 +64,21 @@ async function getImageClipboardItem(
   items: ClipboardItem[],
 ): Promise<undefined | Blob> {
   for (const item of items) {
-    const type = item.types.find((type) => type.startsWith('image/'));
-    if (type) return item.getType(type);
+    const type = item.types.find(
+      (type) => type.startsWith('image/') || type === 'text/plain',
+    );
+    if (type) {
+      if (type.startsWith('image/')) {
+        return item.getType(type);
+      } else {
+        const blob = await item.getType(type);
+        const dataUrl = await blob.text();
+        if (dataUrl.startsWith('data:image/')) {
+          const response = await fetch(dataUrl);
+          return response.blob();
+        }
+      }
+    }
   }
 }
 
