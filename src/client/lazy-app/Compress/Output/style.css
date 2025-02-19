@@ -72,7 +72,8 @@
 }
 
 .button,
-.zoom {
+.zoom,
+.displayResolution {
   display: flex;
   align-items: center;
   box-sizing: border-box;
@@ -141,6 +142,25 @@ input.zoom {
   font-weight: 700;
   text-indent: 3px;
   color: #fff;
+}
+
+.displayResolution {
+  cursor: default;
+  width: 10rem;
+  font: inherit;
+  text-align: center;
+  justify-content: center;
+  border-radius: 6px;
+
+  &:focus {
+    box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.2), 0 0 0 2px #fff;
+  }
+}
+span.displayResolutionValue {
+  color: #939393;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .zoom-value {
