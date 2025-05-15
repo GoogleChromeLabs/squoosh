@@ -70,7 +70,7 @@ async function getImageClipboardItem(
 }
 
 interface Props {
-  onFile?: (file: File) => void;
+  onFiles?: (file: File[]) => void;
   showSnack?: SnackBarElement['showSnackbar'];
 }
 interface State {
@@ -119,10 +119,16 @@ export default class Intro extends Component<Props, State> {
 
   private onFileChange = (event: Event): void => {
     const fileInput = event.target as HTMLInputElement;
-    const file = fileInput.files && fileInput.files[0];
-    if (!file) return;
-    this.fileInput!.value = '';
-    this.props.onFile!(file);
+    try {
+      if (!fileInput.files) return;
+      const files = [...fileInput.files];
+      this.props.onFiles!(files);
+    } catch (e) {
+      console.error(`Something went wrong while picking files: ${e}`);
+      return;
+    } finally {
+      this.fileInput!.value = '';
+    }
   };
 
   private onOpenClick = () => {
@@ -135,7 +141,7 @@ export default class Intro extends Component<Props, State> {
       const demo = demos[index];
       const blob = await fetch(demo.url).then((r) => r.blob());
       const file = new File([blob], demo.filename, { type: blob.type });
-      this.props.onFile!(file);
+      this.props.onFiles!([file]);
     } catch (err) {
       this.setState({ fetchingDemoIndex: undefined });
       this.props.showSnack!("Couldn't fetch demo image");
@@ -218,7 +224,7 @@ export default class Intro extends Component<Props, State> {
       return;
     }
 
-    this.props.onFile!(new File([blob], 'image.unknown'));
+    this.props.onFiles!([new File([blob], 'image.unknown')]);
   };
 
   render(
@@ -231,6 +237,7 @@ export default class Intro extends Component<Props, State> {
           class={style.hide}
           ref={linkRef(this, 'fileInput')}
           type="file"
+          multiple
           onChange={this.onFileChange}
         />
         <div class={style.main}>

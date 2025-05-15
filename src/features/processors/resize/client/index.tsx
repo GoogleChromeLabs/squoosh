@@ -1,31 +1,31 @@
+import type { SourceImage } from 'client/lazy-app/Compress';
+import Checkbox from 'client/lazy-app/Compress/Options/Checkbox';
+import Expander from 'client/lazy-app/Compress/Options/Expander';
+import Select from 'client/lazy-app/Compress/Options/Select';
+import * as style from 'client/lazy-app/Compress/Options/style.css';
+import {
+  inputFieldChecked,
+  inputFieldValue,
+  inputFieldValueAsNumber,
+  preventDefault,
+} from 'client/lazy-app/util';
 import {
   builtinResize,
   BuiltinResizeMethod,
   drawableToImageData,
 } from 'client/lazy-app/util/canvas';
+import type WorkerBridge from 'client/lazy-app/worker-bridge';
+import linkState from 'linkstate';
+import { Component, h } from 'preact';
+import { linkRef } from 'shared/prerendered-app/util';
 import {
   BrowserResizeOptions,
-  VectorResizeOptions,
-  WorkerResizeOptions,
   Options as ResizeOptions,
+  VectorResizeOptions,
   workerResizeMethods,
+  WorkerResizeOptions,
 } from '../shared/meta';
 import { getContainOffsets } from '../shared/util';
-import type { SourceImage } from 'client/lazy-app/Compress';
-import type WorkerBridge from 'client/lazy-app/worker-bridge';
-import { h, Component } from 'preact';
-import linkState from 'linkstate';
-import {
-  inputFieldValueAsNumber,
-  inputFieldValue,
-  preventDefault,
-  inputFieldChecked,
-} from 'client/lazy-app/util';
-import * as style from 'client/lazy-app/Compress/Options/style.css';
-import { linkRef } from 'shared/prerendered-app/util';
-import Select from 'client/lazy-app/Compress/Options/Select';
-import Expander from 'client/lazy-app/Compress/Options/Expander';
-import Checkbox from 'client/lazy-app/Compress/Options/Checkbox';
 
 /**
  * Return whether a set of options are worker resize options.

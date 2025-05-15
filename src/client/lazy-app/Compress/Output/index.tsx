@@ -1,26 +1,26 @@
-import { h, Component, Fragment } from 'preact';
-import type PinchZoom from './custom-els/PinchZoom';
-import type { ScaleToOpts } from './custom-els/PinchZoom';
-import './custom-els/PinchZoom';
-import './custom-els/TwoUp';
-import * as style from './style.css';
 import 'add-css:./style.css';
-import { shallowEqual, isSafari } from '../../util';
+import { drawDataToCanvas } from 'client/lazy-app/util/canvas';
+import { Component, Fragment, h, JSX } from 'preact';
+import { linkRef } from 'shared/prerendered-app/util';
+import type { SourceImage } from '../../Compress';
+import type { PreprocessorState } from '../../feature-meta';
 import {
-  ToggleAliasingIcon,
-  ToggleAliasingActiveIcon,
-  ToggleBackgroundIcon,
   AddIcon,
   RemoveIcon,
-  ToggleBackgroundActiveIcon,
   RotateIcon,
+  ToggleAliasingActiveIcon,
+  ToggleAliasingIcon,
+  ToggleBackgroundActiveIcon,
+  ToggleBackgroundIcon,
 } from '../../icons';
-import { twoUpHandle } from './custom-els/TwoUp/styles.css';
-import type { PreprocessorState } from '../../feature-meta';
+import { isSafari, shallowEqual } from '../../util';
 import { cleanSet } from '../../util/clean-modify';
-import type { SourceImage } from '../../Compress';
-import { linkRef } from 'shared/prerendered-app/util';
-import { drawDataToCanvas } from 'client/lazy-app/util/canvas';
+import './custom-els/PinchZoom';
+import type PinchZoom from './custom-els/PinchZoom';
+import type { ScaleToOpts } from './custom-els/PinchZoom';
+import './custom-els/TwoUp';
+import { twoUpHandle } from './custom-els/TwoUp/styles.css';
+import * as style from './style.css';
 interface Props {
   source?: SourceImage;
   preprocessorState?: PreprocessorState;
@@ -30,6 +30,7 @@ interface Props {
   leftImgContain: boolean;
   rightImgContain: boolean;
   onPreprocessorChange: (newState: PreprocessorState) => void;
+  children?: JSX.Element;
 }
 
 interface State {
@@ -361,6 +362,9 @@ export default class Output extends Component<Props, State> {
               <AddIcon />
             </button>
           </div>
+          {this.props.children && (
+            <div class={style.buttonGroup}>{this.props.children}</div>
+          )}
           <div class={style.buttonGroup}>
             <button
               class={style.firstButton}
