@@ -4,7 +4,7 @@
 
 # Privacy
 
-Squoosh does not send your image to a server. All image compression processes locally.
+Squoosh does not send your image to a server. All image compression is performed locally in your browser
 
 However, Squoosh utilizes Google Analytics to collect the following:
 
