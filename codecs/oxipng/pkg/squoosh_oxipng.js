@@ -43,14 +43,17 @@ function getArrayU8FromWasm0(ptr, len) {
 * @param {number} height
 * @param {number} level
 * @param {boolean} interlace
+* @param {Deflaters} deflater
+* @param {number} iterations
+* @param {number} compressionLevel
 * @returns {Uint8Array}
 */
-export function optimise(data, width, height, level, interlace) {
+export function optimise(data, width, height, level, interlace, deflater, iterations, compressionLevel) {
     try {
         const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
         var ptr0 = passArray8ToWasm0(data, wasm.__wbindgen_malloc);
         var len0 = WASM_VECTOR_LEN;
-        wasm.optimise(retptr, ptr0, len0, width, height, level, interlace);
+        wasm.optimise(retptr, ptr0, len0, width, height, level, interlace, deflater, iterations, compressionLevel);
         var r0 = getInt32Memory0()[retptr / 4 + 0];
         var r1 = getInt32Memory0()[retptr / 4 + 1];
         var v1 = getArrayU8FromWasm0(r0, r1).slice();

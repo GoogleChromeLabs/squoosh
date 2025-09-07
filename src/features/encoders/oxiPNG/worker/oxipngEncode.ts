@@ -51,5 +51,8 @@ export default async function encode(
     data.height,
     options.level,
     options.interlace,
+    options.deflater,
+    options.iterations,
+    options.compressionLevel,
   ).buffer;
 }

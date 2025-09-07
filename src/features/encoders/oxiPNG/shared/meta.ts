@@ -10,9 +10,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+export const enum Deflaters {
+  libdeflater,
+  zopfli,
+}
+
 export interface EncodeOptions {
   level: number;
   interlace: boolean;
+  deflater: Deflaters;
+  iterations: number;
+  compressionLevel: number;
 }
 
 export const label = 'OxiPNG';
@@ -22,4 +30,7 @@ export const extension = 'png';
 export const defaultOptions: EncodeOptions = {
   level: 2,
   interlace: false,
+  deflater: Deflaters.libdeflater,
+  iterations: 5,
+  compressionLevel: 11,
 };
