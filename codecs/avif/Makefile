@@ -16,6 +16,8 @@ override CFLAGS += "-Wno-unused-macros"
 # See libavif/ext/libsharpyuv.cmd for more detail
 LIBWEBP_URL_WITH_SHARPYUV = https://chromium.googlesource.com/webm/libwebp/+archive/e2c85878f6a33f29948b43d3492d9cdaf801aa54.tar.gz
 LIBWEBP_DIR := $(CODEC_DIR)/ext/libwebp
+LIBSHARPYUV_ST := $(LIBWEBP_DIR)/build_st/libsharpyuv.a
+LIBSHARPYUV_MT := $(LIBWEBP_DIR)/build_mt/libsharpyuv.a
 export LIBSHARPYUV := $(LIBWEBP_DIR)/build/libsharpyuv.a
 
 OUT_ENC_JS = enc/avif_enc.js
@@ -36,7 +38,8 @@ HELPER_MAKEFLAGS := -f helper.Makefile
 all: $(OUT_ENC_JS) $(OUT_DEC_JS) $(OUT_ENC_MT_JS)
 
 # ST-Encoding
-$(OUT_ENC_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt $(LIBSHARPYUV)
+$(OUT_ENC_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt $(LIBSHARPYUV_ST)
+	mkdir -p $(LIBWEBP_DIR)/build && cp $(LIBSHARPYUV_ST) $(LIBSHARPYUV)
 	$(MAKE) \
 		$(HELPER_MAKEFLAGS) \
 		OUT_JS=$@ \
@@ -50,7 +53,9 @@ $(OUT_ENC_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLis
 		LIBAVIF_FLAGS="-DAVIF_CODEC_AOM_DECODE=0 -DAVIF_LOCAL_LIBSHARPYUV=ON"
 
 # MT-Encoding
-$(OUT_ENC_MT_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt $(LIBSHARPYUV)
+# We need to run the ST and MT tasks sequentially to avoid conflicts with the copy of libsharpyuv in the build directory
+$(OUT_ENC_MT_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt $(LIBSHARPYUV_MT) | $(OUT_ENC_JS)
+	mkdir -p $(LIBWEBP_DIR)/build && cp $(LIBSHARPYUV_MT) $(LIBSHARPYUV)
 	$(MAKE) \
 		$(HELPER_MAKEFLAGS) \
 		OUT_JS=$@ \
@@ -106,8 +111,29 @@ $(LIBWEBP_DIR)/CMakeLists.txt: $(CODEC_DIR)/CMakeLists.txt
 	curl -sL $(LIBWEBP_URL_WITH_SHARPYUV) \
 		| tar xzm -C $(LIBWEBP_DIR)
 
-# Make libsharpyuv.a
-$(LIBSHARPYUV): $(LIBWEBP_DIR)/CMakeLists.txt
+# Make libsharpyuv.a for ST-Encoding
+$(LIBSHARPYUV_ST): $(LIBWEBP_DIR)/CMakeLists.txt
+	mkdir -p $(@D)
+	emcmake cmake \
+		-DWEBP_USE_THREAD=OFF \
+		-DWEBP_BUILD_ANIM_UTILS=OFF \
+		-DWEBP_BUILD_CWEBP=OFF \
+		-DWEBP_BUILD_DWEBP=OFF \
+		-DWEBP_BUILD_GIF2WEBP=OFF \
+		-DWEBP_BUILD_IMG2WEBP=OFF \
+		-DWEBP_BUILD_VWEBP=OFF \
+		-DWEBP_BUILD_WEBPINFO=OFF \
+		-DWEBP_BUILD_LIBWEBPMUX=OFF \
+		-DWEBP_BUILD_WEBPMUX=OFF \
+		-DWEBP_BUILD_EXTRAS=OFF \
+		-DBUILD_SHARED_LIBS=OFF \
+		-DCMAKE_BUILD_TYPE=Release \
+		-S $(LIBWEBP_DIR) \
+		-B $(@D)
+	$(MAKE) -C $(@D) sharpyuv
+
+# Make libsharpyuv.a for MT-Encoding
+$(LIBSHARPYUV_MT): $(LIBWEBP_DIR)/CMakeLists.txt
 	mkdir -p $(@D)
 	emcmake cmake \
 		-DWEBP_BUILD_ANIM_UTILS=OFF \

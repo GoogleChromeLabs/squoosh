@@ -15,7 +15,7 @@ import { promises as fsp } from 'fs';
 import del from 'del';
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
-import { terser } from 'rollup-plugin-terser';
+import terser from '@rollup/plugin-terser';
 import OMT from '@surma/rollup-plugin-off-main-thread';
 import replace from '@rollup/plugin-replace';
 import { importMetaAssets } from '@web/rollup-plugin-import-meta-assets';
