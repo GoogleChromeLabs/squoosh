@@ -106,8 +106,6 @@ export default async function ({ watch }) {
       format: 'cjs',
       assetFileNames: staticPath,
       exports: 'named',
-      experimentalMinChunkSize: 10000, // Помогает избежать проблем с chunk splitting
-      preserveModules: true,
     },
     watch: {
       clearScreen: false,
@@ -118,6 +116,7 @@ export default async function ({ watch }) {
       // although we may need to change this number over time.
       buildDelay: 250,
     },
+    preserveModules: true,
     plugins: [
       { resolveFileUrl, resolveImportMeta: resolveImportMetaUrlInStaticBuild },
       clientBundlePlugin(
@@ -141,6 +140,7 @@ export default async function ({ watch }) {
             entryDataPlugin(),
             isProduction ? terser({ module: true }) : {},
           ],
+          preserveEntrySignatures: false,
         },
         {
           dir,
@@ -150,8 +150,6 @@ export default async function ({ watch }) {
           // This is needed because emscripten's workers use 'this', so they trigger all kinds of interop things,
           // such as double-wrapping objects in { default }.
           interop: false,
-          experimentalMinChunkSize: 10000, // Помогает избежать проблем с chunk splitting
-          preserveEntrySignatures: false,
         },
         resolveFileUrl,
       ),
