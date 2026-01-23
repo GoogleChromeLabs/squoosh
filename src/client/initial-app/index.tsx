@@ -41,20 +41,19 @@ main();
 {
   // Determine the current display mode.
   const displayMode =
-    (navigator as any).standalone ||
+    navigator.standalone ||
     window.matchMedia('(display-mode: standalone)').matches
       ? 'standalone'
       : 'browser';
 
   // Setup analytics
-  (window as any).ga =
-    (window as any).ga ||
-    ((...args: any[]) =>
-      ((window as any).ga.q = (window as any).ga.q || []).push(args));
-  (window as any).ga('create', 'UA-128752250-1', 'auto');
-  (window as any).ga('set', 'transport', 'beacon');
-  (window as any).ga('set', 'dimension1', displayMode);
-  (window as any).ga('send', 'pageview', '/index.html', { title: 'Squoosh' });
+  window.ga =
+    window.ga ||
+    ((...args: any[]) => (window.ga.q = window.ga.q || []).push(args));
+  window.ga('create', 'UA-128752250-1', 'auto');
+  window.ga('set', 'transport', 'beacon');
+  window.ga('set', 'dimension1', displayMode);
+  window.ga('send', 'pageview', '/index.html', { title: 'Squoosh' });
   // Load the GA script without keeping the browser spinner going.
   addEventListener('load', () => {
     const script = document.createElement('script');

@@ -25,12 +25,6 @@ export default defineConfig({
     },
     sourcemap: true,
     minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-      },
-    },
   },
   server: {
     port: 5000,
@@ -40,6 +34,7 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['preact', 'preact/hooks'],
+    // Exclude service worker module pattern to prevent Vite from trying to optimize it
     exclude: ['service-worker:sw'],
   },
   define: {
