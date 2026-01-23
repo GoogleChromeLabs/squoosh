@@ -32,6 +32,7 @@ import WorkerBridge from '../worker-bridge';
 import { resize } from 'features/processors/resize/client';
 import type SnackBarElement from 'shared/custom-els/snack-bar';
 import { drawableToImageData } from '../util/canvas';
+import { validateImage } from './validators';
 
 export type OutputType = EncoderType | 'identity';
 
@@ -94,33 +95,39 @@ async function decodeImage(
   workerBridge: WorkerBridge,
 ): Promise<ImageData> {
   assertSignal(signal);
+
+  // Validate image before processing
+  const validationResult = await validateImage(blob);
+  if (!validationResult.valid) {
+    throw new Error(validationResult.error);
+  }
+
   const mimeType = await abortable(signal, sniffMimeType(blob));
   const canDecode = await abortable(signal, canDecodeImageType(mimeType));
 
   try {
     if (!canDecode) {
-      if (mimeType === 'image/avif') {
-        return await workerBridge.avifDecode(signal, blob);
-      }
-      if (mimeType === 'image/webp') {
-        return await workerBridge.webpDecode(signal, blob);
-      }
-      if (mimeType === 'image/jxl') {
-        return await workerBridge.jxlDecode(signal, blob);
-      }
-      if (mimeType === 'image/webp2') {
-        return await workerBridge.wp2Decode(signal, blob);
-      }
-      if (mimeType === 'image/qoi') {
-        return await workerBridge.qoiDecode(signal, blob);
-      }
+      if (mimeType === 'image/avif') return await workerBridge.avifDecode(signal, blob);
+      if (mimeType === 'image/webp') return await workerBridge.webpDecode(signal, blob);
+      if (mimeType === 'image/jxl') return await workerBridge.jxlDecode(signal, blob);
+      if (mimeType === 'image/webp2') return await workerBridge.wp2Decode(signal, blob);
+      if (mimeType === 'image/qoi') return await workerBridge.qoiDecode(signal, blob);
     }
-    // Otherwise fall through and try built-in decoding for a laugh.
     return await builtinDecode(signal, blob);
   } catch (err) {
     if (err instanceof Error && err.name === 'AbortError') throw err;
-    console.log(err);
-    throw Error("Couldn't decode image");
+
+    console.error('Image decode failed:', {
+      error: err,
+      mimeType,
+      size: blob.size,
+      type: blob.type,
+    });
+
+    throw new Error(
+      `Couldn't decode image: ${err instanceof Error ? err.message : 'Unknown error'}`,
+      { cause: err },
+    );
   }
 }
 

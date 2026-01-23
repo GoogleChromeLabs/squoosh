@@ -11,18 +11,93 @@ interface CacheEntry extends CacheResult {
   processorState: ProcessorState;
   encoderState: EncoderState;
   preprocessed: ImageData;
+  timestamp: number;
+  sizeMB: number;
 }
 
-const SIZE = 5;
+const MAX_MEMORY_MB = 150; // Maximum cache size in MB
+const MAX_AGE_MS = 5 * 60 * 1000; // 5 minutes TTL
 
 export default class ResultCache {
-  private readonly _entries: CacheEntry[] = [];
+  private readonly _entries = new Map<string, CacheEntry>();
+  private _currentMemoryMB = 0;
+
+  private _calculateSizeMB(imageData: ImageData): number {
+    // RGBA = 4 bytes per pixel
+    const bytes = imageData.width * imageData.height * 4;
+    return bytes / (1024 * 1024);
+  }
+
+  private _generateKey(
+    preprocessed: ImageData,
+    processorState: ProcessorState,
+    encoderState: EncoderState,
+  ): string {
+    const stateHash = JSON.stringify({
+      processor: processorState,
+      encoder: { type: encoderState.type, options: encoderState.options },
+    });
+    const dataId = preprocessed.data.byteLength + preprocessed.width + preprocessed.height;
+    return `${dataId}-${stateHash}`;
+  }
+
+  private _evictOldest(): void {
+    let oldestKey: string | null = null;
+    let oldestTime = Infinity;
+
+    for (const [key, entry] of this._entries) {
+      if (entry.timestamp < oldestTime) {
+        oldestTime = entry.timestamp;
+        oldestKey = key;
+      }
+    }
+
+    if (oldestKey) {
+      const entry = this._entries.get(oldestKey)!;
+      this._currentMemoryMB -= entry.sizeMB;
+      this._entries.delete(oldestKey);
+    }
+  }
+
+  private _cleanExpired(): void {
+    const now = Date.now();
+    const toDelete: string[] = [];
+
+    for (const [key, entry] of this._entries) {
+      if (now - entry.timestamp > MAX_AGE_MS) {
+        toDelete.push(key);
+      }
+    }
+
+    for (const key of toDelete) {
+      const entry = this._entries.get(key)!;
+      this._currentMemoryMB -= entry.sizeMB;
+      this._entries.delete(key);
+    }
+  }
 
   add(entry: CacheEntry) {
-    // Add the new entry to the start
-    this._entries.unshift(entry);
-    // Remove the last entry if we're now bigger than SIZE
-    if (this._entries.length > SIZE) this._entries.pop();
+    this._cleanExpired();
+
+    const key = this._generateKey(entry.preprocessed, entry.processorState, entry.encoderState);
+
+    const sizeMB =
+      this._calculateSizeMB(entry.preprocessed) +
+      this._calculateSizeMB(entry.processed) +
+      this._calculateSizeMB(entry.data);
+
+    // Evict until we have enough space
+    while (this._currentMemoryMB + sizeMB > MAX_MEMORY_MB && this._entries.size > 0) {
+      this._evictOldest();
+    }
+
+    if (sizeMB > MAX_MEMORY_MB) {
+      console.warn('Cache entry too large, skipping:', sizeMB, 'MB');
+      return;
+    }
+
+    this._entries.set(key, { ...entry, timestamp: Date.now(), sizeMB });
+    this._currentMemoryMB += sizeMB;
   }
 
   match(
@@ -30,41 +105,37 @@ export default class ResultCache {
     processorState: ProcessorState,
     encoderState: EncoderState,
   ): CacheResult | undefined {
-    const matchingIndex = this._entries.findIndex((entry) => {
-      // Check for quick exits:
-      if (entry.preprocessed !== preprocessed) return false;
-      if (entry.encoderState.type !== encoderState.type) return false;
+    this._cleanExpired();
 
-      // Check that each set of options in the preprocessor are the same
-      for (const prop in processorState) {
-        if (
-          !shallowEqual(
-            (processorState as any)[prop],
-            (entry.processorState as any)[prop],
-          )
-        ) {
-          return false;
-        }
+    const key = this._generateKey(preprocessed, processorState, encoderState);
+    const entry = this._entries.get(key);
+
+    if (!entry) return undefined;
+    if (entry.preprocessed !== preprocessed) return undefined;
+    if (entry.encoderState.type !== encoderState.type) return undefined;
+
+    for (const prop in processorState) {
+      if (!shallowEqual((processorState as any)[prop], (entry.processorState as any)[prop])) {
+        return undefined;
       }
-
-      // Check detailed encoder options
-      if (!shallowEqual(encoderState.options, entry.encoderState.options)) {
-        return false;
-      }
-
-      return true;
-    });
-
-    if (matchingIndex === -1) return undefined;
-
-    const matchingEntry = this._entries[matchingIndex];
-
-    if (matchingIndex !== 0) {
-      // Move the matched result to 1st position (LRU)
-      this._entries.splice(matchingIndex, 1);
-      this._entries.unshift(matchingEntry);
     }
 
-    return { ...matchingEntry };
+    if (!shallowEqual(encoderState.options, entry.encoderState.options)) return undefined;
+
+    entry.timestamp = Date.now();
+    return { processed: entry.processed, data: entry.data, file: entry.file };
+  }
+
+  clear(): void {
+    this._entries.clear();
+    this._currentMemoryMB = 0;
+  }
+
+  getStats() {
+    return {
+      entries: this._entries.size,
+      memoryMB: this._currentMemoryMB.toFixed(2),
+      maxMemoryMB: MAX_MEMORY_MB,
+    };
   }
 }

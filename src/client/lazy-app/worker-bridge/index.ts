@@ -1,4 +1,4 @@
-import { wrap } from 'comlink';
+import { wrap, Remote } from 'comlink';
 import { BridgeMethods, methodNames } from './meta';
 import workerURL from 'omt:../../../features-worker';
 import type { ProcessorWorkerApi } from '../../../features-worker';
@@ -14,20 +14,70 @@ class WorkerBridge {
   /** Worker instance associated with this processor. */
   protected _worker?: Worker;
   /** Comlinked worker API. */
-  protected _workerApi?: ProcessorWorkerApi;
+  protected _workerApi?: Remote<ProcessorWorkerApi>;
   /** ID from setTimeout */
   protected _workerTimeout?: number;
+
+  // New: Lock to prevent race conditions
+  private _workerLock = false;
+  private _initializing?: Promise<void>;
 
   protected _terminateWorker() {
     if (!this._worker) return;
     this._worker.terminate();
     this._worker = undefined;
     this._workerApi = undefined;
+    this._initializing = undefined;
   }
 
-  protected _startWorker() {
-    this._worker = new Worker(workerURL);
-    this._workerApi = wrap<ProcessorWorkerApi>(this._worker);
+  protected async _startWorker(): Promise<void> {
+    // If already initializing, wait for it
+    if (this._initializing) return this._initializing;
+
+    // If worker already exists, do nothing
+    if (this._worker && this._workerApi) return;
+
+    // Create initialization promise
+    this._initializing = (async () => {
+      // Acquire lock
+      while (this._workerLock) {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+
+      this._workerLock = true;
+
+      try {
+        // Double-check after acquiring lock
+        if (this._worker && this._workerApi) return;
+
+        this._worker = new Worker(workerURL);
+        this._workerApi = wrap<ProcessorWorkerApi>(this._worker);
+
+        // Verify worker is responsive (optional ping)
+        try {
+          await Promise.race([
+            this._workerApi.ping?.(),
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error('Worker init timeout')), 5000),
+            ),
+          ]);
+        } catch (err) {
+          console.error('Worker initialization failed:', err);
+          this._terminateWorker();
+          throw err;
+        }
+      } finally {
+        this._workerLock = false;
+      }
+    })();
+
+    return this._initializing;
+  }
+
+  protected async _ensureWorker(): Promise<Remote<ProcessorWorkerApi>> {
+    await this._startWorker();
+    if (!this._workerApi) throw new Error('Failed to initialize worker');
+    return this._workerApi;
   }
 }
 
@@ -44,16 +94,14 @@ for (const methodName of methodNames) {
         if (signal.aborted) throw new DOMException('AbortError', 'AbortError');
 
         clearTimeout(this._workerTimeout);
-        if (!this._worker) this._startWorker();
+
+        // Use new _ensureWorker method
+        const workerApi = await this._ensureWorker();
 
         const onAbort = () => this._terminateWorker();
         signal.addEventListener('abort', onAbort);
 
-        return abortable(
-          signal,
-          // @ts-ignore - TypeScript can't figure this out
-          this._workerApi![methodName](...args),
-        ).finally(() => {
+        return abortable(signal, workerApi[methodName](...args)).finally(() => {
           // No longer care about aborting - this task is complete.
           signal.removeEventListener('abort', onAbort);
 
