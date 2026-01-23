@@ -9,7 +9,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Plugin для обработки add-css: импортов
+// Plugin to handle add-css: imports
 function addCssPlugin(): Plugin {
   return {
     name: 'vite-plugin-add-css',
@@ -36,7 +36,7 @@ function addCssPlugin(): Plugin {
   };
 }
 
-// Plugin для обработки url: импортов
+// Plugin to handle url: imports
 function urlPlugin(): Plugin {
   return {
     name: 'vite-plugin-url',
@@ -55,7 +55,7 @@ function urlPlugin(): Plugin {
   };
 }
 
-// Plugin для обработки data-url: импортов
+// Plugin to handle data-url: imports
 function dataUrlPlugin(): Plugin {
   return {
     name: 'vite-plugin-data-url',
@@ -141,7 +141,7 @@ export default defineConfig({
       features: path.resolve(__dirname, './src/features'),
       'worker-shared': path.resolve(__dirname, './src/worker-shared'),
       wordpress: path.resolve(__dirname, './src/wordpress-integration'),
-      // Алиасы для кодеков
+      // Aliases for codecs
       codecs: path.resolve(__dirname, './codecs'),
     },
   },
@@ -162,11 +162,11 @@ export default defineConfig({
     strictPort: true,
     host: 'localhost',
     fs: {
-      // Разрешить доступ к codecs директории
+      // Allow access to codecs directory
       allow: ['.', '../codecs'],
     },
     watch: {
-      // Игнорировать символическую ссылку CodeQL
+      // Ignore CodeQL symlink
       ignored: ['**/_codeql_detected_source_root/**'],
     },
   },
