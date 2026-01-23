@@ -12,6 +12,7 @@
  */
 import * as path from 'path';
 import { promises as fsp } from 'fs';
+import { fileURLToPath } from 'url';
 import del from 'del';
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
@@ -20,20 +21,24 @@ import OMT from '@surma/rollup-plugin-off-main-thread';
 import replace from '@rollup/plugin-replace';
 import { importMetaAssets } from '@web/rollup-plugin-import-meta-assets';
 
-import simpleTS from './lib/simple-ts';
-import clientBundlePlugin from './lib/client-bundle-plugin';
-import nodeExternalPlugin from './lib/node-external-plugin';
-import cssPlugin from './lib/css-plugin';
-import urlPlugin from './lib/url-plugin';
-import resolveDirsPlugin from './lib/resolve-dirs-plugin';
-import runScript from './lib/run-script';
-import emitFiles from './lib/emit-files-plugin';
-import featurePlugin from './lib/feature-plugin';
-import initialCssPlugin from './lib/initial-css-plugin';
-import serviceWorkerPlugin from './lib/sw-plugin';
-import dataURLPlugin from './lib/data-url-plugin';
-import entryDataPlugin, { fileNameToURL } from './lib/entry-data-plugin';
+import simpleTS from './lib/simple-ts.js';
+import clientBundlePlugin from './lib/client-bundle-plugin.js';
+import nodeExternalPlugin from './lib/node-external-plugin.js';
+import cssPlugin from './lib/css-plugin.js';
+import urlPlugin from './lib/url-plugin.js';
+import resolveDirsPlugin from './lib/resolve-dirs-plugin.js';
+import runScript from './lib/run-script.js';
+import emitFiles from './lib/emit-files-plugin.js';
+import featurePlugin from './lib/feature-plugin.js';
+import initialCssPlugin from './lib/initial-css-plugin.js';
+import serviceWorkerPlugin from './lib/sw-plugin.js';
+import dataURLPlugin from './lib/data-url-plugin.js';
+import entryDataPlugin, { fileNameToURL } from './lib/entry-data-plugin.js';
 import dedent from 'dedent';
+
+// ES module compatibility shims
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 function resolveFileUrl({ fileName }) {
   return JSON.stringify(fileNameToURL(fileName));
@@ -102,6 +107,7 @@ export default async function ({ watch }) {
       assetFileNames: staticPath,
       exports: 'named',
       experimentalMinChunkSize: 10000, // Помогает избежать проблем с chunk splitting
+      preserveModules: true,
     },
     watch: {
       clearScreen: false,
@@ -112,7 +118,6 @@ export default async function ({ watch }) {
       // although we may need to change this number over time.
       buildDelay: 250,
     },
-    preserveModules: true,
     plugins: [
       { resolveFileUrl, resolveImportMeta: resolveImportMetaUrlInStaticBuild },
       clientBundlePlugin(
@@ -136,7 +141,6 @@ export default async function ({ watch }) {
             entryDataPlugin(),
             isProduction ? terser({ module: true }) : {},
           ],
-          preserveEntrySignatures: false,
         },
         {
           dir,
@@ -147,6 +151,7 @@ export default async function ({ watch }) {
           // such as double-wrapping objects in { default }.
           interop: false,
           experimentalMinChunkSize: 10000, // Помогает избежать проблем с chunk splitting
+          preserveEntrySignatures: false,
         },
         resolveFileUrl,
       ),
