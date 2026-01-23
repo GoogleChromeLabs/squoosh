@@ -131,8 +131,8 @@ export default async function ({ watch }) {
               output: 'static/serviceworker.js',
             }),
             ...commonPlugins(),
-            commonjs(),
             resolve(),
+            commonjs(),
             replace({
               __PRERENDER__: false,
               __PRODUCTION__: isProduction,

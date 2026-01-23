@@ -3,6 +3,11 @@ import preact from '@preact/preset-vite';
 import path from 'path';
 import { readFileSync } from 'fs';
 import { lookup as lookupMime } from 'mime-types';
+import { fileURLToPath } from 'url';
+
+// ES module compatibility shims
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Plugin для обработки add-css: импортов
 function addCssPlugin(): Plugin {
@@ -54,8 +59,21 @@ function urlPlugin(): Plugin {
 function dataUrlPlugin(): Plugin {
   return {
     name: 'vite-plugin-data-url',
-    resolveId(id) {
+    async resolveId(id, importer) {
       if (id.startsWith('data-url:') || id.startsWith('data-url-text:')) {
+        const isText = id.startsWith('data-url-text:');
+        const prefix = isText ? 'data-url-text:' : 'data-url:';
+        const filePath = id.slice(prefix.length);
+
+        // Разрешить путь относительно импортера
+        const resolved = await this.resolve(filePath, importer, {
+          skipSelf: true,
+        });
+
+        if (resolved) {
+          return '\0' + prefix + resolved.id;
+        }
+
         return '\0' + id;
       }
     },
@@ -64,20 +82,21 @@ function dataUrlPlugin(): Plugin {
         const isText = id.startsWith('\0data-url-text:');
         const prefix = isText ? '\0data-url-text:' : '\0data-url:';
         const filePath = id.slice(prefix.length);
-        
+
         try {
-          const resolvedPath = path.resolve(filePath);
-          const source = readFileSync(resolvedPath);
+          const source = readFileSync(filePath);
           const mimeType = lookupMime(filePath) || 'text/plain';
-          
+
           if (isText) {
             const encodedBody = encodeURIComponent(source.toString('utf8'));
             return `export default "data:${mimeType};charset=utf-8,${encodedBody}";`;
           }
-          
+
           return `export default "data:${mimeType};base64,${source.toString('base64')}";`;
         } catch (e) {
-          this.error(`Failed to load file: ${filePath}`);
+          this.error(
+            `Failed to load file: ${filePath} - ${(e as Error).message}`,
+          );
         }
       }
     },
@@ -144,7 +163,11 @@ export default defineConfig({
     host: 'localhost',
     fs: {
       // Разрешить доступ к codecs директории
-      allow: ['..'],
+      allow: ['.', '../codecs'],
+    },
+    watch: {
+      // Игнорировать символическую ссылку CodeQL
+      ignored: ['**/_codeql_detected_source_root/**'],
     },
   },
   optimizeDeps: {
