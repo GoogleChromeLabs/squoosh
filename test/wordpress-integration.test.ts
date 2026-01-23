@@ -1,16 +1,19 @@
 /**
- * Example test for WordPress integration module
+ * Tests for WordPress integration module
  */
 
 import { describe, it, expect } from 'vitest';
-import { compressImage, compressImageBatch } from '../src/wordpress-integration/compression';
+import {
+  compressImage,
+  compressImageBatch,
+} from '../src/wordpress-integration/compression';
 
 describe('WordPress Integration - Compression', () => {
   describe('compressImage', () => {
     it('should compress a single image', async () => {
       // Create a simple test image buffer
       const testBuffer = new ArrayBuffer(1000);
-      
+
       const result = await compressImage(testBuffer, {
         format: 'webp',
         quality: 80,
@@ -24,7 +27,7 @@ describe('WordPress Integration - Compression', () => {
 
     it('should handle Blob input', async () => {
       const testBlob = new Blob(['test data'], { type: 'image/png' });
-      
+
       const result = await compressImage(testBlob, {
         format: 'avif',
         quality: 75,
@@ -36,7 +39,7 @@ describe('WordPress Integration - Compression', () => {
 
     it('should use default options when none provided', async () => {
       const testBuffer = new ArrayBuffer(500);
-      
+
       const result = await compressImage(testBuffer);
 
       expect(result).toBeDefined();
