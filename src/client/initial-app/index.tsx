@@ -15,9 +15,24 @@ import App from './App';
 
 const root = document.getElementById('app') as HTMLElement;
 
+if (!root) {
+  throw new Error('Root element #app not found');
+}
+
 async function main() {
-  if (!__PRODUCTION__) await import('preact/debug');
-  render(<App />, root);
+  try {
+    if (!__PRODUCTION__) await import('preact/debug');
+    render(<App />, root);
+  } catch (error) {
+    console.error('Failed to initialize app:', error);
+    root.innerHTML = `
+      <div style="padding: 20px; text-align: center; font-family: sans-serif;">
+        <h1>Failed to Load</h1>
+        <p>An error occurred while loading the application.</p>
+        <button onclick="location.reload()">Reload</button>
+      </div>
+    `;
+  }
 }
 
 main();
@@ -32,15 +47,27 @@ main();
       : 'browser';
 
   // Setup analytics
-  window.ga = window.ga || ((...args) => (ga.q = ga.q || []).push(args));
-  ga('create', 'UA-128752250-1', 'auto');
-  ga('set', 'transport', 'beacon');
-  ga('set', 'dimension1', displayMode);
-  ga('send', 'pageview', '/index.html', { title: 'Squoosh' });
+  window.ga =
+    window.ga ||
+    ((...args: any[]) => (window.ga.q = window.ga.q || []).push(args));
+  window.ga('create', 'UA-128752250-1', 'auto');
+  window.ga('set', 'transport', 'beacon');
+  window.ga('set', 'dimension1', displayMode);
+  window.ga('send', 'pageview', '/index.html', { title: 'Squoosh' });
   // Load the GA script without keeping the browser spinner going.
   addEventListener('load', () => {
     const script = document.createElement('script');
     script.src = 'https://www.google-analytics.com/analytics.js';
+    script.async = true;
     document.head.appendChild(script);
   });
 }
+
+// Global error handler
+window.addEventListener('error', (event) => {
+  console.error('Global error:', event.error);
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('Unhandled promise rejection:', event.reason);
+});
