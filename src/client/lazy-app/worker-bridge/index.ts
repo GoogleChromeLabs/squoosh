@@ -52,20 +52,6 @@ class WorkerBridge {
 
         this._worker = new Worker(workerURL);
         this._workerApi = wrap<ProcessorWorkerApi>(this._worker);
-
-        // Verify worker is responsive (optional ping)
-        try {
-          await Promise.race([
-            this._workerApi.ping?.(),
-            new Promise((_, reject) =>
-              setTimeout(() => reject(new Error('Worker init timeout')), 5000),
-            ),
-          ]);
-        } catch (err) {
-          console.error('Worker initialization failed:', err);
-          this._terminateWorker();
-          throw err;
-        }
       } finally {
         this._workerLock = false;
       }
@@ -101,15 +87,17 @@ for (const methodName of methodNames) {
         const onAbort = () => this._terminateWorker();
         signal.addEventListener('abort', onAbort);
 
-        return abortable(signal, workerApi[methodName](...args)).finally(() => {
-          // No longer care about aborting - this task is complete.
-          signal.removeEventListener('abort', onAbort);
+        return abortable(signal, workerApi[methodName](...args) as any).finally(
+          () => {
+            // No longer care about aborting - this task is complete.
+            signal.removeEventListener('abort', onAbort);
 
-          // Start a timer to clear up the worker.
-          this._workerTimeout = setTimeout(() => {
-            this._terminateWorker();
-          }, workerTimeout);
-        });
+            // Start a timer to clear up the worker.
+            this._workerTimeout = setTimeout(() => {
+              this._terminateWorker();
+            }, workerTimeout) as any;
+          },
+        );
       });
 
     return this._queue;

@@ -90,7 +90,7 @@ val decode(std::string data) {
                                                          JXL_COLOR_PROFILE_TARGET_DATA, &icc_size));
 
   // Validate ICC profile size
-  if (icc_size > 10 * 1024 * 1024) { // 10MB limit
+  if (icc_size > 10 * 1024 * 1024) {  // 10MB limit
     fprintf(stderr, "ICC profile too large: %zu bytes\n", icc_size);
     return val::null();
   }

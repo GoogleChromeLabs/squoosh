@@ -107,11 +107,16 @@ async function decodeImage(
 
   try {
     if (!canDecode) {
-      if (mimeType === 'image/avif') return await workerBridge.avifDecode(signal, blob);
-      if (mimeType === 'image/webp') return await workerBridge.webpDecode(signal, blob);
-      if (mimeType === 'image/jxl') return await workerBridge.jxlDecode(signal, blob);
-      if (mimeType === 'image/webp2') return await workerBridge.wp2Decode(signal, blob);
-      if (mimeType === 'image/qoi') return await workerBridge.qoiDecode(signal, blob);
+      if (mimeType === 'image/avif')
+        return await workerBridge.avifDecode(signal, blob);
+      if (mimeType === 'image/webp')
+        return await workerBridge.webpDecode(signal, blob);
+      if (mimeType === 'image/jxl')
+        return await workerBridge.jxlDecode(signal, blob);
+      if (mimeType === 'image/webp2')
+        return await workerBridge.wp2Decode(signal, blob);
+      if (mimeType === 'image/qoi')
+        return await workerBridge.qoiDecode(signal, blob);
     }
     return await builtinDecode(signal, blob);
   } catch (err) {
@@ -588,7 +593,10 @@ export default class Compress extends Component<Props, State> {
     if (immediate) {
       this.updateImage();
     } else {
-      this.updateImageTimeout = setTimeout(() => this.updateImage(), delay);
+      this.updateImageTimeout = setTimeout(
+        () => this.updateImage(),
+        delay,
+      ) as any;
     }
   }
 

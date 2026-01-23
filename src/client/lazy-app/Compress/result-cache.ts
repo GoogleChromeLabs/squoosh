@@ -7,10 +7,16 @@ interface CacheResult {
   file: File;
 }
 
-interface CacheEntry extends CacheResult {
+interface CacheInput {
+  processed: ImageData;
+  data: ImageData;
+  file: File;
   processorState: ProcessorState;
   encoderState: EncoderState;
   preprocessed: ImageData;
+}
+
+interface CacheEntry extends CacheInput {
   timestamp: number;
   sizeMB: number;
 }
@@ -37,7 +43,8 @@ export default class ResultCache {
       processor: processorState,
       encoder: { type: encoderState.type, options: encoderState.options },
     });
-    const dataId = preprocessed.data.byteLength + preprocessed.width + preprocessed.height;
+    const dataId =
+      preprocessed.data.byteLength + preprocessed.width + preprocessed.height;
     return `${dataId}-${stateHash}`;
   }
 
@@ -76,10 +83,14 @@ export default class ResultCache {
     }
   }
 
-  add(entry: CacheEntry) {
+  add(entry: CacheInput) {
     this._cleanExpired();
 
-    const key = this._generateKey(entry.preprocessed, entry.processorState, entry.encoderState);
+    const key = this._generateKey(
+      entry.preprocessed,
+      entry.processorState,
+      entry.encoderState,
+    );
 
     const sizeMB =
       this._calculateSizeMB(entry.preprocessed) +
@@ -87,7 +98,10 @@ export default class ResultCache {
       this._calculateSizeMB(entry.data);
 
     // Evict until we have enough space
-    while (this._currentMemoryMB + sizeMB > MAX_MEMORY_MB && this._entries.size > 0) {
+    while (
+      this._currentMemoryMB + sizeMB > MAX_MEMORY_MB &&
+      this._entries.size > 0
+    ) {
       this._evictOldest();
     }
 
@@ -115,12 +129,18 @@ export default class ResultCache {
     if (entry.encoderState.type !== encoderState.type) return undefined;
 
     for (const prop in processorState) {
-      if (!shallowEqual((processorState as any)[prop], (entry.processorState as any)[prop])) {
+      if (
+        !shallowEqual(
+          (processorState as any)[prop],
+          (entry.processorState as any)[prop],
+        )
+      ) {
         return undefined;
       }
     }
 
-    if (!shallowEqual(encoderState.options, entry.encoderState.options)) return undefined;
+    if (!shallowEqual(encoderState.options, entry.encoderState.options))
+      return undefined;
 
     entry.timestamp = Date.now();
     return { processed: entry.processed, data: entry.data, file: entry.file };

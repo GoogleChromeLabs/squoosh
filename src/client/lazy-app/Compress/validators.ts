@@ -36,16 +36,24 @@ export function validateMimeType(blob: Blob): ValidationResult {
   return { valid: true };
 }
 
-export async function validateImageHeader(blob: Blob): Promise<ValidationResult> {
+export async function validateImageHeader(
+  blob: Blob,
+): Promise<ValidationResult> {
   try {
     const header = await blob.slice(0, 12).arrayBuffer();
     const bytes = new Uint8Array(header);
 
     // JPEG: FF D8 FF
-    if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return { valid: true };
+    if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff)
+      return { valid: true };
 
     // PNG: 89 50 4E 47
-    if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47)
+    if (
+      bytes[0] === 0x89 &&
+      bytes[1] === 0x50 &&
+      bytes[2] === 0x4e &&
+      bytes[3] === 0x47
+    )
       return { valid: true };
 
     // WebP: RIFF....WEBP
@@ -62,11 +70,15 @@ export async function validateImageHeader(blob: Blob): Promise<ValidationResult>
       return { valid: true };
 
     // SVG
-    if (bytes[0] === 0x3c || (bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf))
+    if (
+      bytes[0] === 0x3c ||
+      (bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf)
+    )
       return { valid: true };
 
     // GIF
-    if (bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46) return { valid: true };
+    if (bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46)
+      return { valid: true };
 
     return { valid: false, error: 'Invalid image file format' };
   } catch (err) {

@@ -14,7 +14,10 @@ class PerformanceTracker {
     this.marks.set(label, performance.now());
   }
 
-  static end(label: string, metadata?: Record<string, any>): number | undefined {
+  static end(
+    label: string,
+    metadata?: Record<string, any>,
+  ): number | undefined {
     const startTime = this.marks.get(label);
     if (!startTime) {
       console.warn(`Performance: No start mark for "${label}"`);
