@@ -20,7 +20,7 @@
     "@preact/preset-vite": "^2.9.2",
     "@rollup/plugin-commonjs": "^21.1.0",
     "@rollup/plugin-node-resolve": "^13.3.0",
-    "@rollup/plugin-replace": "^4.0.0",
+    "@rollup/plugin-replace": "^6.0.3",
     "@rollup/plugin-terser": "^0.4.4",
     "@surma/rollup-plugin-off-main-thread": "^2.2.3",
     "@testing-library/preact": "^3.2.4",
