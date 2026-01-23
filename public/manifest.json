@@ -1,0 +1,12 @@
+{
+  "name": "Squoosh",
+  "short_name": "Squoosh",
+  "start_url": "/?utm_medium=PWA&utm_source=launcher",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#fff",
+  "theme_color": "#ff3385",
+  "description": "Compress and compare images with different codecs, right in your browser.",
+  "lang": "en",
+  "categories": ["photo", "productivity", "utilities"]
+}
