@@ -1,24 +1,31 @@
 {
   "compilerOptions": {
-    "target": "ES2019",
+    "target": "ES2022",
     "downlevelIteration": true,
     "module": "esnext",
-    "jsx": "react",
-    "jsxFactory": "h",
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
     "strict": true,
-    "moduleResolution": "node",
+    "isolatedModules": true,
+    "moduleResolution": "bundler",
     "composite": true,
     "declarationMap": true,
     "baseUrl": "./",
     "rootDir": "./",
     "outDir": ".tmp/ts",
     "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "paths": {
       "static-build/*": ["src/static-build/*"],
       "client/*": ["src/client/*"],
       "shared/*": ["src/shared/*"],
       "features/*": ["src/features/*"],
-      "worker-shared/*": ["src/worker-shared/*"]
+      "worker-shared/*": ["src/worker-shared/*"],
+      "wordpress/*": ["src/wordpress-integration/*"]
     }
   }
 }
