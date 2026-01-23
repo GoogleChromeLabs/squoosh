@@ -34,7 +34,7 @@
     "dedent": "^0.7.0",
     "del": "^6.1.1",
     "file-drop-element": "^1.0.1",
-    "happy-dom": "^15.11.7",
+    "happy-dom": "^20.0.0",
     "husky": "^9.1.7",
     "idb-keyval": "^6.2.1",
     "image-size": "^2.0.2",
