@@ -10,13 +10,24 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
+        node-version: [20.x, 22.x]
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - id: nvmrc
       uses: browniebroke/read-nvmrc-action@v1
-    - uses: actions/setup-node@v1
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
       with:
-        node-version: '${{ steps.nvmrc.outputs.node_version }}'
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
     - run: npm ci
     - run: npm run build
+    - name: Run tests
+      run: npm run test:run
+    - name: Archive build artifacts
+      uses: actions/upload-artifact@v4
+      if: matrix.os == 'ubuntu-latest' && matrix.node-version == '20.x'
+      with:
+        name: build-output
+        path: .tmp/build/

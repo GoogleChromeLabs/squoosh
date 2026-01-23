@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2019",
+    "target": "ES2022",
     "downlevelIteration": true,
     "module": "esnext",
     "jsx": "react",
@@ -13,12 +13,18 @@
     "rootDir": "./",
     "outDir": ".tmp/ts",
     "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "paths": {
       "static-build/*": ["src/static-build/*"],
       "client/*": ["src/client/*"],
       "shared/*": ["src/shared/*"],
       "features/*": ["src/features/*"],
-      "worker-shared/*": ["src/worker-shared/*"]
+      "worker-shared/*": ["src/worker-shared/*"],
+      "wordpress/*": ["src/wordpress-integration/*"]
     }
   }
 }
