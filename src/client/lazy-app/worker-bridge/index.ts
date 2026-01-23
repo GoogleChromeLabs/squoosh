@@ -41,7 +41,7 @@ class WorkerBridge {
     this._initializing = (async () => {
       // Acquire lock
       while (this._workerLock) {
-        await new Promise((resolve) => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 50));
       }
 
       this._workerLock = true;

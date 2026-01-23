@@ -14,6 +14,9 @@ thread_local const val ImageData = val::global("ImageData");
 // R, G, B, A
 #define COMPONENTS_PER_PIXEL 4
 
+// Maximum dimension for image size validation
+#define MAX_IMAGE_DIMENSION 65535
+
 #ifndef JXL_DEBUG_ON_ALL_ERROR
 #define JXL_DEBUG_ON_ALL_ERROR 0
 #endif
@@ -74,7 +77,8 @@ val decode(std::string data) {
   EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderGetBasicInfo(dec.get(), &info));
 
   // Validate image dimensions
-  if (info.xsize == 0 || info.ysize == 0 || info.xsize > 65535 || info.ysize > 65535) {
+  if (info.xsize == 0 || info.ysize == 0 || info.xsize > MAX_IMAGE_DIMENSION ||
+      info.ysize > MAX_IMAGE_DIMENSION) {
     fprintf(stderr, "Invalid image dimensions: %dx%d\n", info.xsize, info.ysize);
     return val::null();
   }
