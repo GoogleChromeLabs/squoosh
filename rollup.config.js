@@ -101,6 +101,7 @@ export default async function ({ watch }) {
       format: 'cjs',
       assetFileNames: staticPath,
       exports: 'named',
+      experimentalMinChunkSize: 10000, // Помогает избежать проблем с chunk splitting
     },
     watch: {
       clearScreen: false,
@@ -145,6 +146,7 @@ export default async function ({ watch }) {
           // This is needed because emscripten's workers use 'this', so they trigger all kinds of interop things,
           // such as double-wrapping objects in { default }.
           interop: false,
+          experimentalMinChunkSize: 10000, // Помогает избежать проблем с chunk splitting
         },
         resolveFileUrl,
       ),
