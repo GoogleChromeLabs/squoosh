@@ -1,2 +1,10 @@
 /codecs/**/*.js linguist-generated -diff
 /codecs/*/pkg*/*.d.ts linguist-generated
+
+# Test fixtures - binary files
+test/fixtures/images/*.jpg binary
+test/fixtures/images/*.jpeg binary
+test/fixtures/images/*.png binary
+test/fixtures/images/*.webp binary
+test/fixtures/images/*.avif binary
+test/fixtures/images/*.gif binary

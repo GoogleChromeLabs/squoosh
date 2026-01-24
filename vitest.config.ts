@@ -33,4 +33,8 @@ export default defineConfig({
       wordpress: path.resolve(__dirname, './src/wordpress-integration'),
     },
   },
+  define: {
+    __PRODUCTION__: false,
+    __PRERENDER__: false,
+  },
 });
