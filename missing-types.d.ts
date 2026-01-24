@@ -60,3 +60,8 @@ declare var ga: {
 };
 
 declare const __PRODUCTION__: boolean;
+declare const __PRERENDER__: boolean;
+
+interface Navigator {
+  readonly standalone?: boolean;
+}

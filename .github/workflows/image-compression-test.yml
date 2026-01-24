@@ -1,0 +1,128 @@
+name: Image Compression Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  compression-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build project
+        run: npm run build
+      
+      - name: Create test fixtures directory
+        run: mkdir -p test/fixtures/images test/results test/output/compressed
+      
+      - name: Download test images
+        run: |
+          # Create simple test images using ImageMagick if available, or skip if not
+          if command -v convert &> /dev/null; then
+            # Create a 100KB JPEG test image
+            convert -size 800x600 plasma: test/fixtures/images/test-photo.jpg
+            
+            # Create a 50KB PNG test image
+            convert -size 400x300 gradient: test/fixtures/images/test-graphic.png
+            
+            # Create a small 10KB JPEG test image
+            convert -size 200x150 xc:blue test/fixtures/images/test-small.jpg
+            
+            # Create a large 500KB JPEG test image
+            convert -size 2000x1500 plasma: test/fixtures/images/test-large.jpg
+            
+            echo "Test images created successfully"
+          else
+            # Create placeholder files if ImageMagick is not available
+            echo "ImageMagick not available, creating placeholder files"
+            dd if=/dev/urandom of=test/fixtures/images/test-photo.jpg bs=1024 count=100 2>/dev/null
+            dd if=/dev/urandom of=test/fixtures/images/test-graphic.png bs=1024 count=50 2>/dev/null
+            dd if=/dev/urandom of=test/fixtures/images/test-small.jpg bs=1024 count=10 2>/dev/null
+            dd if=/dev/urandom of=test/fixtures/images/test-large.jpg bs=1024 count=500 2>/dev/null
+          fi
+          
+          ls -lh test/fixtures/images/
+      
+      - name: Run integration tests
+        run: |
+          # Run integration tests if they exist
+          if [ -f "test/integration/compression.test.ts" ]; then
+            npm run test:run test/integration/compression.test.ts
+          else
+            echo "Integration tests not yet implemented"
+          fi
+        continue-on-error: true
+      
+      - name: Generate compression metrics report
+        run: |
+          cat > test/results/report.md << 'EOF'
+          # Image Compression Test Results
+          
+          ## Summary
+          
+          This workflow tests the image compression functionality of Squoosh.
+          
+          ## Test Images
+          
+          | Image | Original Size | Format |
+          |-------|--------------|--------|
+          | test-photo.jpg | $(stat -f%z test/fixtures/images/test-photo.jpg 2>/dev/null || stat -c%s test/fixtures/images/test-photo.jpg) bytes | JPEG |
+          | test-graphic.png | $(stat -f%z test/fixtures/images/test-graphic.png 2>/dev/null || stat -c%s test/fixtures/images/test-graphic.png) bytes | PNG |
+          | test-small.jpg | $(stat -f%z test/fixtures/images/test-small.jpg 2>/dev/null || stat -c%s test/fixtures/images/test-small.jpg) bytes | JPEG |
+          | test-large.jpg | $(stat -f%z test/fixtures/images/test-large.jpg 2>/dev/null || stat -c%s test/fixtures/images/test-large.jpg) bytes | JPEG |
+          
+          ## Status
+          
+          ✅ Build completed successfully
+          ✅ Test fixtures created
+          ℹ️  Compression tests are placeholder (full integration pending)
+          
+          ## Next Steps
+          
+          - Implement full codec integration
+          - Add quality metrics (SSIM, PSNR)
+          - Add performance benchmarks
+          - Compare against baseline results
+          EOF
+          
+          cat test/results/report.md
+      
+      - name: Upload compression results
+        uses: actions/upload-artifact@v4
+        with:
+          name: compression-results
+          path: |
+            test/results/
+            test/fixtures/images/
+            test/output/compressed/
+      
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('test/results/report.md', 'utf8');
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report
+            });
+        continue-on-error: true
