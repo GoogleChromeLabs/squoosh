@@ -1,5 +1,9 @@
 # [Squoosh]!
 
+[![Node.js CI](https://github.com/mihail-moonz/squoosh/actions/workflows/node.js.yml/badge.svg)](https://github.com/mihail-moonz/squoosh/actions/workflows/node.js.yml)
+[![Image Compression Tests](https://github.com/mihail-moonz/squoosh/actions/workflows/image-compression-test.yml/badge.svg)](https://github.com/mihail-moonz/squoosh/actions/workflows/image-compression-test.yml)
+[![Performance Benchmark](https://github.com/mihail-moonz/squoosh/actions/workflows/benchmark.yml/badge.svg)](https://github.com/mihail-moonz/squoosh/actions/workflows/benchmark.yml)
+
 [Squoosh] is an image compression web app that reduces image sizes through numerous formats.
 
 ## 🚀 Features (2026 Edition)
@@ -116,4 +120,3 @@ Compared to the 2021 version:
 Apache 2.0 - See [LICENSE](./LICENSE) file
 
 [squoosh]: https://squoosh.app
-

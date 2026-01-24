@@ -22,11 +22,15 @@ export default defineConfig({
   resolve: {
     alias: {
       'static-build': path.resolve(__dirname, './src/static-build'),
-      'client': path.resolve(__dirname, './src/client'),
-      'shared': path.resolve(__dirname, './src/shared'),
-      'features': path.resolve(__dirname, './src/features'),
+      client: path.resolve(__dirname, './src/client'),
+      shared: path.resolve(__dirname, './src/shared'),
+      features: path.resolve(__dirname, './src/features'),
       'worker-shared': path.resolve(__dirname, './src/worker-shared'),
-      'wordpress': path.resolve(__dirname, './src/wordpress-integration'),
+      wordpress: path.resolve(__dirname, './src/wordpress-integration'),
     },
+  },
+  define: {
+    __PRODUCTION__: false,
+    __PRERENDER__: false,
   },
 });
