@@ -25,7 +25,7 @@ if (typeof PromiseRejectionEvent === 'undefined') {
 
     constructor(type: string, init?: { promise?: Promise<any>; reason?: any }) {
       super(type);
-      this.promise = init?.promise || Promise.resolve();
+      this.promise = init?.promise || Promise.reject(init?.reason);
       this.reason = init?.reason;
     }
   };
