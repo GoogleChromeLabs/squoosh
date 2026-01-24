@@ -21,7 +21,12 @@ if (!root) {
 
 async function main() {
   try {
-    if (!__PRODUCTION__) await import('preact/debug');
+    // Load preact debug in development mode
+    // Using dynamic construction to prevent Rollup from processing during build
+    if (!__PRODUCTION__) {
+      const modulePath = 'preact' + '/' + 'debug';
+      await import(/* @vite-ignore */ modulePath);
+    }
     render(<App />, root);
   } catch (error) {
     console.error('Failed to initialize app:', error);
