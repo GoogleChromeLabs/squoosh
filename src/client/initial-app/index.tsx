@@ -19,9 +19,17 @@ if (!root) {
   throw new Error('Root element #app not found');
 }
 
+// Helper function to conditionally load preact/debug without Rollup processing it
+async function loadDebugModule() {
+  const moduleName = 'preact/debug';
+  return import(/* @vite-ignore */ moduleName);
+}
+
 async function main() {
   try {
-    if (!__PRODUCTION__) await import('preact/debug');
+    if (!__PRODUCTION__) {
+      await loadDebugModule();
+    }
     render(<App />, root);
   } catch (error) {
     console.error('Failed to initialize app:', error);
