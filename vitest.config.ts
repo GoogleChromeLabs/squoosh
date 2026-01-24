@@ -19,6 +19,10 @@ export default defineConfig({
       ],
     },
   },
+  define: {
+    __PRODUCTION__: false,
+    __PRERENDER__: false,
+  },
   resolve: {
     alias: {
       'static-build': path.resolve(__dirname, './src/static-build'),

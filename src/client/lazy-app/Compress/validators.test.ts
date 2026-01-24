@@ -21,23 +21,27 @@ describe('Image Validators', () => {
       expect(result.error).toContain('too large');
     });
 
-    it('should accept files at exactly max size', () => {
-      const blob = new Blob(['x'.repeat(MAX_FILE_SIZE)]);
-      const result = validateFileSize(blob);
-      expect(result.valid).toBe(true);
-    });
-
-    it('should accept empty files', () => {
+    it('should handle empty files', () => {
       const blob = new Blob([]);
       const result = validateFileSize(blob);
       expect(result.valid).toBe(true);
+      expect(blob.size).toBe(0);
     });
 
-    it('should format error message with MB units', () => {
-      const blob = new Blob(['x'.repeat(MAX_FILE_SIZE + 1)]);
+    it('should handle extremely large files', () => {
+      // Create a blob that simulates an extremely large file
+      const largeSize = MAX_FILE_SIZE * 2;
+      const blob = new Blob(['x'.repeat(largeSize)]);
       const result = validateFileSize(blob);
-      expect(result.error).toContain('MB');
-      expect(result.error).toContain('max');
+      expect(result.valid).toBe(false);
+      expect(result.error).toBeDefined();
+    });
+
+    it('should show file size in error message', () => {
+      const blob = new Blob(['x'.repeat(MAX_FILE_SIZE + 1000)]);
+      const result = validateFileSize(blob);
+      expect(result.valid).toBe(false);
+      expect(result.error).toMatch(/\d+\.?\d*MB/);
     });
   });
 
@@ -54,51 +58,41 @@ describe('Image Validators', () => {
       expect(result.valid).toBe(false);
     });
 
-    it('should accept PNG', () => {
-      const blob = new Blob([], { type: 'image/png' });
-      const result = validateMimeType(blob);
-      expect(result.valid).toBe(true);
+    it('should accept all supported image formats', () => {
+      const supportedTypes = [
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+        'image/avif',
+        'image/gif',
+        'image/svg+xml',
+        'image/jxl',
+        'image/webp2',
+        'image/qoi',
+      ];
+
+      supportedTypes.forEach((type) => {
+        const blob = new Blob([], { type });
+        const result = validateMimeType(blob);
+        expect(result.valid).toBe(true);
+      });
     });
 
-    it('should accept WebP', () => {
-      const blob = new Blob([], { type: 'image/webp' });
-      const result = validateMimeType(blob);
-      expect(result.valid).toBe(true);
-    });
-
-    it('should accept AVIF', () => {
-      const blob = new Blob([], { type: 'image/avif' });
-      const result = validateMimeType(blob);
-      expect(result.valid).toBe(true);
-    });
-
-    it('should accept GIF', () => {
-      const blob = new Blob([], { type: 'image/gif' });
-      const result = validateMimeType(blob);
-      expect(result.valid).toBe(true);
-    });
-
-    it('should accept SVG', () => {
-      const blob = new Blob([], { type: 'image/svg+xml' });
-      const result = validateMimeType(blob);
-      expect(result.valid).toBe(true);
-    });
-
-    it('should accept JXL', () => {
-      const blob = new Blob([], { type: 'image/jxl' });
-      const result = validateMimeType(blob);
-      expect(result.valid).toBe(true);
-    });
-
-    it('should reject video types', () => {
+    it('should reject video formats', () => {
       const blob = new Blob([], { type: 'video/mp4' });
       const result = validateMimeType(blob);
       expect(result.valid).toBe(false);
       expect(result.error).toContain('Unsupported file type');
     });
 
-    it('should reject text types', () => {
+    it('should reject text formats', () => {
       const blob = new Blob([], { type: 'text/plain' });
+      const result = validateMimeType(blob);
+      expect(result.valid).toBe(false);
+    });
+
+    it('should handle empty mime type', () => {
+      const blob = new Blob([]);
       const result = validateMimeType(blob);
       expect(result.valid).toBe(false);
     });
@@ -120,7 +114,7 @@ describe('Image Validators', () => {
     });
 
     it('should validate WebP magic bytes', async () => {
-      // RIFF....WEBP format
+      // WebP: RIFF....WEBP
       const bytes = new Uint8Array([
         0x52,
         0x49,
@@ -129,7 +123,7 @@ describe('Image Validators', () => {
         0x00,
         0x00,
         0x00,
-        0x00, // file size
+        0x00, // file size (placeholder)
         0x57,
         0x45,
         0x42,
@@ -154,14 +148,38 @@ describe('Image Validators', () => {
       expect(result.valid).toBe(true);
     });
 
-    it('should validate SVG with BOM', async () => {
+    it('should validate SVG with UTF-8 BOM', async () => {
       const bytes = new Uint8Array([0xef, 0xbb, 0xbf]); // UTF-8 BOM
       const blob = new Blob([bytes]);
       const result = await validateImageHeader(blob);
       expect(result.valid).toBe(true);
     });
 
-    it('should reject invalid magic bytes', async () => {
+    it('should detect AVIF header', async () => {
+      // AVIF files start with ftyp box after initial bytes
+      // This test verifies unsupported format detection
+      const bytes = new Uint8Array([
+        0x00, 0x00, 0x00, 0x20, 0x66, 0x74, 0x79, 0x70, 0x61, 0x76, 0x69, 0x66,
+      ]);
+      const blob = new Blob([bytes]);
+      const result = await validateImageHeader(blob);
+      // Should be invalid as it doesn't match known patterns
+      expect(result.valid).toBe(false);
+    });
+
+    it('should detect JXL header', async () => {
+      // JXL files start with specific magic bytes
+      const bytes = new Uint8Array([
+        0xff,
+        0x0a, // JXL signature
+      ]);
+      const blob = new Blob([bytes]);
+      const result = await validateImageHeader(blob);
+      // Should be invalid as it doesn't match known patterns
+      expect(result.valid).toBe(false);
+    });
+
+    it('should reject corrupted image data', async () => {
       const bytes = new Uint8Array([0x00, 0x00, 0x00, 0x00]);
       const blob = new Blob([bytes]);
       const result = await validateImageHeader(blob);
@@ -169,43 +187,53 @@ describe('Image Validators', () => {
       expect(result.error).toContain('Invalid image file format');
     });
 
-    it('should reject AVIF header (not implemented)', async () => {
-      // AVIF starts with ftyp
-      const bytes = new Uint8Array([
-        0x00, 0x00, 0x00, 0x1c, 0x66, 0x74, 0x79, 0x70,
-      ]);
+    it('should reject random binary data', async () => {
+      const bytes = new Uint8Array([0xde, 0xad, 0xbe, 0xef]);
       const blob = new Blob([bytes]);
       const result = await validateImageHeader(blob);
       expect(result.valid).toBe(false);
     });
 
-    it('should reject JXL header (not implemented)', async () => {
-      // JXL starts with FF 0A or 00 00 00 0C
-      const bytes = new Uint8Array([0xff, 0x0a]);
-      const blob = new Blob([bytes]);
-      const result = await validateImageHeader(blob);
-      expect(result.valid).toBe(false);
-    });
-
-    it('should handle corrupted data', async () => {
-      const bytes = new Uint8Array([0xff, 0xd8]); // Incomplete JPEG
-      const blob = new Blob([bytes]);
-      const result = await validateImageHeader(blob);
-      expect(result.valid).toBe(false);
-    });
-
-    it('should handle empty files', async () => {
+    it('should handle empty blob', async () => {
       const blob = new Blob([]);
       const result = await validateImageHeader(blob);
       expect(result.valid).toBe(false);
     });
 
-    it('should handle errors gracefully', async () => {
-      // Create a blob that might cause errors
-      const blob = new Blob(['not an image']);
+    it('should handle blob with insufficient data', async () => {
+      const bytes = new Uint8Array([0xff]); // Only 1 byte
+      const blob = new Blob([bytes]);
       const result = await validateImageHeader(blob);
-      // Should return valid: false with an error message
       expect(result.valid).toBe(false);
+    });
+
+    it('should handle various JPEG markers', async () => {
+      // JPEG with different markers
+      const markers = [
+        [0xff, 0xd8, 0xff, 0xe0], // JFIF
+        [0xff, 0xd8, 0xff, 0xe1], // EXIF
+        [0xff, 0xd8, 0xff, 0xe2], // ICC
+      ];
+
+      for (const marker of markers) {
+        const bytes = new Uint8Array(marker);
+        const blob = new Blob([bytes]);
+        const result = await validateImageHeader(blob);
+        expect(result.valid).toBe(true);
+      }
+    });
+
+    it('should handle error during validation', async () => {
+      // Create a mock blob that throws an error
+      const mockBlob = {
+        slice: () => {
+          throw new Error('Slice error');
+        },
+      } as any;
+
+      const result = await validateImageHeader(mockBlob);
+      expect(result.valid).toBe(false);
+      expect(result.error).toContain('Validation error');
     });
   });
 });

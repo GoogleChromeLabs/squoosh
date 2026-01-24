@@ -19,13 +19,16 @@ if (!root) {
   throw new Error('Root element #app not found');
 }
 
+// Helper function to defer dynamic import resolution and prevent Rollup chunk editing conflicts during build
+async function loadDebugModule() {
+  const moduleName = 'preact/debug';
+  return import(/* @vite-ignore */ moduleName);
+}
+
 async function main() {
   try {
-    // Load preact debug in development mode
-    // Using dynamic construction to prevent Rollup from processing during build
     if (!__PRODUCTION__) {
-      const modulePath = 'preact' + '/' + 'debug';
-      await import(/* @vite-ignore */ modulePath);
+      await loadDebugModule();
     }
     render(<App />, root);
   } catch (error) {

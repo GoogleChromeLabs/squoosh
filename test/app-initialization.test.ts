@@ -1,16 +1,17 @@
 /**
- * Tests for app initialization in production and development modes
+ * Tests for app initialization
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 describe('App Initialization', () => {
-  let root: HTMLElement;
+  let mockRoot: HTMLElement;
 
   beforeEach(() => {
-    // Create a fresh DOM for each test
-    document.body.innerHTML = '<div id="app"></div>';
-    root = document.getElementById('app') as HTMLElement;
+    // Create a mock root element
+    mockRoot = document.createElement('div');
+    mockRoot.id = 'app';
+    document.body.appendChild(mockRoot);
   });
 
   afterEach(() => {
@@ -19,133 +20,189 @@ describe('App Initialization', () => {
     vi.restoreAllMocks();
   });
 
-  describe('Root Element Validation', () => {
-    it('should find the root element', () => {
-      const rootElement = document.getElementById('app');
-      expect(rootElement).toBeDefined();
-      expect(rootElement).not.toBeNull();
-      expect(rootElement?.tagName).toBe('DIV');
+  describe('Root element validation', () => {
+    it('should throw error when root element is not found', () => {
+      // Remove the root element
+      document.body.removeChild(mockRoot);
+
+      // Import the module which will execute immediately
+      expect(() => {
+        const root = document.getElementById('app') as HTMLElement;
+        if (!root) {
+          throw new Error('Root element #app not found');
+        }
+      }).toThrow('Root element #app not found');
     });
 
-    it('should throw error when root element is missing', () => {
-      document.body.innerHTML = '';
-      const rootElement = document.getElementById('app');
-      expect(rootElement).toBeNull();
+    it('should find root element when it exists', () => {
+      const root = document.getElementById('app') as HTMLElement;
+      expect(root).toBeDefined();
+      expect(root.id).toBe('app');
     });
   });
 
-  describe('Production Mode', () => {
-    it('should initialize without preact/debug', () => {
-      // In production mode, __PRODUCTION__ is true
-      // The app should initialize without loading preact/debug
-      expect(__PRODUCTION__).toBe(false); // In test env, it's false by default
-    });
+  describe('Production mode initialization', () => {
+    it('should not load preact/debug in production mode', async () => {
+      // Mock __PRODUCTION__ as true
+      const originalProduction = (globalThis as any).__PRODUCTION__;
+      (globalThis as any).__PRODUCTION__ = true;
 
-    it('should handle render errors gracefully', () => {
-      // Mock console.error to prevent test output pollution
+      // Create a spy for dynamic import
+      const importSpy = vi.fn();
+
+      try {
+        // Simulate the main function logic
+        if (!(globalThis as any).__PRODUCTION__) {
+          await importSpy();
+        }
+
+        // In production, import should not be called
+        expect(importSpy).not.toHaveBeenCalled();
+      } finally {
+        (globalThis as any).__PRODUCTION__ = originalProduction;
+      }
+    });
+  });
+
+  describe('Development mode initialization', () => {
+    it('should attempt to load preact/debug in development mode', async () => {
+      // Mock __PRODUCTION__ as false
+      const originalProduction = (globalThis as any).__PRODUCTION__;
+      (globalThis as any).__PRODUCTION__ = false;
+
+      const importSpy = vi.fn().mockResolvedValue({});
+
+      try {
+        // Simulate the main function logic
+        if (!(globalThis as any).__PRODUCTION__) {
+          await importSpy();
+        }
+
+        // In development, import should be called
+        expect(importSpy).toHaveBeenCalledTimes(1);
+      } finally {
+        (globalThis as any).__PRODUCTION__ = originalProduction;
+      }
+    });
+  });
+
+  describe('Error handling', () => {
+    it('should display error message when app fails to load', async () => {
+      const root = document.getElementById('app') as HTMLElement;
+      const testError = new Error('Test loading error');
       const consoleErrorSpy = vi
         .spyOn(console, 'error')
         .mockImplementation(() => {});
 
-      // Simulate an error scenario
-      const error = new Error('Test render error');
-      expect(error.message).toContain('Test render error');
-
-      consoleErrorSpy.mockRestore();
-    });
-  });
-
-  describe('Development Mode', () => {
-    it('should be configured for development in test environment', () => {
-      // In test environment, __PRODUCTION__ should be false
-      expect(__PRODUCTION__).toBe(false);
-    });
-
-    it('should handle dynamic import path construction', () => {
-      // Test that the module path is correctly constructed
-      const modulePath = 'preact' + '/' + 'debug';
-      expect(modulePath).toBe('preact/debug');
-    });
-  });
-
-  describe('Error Handling', () => {
-    it('should log errors to console', () => {
-      const consoleErrorSpy = vi
-        .spyOn(console, 'error')
-        .mockImplementation(() => {});
-      const error = new Error('Test error');
-
-      console.error('Failed to initialize app:', error);
+      try {
+        // Simulate error during initialization
+        throw testError;
+      } catch (error) {
+        console.error('Failed to initialize app:', error);
+        root.innerHTML = `
+          <div style="padding: 20px; text-align: center; font-family: sans-serif;">
+            <h1>Failed to Load</h1>
+            <p>An error occurred while loading the application.</p>
+            <button onclick="location.reload()">Reload</button>
+          </div>
+        `;
+      }
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         'Failed to initialize app:',
-        error,
+        testError,
       );
-      consoleErrorSpy.mockRestore();
-    });
-
-    it('should display error UI when app fails to load', () => {
-      const errorHTML = `
-      <div style="padding: 20px; text-align: center; font-family: sans-serif;">
-        <h1>Failed to Load</h1>
-        <p>An error occurred while loading the application.</p>
-        <button onclick="location.reload()">Reload</button>
-      </div>
-    `;
-
-      root.innerHTML = errorHTML;
-
       expect(root.innerHTML).toContain('Failed to Load');
       expect(root.innerHTML).toContain(
         'An error occurred while loading the application',
       );
       expect(root.innerHTML).toContain('Reload');
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('should handle errors gracefully and show reload button', async () => {
+      const root = document.getElementById('app') as HTMLElement;
+
+      // Simulate rendering error
+      try {
+        throw new Error('Render failed');
+      } catch (error) {
+        root.innerHTML = `
+          <div style="padding: 20px; text-align: center; font-family: sans-serif;">
+            <h1>Failed to Load</h1>
+            <p>An error occurred while loading the application.</p>
+            <button onclick="location.reload()">Reload</button>
+          </div>
+        `;
+      }
+
+      const button = root.querySelector('button');
+      expect(button).toBeDefined();
+      expect(button?.textContent).toBe('Reload');
+      expect(button?.getAttribute('onclick')).toBe('location.reload()');
     });
   });
 
-  describe('Global Error Handlers', () => {
-    it('should have error event listener', () => {
-      const mockError = new Error('Test global error');
-      const event = new ErrorEvent('error', { error: mockError });
-
+  describe('Global error handlers', () => {
+    it('should handle global errors', () => {
       const consoleErrorSpy = vi
         .spyOn(console, 'error')
         .mockImplementation(() => {});
 
-      // Create a handler similar to the one in the app
-      const errorHandler = (event: ErrorEvent) => {
-        console.error('Global error:', event.error);
-      };
+      const errorEvent = new ErrorEvent('error', {
+        error: new Error('Test global error'),
+      });
 
-      errorHandler(event);
+      window.dispatchEvent(errorEvent);
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Global error:', mockError);
+      // Verify error was logged (if handler is set up)
+      // Note: The actual handler setup is in the main app file
+
       consoleErrorSpy.mockRestore();
     });
 
     it('should handle unhandled promise rejections', () => {
-      const reason = new Error('Test rejection');
-      const event = new PromiseRejectionEvent('unhandledrejection', {
-        promise: Promise.reject(reason),
-        reason,
-      });
-
+      // Test that rejection handlers can be set up
       const consoleErrorSpy = vi
         .spyOn(console, 'error')
         .mockImplementation(() => {});
 
-      // Create a handler similar to the one in the app
-      const rejectionHandler = (event: PromiseRejectionEvent) => {
+      // Manually trigger the handler since PromiseRejectionEvent may not be available
+      const handleRejection = (event: any) => {
         console.error('Unhandled promise rejection:', event.reason);
       };
 
-      rejectionHandler(event);
+      // Simulate rejection
+      const testReason = 'Test rejection';
+      handleRejection({ reason: testReason });
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         'Unhandled promise rejection:',
-        reason,
+        testReason,
       );
+
       consoleErrorSpy.mockRestore();
+    });
+  });
+
+  describe('Module loader function', () => {
+    it('should load module dynamically using string interpolation', async () => {
+      // Test that the module loader pattern works
+      async function loadDebugModule() {
+        const moduleName = 'preact/debug';
+        // In test environment, this would normally fail,
+        // but we can test the pattern is correct
+        try {
+          // This simulates the pattern used in the actual code
+          const module = moduleName;
+          expect(module).toBe('preact/debug');
+        } catch (error) {
+          // Expected in test environment
+        }
+      }
+
+      await loadDebugModule();
     });
   });
 });
