@@ -80,11 +80,16 @@ describe('WordPress Integration - Compression', () => {
 
     it('should handle different formats', async () => {
       const testBuffer = new ArrayBuffer(1000);
-      const formats = ['webp', 'avif', 'jpeg', 'png'] as const;
+      const formats: Array<'webp' | 'avif' | 'mozjpeg' | 'oxipng'> = [
+        'webp',
+        'avif',
+        'mozjpeg',
+        'oxipng',
+      ];
 
       for (const format of formats) {
         const result = await compressImage(testBuffer, {
-          format: format as any,
+          format,
           quality: 80,
         });
 

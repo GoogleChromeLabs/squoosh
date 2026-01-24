@@ -19,7 +19,7 @@ if (!root) {
   throw new Error('Root element #app not found');
 }
 
-// Helper function to conditionally load preact/debug without Rollup processing it
+// Helper function to defer dynamic import resolution and prevent Rollup chunk editing conflicts during build
 async function loadDebugModule() {
   const moduleName = 'preact/debug';
   return import(/* @vite-ignore */ moduleName);
