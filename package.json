@@ -44,7 +44,7 @@
     "preact-render-to-string": "^5.1.11",
     "prettier": "^2.4.1",
     "rollup": "^2.38.0",
-    "serve": "^11.3.2",
+    "serve": "^14.2.5",
     "typescript": "^4.4.4",
     "wasm-feature-detect": "^1.2.11",
     "which": "^2.0.2"
