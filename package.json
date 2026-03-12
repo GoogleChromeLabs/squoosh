@@ -15,7 +15,7 @@
     "@rollup/plugin-commonjs": "^17.0.0",
     "@rollup/plugin-node-resolve": "^11.1.0",
     "@rollup/plugin-replace": "^2.3.4",
-    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-terser": "^1.0.0",
     "@surma/rollup-plugin-off-main-thread": "^2.2.2",
     "@types/dedent": "^0.7.0",
     "@types/mime-types": "^2.1.1",
