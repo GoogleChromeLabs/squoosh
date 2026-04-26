@@ -125,3 +125,75 @@ export const ImportIcon = () => (
     </g>
   </svg>
 );
+
+export const BackIcon = (props: preact.JSX.HTMLAttributes) => (
+  <Icon {...props}>
+    <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
+  </Icon>
+);
+
+export const ImageIcon = (props: preact.JSX.HTMLAttributes) => (
+  <Icon {...props}>
+    <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
+  </Icon>
+);
+
+export const UploadIcon = (props: preact.JSX.HTMLAttributes) => (
+  <Icon {...props}>
+    <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z" />
+  </Icon>
+);
+
+export const PlayIcon = (props: preact.JSX.HTMLAttributes) => (
+  <Icon {...props}>
+    <path d="M8 5v14l11-7z" />
+  </Icon>
+);
+
+export const StopIcon = (props: preact.JSX.HTMLAttributes) => (
+  <Icon {...props}>
+    <path d="M6 6h12v12H6z" />
+  </Icon>
+);
+
+export const TrashIcon = (props: preact.JSX.HTMLAttributes) => (
+  <Icon {...props}>
+    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+  </Icon>
+);
+
+export const SettingsIcon = (props: preact.JSX.HTMLAttributes) => (
+  <Icon {...props}>
+    <path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
+  </Icon>
+);
+
+export const RetryIcon = (props: preact.JSX.HTMLAttributes) => (
+  <Icon {...props}>
+    <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
+  </Icon>
+);
+
+export const CheckIcon = (props: preact.JSX.HTMLAttributes) => (
+  <Icon {...props}>
+    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+  </Icon>
+);
+
+export const CrossIcon = (props: preact.JSX.HTMLAttributes) => (
+  <Icon {...props}>
+    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+  </Icon>
+);
+
+export const SpinnerIcon = (props: preact.JSX.HTMLAttributes) => (
+  <Icon {...props}>
+    <path
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      d="M12 4V1M12 23v-3M4 12H1M23 12h-3M5.6 5.6L3.5 3.5M20.5 20.5l-2.1-2.1M5.6 18.4l-2.1 2.1M20.5 3.5l-2.1 2.1"
+    />
+  </Icon>
+);

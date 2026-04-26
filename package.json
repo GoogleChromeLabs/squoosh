@@ -53,5 +53,8 @@
     "*.{js,css,json,md,ts,tsx}": "prettier --write",
     "*.{c,h,cpp,hpp}": "clang-format -i",
     "*.rs": "rustfmt"
+  },
+  "dependencies": {
+    "client-zip": "^2.5.0"
   }
 }
