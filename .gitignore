@@ -10,3 +10,6 @@ build
 src/features-worker/index.ts
 src/client/lazy-app/worker-bridge/meta.ts
 src/client/lazy-app/feature-meta/index.ts
+
+.gemini/
+.claude/
