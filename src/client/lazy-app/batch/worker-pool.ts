@@ -1,4 +1,4 @@
-import { wrap } from 'comlink';
+import { wrap, releaseProxy } from 'comlink';
 import workerURL from 'omt:../../../features-worker';
 import type { ProcessorWorkerApi } from '../../../features-worker';
 import { abortable } from '../util';
@@ -76,6 +76,7 @@ export class WorkerPool {
     if (instance.idleTimeout) {
       clearTimeout(instance.idleTimeout);
     }
+    (instance.api as any)[releaseProxy]();
     instance.worker.terminate();
     this.workers.delete(id);
   }

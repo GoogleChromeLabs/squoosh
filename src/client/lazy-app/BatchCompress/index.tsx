@@ -37,6 +37,7 @@ interface Props {
   showSnack: SnackBarElement['showSnackbar'];
   onBack: () => void;
   onSwitchToSingle: (file: File) => void;
+  initialFiles?: File[];
 }
 
 interface State {
@@ -95,6 +96,10 @@ export default class BatchCompress extends Component<Props, State> {
       this.updateFromStore();
     });
     this.updateFromStore();
+
+    if (this.props.initialFiles && this.props.initialFiles.length > 0) {
+      this.handleFilesAdded(this.props.initialFiles);
+    }
   }
 
   componentWillUnmount(): void {

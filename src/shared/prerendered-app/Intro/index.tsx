@@ -71,6 +71,7 @@ async function getImageClipboardItem(
 
 interface Props {
   onFile?: (file: File) => void;
+  onFiles?: (files: File[]) => void;
   showSnack?: SnackBarElement['showSnackbar'];
 }
 interface State {
@@ -119,10 +120,17 @@ export default class Intro extends Component<Props, State> {
 
   private onFileChange = (event: Event): void => {
     const fileInput = event.target as HTMLInputElement;
-    const file = fileInput.files && fileInput.files[0];
-    if (!file) return;
-    this.fileInput!.value = '';
-    this.props.onFile!(file);
+    if (!fileInput.files || fileInput.files.length === 0) return;
+    
+    if (fileInput.files.length > 1 && this.props.onFiles) {
+      const files = Array.from(fileInput.files);
+      this.fileInput!.value = '';
+      this.props.onFiles(files);
+    } else {
+      const file = fileInput.files[0];
+      this.fileInput!.value = '';
+      this.props.onFile!(file);
+    }
   };
 
   private onOpenClick = () => {
@@ -231,6 +239,8 @@ export default class Intro extends Component<Props, State> {
           class={style.hide}
           ref={linkRef(this, 'fileInput')}
           type="file"
+          multiple
+          accept="image/*"
           onChange={this.onFileChange}
         />
         <div class={style.main}>
