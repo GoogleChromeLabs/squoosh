@@ -234,7 +234,7 @@ async function processSvg(
   const viewBox = svg.getAttribute('viewBox');
   if (viewBox === null) throw Error('SVG must have width/height or viewBox');
 
-  const viewboxParts = viewBox.split(/\s+/);
+  const viewboxParts = viewBox.split(/[\s,]+/);
   svg.setAttribute('width', viewboxParts[2]);
   svg.setAttribute('height', viewboxParts[3]);
 
