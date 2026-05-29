@@ -24,9 +24,9 @@ enc/jxl_node_enc.js dec/jxl_node_dec.js: ENVIRONMENT = node
 enc/jxl_enc.js enc/jxl_node_enc.js enc/jxl_enc_mt.js dec/jxl_dec.js dec/jxl_node_dec.js: CODEC_BUILD_DIR:=$(CODEC_MT_BUILD_DIR)
 enc/jxl_enc_mt_simd.js: CODEC_BUILD_DIR:=$(CODEC_MT_SIMD_BUILD_DIR)
 
-enc/jxl_node_enc.js dec/jxl_node_dec.js enc/jxl_enc.js dec/jxl_dec.js: $(CODEC_MT_BUILD_DIR)/lib/libjxl.a
-enc/jxl_enc_mt.js: $(CODEC_MT_BUILD_DIR)/lib/libjxl.a $(CODEC_MT_BUILD_DIR)/lib/libjxl_threads.a
-enc/jxl_enc_mt_simd.js: $(CODEC_MT_SIMD_BUILD_DIR)/lib/libjxl.a $(CODEC_MT_SIMD_BUILD_DIR)/lib/libjxl_threads.a
+enc/jxl_node_enc.js dec/jxl_node_dec.js enc/jxl_enc.js dec/jxl_dec.js: $(CODEC_MT_BUILD_DIR)/lib/libjxl.a $(CODEC_MT_BUILD_DIR)/third_party/libskcms.a
+enc/jxl_enc_mt.js: $(CODEC_MT_BUILD_DIR)/lib/libjxl.a $(CODEC_MT_BUILD_DIR)/lib/libjxl_threads.a $(CODEC_MT_BUILD_DIR)/third_party/libskcms.a
+enc/jxl_enc_mt_simd.js: $(CODEC_MT_SIMD_BUILD_DIR)/lib/libjxl.a $(CODEC_MT_SIMD_BUILD_DIR)/lib/libjxl_threads.a $(CODEC_MT_SIMD_BUILD_DIR)/third_party/libskcms.a
 
 # Disable errors on deprecated SIMD intrinsics.
 # JPEG-XL & Highway need to catch up, once they do, we can remove this suppression.
@@ -35,10 +35,25 @@ export CXXFLAGS += -Wno-deprecated-declarations
 # Compile multithreaded wrappers with -pthread.
 enc/jxl_enc_mt.js enc/jxl_enc_mt_simd.js: CXXFLAGS+=-pthread
 
+# Multithreaded JXL builds need larger stacks than Emscripten's 64 KB default
+# (matching the bump applied to the AVIF MT encoder).
+enc/jxl_enc_mt.js enc/jxl_enc_mt_simd.js: STACK_FLAGS = -s STACK_SIZE=2MB -s DEFAULT_PTHREAD_STACK_SIZE=2MB
+
+# Set DEBUG_BUILD=1 to produce an unoptimised wasm with DWARF and assertions —
+# stack traces show real C++ function names instead of `wasm-function[N]`.
+ifdef DEBUG_BUILD
+DEBUG_FLAGS = -O0 -g3 -gsource-map -fno-lto -s ASSERTIONS=2 -s STACK_OVERFLOW_CHECK=2
+CMAKE_BUILD_TYPE = Debug
+else
+CMAKE_BUILD_TYPE = Release
+endif
+
 $(OUT_JS):
 	$(CXX) \
 		$(CXXFLAGS) \
 		$(LDFLAGS) \
+		$(STACK_FLAGS) \
+		$(DEBUG_FLAGS) \
 		-I $(CODEC_DIR) \
 		-I $(CODEC_DIR)/lib \
 		-I $(CODEC_DIR)/lib/include \
@@ -68,6 +83,7 @@ $(CODEC_MT_SIMD_BUILD_DIR)/Makefile: CXXFLAGS+=-msimd128
 %/Makefile: $(CODEC_DIR)/CMakeLists.txt
 	emcmake cmake \
 	$(CMAKE_FLAGS) \
+	-DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) \
 	-DBUILD_SHARED_LIBS=0 \
 	-DJPEGXL_ENABLE_BENCHMARK=0 \
 	-DJPEGXL_ENABLE_EXAMPLES=0 \
@@ -75,9 +91,14 @@ $(CODEC_MT_SIMD_BUILD_DIR)/Makefile: CXXFLAGS+=-msimd128
 	-DCMAKE_CROSSCOMPILING_EMULATOR=node \
 	-B $(@D) \
 	$(<D)
-	emcc -Wall -O3 -o $(CODEC_DIR)/third_party/skcms/skcms.cc.o -I$(CODEC_DIR)/third_party/skcms -c $(CODEC_DIR)/third_party/skcms/skcms.cc
-	llvm-ar rc $(CODEC_BUILD_DIR)/third_party/libskcms.a $(CODEC_DIR)/third_party/skcms/skcms.cc.o
-	rm $(CODEC_DIR)/third_party/skcms/skcms.cc.o
+
+# Build skcms as a standalone static lib, once per build-dir (Release/Debug,
+# scalar/SIMD), so each variant gets its own consistent artefact.
+%/third_party/libskcms.a:
+	mkdir -p $(@D)
+	emcc -Wall -O3 -o $(@D)/../skcms.cc.o -I$(CODEC_DIR)/third_party/skcms -c $(CODEC_DIR)/third_party/skcms/skcms.cc
+	emar rc $@ $(@D)/../skcms.cc.o
+	rm $(@D)/../skcms.cc.o
 
 $(CODEC_DIR)/CMakeLists.txt:
 	$(RM) -r $(@D)
