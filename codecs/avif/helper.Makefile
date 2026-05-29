@@ -35,12 +35,34 @@ $(OUT_JS): $(LIBSHARPYUV)
 $(CODEC_OUT): $(LIBSHARPYUV)
 endif
 
+# libaom's intra-mode RD search recurses deeply. Bump both the main module
+# stack and the pthread stacks from Emscripten's default 64 KB, otherwise
+# the encoder hits a stack overflow inside av1_rd_pick_partition.
+ifneq (,$(findstring -pthread, $(OUT_FLAGS)))
+PTHREAD_STACK_FLAGS = -s STACK_SIZE=2MB -s DEFAULT_PTHREAD_STACK_SIZE=2MB
+endif
+
+# Set DEBUG_BUILD=1 to produce an unoptimised build with full DWARF debug info
+# in the wasm, plus Emscripten assertions. Stack traces from this build show
+# real C++ function names instead of `wasm-function[N]` indices.
+ifdef DEBUG_BUILD
+# -O0 / -g3 override the -O3 from CXXFLAGS; -fno-lto cancels -flto.
+DEBUG_CFLAGS = -O0 -g3 -gsource-map -fno-lto
+DEBUG_LDFLAGS = -O0 -g3 -gsource-map -fno-lto -s ASSERTIONS=2 -s STACK_OVERFLOW_CHECK=2
+CMAKE_BUILD_TYPE = Debug
+else
+CMAKE_BUILD_TYPE = Release
+endif
+
 $(OUT_JS): $(OUT_CPP) $(LIBAOM_OUT) $(CODEC_OUT)
 	$(CXX) \
 		-I $(CODEC_DIR)/include \
 		$(CXXFLAGS) \
 		$(LDFLAGS) \
 		$(OUT_FLAGS) \
+		$(PTHREAD_STACK_FLAGS) \
+		$(DEBUG_CFLAGS) \
+		$(DEBUG_LDFLAGS) \
 		--bind \
 		-s ERROR_ON_UNDEFINED_SYMBOLS=0 \
 		-s ENVIRONMENT=$(ENVIRONMENT) \
@@ -51,7 +73,7 @@ $(OUT_JS): $(OUT_CPP) $(LIBAOM_OUT) $(CODEC_OUT)
 $(CODEC_OUT): $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_OUT)
 	emcmake cmake \
 		-DCMAKE_LIBRARY_PATH=$(LIBSHARPYUV_BUILD_DIR) \
-		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) \
 		-DBUILD_SHARED_LIBS=0 \
 		-DAVIF_CODEC_AOM=1 \
 		-DAOM_LIBRARY=$(LIBAOM_OUT) \
@@ -63,7 +85,7 @@ $(CODEC_OUT): $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_OUT)
 
 $(LIBAOM_OUT): $(LIBAOM_DIR)/CMakeLists.txt
 	emcmake cmake \
-		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) \
 		-DENABLE_CCACHE=0 \
 		-DAOM_TARGET_CPU=generic \
 		-DENABLE_DOCS=0 \
