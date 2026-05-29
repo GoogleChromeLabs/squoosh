@@ -479,7 +479,16 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
   }
 
   encoder->speed = options.speed;
-  encoder->maxThreads = emscripten_num_logical_cores();
+  // The layered (progressive) encode must run single-threaded. We call encode()
+  // synchronously on this Web Worker's own main thread; libaom's multi-threaded
+  // GOOD_QUALITY pipeline (used for layered output) calls pthread_create during
+  // the encode, which Emscripten proxies *back* to this blocked thread via the
+  // mailbox/setTimeout - which never runs because we're blocked in Atomics.wait,
+  // so it deadlocks. (Firefox happens to pump the mailbox during the wait and
+  // survives; Chrome and Safari do not.) Single-image encodes use the ALL_INTRA
+  // pipeline, which doesn't spawn threads mid-encode here, so they keep MT.
+  // TODO: I don't know if the above slop is correct, but it does fix the issue.
+  encoder->maxThreads = needBaseLayer ? 1 : emscripten_num_logical_cores();
   // Let libavif choose a sensible number of tiles based on image dimensions.
   encoder->autoTiling = AVIF_TRUE;
   // Progressive output has one extra layer (the base); a plain encode is a
