@@ -29,15 +29,14 @@ interface State {
   showAdvanced: boolean;
   separateAlpha: boolean;
   alphaQuality: number;
-  chromaDeltaQ: boolean;
+  aqMode: number;
   subsample: number;
-  tileRows: number;
-  tileCols: number;
   effort: number;
-  sharpness: number;
   denoiseLevel: number;
   tune: AVIFTune;
   enableSharpYUV: boolean;
+  channelDepth: number;
+  premultiplyAlpha: boolean;
 }
 
 /**
@@ -77,14 +76,13 @@ export class Options extends Component<Props, State> {
       separateAlpha,
       alphaQuality: separateAlpha ? options.qualityAlpha : options.quality,
       subsample: options.subsample,
-      tileRows: options.tileRowsLog2,
-      tileCols: options.tileColsLog2,
       effort: MAX_EFFORT - options.speed,
-      chromaDeltaQ: options.chromaDeltaQ,
-      sharpness: options.sharpness,
+      aqMode: options.aqMode,
       denoiseLevel: options.denoiseLevel,
       tune: options.tune,
       enableSharpYUV: options.enableSharpYUV,
+      channelDepth: options.channelDepth,
+      premultiplyAlpha: options.premultiplyAlpha,
     };
   }
 
@@ -129,14 +127,13 @@ export class Options extends Component<Props, State> {
               : optionState.alphaQuality,
           // Always set to 4:4:4 if lossless
           subsample: optionState.lossless ? 3 : optionState.subsample,
-          tileColsLog2: optionState.tileCols,
-          tileRowsLog2: optionState.tileRows,
           speed: MAX_EFFORT - optionState.effort,
-          chromaDeltaQ: optionState.chromaDeltaQ,
-          sharpness: optionState.sharpness,
+          aqMode: optionState.aqMode,
           denoiseLevel: optionState.denoiseLevel,
           tune: optionState.tune,
           enableSharpYUV: optionState.enableSharpYUV,
+          channelDepth: optionState.channelDepth,
+          premultiplyAlpha: optionState.premultiplyAlpha,
         };
 
         // Updating options, so we don't recalculate in getDerivedStateFromProps.
@@ -164,13 +161,12 @@ export class Options extends Component<Props, State> {
       quality,
       showAdvanced,
       subsample,
-      tileCols,
-      tileRows,
-      chromaDeltaQ,
-      sharpness,
+      aqMode,
       denoiseLevel,
       tune,
       enableSharpYUV,
+      channelDepth,
+      premultiplyAlpha,
     }: State,
   ) {
     return (
@@ -260,22 +256,28 @@ export class Options extends Component<Props, State> {
                       )}
                     </Expander>
                     <label class={style.optionToggle}>
-                      Extra chroma compression
+                      Premultiply alpha
                       <Checkbox
-                        checked={chromaDeltaQ}
-                        onChange={this._inputChange('chromaDeltaQ', 'boolean')}
+                        checked={premultiplyAlpha}
+                        onChange={this._inputChange(
+                          'premultiplyAlpha',
+                          'boolean',
+                        )}
                       />
                     </label>
-                    <div class={style.optionOneCell}>
-                      <Range
-                        min="0"
-                        max="7"
-                        value={sharpness}
-                        onInput={this._inputChange('sharpness', 'number')}
+                    <label class={style.optionTextFirst}>
+                      Adaptive Quantization:
+                      <Select
+                        value={aqMode}
+                        onChange={this._inputChange('aqMode', 'number')}
                       >
-                        Sharpness:
-                      </Range>
-                    </div>
+                        <option value="0">Auto</option>
+                        <option value="1">Off</option>
+                        <option value="2">Perceptual</option>
+                        <option value="3">Perceptual AI</option>
+                        <option value="4">Variance boost</option>
+                      </Select>
+                    </label>
                     <div class={style.optionOneCell}>
                       <Range
                         min="0"
@@ -293,33 +295,25 @@ export class Options extends Component<Props, State> {
                         onChange={this._inputChange('tune', 'number')}
                       >
                         <option value={AVIFTune.auto}>Auto</option>
-                        <option value={AVIFTune.psnr}>PSNR</option>
+                        <option value={AVIFTune.iq}>IQ</option>
                         <option value={AVIFTune.ssim}>SSIM</option>
+                        <option value={AVIFTune.psnr}>PSNR</option>
+                      </Select>
+                    </label>
+                    <label class={style.optionTextFirst}>
+                      Channel depth:
+                      <Select
+                        value={channelDepth}
+                        onChange={this._inputChange('channelDepth', 'number')}
+                      >
+                        <option value="8">8-bit</option>
+                        <option value="10">10-bit</option>
+                        <option value="12">12-bit</option>
                       </Select>
                     </label>
                   </div>
                 )}
               </Expander>
-              <div class={style.optionOneCell}>
-                <Range
-                  min="0"
-                  max="6"
-                  value={tileRows}
-                  onInput={this._inputChange('tileRows', 'number')}
-                >
-                  Log2 of tile rows:
-                </Range>
-              </div>
-              <div class={style.optionOneCell}>
-                <Range
-                  min="0"
-                  max="6"
-                  value={tileCols}
-                  onInput={this._inputChange('tileCols', 'number')}
-                >
-                  Log2 of tile cols:
-                </Range>
-              </div>
             </div>
           )}
         </Expander>

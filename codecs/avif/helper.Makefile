@@ -24,6 +24,10 @@ LIBAOM_OUT := $(LIBAOM_BUILD_DIR)/libaom.a
 OUT_WASM = $(OUT_JS:.js=.wasm)
 OUT_WORKER=$(OUT_JS:.js=.worker.js)
 
+# Rebuild when the build configuration changes. The CMake/link flags are defined
+# across both makefiles, so a change to either should invalidate the outputs.
+MAKEFILE_DEPS := Makefile helper.Makefile
+
 .PHONY: all clean
 
 all: $(OUT_JS)
@@ -40,6 +44,11 @@ endif
 # the encoder hits a stack overflow inside av1_rd_pick_partition.
 ifneq (,$(findstring -pthread, $(OUT_FLAGS)))
 PTHREAD_STACK_FLAGS = -s STACK_SIZE=2MB -s DEFAULT_PTHREAD_STACK_SIZE=2MB
+# The MT target links with --shared-memory (via -pthread), so every object in
+# the link - including libaom and libavif - must be compiled with the atomics
+# and bulk-memory features. -pthread enables those, so propagate it into the
+# CMake compile flags for the dependency libraries too.
+PTHREAD_COMPILE_FLAGS = -pthread
 endif
 
 # Set DEBUG_BUILD=1 to produce an unoptimised build with full DWARF debug info
@@ -54,7 +63,7 @@ else
 CMAKE_BUILD_TYPE = Release
 endif
 
-$(OUT_JS): $(OUT_CPP) $(LIBAOM_OUT) $(CODEC_OUT)
+$(OUT_JS): $(OUT_CPP) $(LIBAOM_OUT) $(CODEC_OUT) $(MAKEFILE_DEPS)
 	$(CXX) \
 		-I $(CODEC_DIR)/include \
 		$(CXXFLAGS) \
@@ -68,14 +77,21 @@ $(OUT_JS): $(OUT_CPP) $(LIBAOM_OUT) $(CODEC_OUT)
 		-s ENVIRONMENT=$(ENVIRONMENT) \
 		-s EXPORT_ES6=1 \
 		-o $@ \
-		$+
+		$(filter-out $(MAKEFILE_DEPS),$+)
+	# Emscripten emits `"name": "em-pthread-" + PThread.nextWorkerID` in the
+	# `new Worker(...)` options. That string concat trips up
+	# rollup-plugin-off-main-thread's JSON5 parser, leaving `type: "module"`
+	# in the AMD output. The worker name is only used as a startsWith prefix
+	# to detect pthread workers, so a static string is equivalent.
+	sed -i.bak 's/"em-pthread-" + PThread.nextWorkerID/"em-pthread"/g' $@ && rm $@.bak
 
-$(CODEC_OUT): $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_OUT)
+$(CODEC_OUT): $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_OUT) $(MAKEFILE_DEPS)
 	emcmake cmake \
-		-DCMAKE_LIBRARY_PATH=$(LIBSHARPYUV_BUILD_DIR) \
 		-DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) \
+		-DCMAKE_C_FLAGS="$(CFLAGS) $(PTHREAD_COMPILE_FLAGS)" \
+		-DCMAKE_CXX_FLAGS="$(CXXFLAGS) $(PTHREAD_COMPILE_FLAGS)" \
 		-DBUILD_SHARED_LIBS=0 \
-		-DAVIF_CODEC_AOM=1 \
+		-DAVIF_CODEC_AOM=SYSTEM \
 		-DAOM_LIBRARY=$(LIBAOM_OUT) \
 		-DAOM_INCLUDE_DIR=$(LIBAOM_DIR) \
 		$(LIBAVIF_FLAGS) \
@@ -83,9 +99,11 @@ $(CODEC_OUT): $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_OUT)
 		$(CODEC_DIR) && \
 	$(MAKE) -C $(CODEC_BUILD_DIR)
 
-$(LIBAOM_OUT): $(LIBAOM_DIR)/CMakeLists.txt
+$(LIBAOM_OUT): $(LIBAOM_DIR)/CMakeLists.txt $(MAKEFILE_DEPS)
 	emcmake cmake \
 		-DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) \
+		-DCMAKE_C_FLAGS="$(CFLAGS) $(PTHREAD_COMPILE_FLAGS)" \
+		-DCMAKE_CXX_FLAGS="$(CXXFLAGS) $(PTHREAD_COMPILE_FLAGS)" \
 		-DENABLE_CCACHE=0 \
 		-DAOM_TARGET_CPU=generic \
 		-DENABLE_DOCS=0 \

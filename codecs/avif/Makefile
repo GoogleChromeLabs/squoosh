@@ -1,16 +1,14 @@
 # using libavif from https://github.com/AOMediaCodec/libavif
-LIBAVIF_URL = https://github.com/AOMediaCodec/libavif/archive/refs/tags/v1.0.1.tar.gz
+LIBAVIF_URL = https://github.com/AOMediaCodec/libavif/archive/refs/tags/v1.4.2.tar.gz
 LIBAVIF_PACKAGE = node_modules/libavif.tar.gz
 
 # using libaom from https://aomedia.googlesource.com/aom
-LIBAOM_URL = https://aomedia.googlesource.com/aom/+archive/v3.7.0.tar.gz
+LIBAOM_URL = https://aomedia.googlesource.com/aom/+archive/v3.14.1.tar.gz
 LIBAOM_PACKAGE = node_modules/libaom.tar.gz
 
 export CODEC_DIR = node_modules/libavif
 export BUILD_DIR = node_modules/build
 export LIBAOM_DIR = node_modules/libaom
-
-override CFLAGS += "-Wno-unused-macros"
 
 # We must build libsharpyuv from a specific libwebp commit
 # See libavif/ext/libsharpyuv.cmd for more detail
@@ -21,11 +19,8 @@ LIBSHARPYUV_MT := $(LIBWEBP_DIR)/build_mt/libsharpyuv.a
 export LIBSHARPYUV := $(LIBWEBP_DIR)/build/libsharpyuv.a
 
 OUT_ENC_JS = enc/avif_enc.js
-OUT_NODE_ENC_JS = enc/avif_node_enc.js
 OUT_ENC_MT_JS = enc/avif_enc_mt.js
-OUT_NODE_ENC_MT_JS = enc/avif_node_enc_mt.js
 OUT_DEC_JS = dec/avif_dec.js
-OUT_NODE_DEC_JS = dec/avif_node_dec.js
 
 OUT_ENC_CPP = enc/avif_enc.cpp
 OUT_DEC_CPP = dec/avif_dec.cpp
@@ -33,12 +28,17 @@ ENVIRONMENT = worker
 
 HELPER_MAKEFLAGS := -f helper.Makefile
 
+# Rebuild the outputs whenever the build configuration itself changes, since the
+# flags passed to CMake/the linker live here rather than in a tracked source
+# file. Without this, editing build flags wouldn't invalidate the .wasm outputs.
+MAKEFILE_DEPS := Makefile helper.Makefile
+
 .PHONY: all clean
 
 all: $(OUT_ENC_JS) $(OUT_DEC_JS) $(OUT_ENC_MT_JS)
 
 # ST-Encoding
-$(OUT_ENC_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt $(LIBSHARPYUV_ST)
+$(OUT_ENC_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt $(LIBSHARPYUV_ST) $(MAKEFILE_DEPS)
 	mkdir -p $(LIBWEBP_DIR)/build && cp $(LIBSHARPYUV_ST) $(LIBSHARPYUV)
 	$(MAKE) \
 		$(HELPER_MAKEFLAGS) \
@@ -47,14 +47,13 @@ $(OUT_ENC_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLis
 		LIBAOM_FLAGS="\
 			-DCONFIG_AV1_DECODER=0 \
 			-DCONFIG_MULTITHREAD=0 \
-			-DCONFIG_AV1_HIGHBITDEPTH=0 \
 		" \
 		ENVIRONMENT=$(ENVIRONMENT) \
-		LIBAVIF_FLAGS="-DAVIF_CODEC_AOM_DECODE=0 -DAVIF_LOCAL_LIBSHARPYUV=ON"
+		LIBAVIF_FLAGS="-DAVIF_CODEC_AOM_DECODE=0 -DAVIF_LIBSHARPYUV=SYSTEM -DLIBSHARPYUV_LIBRARY=$(abspath $(LIBSHARPYUV)) -DLIBSHARPYUV_INCLUDE_DIR=$(abspath $(LIBWEBP_DIR)) -DAVIF_LIBYUV=OFF"
 
 # MT-Encoding
 # We need to run the ST and MT tasks sequentially to avoid conflicts with the copy of libsharpyuv in the build directory
-$(OUT_ENC_MT_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt $(LIBSHARPYUV_MT) | $(OUT_ENC_JS)
+$(OUT_ENC_MT_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt $(LIBSHARPYUV_MT) $(MAKEFILE_DEPS) | $(OUT_ENC_JS)
 	mkdir -p $(LIBWEBP_DIR)/build && cp $(LIBSHARPYUV_MT) $(LIBSHARPYUV)
 	$(MAKE) \
 		$(HELPER_MAKEFLAGS) \
@@ -62,14 +61,13 @@ $(OUT_ENC_MT_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMake
 		OUT_CPP=$< \
 		LIBAOM_FLAGS="\
 			-DCONFIG_AV1_DECODER=0 \
-			-DCONFIG_AV1_HIGHBITDEPTH=0 \
 		" \
 		ENVIRONMENT=$(ENVIRONMENT) \
-		LIBAVIF_FLAGS="-DAVIF_CODEC_AOM_DECODE=0 -DAVIF_LOCAL_LIBSHARPYUV=ON" \
+		LIBAVIF_FLAGS="-DAVIF_CODEC_AOM_DECODE=0 -DAVIF_LIBSHARPYUV=SYSTEM -DLIBSHARPYUV_LIBRARY=$(abspath $(LIBSHARPYUV)) -DLIBSHARPYUV_INCLUDE_DIR=$(abspath $(LIBWEBP_DIR)) -DAVIF_LIBYUV=OFF" \
 		OUT_FLAGS="-pthread"
 
 # Decoding
-$(OUT_DEC_JS): $(OUT_DEC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt
+$(OUT_DEC_JS): $(OUT_DEC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt $(MAKEFILE_DEPS)
 	$(MAKE) \
 		$(HELPER_MAKEFLAGS) \
 		OUT_JS=$@ \
@@ -79,7 +77,7 @@ $(OUT_DEC_JS): $(OUT_DEC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLis
 			-DCONFIG_MULTITHREAD=0 \
 		" \
 		ENVIRONMENT=$(ENVIRONMENT) \
-		LIBAVIF_FLAGS="-DAVIF_CODEC_AOM_ENCODE=0"
+		LIBAVIF_FLAGS="-DAVIF_CODEC_AOM_ENCODE=0 -DAVIF_LIBYUV=OFF"
 
 # LIBAOM EXTRACTION SECTION
 
@@ -155,7 +153,4 @@ $(LIBSHARPYUV_MT): $(LIBWEBP_DIR)/CMakeLists.txt
 clean:
 	$(MAKE) $(HELPER_MAKEFLAGS) OUT_JS=$(OUT_ENC_JS) clean
 	$(MAKE) $(HELPER_MAKEFLAGS) OUT_JS=$(OUT_ENC_MT_JS) clean
-	$(MAKE) $(HELPER_MAKEFLAGS) OUT_JS=$(OUT_ENC_NODE_JS) clean
-	$(MAKE) $(HELPER_MAKEFLAGS) OUT_JS=$(OUT_ENC_NODE_MT_JS) clean
 	$(MAKE) $(HELPER_MAKEFLAGS) OUT_JS=$(OUT_DEC_JS) clean
-	$(MAKE) $(HELPER_MAKEFLAGS) OUT_JS=$(OUT_DEV_NODE_JS) clean
