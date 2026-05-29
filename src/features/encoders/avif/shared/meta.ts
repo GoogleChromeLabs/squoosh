@@ -28,4 +28,10 @@ export const defaultOptions: EncodeOptions = {
   enableSharpYUV: false,
   channelDepth: 8,
   premultiplyAlpha: false,
+  progressive: false,
+  progressiveQuality: 25,
+  scalingMode: 1, // 1/2
+  blur: 0,
+  previewProgressiveFrame: false,
+  independentMainLayer: false,
 };

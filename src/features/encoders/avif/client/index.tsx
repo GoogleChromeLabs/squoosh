@@ -37,6 +37,12 @@ interface State {
   enableSharpYUV: boolean;
   channelDepth: number;
   premultiplyAlpha: boolean;
+  progressive: boolean;
+  progressiveQuality: number;
+  scalingMode: number;
+  blur: number;
+  previewProgressiveFrame: boolean;
+  independentMainLayer: boolean;
 }
 
 /**
@@ -83,6 +89,12 @@ export class Options extends Component<Props, State> {
       enableSharpYUV: options.enableSharpYUV,
       channelDepth: options.channelDepth,
       premultiplyAlpha: options.premultiplyAlpha,
+      progressive: options.progressive,
+      progressiveQuality: options.progressiveQuality,
+      scalingMode: options.scalingMode,
+      blur: options.blur,
+      previewProgressiveFrame: options.previewProgressiveFrame,
+      independentMainLayer: options.independentMainLayer,
     };
   }
 
@@ -134,6 +146,15 @@ export class Options extends Component<Props, State> {
           enableSharpYUV: optionState.enableSharpYUV,
           channelDepth: optionState.channelDepth,
           premultiplyAlpha: optionState.premultiplyAlpha,
+          progressive: optionState.progressive,
+          progressiveQuality: optionState.progressiveQuality,
+          scalingMode: optionState.scalingMode,
+          blur: optionState.blur,
+          // Previewing the progressive frame only makes sense while progressive
+          // is on; clear it otherwise so a stale preview can't be encoded.
+          previewProgressiveFrame:
+            optionState.progressive && optionState.previewProgressiveFrame,
+          independentMainLayer: optionState.independentMainLayer,
         };
 
         // Updating options, so we don't recalculate in getDerivedStateFromProps.
@@ -167,6 +188,12 @@ export class Options extends Component<Props, State> {
       enableSharpYUV,
       channelDepth,
       premultiplyAlpha,
+      progressive,
+      progressiveQuality,
+      scalingMode,
+      blur,
+      previewProgressiveFrame,
+      independentMainLayer,
     }: State,
   ) {
     return (
@@ -311,6 +338,81 @@ export class Options extends Component<Props, State> {
                         <option value="12">12-bit</option>
                       </Select>
                     </label>
+                    <label class={style.optionToggle}>
+                      Progressive
+                      <Checkbox
+                        checked={progressive}
+                        onChange={this._inputChange('progressive', 'boolean')}
+                      />
+                    </label>
+                    <Expander>
+                      {progressive && (
+                        <div>
+                          <label class={style.optionToggle}>
+                            Preview progressive frame
+                            <Checkbox
+                              checked={previewProgressiveFrame}
+                              onChange={this._inputChange(
+                                'previewProgressiveFrame',
+                                'boolean',
+                              )}
+                            />
+                          </label>
+                          <div class={style.optionOneCell}>
+                            <Range
+                              min="0"
+                              max={MAX_QUALITY - 1}
+                              value={progressiveQuality}
+                              onInput={this._inputChange(
+                                'progressiveQuality',
+                                'number',
+                              )}
+                            >
+                              Progressive layer quality:
+                            </Range>
+                          </div>
+                          <label class={style.optionTextFirst}>
+                            Progressive scaling:
+                            <Select
+                              value={scalingMode}
+                              onChange={this._inputChange(
+                                'scalingMode',
+                                'number',
+                              )}
+                            >
+                              <option value="0">1/1</option>
+                              <option value="1">1/2</option>
+                              <option value="2">1/4</option>
+                              <option value="3">1/8</option>
+                              <option value="4">3/4</option>
+                              <option value="5">3/5</option>
+                              <option value="6">4/5</option>
+                            </Select>
+                          </label>
+                          <div class={style.optionOneCell}>
+                            <Range
+                              min="0"
+                              max="2"
+                              step="0.01"
+                              value={blur}
+                              onInput={this._inputChange('blur', 'number')}
+                            >
+                              Progressive layer blur:
+                            </Range>
+                          </div>
+                          <label class={style.optionToggle}>
+                            Independent main layer
+                            <Checkbox
+                              checked={independentMainLayer}
+                              onChange={this._inputChange(
+                                'independentMainLayer',
+                                'boolean',
+                              )}
+                            />
+                          </label>
+                        </div>
+                      )}
+                    </Expander>
                   </div>
                 )}
               </Expander>

@@ -16,6 +16,12 @@ export interface EncodeOptions {
   tune: AVIFTune;
   channelDepth: number;
   premultiplyAlpha: boolean;
+  progressive: boolean;
+  progressiveQuality: number;
+  scalingMode: number;
+  blur: number;
+  previewProgressiveFrame: boolean;
+  independentMainLayer: boolean;
 }
 
 export interface AVIFModule extends EmscriptenWasm.Module {
