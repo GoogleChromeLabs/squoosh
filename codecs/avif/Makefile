@@ -53,6 +53,19 @@ $(OUT_ENC_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLis
 
 # MT-Encoding
 # We need to run the ST and MT tasks sequentially to avoid conflicts with the copy of libsharpyuv in the build directory
+#
+# About PTHREAD_POOL_SIZE='2*navigator.hardwareConcurrency' in OUT_FLAGS below:
+# encode() runs synchronously on the codec Web Worker's thread, so that thread is
+# blocked in Atomics.wait (its event loop frozen) for the whole encode. libaom's
+# av1_create_workers spawns up to maxThreads (= hardwareConcurrency) PERSISTENT
+# pthreads PER codec instance, and a layered/progressive encode uses two
+# instances (colour + alpha), so peak demand is ~2*hardwareConcurrency. Any
+# pthread spawned beyond the preloaded pool is a fresh Web Worker whose "loaded"
+# handshake the blocked thread can never process, so the encode deadlocks
+# (Chrome/Safari hang; Firefox happens to pump messages during the wait and
+# survives). Preloading a 2x pool means a full-threaded layered encode never has
+# to spawn a worker mid-encode. Do NOT lower this below 2x without also capping
+# encoder->maxThreads in avif_enc.cpp to keep peak demand within the pool.
 $(OUT_ENC_MT_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt $(LIBSHARPYUV_MT) $(MAKEFILE_DEPS) | $(OUT_ENC_JS)
 	mkdir -p $(LIBWEBP_DIR)/build && cp $(LIBSHARPYUV_MT) $(LIBSHARPYUV)
 	$(MAKE) \
@@ -64,7 +77,7 @@ $(OUT_ENC_MT_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMake
 		" \
 		ENVIRONMENT=$(ENVIRONMENT) \
 		LIBAVIF_FLAGS="-DAVIF_CODEC_AOM_DECODE=0 -DAVIF_LIBSHARPYUV=SYSTEM -DLIBSHARPYUV_LIBRARY=$(abspath $(LIBSHARPYUV)) -DLIBSHARPYUV_INCLUDE_DIR=$(abspath $(LIBWEBP_DIR)) -DAVIF_LIBYUV=OFF" \
-		OUT_FLAGS="-pthread"
+		OUT_FLAGS="-pthread -s PTHREAD_POOL_SIZE='2*navigator.hardwareConcurrency'"
 
 # Decoding
 $(OUT_DEC_JS): $(OUT_DEC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt $(MAKEFILE_DEPS)
