@@ -33,6 +33,17 @@ import { resize } from 'features/processors/resize/client';
 import type SnackBarElement from 'shared/custom-els/snack-bar';
 import { drawableToImageData } from '../util/canvas';
 
+declare global {
+  interface Window {
+    /**
+     * Debug flag: when truthy, the SSIMULACRA 2 score of each encoded side is
+     * computed against the processed (pre-encode) image and logged to the
+     * console. Set `window.logQuality = true` in the devtools console.
+     */
+    logQuality?: boolean;
+  }
+}
+
 export type OutputType = EncoderType | 'identity';
 
 export interface SourceImage {
@@ -876,6 +887,24 @@ export default class Compress extends Component<Props, State> {
               encoderState: jobState.encoderState,
               processorState: jobState.processorState,
             });
+          }
+
+          // When the debug flag is set, score the encoded result against the
+          // processed (pre-encode) image with SSIMULACRA 2 and log it. Best
+          // effort: a metric failure must never break compression.
+          if (window.logQuality && processed && data) {
+            try {
+              const score = await workerBridge.ssimulacra2(
+                signal,
+                processed,
+                data,
+              );
+              console.log(`SSIMULACRA 2 (side ${sideIndex}): ${score}`);
+            } catch (err) {
+              if (!signal.aborted) {
+                console.error(`SSIMULACRA 2 (side ${sideIndex}) failed:`, err);
+              }
+            }
           }
         }
 
