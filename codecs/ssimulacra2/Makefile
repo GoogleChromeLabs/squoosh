@@ -58,6 +58,15 @@ LIBLCMS2_A    = $(LCMS2_DIR)/src/.libs/liblcms2.a
 
 ENVIRONMENT = worker
 
+# Enable WebAssembly SIMD. The shared CFLAGS in codecs/cpp.Dockerfile do NOT set
+# this, so without it Highway compiles to its scalar EMU128 target and libjxl's
+# metric loops stay scalar. With it, Highway selects its wasm SIMD target and
+# SSIMULACRA 2's per-pixel math (downsampling, blur, SSIM/edge maps) vectorises.
+# Must reach every object that emits the metric's hot kernels, so it's added to
+# the final link AND propagated into the dependency CMake builds below (mirrors
+# codecs/avif's SIMD_COMPILE_FLAGS / DEP_COMPILE_FLAGS plumbing).
+SIMD_FLAGS = -msimd128
+
 OUT_JS   = ssimulacra2.js
 OUT_WASM = $(OUT_JS:.js=.wasm)
 
@@ -92,6 +101,7 @@ all: $(OUT_JS)
 $(OUT_JS): ssimulacra2.cpp $(SS2_CC) $(LIBJXL_A) $(LIBHWY_A) $(LIBLCMS2_A) $(LIBBROTLI_ALL) $(MAKEFILE_DEPS)
 	$(CXX) \
 		$(CXXFLAGS) \
+		$(SIMD_FLAGS) \
 		$(LDFLAGS) \
 		$(DEBUG_FLAGS) \
 		-I $(JXL_SRC) \
@@ -119,6 +129,8 @@ $(OUT_JS): ssimulacra2.cpp $(SS2_CC) $(LIBJXL_A) $(LIBHWY_A) $(LIBLCMS2_A) $(LIB
 $(LIBJXL_A): $(JXL_SRC)/CMakeLists.txt $(LIBHWY_A) $(LIBLCMS2_A) $(LIBBROTLI_ALL) $(MAKEFILE_DEPS)
 	emcmake cmake \
 		-DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) \
+		-DCMAKE_C_FLAGS="$(SIMD_FLAGS)" \
+		-DCMAKE_CXX_FLAGS="$(SIMD_FLAGS)" \
 		-DBUILD_SHARED_LIBS=0 \
 		-DBUILD_TESTING=0 \
 		-DJPEGXL_ENABLE_TOOLS=0 \
@@ -150,6 +162,8 @@ $(LIBJXL_A): $(JXL_SRC)/CMakeLists.txt $(LIBHWY_A) $(LIBLCMS2_A) $(LIBBROTLI_ALL
 $(LIBHWY_A): $(HWY_DIR)/CMakeLists.txt $(MAKEFILE_DEPS)
 	emcmake cmake \
 		-DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) \
+		-DCMAKE_C_FLAGS="$(SIMD_FLAGS)" \
+		-DCMAKE_CXX_FLAGS="$(SIMD_FLAGS)" \
 		-DBUILD_SHARED_LIBS=0 \
 		-DHWY_ENABLE_CONTRIB=0 \
 		-DHWY_ENABLE_EXAMPLES=0 \
@@ -163,6 +177,8 @@ $(LIBHWY_A): $(HWY_DIR)/CMakeLists.txt $(MAKEFILE_DEPS)
 $(LIBBROTLI_COMMON) $(LIBBROTLI_DEC) $(LIBBROTLI_ENC): $(BROTLI_DIR)/CMakeLists.txt $(MAKEFILE_DEPS)
 	emcmake cmake \
 		-DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) \
+		-DCMAKE_C_FLAGS="$(SIMD_FLAGS)" \
+		-DCMAKE_CXX_FLAGS="$(SIMD_FLAGS)" \
 		-DBUILD_SHARED_LIBS=0 \
 		-DBROTLI_DISABLE_TESTS=1 \
 		-B $(BROTLI_BUILD) \
@@ -177,6 +193,7 @@ $(LIBBROTLI_COMMON) $(LIBBROTLI_DEC) $(LIBBROTLI_ENC): $(BROTLI_DIR)/CMakeLists.
 $(LIBLCMS2_A): $(LCMS2_DIR)/configure $(MAKEFILE_DEPS)
 	cd $(LCMS2_DIR) && emconfigure ./configure \
 		--host=wasm32 \
+		CFLAGS="$(CFLAGS) $(SIMD_FLAGS)" \
 		--enable-static --disable-shared && emmake $(MAKE)
 
 # ---- downloads + extraction (curl + tar, like codecs/avif) ------------------
