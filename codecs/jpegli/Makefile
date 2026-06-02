@@ -56,6 +56,15 @@ SKCMS_MARKER = $(SKCMS_DIR)/skcms.h
 
 ENVIRONMENT = worker
 
+# Enable WebAssembly SIMD. The shared CFLAGS in codecs/cpp.Dockerfile do NOT set
+# this, so without it Highway compiles to its scalar EMU128 target and jpegli's
+# DCT / colour-transform / quantisation kernels stay scalar. With it, Highway
+# selects its wasm SIMD target and those kernels vectorise. Applied to the final
+# link and propagated into the dependency CMake builds (Highway, jpegli) so every
+# object can emit SIMD. SIMD objects mix freely with non-SIMD ones, but enabling
+# it everywhere is simplest. Mirrors codecs/avif's SIMD_COMPILE_FLAGS plumbing.
+SIMD_FLAGS = -msimd128
+
 OUT_JS   = enc/jpegli_enc.js
 OUT_WASM = $(OUT_JS:.js=.wasm)
 
@@ -86,6 +95,7 @@ all: $(OUT_JS)
 $(OUT_JS): enc/jpegli_enc.cpp $(LIBJPEGLI_A) $(LIBHWY_A) $(MAKEFILE_DEPS)
 	$(CXX) \
 		$(CXXFLAGS) \
+		$(SIMD_FLAGS) \
 		$(LDFLAGS) \
 		$(DEBUG_FLAGS) \
 		-I $(JPEGLI_DIR) \
@@ -106,6 +116,8 @@ $(OUT_JS): enc/jpegli_enc.cpp $(LIBJPEGLI_A) $(LIBHWY_A) $(MAKEFILE_DEPS)
 $(LIBJPEGLI_A): $(JPEGLI_DIR)/CMakeLists.txt $(LJT_MARKER) $(SKCMS_MARKER) $(LIBHWY_A) $(MAKEFILE_DEPS)
 	emcmake cmake \
 		-DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) \
+		-DCMAKE_C_FLAGS="$(SIMD_FLAGS)" \
+		-DCMAKE_CXX_FLAGS="$(SIMD_FLAGS)" \
 		-DBUILD_SHARED_LIBS=0 \
 		-DBUILD_TESTING=0 \
 		-DJPEGLI_ENABLE_SKCMS=1 \
@@ -130,6 +142,8 @@ $(LIBJPEGLI_A): $(JPEGLI_DIR)/CMakeLists.txt $(LJT_MARKER) $(SKCMS_MARKER) $(LIB
 $(LIBHWY_A): $(HWY_DIR)/CMakeLists.txt $(MAKEFILE_DEPS)
 	emcmake cmake \
 		-DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) \
+		-DCMAKE_C_FLAGS="$(SIMD_FLAGS)" \
+		-DCMAKE_CXX_FLAGS="$(SIMD_FLAGS)" \
 		-DBUILD_SHARED_LIBS=0 \
 		-DHWY_ENABLE_CONTRIB=0 \
 		-DHWY_ENABLE_EXAMPLES=0 \
