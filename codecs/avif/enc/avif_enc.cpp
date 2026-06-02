@@ -1,6 +1,7 @@
 #include <emscripten/bind.h>
 #include <emscripten/threading.h>
 #include <emscripten/val.h>
+#include <wasm_simd128.h>
 #include "avif/avif.h"
 
 #include <algorithm>
@@ -8,6 +9,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <thread>
 #include <vector>
 
 using namespace emscripten;
@@ -97,6 +99,46 @@ static const int kScalingModeCount = sizeof(kScalingModes) / sizeof(kScalingMode
 
 thread_local const val Uint8Array = val::global("Uint8Array");
 
+// Runs `body(y)` for every row y in [0, rows), splitting the range across
+// threads. The blur runs before any libaom encoder (and thus its worker
+// pthreads) is created, and these threads are joined before returning, so the
+// transient peak stays well inside the preloaded pthread pool (see the AVIF
+// Makefile's PTHREAD_POOL_SIZE note). Small buffers stay single-threaded -
+// thread spawn/join cost dwarfs the work otherwise.
+template <typename Body>
+static void parallelRows(int rows, size_t pixelsPerRow, const Body& body) {
+  // ~64k pixels is roughly where threading starts to pay off over spawn cost.
+  const size_t totalPixels = static_cast<size_t>(rows) * pixelsPerRow;
+  int threadCount = 1;
+  if (totalPixels >= 64 * 1024) {
+    threadCount = emscripten_num_logical_cores();
+    if (threadCount < 1) threadCount = 1;
+    if (threadCount > rows) threadCount = rows;
+  }
+
+  if (threadCount <= 1) {
+    for (int y = 0; y < rows; ++y) body(y);
+    return;
+  }
+
+  std::vector<std::thread> workers;
+  workers.reserve(threadCount - 1);
+  const int rowsPerThread = (rows + threadCount - 1) / threadCount;
+  // Spawn workers for all but the first chunk; run the first chunk inline so the
+  // calling thread does its share rather than just blocking in join.
+  for (int t = 1; t < threadCount; ++t) {
+    const int begin = t * rowsPerThread;
+    if (begin >= rows) break;
+    const int end = std::min(begin + rowsPerThread, rows);
+    workers.emplace_back([&body, begin, end]() {
+      for (int y = begin; y < end; ++y) body(y);
+    });
+  }
+  const int firstEnd = std::min(rowsPerThread, rows);
+  for (int y = 0; y < firstEnd; ++y) body(y);
+  for (std::thread& w : workers) w.join();
+}
+
 // Applies a separable Gaussian blur to an 8-bit RGBA buffer in place. The blur
 // runs in premultiplied-alpha space: colour is weighted by alpha before
 // blurring and divided back out afterwards. This stops the (invisible) colour
@@ -132,77 +174,82 @@ static void gaussianBlurRGBA(uint8_t* pixels, int width, int height, float sigma
   // Premultiplied working buffer (RGB scaled by alpha, alpha kept as-is). Both
   // separable passes run on this; we round-trip through 8-bit only at the ends.
   std::vector<float> premul(pixelCount * channels);
-  for (size_t i = 0; i < pixelCount; ++i) {
-    const float a = pixels[i * channels + 3] / 255.0f;
-    premul[i * channels + 0] = pixels[i * channels + 0] * a;
-    premul[i * channels + 1] = pixels[i * channels + 1] * a;
-    premul[i * channels + 2] = pixels[i * channels + 2] * a;
-    premul[i * channels + 3] = pixels[i * channels + 3];
-  }
+  parallelRows(height, static_cast<size_t>(width), [&](int y) {
+    for (int x = 0; x < width; ++x) {
+      const size_t i = static_cast<size_t>(y) * width + x;
+      const float a = pixels[i * channels + 3] / 255.0f;
+      premul[i * channels + 0] = pixels[i * channels + 0] * a;
+      premul[i * channels + 1] = pixels[i * channels + 1] * a;
+      premul[i * channels + 2] = pixels[i * channels + 2] * a;
+      premul[i * channels + 3] = pixels[i * channels + 3];
+    }
+  });
 
   std::vector<float> scratch(pixelCount * channels);
 
+  // Each RGBA pixel is four contiguous floats, so it maps onto a single f32x4
+  // vector: one load per tap, one fused multiply-add per tap, and the per-channel
+  // loop vanishes. The scalar kernel weight is broadcast across all four lanes.
+
+  // Both passes are row-parallel: each output row reads only the (read-only)
+  // source buffer and writes its own disjoint destination row, so rows can be
+  // distributed across threads with no synchronisation.
+
   // Horizontal pass: premul -> scratch. Edges use clamp-to-edge sampling.
-  for (int y = 0; y < height; ++y) {
+  parallelRows(height, static_cast<size_t>(width), [&](int y) {
     const float* srcRow = premul.data() + static_cast<size_t>(y) * width * channels;
     float* dstRow = scratch.data() + static_cast<size_t>(y) * width * channels;
     for (int x = 0; x < width; ++x) {
-      float acc[channels] = {0, 0, 0, 0};
+      v128_t acc = wasm_f32x4_const_splat(0.0f);
       for (int k = -radius; k <= radius; ++k) {
         int sx = x + k;
         if (sx < 0) sx = 0;
         if (sx >= width) sx = width - 1;
-        const float w = kernel[std::abs(k)];
-        const float* s = srcRow + static_cast<size_t>(sx) * channels;
-        for (int c = 0; c < channels; ++c) {
-          acc[c] += s[c] * w;
-        }
+        const v128_t w = wasm_f32x4_splat(kernel[std::abs(k)]);
+        const v128_t s = wasm_v128_load(srcRow + static_cast<size_t>(sx) * channels);
+        acc = wasm_f32x4_add(acc, wasm_f32x4_mul(s, w));
       }
-      float* d = dstRow + static_cast<size_t>(x) * channels;
-      for (int c = 0; c < channels; ++c) {
-        d[c] = acc[c];
-      }
+      wasm_v128_store(dstRow + static_cast<size_t>(x) * channels, acc);
     }
-  }
+  });
 
   // Vertical pass: scratch -> premul.
-  for (int y = 0; y < height; ++y) {
+  parallelRows(height, static_cast<size_t>(width), [&](int y) {
     float* dstRow = premul.data() + static_cast<size_t>(y) * width * channels;
     for (int x = 0; x < width; ++x) {
-      float acc[channels] = {0, 0, 0, 0};
+      v128_t acc = wasm_f32x4_const_splat(0.0f);
       for (int k = -radius; k <= radius; ++k) {
         int sy = y + k;
         if (sy < 0) sy = 0;
         if (sy >= height) sy = height - 1;
-        const float w = kernel[std::abs(k)];
-        const float* s = scratch.data() + (static_cast<size_t>(sy) * width + x) * channels;
-        for (int c = 0; c < channels; ++c) {
-          acc[c] += s[c] * w;
-        }
+        const v128_t w = wasm_f32x4_splat(kernel[std::abs(k)]);
+        const v128_t s =
+            wasm_v128_load(scratch.data() + (static_cast<size_t>(sy) * width + x) * channels);
+        acc = wasm_f32x4_add(acc, wasm_f32x4_mul(s, w));
       }
-      float* d = dstRow + static_cast<size_t>(x) * channels;
-      for (int c = 0; c < channels; ++c) {
-        d[c] = acc[c];
-      }
+      wasm_v128_store(dstRow + static_cast<size_t>(x) * channels, acc);
     }
-  }
+  });
 
   // Un-premultiply and write back to 8-bit. Where alpha is ~0 the colour is
   // undefined; leave it black, since it's fully transparent anyway.
-  for (size_t i = 0; i < pixelCount; ++i) {
-    const float a = premul[i * channels + 3];
-    const float inv = a > 0.0f ? 255.0f / a : 0.0f;
-    for (int c = 0; c < 3; ++c) {
-      float v = premul[i * channels + c] * inv + 0.5f;
-      if (v < 0.0f) v = 0.0f;
-      if (v > 255.0f) v = 255.0f;
-      pixels[i * channels + c] = static_cast<uint8_t>(v);
+  parallelRows(height, static_cast<size_t>(width), [&](int y) {
+    for (int x = 0; x < width; ++x) {
+      const size_t i = static_cast<size_t>(y) * width + x;
+      const float a = premul[i * channels + 3];
+      const float inv = a > 0.0f ? 255.0f / a : 0.0f;
+      for (int c = 0; c < 3; ++c) {
+        float v = premul[i * channels + c] * inv + 0.5f;
+        if (v < 0.0f) v = 0.0f;
+        if (v > 255.0f) v = 255.0f;
+        pixels[i * channels + c] = static_cast<uint8_t>(v);
+      }
+      float av = premul[i * channels + 3] + 0.5f;
+      if (av < 0.0f) av = 0.0f;
+      if (av > 255.0f) av = 255.0f;
+      pixels[i * channels + 3] = static_cast<uint8_t>(av);
     }
-    float av = premul[i * channels + 3] + 0.5f;
-    if (av < 0.0f) av = 0.0f;
-    if (av > 255.0f) av = 255.0f;
-    pixels[i * channels + 3] = static_cast<uint8_t>(av);
-  }
+  });
 }
 
 // Bilinearly downscales an 8-bit RGBA buffer to a new size. Used to build the
