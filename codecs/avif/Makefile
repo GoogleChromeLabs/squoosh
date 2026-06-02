@@ -72,6 +72,19 @@ PTHREAD_STACK_FLAGS := -s STACK_SIZE=2MB -s DEFAULT_PTHREAD_STACK_SIZE=2MB
 # compile flags for the dependency libraries too.
 PTHREAD_COMPILE_FLAGS := -pthread
 
+# Enable WebAssembly SIMD. libaom 3.x has no wasm SIMD kernels (it's built with
+# AOM_TARGET_CPU=generic, i.e. scalar C), so this mainly lets LLVM autovectorise
+# libaom's scalar loops and turns on libsharpyuv/libavif's vectorised paths.
+# Applied to every compile so each object can emit SIMD opcodes (unlike -pthread,
+# SIMD objects mix freely with non-SIMD ones, but enabling it everywhere is
+# simplest and lets the optimiser vectorise across the whole tree).
+SIMD_COMPILE_FLAGS := -msimd128
+
+# Compile flags propagated into libaom's and libavif's CMake builds (and the
+# final link). -pthread must be on every object in the shared-memory link;
+# -msimd128 lets each object emit SIMD.
+DEP_COMPILE_FLAGS := $(PTHREAD_COMPILE_FLAGS) $(SIMD_COMPILE_FLAGS)
+
 # Set DEBUG_BUILD=1 to produce an unoptimised build with full DWARF debug info
 # in the wasm, plus Emscripten assertions. Stack traces from this build show
 # real C++ function names instead of `wasm-function[N]` indices.
@@ -94,6 +107,7 @@ $(OUT_JS): $(OUT_CPP) $(LIBAOM_OUT) $(CODEC_OUT) $(LIBSHARPYUV) $(MAKEFILE_DEPS)
 		$(CXXFLAGS) \
 		$(LDFLAGS) \
 		$(OUT_FLAGS) \
+		$(SIMD_COMPILE_FLAGS) \
 		$(PTHREAD_STACK_FLAGS) \
 		$(DEBUG_CFLAGS) \
 		$(DEBUG_LDFLAGS) \
@@ -113,8 +127,8 @@ $(OUT_JS): $(OUT_CPP) $(LIBAOM_OUT) $(CODEC_OUT) $(LIBSHARPYUV) $(MAKEFILE_DEPS)
 $(CODEC_OUT): $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_OUT) $(LIBSHARPYUV) $(MAKEFILE_DEPS)
 	emcmake cmake \
 		-DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) \
-		-DCMAKE_C_FLAGS="$(CFLAGS) $(PTHREAD_COMPILE_FLAGS)" \
-		-DCMAKE_CXX_FLAGS="$(CXXFLAGS) $(PTHREAD_COMPILE_FLAGS)" \
+		-DCMAKE_C_FLAGS="$(CFLAGS) $(DEP_COMPILE_FLAGS)" \
+		-DCMAKE_CXX_FLAGS="$(CXXFLAGS) $(DEP_COMPILE_FLAGS)" \
 		-DBUILD_SHARED_LIBS=0 \
 		-DAVIF_CODEC_AOM=SYSTEM \
 		-DAOM_LIBRARY=$(LIBAOM_OUT) \
@@ -127,8 +141,8 @@ $(CODEC_OUT): $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_OUT) $(LIBSHARPYUV) $(MAKEFIL
 $(LIBAOM_OUT): $(LIBAOM_DIR)/CMakeLists.txt $(MAKEFILE_DEPS)
 	emcmake cmake \
 		-DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) \
-		-DCMAKE_C_FLAGS="$(CFLAGS) $(PTHREAD_COMPILE_FLAGS)" \
-		-DCMAKE_CXX_FLAGS="$(CXXFLAGS) $(PTHREAD_COMPILE_FLAGS)" \
+		-DCMAKE_C_FLAGS="$(CFLAGS) $(DEP_COMPILE_FLAGS)" \
+		-DCMAKE_CXX_FLAGS="$(CXXFLAGS) $(DEP_COMPILE_FLAGS)" \
 		-DENABLE_CCACHE=0 \
 		-DAOM_TARGET_CPU=generic \
 		-DENABLE_DOCS=0 \
@@ -174,10 +188,14 @@ $(LIBWEBP_DIR)/CMakeLists.txt: $(CODEC_DIR)/CMakeLists.txt
 	curl -sL $(LIBWEBP_URL_WITH_SHARPYUV) \
 		| tar xzm -C $(LIBWEBP_DIR)
 
-# Build libsharpyuv.a (with threading, to match the -pthread encoder link)
+# Build libsharpyuv.a. It's thread-free (no -pthread) - it links cleanly into
+# the shared-memory encoder because it uses no atomics/TLS. -msimd128 turns on
+# its hand-written SIMD chroma-conversion paths. This build doesn't inherit
+# CFLAGS, so SIMD is passed explicitly via CMAKE_C_FLAGS.
 $(LIBSHARPYUV): $(LIBWEBP_DIR)/CMakeLists.txt
 	mkdir -p $(@D)
 	emcmake cmake \
+		-DCMAKE_C_FLAGS="$(CFLAGS) $(SIMD_COMPILE_FLAGS)" \
 		-DWEBP_BUILD_ANIM_UTILS=OFF \
 		-DWEBP_BUILD_CWEBP=OFF \
 		-DWEBP_BUILD_DWEBP=OFF \
