@@ -381,12 +381,12 @@ export class Options extends Component<Props, State> {
                               )}
                             >
                               <option value="0">1/1</option>
+                              <option value="6">4/5</option>
+                              <option value="4">3/4</option>
+                              <option value="5">3/5</option>
                               <option value="1">1/2</option>
                               <option value="2">1/4</option>
                               <option value="3">1/8</option>
-                              <option value="4">3/4</option>
-                              <option value="5">3/5</option>
-                              <option value="6">4/5</option>
                             </Select>
                           </label>
                           <div class={style.optionOneCell}>
