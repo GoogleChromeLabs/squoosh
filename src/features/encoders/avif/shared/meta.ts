@@ -10,7 +10,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { EncodeOptions, AVIFTune } from 'codecs/avif/enc/avif_enc';
+import { EncodeOptions, AVIFTune } from 'codecs/avif/enc/avif_enc_mt';
 
 export { EncodeOptions, AVIFTune };
 

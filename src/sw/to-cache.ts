@@ -1,6 +1,5 @@
 import { simd } from 'wasm-feature-detect';
 import webpDataUrl from 'data-url:./tiny.webp';
-import avifDataUrl from 'data-url:./tiny.avif';
 import checkThreadsSupport from 'worker-shared/supports-wasm-threads';
 
 // Give TypeScript the correct global.
@@ -24,12 +23,10 @@ import * as blobAnim from 'entry-data:shared/prerendered-app/Intro/blob-anim';
 import * as featuresWorker from 'entry-data:../features-worker';
 
 // Decoders (some are feature detected)
-import * as avifDec from 'entry-data:codecs/avif/dec/avif_dec';
 import * as webpDec from 'entry-data:codecs/webp/dec/webp_dec';
 
 // AVIF
 import * as avifEncMt from 'entry-data:codecs/avif/enc/avif_enc_mt';
-import * as avifEnc from 'entry-data:codecs/avif/enc/avif_enc';
 
 // JXL
 import * as jxlEncMtSimd from 'entry-data:codecs/jxl/enc/jxl_enc_mt_simd';
@@ -83,20 +80,19 @@ initialJs = subtractSets(
 export const initial = ['/', ...initialJs];
 
 export const theRest = (async () => {
-  const [supportsThreads, supportsSimd, supportsWebP, supportsAvif] =
-    await Promise.all([
-      checkThreadsSupport(),
-      simd(),
-      ...[webpDataUrl, avifDataUrl].map(async (dataUrl) => {
-        if (!self.createImageBitmap) return false;
-        const response = await fetch(dataUrl);
-        const blob = await response.blob();
-        return createImageBitmap(blob).then(
-          () => true,
-          () => false,
-        );
-      }),
-    ]);
+  const [supportsThreads, supportsSimd, supportsWebP] = await Promise.all([
+    checkThreadsSupport(),
+    simd(),
+    (async () => {
+      if (!self.createImageBitmap) return false;
+      const response = await fetch(webpDataUrl);
+      const blob = await response.blob();
+      return createImageBitmap(blob).then(
+        () => true,
+        () => false,
+      );
+    })(),
+  ]);
 
   const items: string[] = [];
 
@@ -106,15 +102,10 @@ export const theRest = (async () => {
 
   addWithDeps(featuresWorker);
 
-  if (!supportsAvif) addWithDeps(avifDec);
   if (!supportsWebP) addWithDeps(webpDec);
 
   // AVIF
-  if (supportsThreads) {
-    addWithDeps(avifEncMt);
-  } else {
-    addWithDeps(avifEnc);
-  }
+  addWithDeps(avifEncMt);
 
   // JXL
   if (supportsThreads && supportsSimd) {
