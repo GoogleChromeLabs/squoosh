@@ -39,6 +39,7 @@ export interface SourceImage {
   file: File;
   decoded: ImageData;
   preprocessed: ImageData;
+  hasTransparency: boolean;
   vectorImage?: HTMLImageElement;
 }
 
@@ -83,6 +84,10 @@ interface SideJob {
   encoderState?: EncoderState;
 }
 
+type StoredProcessorState = Partial<ProcessorState> & {
+  removeTransparency?: ProcessorState['setBackground'];
+};
+
 interface LoadingFileInfo {
   loading: boolean;
   filename?: string;
@@ -124,6 +129,16 @@ async function decodeImage(
   }
 }
 
+function hasTransparency(imageData: ImageData): boolean {
+  const pixels = imageData.data;
+
+  for (let i = 3; i < pixels.length; i += 4) {
+    if (pixels[i] !== 255) return true;
+  }
+
+  return false;
+}
+
 async function preprocessImage(
   signal: AbortSignal,
   data: ImageData,
@@ -155,6 +170,13 @@ async function processImage(
 
   if (processorState.resize.enabled) {
     result = await resize(signal, source, processorState.resize, workerBridge);
+  }
+  if (source.hasTransparency && processorState.setBackground.enabled) {
+    result = await workerBridge.setBackground(
+      signal,
+      result,
+      processorState.setBackground,
+    );
   }
   if (processorState.quantize.enabled) {
     result = await workerBridge.quantize(
@@ -212,6 +234,46 @@ function stateForNewSourceData(state: State): State {
   }
 
   return newState;
+}
+
+function normalizeProcessorState(
+  processorState?: StoredProcessorState,
+): ProcessorState {
+  const setBackground =
+    processorState?.setBackground || processorState?.removeTransparency;
+
+  return {
+    quantize: {
+      ...defaultProcessorState.quantize,
+      ...processorState?.quantize,
+    },
+    setBackground: {
+      ...defaultProcessorState.setBackground,
+      ...setBackground,
+    },
+    resize: {
+      ...defaultProcessorState.resize,
+      ...processorState?.resize,
+    },
+  };
+}
+
+function normalizeSide(side: Side): Side {
+  return {
+    ...side,
+    latestSettings: {
+      ...side.latestSettings,
+      processorState: normalizeProcessorState(
+        side.latestSettings.processorState,
+      ),
+    },
+    encodedSettings: side.encodedSettings && {
+      ...side.encodedSettings,
+      processorState: normalizeProcessorState(
+        side.encodedSettings.processorState,
+      ),
+    },
+  };
 }
 
 async function processSvg(
@@ -284,13 +346,13 @@ export default class Compress extends Component<Props, State> {
     source: undefined,
     loading: false,
     preprocessorState: defaultPreprocessorState,
-    // Tasking catched side settings if available otherwise taking default settings
+    // Persisted settings can predate processors added after they were saved.
     sides: [
       localStorage.getItem('leftSideSettings')
-        ? {
+        ? normalizeSide({
             ...JSON.parse(localStorage.getItem('leftSideSettings') as string),
             loading: false,
-          }
+          })
         : {
             latestSettings: {
               processorState: defaultProcessorState,
@@ -299,10 +361,10 @@ export default class Compress extends Component<Props, State> {
             loading: false,
           },
       localStorage.getItem('rightSideSettings')
-        ? {
+        ? normalizeSide({
             ...JSON.parse(localStorage.getItem('rightSideSettings') as string),
             loading: false,
-          }
+          })
         : {
             latestSettings: {
               processorState: defaultProcessorState,
@@ -492,10 +554,10 @@ export default class Compress extends Component<Props, State> {
 
     if (index === 0 && leftSideSettingsString) {
       const oldLeftSideSettings = this.state.sides[index];
-      const newLeftSideSettings = {
+      const newLeftSideSettings = normalizeSide({
         ...this.state.sides[index],
         ...JSON.parse(leftSideSettingsString),
-      };
+      });
       this.setState({
         sides: cleanSet(this.state.sides, index, newLeftSideSettings),
       });
@@ -513,10 +575,10 @@ export default class Compress extends Component<Props, State> {
 
     if (index === 1 && rightSideSettingsString) {
       const oldRightSideSettings = this.state.sides[index];
-      const newRightSideSettings = {
+      const newRightSideSettings = normalizeSide({
         ...this.state.sides[index],
         ...JSON.parse(rightSideSettingsString),
-      };
+      });
       this.setState({
         sides: cleanSet(this.state.sides, index, newRightSideSettings),
       });
@@ -753,6 +815,7 @@ export default class Compress extends Component<Props, State> {
           decoded,
           vectorImage,
           preprocessed,
+          hasTransparency: hasTransparency(preprocessed),
           file: mainJobState.file,
         };
 
