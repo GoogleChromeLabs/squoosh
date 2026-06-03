@@ -1,11 +1,15 @@
 #include <emscripten/bind.h>
+#include <emscripten/threading.h>
 #include <emscripten/val.h>
 
+#include <algorithm>
 #include <cstdio>
 #include <vector>
 
 #include <jxl/encode.h>
 #include <jxl/encode_cxx.h>
+#include <jxl/resizable_parallel_runner.h>
+#include <jxl/resizable_parallel_runner_cxx.h>
 
 using namespace emscripten;
 
@@ -65,8 +69,22 @@ val encode(std::string image, int width, int height, JXLOptions options) {
               width, height, image.size(), options.quality, options.lossless, options.effort);
 
   JxlEncoderPtr enc = JxlEncoderMake(/*memory_manager=*/nullptr);
-  // Single-threaded: no parallel runner. libjxl runs inline on the calling
-  // thread, which is the codec's worker. (Threads are a future experiment.)
+
+  // Run libjxl's work across worker threads. The resizable runner picks a thread
+  // count from the image size; we cap it to the number of logical cores
+  // (navigator.hardwareConcurrency), which is also the size of the pthread pool
+  // preloaded at module load. Never asking for more threads than the pool holds
+  // is what avoids the mid-encode pthread deadlock that bites Chrome/Safari when
+  // a worker has to be spawned while the main thread is blocked inside encode.
+  JxlResizableParallelRunnerPtr runner = JxlResizableParallelRunnerMake(nullptr);
+  size_t threads =
+      std::min<uint64_t>(JxlResizableParallelRunnerSuggestThreads(width, height),
+                         emscripten_num_logical_cores());
+  JxlResizableParallelRunnerSetThreads(runner.get(), threads);
+  JXL_ENC_LOG("jxl_enc: using %zu threads (%d cores)\n", threads,
+              emscripten_num_logical_cores());
+  EXPECT_SUCCESS(JxlEncoderSetParallelRunner(enc.get(), JxlResizableParallelRunner,
+                                             runner.get()));
 
   JxlBasicInfo basic_info;
   JxlEncoderInitBasicInfo(&basic_info);

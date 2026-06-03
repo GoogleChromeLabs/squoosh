@@ -4,12 +4,15 @@
 # wrapper (dec/jxl_dec.cpp) use libjxl's *stable public C API* (jxl/encode.h,
 # jxl/decode.h) rather than internal headers, so they survive version bumps.
 #
-# We produce a SINGLE build of each: WebAssembly SIMD enabled (-msimd128), no
-# pthreads. All modern browsers support SIMD; threads are a future experiment
-# (Highway codecs like libjxl gain far more from SIMD than from worker threads,
-# and spawning workers mid-encode can deadlock - see codecs/avif for the
-# threading exception). Dropping threads also removes the scalar / _mt /
-# _mt_simd variant matrix the old build carried.
+# We produce a SINGLE build of each, with WebAssembly SIMD enabled (-msimd128).
+# The encoder additionally uses pthreads: libjxl's resizable parallel runner
+# fans the encode across worker threads (see enc/jxl_enc.cpp). The decoder stays
+# single-threaded - its work is light and not worth the thread overhead.
+# Building libjxl with threads requires JPEGXL_ENABLE_WASM_THREADS=1 and the
+# whole encoder pipeline (libjxl, jxl_threads, the wrapper) must agree on the
+# -pthread memory model. To avoid the mid-encode pthread deadlock that bites
+# Chrome/Safari (spawning a worker while the main thread is blocked in encode),
+# the worker pool is preloaded at module init - see codecs/avif, same pattern.
 #
 # libjxl's third_party deps (highway, brotli, skcms, ...) are git submodules and
 # are NOT in the GitHub release tarball, and skcms lives on a googlesource git.
@@ -33,16 +36,35 @@ ENVIRONMENT = worker
 # and propagated into the libjxl CMake build. Mirrors codecs/jpegli.
 SIMD_FLAGS = -msimd128
 
+# pthreads for the encoder. -pthread is needed at compile and link, and must
+# match the memory model libjxl + jxl_threads were built with (see the CMake
+# flags below).
+#
+# Pool sized to 1x cores. Unlike AVIF/libaom (which spawns workers *during* the
+# encode, risking a deadlock when the codec worker is blocked in Atomics.wait -
+# hence its 2x preload), libjxl's resizable runner creates all its threads in
+# JxlResizableParallelRunnerSetThreads, which jxl_enc.cpp calls *before* any
+# encoding work. By the time the worker blocks in JxlEncoderProcessOutput the
+# threads already exist, so nothing is spawned mid-encode and the deadlock can't
+# arise. Our peak demand is threads = min(SuggestThreads, cores) <= cores, so a
+# 1x pool covers it; preloading just saves first-encode thread-startup latency.
+PTHREAD_FLAGS = -pthread
+PTHREAD_POOL_FLAGS = -s PTHREAD_POOL_SIZE=navigator.hardwareConcurrency
+
 # Encoder-only link flags. libjxl's encoder is far heavier than the decoder:
 #  - It recurses deeply (especially at high effort on large images) and
-#    overflows Emscripten's default 64 KB stack, so bump the stack to 8 MB. The
-#    old multithreaded build used 2 MB per worker; this single-threaded build
-#    does all the work on one stack, so it needs more headroom.
+#    overflows Emscripten's default 64 KB stack, so bump the stack to 8 MB. Each
+#    pthread also gets its own stack, so size those too.
 #  - At high effort on large images it also needs more than the default 2 GB
 #    heap (wasm32's MAXIMUM_MEMORY default), so raise the cap to wasm32's 4 GB
 #    addressable maximum. Memory still grows on demand (ALLOW_MEMORY_GROWTH),
 #    this only lifts the ceiling.
-ENC_LINK_FLAGS = -s STACK_SIZE=8MB -s MAXIMUM_MEMORY=4GB
+ENC_LINK_FLAGS = \
+	$(PTHREAD_FLAGS) \
+	$(PTHREAD_POOL_FLAGS) \
+	-s STACK_SIZE=8MB \
+	-s DEFAULT_PTHREAD_STACK_SIZE=8MB \
+	-s MAXIMUM_MEMORY=4GB
 
 OUT_JS = enc/jxl_enc.js dec/jxl_dec.js
 OUT_WASM = $(OUT_JS:.js=.wasm)
@@ -69,6 +91,9 @@ LIBJXL_A      = $(CODEC_BUILD_DIR)/lib/libjxl.a
 # libjxl's colour-management code is its own static lib that libjxl.a depends on.
 # It backs JxlGetDefaultCms(), which the decoder uses to convert to sRGB.
 LIBJXLCMS_A   = $(CODEC_BUILD_DIR)/lib/libjxl_cms.a
+# The parallel runners (JxlResizableParallelRunner) live in their own lib, linked
+# by the encoder only.
+LIBJXLTHREADS_A = $(CODEC_BUILD_DIR)/lib/libjxl_threads.a
 LIBHWY_A      = $(CODEC_BUILD_DIR)/third_party/highway/libhwy.a
 LIBBROTLI_A   = \
 	$(CODEC_BUILD_DIR)/third_party/brotli/libbrotlienc.a \
@@ -83,9 +108,16 @@ all: $(OUT_JS)
 # Include roots:
 #   $(CODEC_DIR)/lib/include       -> public "jxl/encode.h", "jxl/decode.h", ...
 #   $(CODEC_BUILD_DIR)/lib/include -> CMake-generated "jxl/jxl_export.h" etc.
-enc/jxl_enc.js: enc/jxl_enc.cpp $(LIBJXL_A) $(MAKEFILE_DEPS)
+# The encoder is multithreaded (extra link flags + the jxl_threads lib); the
+# decoder is single-threaded and links neither.
+enc/jxl_enc.js: enc/jxl_enc.cpp $(LIBJXL_A) $(LIBJXLTHREADS_A) $(MAKEFILE_DEPS)
 enc/jxl_enc.js: LINK_EXTRA_FLAGS = $(ENC_LINK_FLAGS)
+enc/jxl_enc.js: EXTRA_LIBS = $(LIBJXLTHREADS_A)
+# The decoder uses no threads, but libjxl.a is now compiled with -pthread (shared
+# memory model), and Emscripten can't link those objects into a non-pthread
+# output - so the decoder must carry -pthread too. It needs no preloaded pool.
 dec/jxl_dec.js: dec/jxl_dec.cpp $(LIBJXL_A) $(MAKEFILE_DEPS)
+dec/jxl_dec.js: LINK_EXTRA_FLAGS = $(PTHREAD_FLAGS)
 
 $(OUT_JS):
 	$(CXX) \
@@ -103,24 +135,25 @@ $(OUT_JS):
 		$< \
 		$(LIBJXL_A) \
 		$(LIBJXLCMS_A) \
+		$(EXTRA_LIBS) \
 		$(LIBBROTLI_A) \
 		$(LIBHWY_A)
 
 # ---- libjxl (libjxl.a + its in-tree third_party static libs) ----------------
 # Build only the core encoder+decoder library, with tools/tests/extras disabled.
-# JPEGXL_ENABLE_WASM_THREADS=0 keeps the library single-threaded to match our
-# no-pthread link. A single recipe produces every archive the links need, then
-# stamps a marker so make tracks one prerequisite rather than racing on each.
-$(LIBJXL_A) $(LIBJXLCMS_A) $(LIBHWY_A) $(LIBBROTLI_A): $(CODEC_BUILD_DIR)/libs.stamp
+# JPEGXL_ENABLE_WASM_THREADS=1 builds jxl_threads (the parallel runners) and
+# makes libjxl thread-safe. A single recipe produces every archive the links
+# need, then stamps a marker so make tracks one prerequisite rather than racing.
+$(LIBJXL_A) $(LIBJXLCMS_A) $(LIBJXLTHREADS_A) $(LIBHWY_A) $(LIBBROTLI_A): $(CODEC_BUILD_DIR)/libs.stamp
 $(CODEC_BUILD_DIR)/libs.stamp: $(CODEC_BUILD_DIR)/Makefile
-	$(MAKE) -C $(CODEC_BUILD_DIR) jxl jxl_cms brotlienc brotlidec brotlicommon hwy
+	$(MAKE) -C $(CODEC_BUILD_DIR) jxl jxl_cms jxl_threads brotlienc brotlidec brotlicommon hwy
 	touch $@
 
 $(CODEC_BUILD_DIR)/Makefile: $(CODEC_DIR)/CMakeLists.txt $(MAKEFILE_DEPS)
 	emcmake cmake \
 		-DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) \
-		-DCMAKE_C_FLAGS="$(SIMD_FLAGS)" \
-		-DCMAKE_CXX_FLAGS="$(SIMD_FLAGS)" \
+		-DCMAKE_C_FLAGS="$(SIMD_FLAGS) $(PTHREAD_FLAGS)" \
+		-DCMAKE_CXX_FLAGS="$(SIMD_FLAGS) $(PTHREAD_FLAGS)" \
 		-DBUILD_SHARED_LIBS=0 \
 		-DBUILD_TESTING=0 \
 		-DJPEGXL_STATIC=0 \
@@ -139,7 +172,7 @@ $(CODEC_BUILD_DIR)/Makefile: $(CODEC_DIR)/CMakeLists.txt $(MAKEFILE_DEPS)
 		-DJPEGXL_ENABLE_SKCMS=1 \
 		-DJPEGXL_BUNDLE_LIBPNG=0 \
 		-DJPEGXL_ENABLE_FUZZERS=0 \
-		-DJPEGXL_ENABLE_WASM_THREADS=0 \
+		-DJPEGXL_ENABLE_WASM_THREADS=1 \
 		-DCMAKE_CROSSCOMPILING_EMULATOR=node \
 		-B $(CODEC_BUILD_DIR) \
 		$(CODEC_DIR)
