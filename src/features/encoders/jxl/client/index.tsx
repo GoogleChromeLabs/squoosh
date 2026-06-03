@@ -33,6 +33,7 @@ interface State {
   progressiveAC: boolean;
   qProgressiveAC: boolean;
   progressiveDC: number;
+  groupOrder: number;
 }
 
 export class Options extends Component<Props, State> {
@@ -61,6 +62,7 @@ export class Options extends Component<Props, State> {
       progressiveAC: options.progressiveAC,
       qProgressiveAC: options.qProgressiveAC,
       progressiveDC: options.progressiveDC,
+      groupOrder: options.groupOrder,
     };
   }
 
@@ -107,6 +109,8 @@ export class Options extends Component<Props, State> {
           progressiveDC: optionState.progressiveAC
             ? optionState.progressiveDC
             : 0,
+          // Group order only has an effect during progressive decode.
+          groupOrder: optionState.progressiveAC ? optionState.groupOrder : 0,
         };
 
         // Updating options, so we don't recalculate in getDerivedStateFromProps.
@@ -133,6 +137,7 @@ export class Options extends Component<Props, State> {
       progressiveAC,
       qProgressiveAC,
       progressiveDC,
+      groupOrder,
     }: State,
   ) {
     return (
@@ -230,6 +235,19 @@ export class Options extends Component<Props, State> {
                               <option value="0">Off</option>
                               <option value="1">One pass</option>
                               <option value="2">Two pass</option>
+                            </Select>
+                          </label>
+                          <label class={style.optionTextFirst}>
+                            Block order:
+                            <Select
+                              value={groupOrder}
+                              onChange={this._inputChange(
+                                'groupOrder',
+                                'number',
+                              )}
+                            >
+                              <option value="0">Scanline</option>
+                              <option value="1">From center</option>
                             </Select>
                           </label>
                         </div>

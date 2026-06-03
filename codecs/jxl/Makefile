@@ -140,6 +140,12 @@ $(OUT_JS):
 		$(EXTRA_LIBS) \
 		$(LIBBROTLI_A) \
 		$(LIBHWY_A)
+	# In -pthread builds Emscripten emits `"name": "em-pthread-" + PThread.nextWorkerID`
+	# in the `new Worker(...)` options. That string concat trips up
+	# rollup-plugin-off-main-thread's JSON5 parser, leaving `type: "module"` out of
+	# the AMD output. The worker name is only a startsWith prefix used to detect
+	# pthread workers, so a static string is equivalent. (Mirrors codecs/avif.)
+	sed -i.bak 's/"em-pthread-" + PThread.nextWorkerID/"em-pthread"/g' $@ && rm $@.bak
 
 # ---- libjxl (libjxl.a + its in-tree third_party static libs) ----------------
 # Build only the core encoder+decoder library, with tools/tests/extras disabled.

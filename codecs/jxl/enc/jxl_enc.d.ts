@@ -10,6 +10,8 @@ export interface EncodeOptions {
   qProgressiveAC: boolean;
   /** Extra DC passes: 0 off, 1 one pass, 2 two passes. Ignored unless progressiveAC. */
   progressiveDC: number;
+  /** Group order: 0 = scanline, 1 = center-first ("Expand"). */
+  groupOrder: number;
 }
 
 export interface JXLModule extends EmscriptenWasm.Module {

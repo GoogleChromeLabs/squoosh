@@ -75,14 +75,21 @@ struct JXLOptions {
   // 0 = off, 1 = one extra pass, 2 = two extra passes. Only meaningful as part
   // of a progressive encode, so it is ignored unless progressiveAC is set.
   int progressiveDC;
+  // Group order (GROUP_ORDER, ~ --group_order): 0 = scanline, 1 = center-first
+  // ("Expand"). Only has an effect during progressive (multi-pass) decode. We
+  // leave the center at libjxl's default (image middle); an explicit center
+  // can't be supported alongside progressive DC, since libjxl reuses one
+  // unscaled pixel value across the full-res and reduced-resolution DC frames.
+  int groupOrder;
 };
 
 val encode(std::string image, int width, int height, JXLOptions options) {
   JXL_ENC_LOG(
       "jxl_enc: encoding %dx%d (%zu bytes in), quality=%g qualityAlpha=%g lossless=%d effort=%d "
-      "progressiveAC=%d qProgressiveAC=%d progressiveDC=%d\n",
+      "progressiveAC=%d qProgressiveAC=%d progressiveDC=%d groupOrder=%d\n",
       width, height, image.size(), options.quality, options.qualityAlpha, options.lossless,
-      options.effort, options.progressiveAC, options.qProgressiveAC, options.progressiveDC);
+      options.effort, options.progressiveAC, options.qProgressiveAC, options.progressiveDC,
+      options.groupOrder);
 
   JxlEncoderPtr enc = JxlEncoderMake(/*memory_manager=*/nullptr);
 
@@ -165,6 +172,11 @@ val encode(std::string image, int width, int height, JXLOptions options) {
         frame_settings, JXL_ENC_FRAME_SETTING_PROGRESSIVE_DC, options.progressiveDC));
   }
 
+  // Group order: 0 = scanline, 1 = center-first. We don't set CENTER_X/CENTER_Y
+  // (left at libjxl's default of the image middle) - see the struct comment.
+  EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
+      frame_settings, JXL_ENC_FRAME_SETTING_GROUP_ORDER, options.groupOrder));
+
   if (options.lossless) {
     EXPECT_SUCCESS(JxlEncoderSetFrameLossless(frame_settings, JXL_TRUE));
   } else {
@@ -236,7 +248,8 @@ EMSCRIPTEN_BINDINGS(my_module) {
       .field("effort", &JXLOptions::effort)
       .field("progressiveAC", &JXLOptions::progressiveAC)
       .field("qProgressiveAC", &JXLOptions::qProgressiveAC)
-      .field("progressiveDC", &JXLOptions::progressiveDC);
+      .field("progressiveDC", &JXLOptions::progressiveDC)
+      .field("groupOrder", &JXLOptions::groupOrder);
 
   function("encode", &encode);
 }
