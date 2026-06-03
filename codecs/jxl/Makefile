@@ -33,6 +33,17 @@ ENVIRONMENT = worker
 # and propagated into the libjxl CMake build. Mirrors codecs/jpegli.
 SIMD_FLAGS = -msimd128
 
+# Encoder-only link flags. libjxl's encoder is far heavier than the decoder:
+#  - It recurses deeply (especially at high effort on large images) and
+#    overflows Emscripten's default 64 KB stack, so bump the stack to 8 MB. The
+#    old multithreaded build used 2 MB per worker; this single-threaded build
+#    does all the work on one stack, so it needs more headroom.
+#  - At high effort on large images it also needs more than the default 2 GB
+#    heap (wasm32's MAXIMUM_MEMORY default), so raise the cap to wasm32's 4 GB
+#    addressable maximum. Memory still grows on demand (ALLOW_MEMORY_GROWTH),
+#    this only lifts the ceiling.
+ENC_LINK_FLAGS = -s STACK_SIZE=8MB -s MAXIMUM_MEMORY=4GB
+
 OUT_JS = enc/jxl_enc.js dec/jxl_dec.js
 OUT_WASM = $(OUT_JS:.js=.wasm)
 
@@ -43,9 +54,11 @@ MAKEFILE_DEPS := Makefile
 export CXXFLAGS += -Wno-deprecated-declarations
 
 # Set DEBUG_BUILD=1 to produce an unoptimised wasm with DWARF and assertions -
-# stack traces show real C++ names instead of `wasm-function[N]`.
+# stack traces show real C++ names instead of `wasm-function[N]`. It also defines
+# JXL_ENC_DEBUG, enabling the encoder's per-encode stderr logging (see
+# enc/jxl_enc.cpp); release builds stay silent.
 ifdef DEBUG_BUILD
-DEBUG_FLAGS = -O0 -g3 -gsource-map -fno-lto -s ASSERTIONS=2 -s STACK_OVERFLOW_CHECK=2
+DEBUG_FLAGS = -O0 -g3 -gsource-map -fno-lto -s ASSERTIONS=2 -s STACK_OVERFLOW_CHECK=2 -DJXL_ENC_DEBUG
 CMAKE_BUILD_TYPE = Debug
 else
 DEBUG_FLAGS =
@@ -71,6 +84,7 @@ all: $(OUT_JS)
 #   $(CODEC_DIR)/lib/include       -> public "jxl/encode.h", "jxl/decode.h", ...
 #   $(CODEC_BUILD_DIR)/lib/include -> CMake-generated "jxl/jxl_export.h" etc.
 enc/jxl_enc.js: enc/jxl_enc.cpp $(LIBJXL_A) $(MAKEFILE_DEPS)
+enc/jxl_enc.js: LINK_EXTRA_FLAGS = $(ENC_LINK_FLAGS)
 dec/jxl_dec.js: dec/jxl_dec.cpp $(LIBJXL_A) $(MAKEFILE_DEPS)
 
 $(OUT_JS):
@@ -79,6 +93,7 @@ $(OUT_JS):
 		$(SIMD_FLAGS) \
 		$(LDFLAGS) \
 		$(DEBUG_FLAGS) \
+		$(LINK_EXTRA_FLAGS) \
 		-I $(CODEC_DIR)/lib/include \
 		-I $(CODEC_BUILD_DIR)/lib/include \
 		--bind \

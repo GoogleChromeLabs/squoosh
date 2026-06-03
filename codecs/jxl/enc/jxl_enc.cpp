@@ -1,6 +1,7 @@
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
 
+#include <cstdio>
 #include <vector>
 
 #include <jxl/encode.h>
@@ -13,11 +14,39 @@ thread_local const val Uint8Array = val::global("Uint8Array");
 // Input from the browser is always 8-bit sRGB RGBA, one byte per channel.
 #define COMPONENTS_PER_PIXEL 4
 
-// Bail out of encode() returning null if a libjxl call doesn't succeed. Mirrors
-// the EXPECT_* helpers in dec/jxl_dec.cpp.
-#define EXPECT_SUCCESS(a)         \
-  if ((a) != JXL_ENC_SUCCESS) {   \
-    return val::null();           \
+// Per-encode tracing to stderr (input params, output size). Compiled out unless
+// JXL_ENC_DEBUG is defined, which the Makefile sets for DEBUG_BUILD=1. Failure
+// logging (EXPECT_SUCCESS and the ProcessOutput error below) stays always-on -
+// it only fires when encode() is about to return null, so it's never noise.
+#ifdef JXL_ENC_DEBUG
+#define JXL_ENC_LOG(...) fprintf(stderr, __VA_ARGS__)
+#else
+#define JXL_ENC_LOG(...) ((void)0)
+#endif
+
+// Human-readable name for a JxlEncoderError, for logging on failure.
+static const char* JxlEncoderErrorName(JxlEncoderError err) {
+  switch (err) {
+    case JXL_ENC_ERR_OK: return "OK";
+    case JXL_ENC_ERR_GENERIC: return "GENERIC";
+    case JXL_ENC_ERR_OOM: return "OUT_OF_MEMORY";
+    case JXL_ENC_ERR_JBRD: return "JPEG_BITSTREAM_RECONSTRUCTION";
+    case JXL_ENC_ERR_BAD_INPUT: return "BAD_INPUT";
+    case JXL_ENC_ERR_NOT_SUPPORTED: return "NOT_SUPPORTED";
+    case JXL_ENC_ERR_API_USAGE: return "API_USAGE";
+    default: return "UNKNOWN";
+  }
+}
+
+// Bail out of encode() returning null if a libjxl call doesn't succeed, logging
+// which call failed and the encoder's specific error code. Mirrors the EXPECT_*
+// helpers in dec/jxl_dec.cpp. `enc` must be in scope (the JxlEncoderPtr).
+#define EXPECT_SUCCESS(a)                                                     \
+  if ((a) != JXL_ENC_SUCCESS) {                                              \
+    JxlEncoderError err_ = JxlEncoderGetError(enc.get());                    \
+    fprintf(stderr, "jxl_enc: %s failed at %s:%d (encoder error %d: %s)\n",  \
+            #a, __FILE__, __LINE__, err_, JxlEncoderErrorName(err_));        \
+    return val::null();                                                       \
   }
 
 struct JXLOptions {
@@ -32,6 +61,9 @@ struct JXLOptions {
 };
 
 val encode(std::string image, int width, int height, JXLOptions options) {
+  JXL_ENC_LOG("jxl_enc: encoding %dx%d (%zu bytes in), quality=%g lossless=%d effort=%d\n",
+              width, height, image.size(), options.quality, options.lossless, options.effort);
+
   JxlEncoderPtr enc = JxlEncoderMake(/*memory_manager=*/nullptr);
   // Single-threaded: no parallel runner. libjxl runs inline on the calling
   // thread, which is the codec's worker. (Threads are a future experiment.)
@@ -90,9 +122,14 @@ val encode(std::string image, int width, int height, JXLOptions options) {
     }
   }
   if (process_result != JXL_ENC_SUCCESS) {
+    JxlEncoderError err = JxlEncoderGetError(enc.get());
+    fprintf(stderr, "jxl_enc: JxlEncoderProcessOutput failed (encoder error %d: %s)\n",
+            err, JxlEncoderErrorName(err));
     return val::null();
   }
   compressed.resize(next_out - compressed.data());
+
+  JXL_ENC_LOG("jxl_enc: done, %zu bytes out\n", compressed.size());
 
   return Uint8Array.new_(typed_memory_view(compressed.size(), compressed.data()));
 }
