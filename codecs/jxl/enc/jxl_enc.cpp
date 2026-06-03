@@ -65,13 +65,24 @@ struct JXLOptions {
   bool lossless;
   // libjxl effort / speed tier, 1 (fastest) - 9 (slowest, best compression).
   int effort;
+  // Progressive AC for VarDCT (PROGRESSIVE_AC, ~ --progressive_ac). This is the
+  // flag that actually makes the image decode in visible passes.
+  bool progressiveAC;
+  // Progressive AC using LSB quantization (QPROGRESSIVE_AC, ~ --qprogressive_ac).
+  // In libjxl this takes precedence over progressiveAC when both are set.
+  bool qProgressiveAC;
+  // Extra lower-resolution DC passes (PROGRESSIVE_DC, ~ --progressive_dc):
+  // 0 = off, 1 = one extra pass, 2 = two extra passes. Only meaningful as part
+  // of a progressive encode, so it is ignored unless progressiveAC is set.
+  int progressiveDC;
 };
 
 val encode(std::string image, int width, int height, JXLOptions options) {
   JXL_ENC_LOG(
-      "jxl_enc: encoding %dx%d (%zu bytes in), quality=%g qualityAlpha=%g lossless=%d effort=%d\n",
+      "jxl_enc: encoding %dx%d (%zu bytes in), quality=%g qualityAlpha=%g lossless=%d effort=%d "
+      "progressiveAC=%d qProgressiveAC=%d progressiveDC=%d\n",
       width, height, image.size(), options.quality, options.qualityAlpha, options.lossless,
-      options.effort);
+      options.effort, options.progressiveAC, options.qProgressiveAC, options.progressiveDC);
 
   JxlEncoderPtr enc = JxlEncoderMake(/*memory_manager=*/nullptr);
 
@@ -91,16 +102,35 @@ val encode(std::string image, int width, int height, JXLOptions options) {
   EXPECT_SUCCESS(JxlEncoderSetParallelRunner(enc.get(), JxlResizableParallelRunner,
                                              runner.get()));
 
+  // The browser always hands us RGBA. Detect whether the alpha channel is
+  // actually used: if every pixel is fully opaque we drop the alpha channel
+  // entirely. Besides saving a redundant plane, this matters because libjxl
+  // force-disables progressive DC whenever an image has any extra (alpha)
+  // channel (see lib/jxl/enc_frame.cc), so an unused alpha plane would silently
+  // suppress progressive DC.
+  const uint8_t* pixels = reinterpret_cast<const uint8_t*>(image.data());
+  const size_t pixel_count = static_cast<size_t>(width) * height;
+  bool has_alpha = false;
+  for (size_t i = 0; i < pixel_count; i++) {
+    if (pixels[i * COMPONENTS_PER_PIXEL + 3] != 255) {
+      has_alpha = true;
+      break;
+    }
+  }
+  JXL_ENC_LOG("jxl_enc: has_alpha=%d\n", has_alpha);
+
   JxlBasicInfo basic_info;
   JxlEncoderInitBasicInfo(&basic_info);
   basic_info.xsize = width;
   basic_info.ysize = height;
   basic_info.bits_per_sample = 8;
   basic_info.num_color_channels = 3;
-  // RGBA: the alpha channel is one extra channel of 8 bits.
-  basic_info.alpha_bits = 8;
-  basic_info.alpha_exponent_bits = 0;
-  basic_info.num_extra_channels = 1;
+  if (has_alpha) {
+    // Alpha is one extra channel of 8 bits.
+    basic_info.alpha_bits = 8;
+    basic_info.alpha_exponent_bits = 0;
+    basic_info.num_extra_channels = 1;
+  }
   // Lossless requires the original colour profile to be preserved; lossy lets
   // libjxl transform to its internal XYB space for better compression.
   basic_info.uses_original_profile = options.lossless ? JXL_TRUE : JXL_FALSE;
@@ -116,6 +146,25 @@ val encode(std::string image, int width, int height, JXLOptions options) {
   EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
       frame_settings, JXL_ENC_FRAME_SETTING_EFFORT, options.effort));
 
+  // Progressive AC is what actually yields a progressive decode. The two modes
+  // are independent flags in the API, but libjxl lets qprogressive take
+  // precedence when both are on, so we just forward both.
+  if (options.progressiveAC) {
+    EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
+        frame_settings, JXL_ENC_FRAME_SETTING_PROGRESSIVE_AC, 1));
+  }
+  if (options.qProgressiveAC) {
+    EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
+        frame_settings, JXL_ENC_FRAME_SETTING_QPROGRESSIVE_AC, 1));
+  }
+
+  // Extra DC passes only make sense as part of a progressive encode, so ignore
+  // them unless progressive AC is on. 0 = off, 1/2 = one/two extra passes.
+  if (options.progressiveAC && options.progressiveDC > 0) {
+    EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
+        frame_settings, JXL_ENC_FRAME_SETTING_PROGRESSIVE_DC, options.progressiveDC));
+  }
+
   if (options.lossless) {
     EXPECT_SUCCESS(JxlEncoderSetFrameLossless(frame_settings, JXL_TRUE));
   } else {
@@ -124,19 +173,32 @@ val encode(std::string image, int width, int height, JXLOptions options) {
     // qualityAlpha of -1 means "same as the colour quality"; libjxl already
     // applies the frame distance to the alpha channel by default, so we only
     // override when a separate alpha quality was requested. The alpha channel is
-    // extra channel index 0 (num_extra_channels == 1).
-    if (options.qualityAlpha >= 0) {
+    // extra channel index 0 (num_extra_channels == 1). Only relevant if the
+    // image actually has alpha.
+    if (has_alpha && options.qualityAlpha >= 0) {
       EXPECT_SUCCESS(JxlEncoderSetExtraChannelDistance(
           frame_settings, /*index=*/0,
           JxlEncoderDistanceFromQuality(options.qualityAlpha)));
     }
   }
 
-  const JxlPixelFormat pixel_format = {COMPONENTS_PER_PIXEL, JXL_TYPE_UINT8,
-                                       JXL_NATIVE_ENDIAN, 0};
-  EXPECT_SUCCESS(JxlEncoderAddImageFrame(frame_settings, &pixel_format,
-                                         static_cast<const void*>(image.data()),
-                                         image.size()));
+  // Feed RGBA as-is when there's alpha; otherwise repack to RGB so the pixel
+  // format matches the 3-channel (no extra channel) basic info we set above.
+  if (has_alpha) {
+    const JxlPixelFormat pixel_format = {4, JXL_TYPE_UINT8, JXL_NATIVE_ENDIAN, 0};
+    EXPECT_SUCCESS(JxlEncoderAddImageFrame(frame_settings, &pixel_format, pixels,
+                                           image.size()));
+  } else {
+    std::vector<uint8_t> rgb(pixel_count * 3);
+    for (size_t i = 0; i < pixel_count; i++) {
+      rgb[i * 3 + 0] = pixels[i * COMPONENTS_PER_PIXEL + 0];
+      rgb[i * 3 + 1] = pixels[i * COMPONENTS_PER_PIXEL + 1];
+      rgb[i * 3 + 2] = pixels[i * COMPONENTS_PER_PIXEL + 2];
+    }
+    const JxlPixelFormat pixel_format = {3, JXL_TYPE_UINT8, JXL_NATIVE_ENDIAN, 0};
+    EXPECT_SUCCESS(
+        JxlEncoderAddImageFrame(frame_settings, &pixel_format, rgb.data(), rgb.size()));
+  }
   JxlEncoderCloseInput(enc.get());
 
   // Pull the compressed bytes out, growing the buffer as libjxl asks for room.
@@ -171,7 +233,10 @@ EMSCRIPTEN_BINDINGS(my_module) {
       .field("quality", &JXLOptions::quality)
       .field("qualityAlpha", &JXLOptions::qualityAlpha)
       .field("lossless", &JXLOptions::lossless)
-      .field("effort", &JXLOptions::effort);
+      .field("effort", &JXLOptions::effort)
+      .field("progressiveAC", &JXLOptions::progressiveAC)
+      .field("qProgressiveAC", &JXLOptions::qProgressiveAC)
+      .field("progressiveDC", &JXLOptions::progressiveDC);
 
   function("encode", &encode);
 }

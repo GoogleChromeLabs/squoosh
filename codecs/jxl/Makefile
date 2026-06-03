@@ -1,6 +1,7 @@
 # Emscripten build for JPEG XL (libjxl), encoder + decoder.
 #
-# Updated to libjxl v0.11.2. The encoder wrapper (enc/jxl_enc.cpp) and decoder
+# Pinned to a post-0.11.2 libjxl commit (see CODEC_VERSION) that fixes encoder
+# bugs in the 0.11.2 tag. The encoder wrapper (enc/jxl_enc.cpp) and decoder
 # wrapper (dec/jxl_dec.cpp) use libjxl's *stable public C API* (jxl/encode.h,
 # jxl/decode.h) rather than internal headers, so they survive version bumps.
 #
@@ -16,16 +17,17 @@
 #
 # libjxl's third_party deps (highway, brotli, skcms, ...) are git submodules and
 # are NOT in the GitHub release tarball, and skcms lives on a googlesource git.
-# So we fetch the v0.11.2 *tag* via git and init the submodules, which pins
-# every dep to the exact revisions libjxl tested (deps.sh) - more reliable than
-# stitching together separate tarballs.
+# So we fetch the pinned commit via git and init the submodules, which pins every
+# dep to the exact revisions libjxl tested (deps.sh) - more reliable than
+# stitching together separate tarballs. (Pinned to a post-0.11.2 commit that
+# fixes encoder bugs present in the 0.11.2 tag.)
 #
 # Run inside the shared codecs Docker via ../build-cpp.sh (emscripten/emsdk),
 # whose CMD is `emmake make -j<nproc>`. CXXFLAGS / CFLAGS / LDFLAGS are exported
 # by codecs/cpp.Dockerfile.
 
 CODEC_URL = https://github.com/libjxl/libjxl.git
-CODEC_VERSION = v0.11.2
+CODEC_VERSION = 1dfa3c26b5ac199135bddcb9d4d096ff12a7b837
 CODEC_DIR = node_modules/jxl
 CODEC_BUILD_DIR := $(CODEC_DIR)/build
 
@@ -177,11 +179,11 @@ $(CODEC_BUILD_DIR)/Makefile: $(CODEC_DIR)/CMakeLists.txt $(MAKEFILE_DEPS)
 		-B $(CODEC_BUILD_DIR) \
 		$(CODEC_DIR)
 
-# ---- source fetch (git tag + submodules) ------------------------------------
+# ---- source fetch (git commit + submodules) ---------------------------------
 $(CODEC_DIR)/CMakeLists.txt:
 	$(RM) -r $(@D)
 	git init $(@D)
-	git -C $(@D) fetch $(CODEC_URL) refs/tags/$(CODEC_VERSION) --depth 1
+	git -C $(@D) fetch $(CODEC_URL) $(CODEC_VERSION) --depth 1
 	git -C $(@D) checkout FETCH_HEAD
 	git -C $(@D) submodule update --init --depth 1 --recursive --jobs `nproc`
 

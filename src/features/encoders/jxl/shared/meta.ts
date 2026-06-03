@@ -22,4 +22,7 @@ export const defaultOptions: EncodeOptions = {
   qualityAlpha: -1,
   lossless: false,
   effort: 7,
+  progressiveAC: false,
+  qProgressiveAC: false,
+  progressiveDC: 1,
 };

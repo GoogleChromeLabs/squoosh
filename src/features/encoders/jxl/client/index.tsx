@@ -8,6 +8,7 @@ import Range from 'client/lazy-app/Compress/Options/Range';
 import Checkbox from 'client/lazy-app/Compress/Options/Checkbox';
 import Expander from 'client/lazy-app/Compress/Options/Expander';
 import Revealer from 'client/lazy-app/Compress/Options/Revealer';
+import Select from 'client/lazy-app/Compress/Options/Select';
 
 export const encode = (
   signal: AbortSignal,
@@ -29,6 +30,9 @@ interface State {
   alphaQuality: number;
   lossless: boolean;
   effort: number;
+  progressiveAC: boolean;
+  qProgressiveAC: boolean;
+  progressiveDC: number;
 }
 
 export class Options extends Component<Props, State> {
@@ -54,6 +58,9 @@ export class Options extends Component<Props, State> {
       alphaQuality: separateAlpha ? options.qualityAlpha : options.quality,
       lossless: options.lossless,
       effort: options.effort,
+      progressiveAC: options.progressiveAC,
+      qProgressiveAC: options.qProgressiveAC,
+      progressiveDC: options.progressiveDC,
     };
   }
 
@@ -94,6 +101,12 @@ export class Options extends Component<Props, State> {
               : optionState.alphaQuality,
           lossless: optionState.lossless,
           effort: optionState.effort,
+          progressiveAC: optionState.progressiveAC,
+          qProgressiveAC: optionState.qProgressiveAC,
+          // DC only applies when progressive (AC) is on; treat as Off otherwise.
+          progressiveDC: optionState.progressiveAC
+            ? optionState.progressiveDC
+            : 0,
         };
 
         // Updating options, so we don't recalculate in getDerivedStateFromProps.
@@ -117,6 +130,9 @@ export class Options extends Component<Props, State> {
       alphaQuality,
       lossless,
       effort,
+      progressiveAC,
+      qProgressiveAC,
+      progressiveDC,
     }: State,
   ) {
     return (
@@ -179,6 +195,43 @@ export class Options extends Component<Props, State> {
                           >
                             Alpha quality:
                           </Range>
+                        </div>
+                      )}
+                    </Expander>
+                    <label class={style.optionToggle}>
+                      Progressive
+                      <Checkbox
+                        checked={progressiveAC}
+                        onChange={this._inputChange('progressiveAC', 'boolean')}
+                      />
+                    </label>
+                    <Expander>
+                      {progressiveAC && (
+                        <div>
+                          <label class={style.optionToggle}>
+                            Progressive shift quantization
+                            <Checkbox
+                              checked={qProgressiveAC}
+                              onChange={this._inputChange(
+                                'qProgressiveAC',
+                                'boolean',
+                              )}
+                            />
+                          </label>
+                          <label class={style.optionTextFirst}>
+                            Progressive DC:
+                            <Select
+                              value={progressiveDC}
+                              onChange={this._inputChange(
+                                'progressiveDC',
+                                'number',
+                              )}
+                            >
+                              <option value="0">Off</option>
+                              <option value="1">One pass</option>
+                              <option value="2">Two pass</option>
+                            </Select>
+                          </label>
                         </div>
                       )}
                     </Expander>

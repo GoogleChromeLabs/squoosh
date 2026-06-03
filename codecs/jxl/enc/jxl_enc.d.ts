@@ -4,6 +4,12 @@ export interface EncodeOptions {
   qualityAlpha: number;
   lossless: boolean;
   effort: number;
+  /** Progressive AC (VarDCT) — the flag that makes the image decode in passes. */
+  progressiveAC: boolean;
+  /** Progressive AC using LSB quantization (qprogressive_ac). */
+  qProgressiveAC: boolean;
+  /** Extra DC passes: 0 off, 1 one pass, 2 two passes. Ignored unless progressiveAC. */
+  progressiveDC: number;
 }
 
 export interface JXLModule extends EmscriptenWasm.Module {
