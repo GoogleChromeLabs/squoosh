@@ -19,6 +19,7 @@ export const mimeType = 'image/jxl';
 export const extension = 'jxl';
 export const defaultOptions: EncodeOptions = {
   quality: 75,
+  qualityAlpha: -1,
   lossless: false,
   effort: 7,
 };

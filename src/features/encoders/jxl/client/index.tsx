@@ -1,11 +1,13 @@
 import { EncodeOptions } from '../shared/meta';
 import type WorkerBridge from 'client/lazy-app/worker-bridge';
 import { h, Component } from 'preact';
+import linkState from 'linkstate';
 import { preventDefault, shallowEqual } from 'client/lazy-app/util';
 import * as style from 'client/lazy-app/Compress/Options/style.css';
 import Range from 'client/lazy-app/Compress/Options/Range';
 import Checkbox from 'client/lazy-app/Compress/Options/Checkbox';
 import Expander from 'client/lazy-app/Compress/Options/Expander';
+import Revealer from 'client/lazy-app/Compress/Options/Revealer';
 
 export const encode = (
   signal: AbortSignal,
@@ -22,6 +24,9 @@ interface Props {
 interface State {
   options: EncodeOptions;
   quality: number;
+  showAdvanced: boolean;
+  separateAlpha: boolean;
+  alphaQuality: number;
   lossless: boolean;
   effort: number;
 }
@@ -37,10 +42,16 @@ export class Options extends Component<Props, State> {
 
     const { options } = props;
 
+    // qualityAlpha of -1 means "same as quality"; otherwise it's a separate
+    // alpha quality.
+    const separateAlpha = options.qualityAlpha !== -1;
+
     // Create default form state from options
     return {
       options,
       quality: options.quality,
+      separateAlpha,
+      alphaQuality: separateAlpha ? options.qualityAlpha : options.quality,
       lossless: options.lossless,
       effort: options.effort,
     };
@@ -49,6 +60,7 @@ export class Options extends Component<Props, State> {
   // The rest of the defaults are set in getDerivedStateFromProps
   state: State = {
     lossless: false,
+    showAdvanced: false,
   } as State;
 
   private _inputChangeCallbacks = new Map<string, (event: Event) => void>();
@@ -76,6 +88,10 @@ export class Options extends Component<Props, State> {
 
         const newOptions: EncodeOptions = {
           quality: optionState.quality,
+          qualityAlpha:
+            optionState.lossless || !optionState.separateAlpha
+              ? -1 // Use the same quality as the colour channels.
+              : optionState.alphaQuality,
           lossless: optionState.lossless,
           effort: optionState.effort,
         };
@@ -92,7 +108,17 @@ export class Options extends Component<Props, State> {
     return this._inputChangeCallbacks.get(prop)!;
   };
 
-  render({}: Props, { quality, lossless, effort }: State) {
+  render(
+    {}: Props,
+    {
+      quality,
+      showAdvanced,
+      separateAlpha,
+      alphaQuality,
+      lossless,
+      effort,
+    }: State,
+  ) {
     return (
       <form class={style.optionsSection} onSubmit={preventDefault}>
         <label class={style.optionToggle}>
@@ -115,6 +141,50 @@ export class Options extends Component<Props, State> {
               >
                 Quality:
               </Range>
+            </div>
+          )}
+        </Expander>
+        <label class={style.optionReveal}>
+          <Revealer
+            checked={showAdvanced}
+            onChange={linkState(this, 'showAdvanced')}
+          />
+          Advanced settings
+        </label>
+        <Expander>
+          {showAdvanced && (
+            <div>
+              <Expander>
+                {!lossless && (
+                  <div>
+                    <label class={style.optionToggle}>
+                      Separate alpha quality
+                      <Checkbox
+                        checked={separateAlpha}
+                        onChange={this._inputChange('separateAlpha', 'boolean')}
+                      />
+                    </label>
+                    <Expander>
+                      {separateAlpha && (
+                        <div class={style.optionOneCell}>
+                          <Range
+                            min="0"
+                            max="100"
+                            step="0.1"
+                            value={alphaQuality}
+                            onInput={this._inputChange(
+                              'alphaQuality',
+                              'number',
+                            )}
+                          >
+                            Alpha quality:
+                          </Range>
+                        </div>
+                      )}
+                    </Expander>
+                  </div>
+                )}
+              </Expander>
             </div>
           )}
         </Expander>

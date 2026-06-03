@@ -58,6 +58,9 @@ struct JXLOptions {
   // butteraugli distance via JxlEncoderDistanceFromQuality. Ignored when
   // lossless is set.
   float quality;
+  // 0-100 quality for the alpha channel, or -1 to use the same as `quality`
+  // (matching codecs/avif's qualityAlpha convention). Ignored when lossless.
+  float qualityAlpha;
   // Mathematically lossless encoding.
   bool lossless;
   // libjxl effort / speed tier, 1 (fastest) - 9 (slowest, best compression).
@@ -65,8 +68,10 @@ struct JXLOptions {
 };
 
 val encode(std::string image, int width, int height, JXLOptions options) {
-  JXL_ENC_LOG("jxl_enc: encoding %dx%d (%zu bytes in), quality=%g lossless=%d effort=%d\n",
-              width, height, image.size(), options.quality, options.lossless, options.effort);
+  JXL_ENC_LOG(
+      "jxl_enc: encoding %dx%d (%zu bytes in), quality=%g qualityAlpha=%g lossless=%d effort=%d\n",
+      width, height, image.size(), options.quality, options.qualityAlpha, options.lossless,
+      options.effort);
 
   JxlEncoderPtr enc = JxlEncoderMake(/*memory_manager=*/nullptr);
 
@@ -116,6 +121,15 @@ val encode(std::string image, int width, int height, JXLOptions options) {
   } else {
     EXPECT_SUCCESS(JxlEncoderSetFrameDistance(
         frame_settings, JxlEncoderDistanceFromQuality(options.quality)));
+    // qualityAlpha of -1 means "same as the colour quality"; libjxl already
+    // applies the frame distance to the alpha channel by default, so we only
+    // override when a separate alpha quality was requested. The alpha channel is
+    // extra channel index 0 (num_extra_channels == 1).
+    if (options.qualityAlpha >= 0) {
+      EXPECT_SUCCESS(JxlEncoderSetExtraChannelDistance(
+          frame_settings, /*index=*/0,
+          JxlEncoderDistanceFromQuality(options.qualityAlpha)));
+    }
   }
 
   const JxlPixelFormat pixel_format = {COMPONENTS_PER_PIXEL, JXL_TYPE_UINT8,
@@ -155,6 +169,7 @@ val encode(std::string image, int width, int height, JXLOptions options) {
 EMSCRIPTEN_BINDINGS(my_module) {
   value_object<JXLOptions>("JXLOptions")
       .field("quality", &JXLOptions::quality)
+      .field("qualityAlpha", &JXLOptions::qualityAlpha)
       .field("lossless", &JXLOptions::lossless)
       .field("effort", &JXLOptions::effort);
 
