@@ -4,7 +4,9 @@ export interface EncodeOptions {
   qualityAlpha: number;
   lossless: boolean;
   effort: number;
-  /** Progressive AC (VarDCT) — the flag that makes the image decode in passes. */
+  /** Encoding mode: false = VarDCT, true = modular. Only meaningful when lossy. */
+  modular: boolean;
+  /** "Progressive": maps to progressive_ac in VarDCT, or responsive in modular. */
   progressiveAC: boolean;
   /** Progressive AC using LSB quantization (qprogressive_ac). */
   qProgressiveAC: boolean;

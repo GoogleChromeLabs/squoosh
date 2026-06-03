@@ -30,6 +30,7 @@ interface State {
   alphaQuality: number;
   lossless: boolean;
   effort: number;
+  modular: boolean;
   progressiveAC: boolean;
   qProgressiveAC: boolean;
   progressiveDC: number;
@@ -59,6 +60,7 @@ export class Options extends Component<Props, State> {
       alphaQuality: separateAlpha ? options.qualityAlpha : options.quality,
       lossless: options.lossless,
       effort: options.effort,
+      modular: options.modular,
       progressiveAC: options.progressiveAC,
       qProgressiveAC: options.qProgressiveAC,
       progressiveDC: options.progressiveDC,
@@ -83,7 +85,8 @@ export class Options extends Component<Props, State> {
           type === 'boolean'
             ? 'checked' in formEl
               ? formEl.checked
-              : !!formEl.value
+              : // <select> used as a boolean: option values are "0" / "1".
+                formEl.value === '1'
             : Number(formEl.value);
 
         const newState: Partial<State> = {
@@ -103,6 +106,7 @@ export class Options extends Component<Props, State> {
               : optionState.alphaQuality,
           lossless: optionState.lossless,
           effort: optionState.effort,
+          modular: optionState.modular,
           progressiveAC: optionState.progressiveAC,
           qProgressiveAC: optionState.qProgressiveAC,
           // DC only applies when progressive (AC) is on; treat as Off otherwise.
@@ -134,6 +138,7 @@ export class Options extends Component<Props, State> {
       alphaQuality,
       lossless,
       effort,
+      modular,
       progressiveAC,
       qProgressiveAC,
       progressiveDC,
@@ -178,6 +183,16 @@ export class Options extends Component<Props, State> {
               <Expander>
                 {!lossless && (
                   <div>
+                    <label class={style.optionTextFirst}>
+                      Mode:
+                      <Select
+                        value={modular ? 1 : 0}
+                        onChange={this._inputChange('modular', 'boolean')}
+                      >
+                        <option value="0">VarDCT</option>
+                        <option value="1">Modular</option>
+                      </Select>
+                    </label>
                     <label class={style.optionToggle}>
                       Separate alpha quality
                       <Checkbox
@@ -203,53 +218,64 @@ export class Options extends Component<Props, State> {
                         </div>
                       )}
                     </Expander>
-                    <label class={style.optionToggle}>
-                      Progressive
-                      <Checkbox
-                        checked={progressiveAC}
-                        onChange={this._inputChange('progressiveAC', 'boolean')}
-                      />
-                    </label>
                     <Expander>
-                      {progressiveAC && (
+                      {/* Progressive is VarDCT-only; modular is always
+                          responsive (progressive), so hide this in modular. */}
+                      {!modular && (
                         <div>
                           <label class={style.optionToggle}>
-                            Progressive shift quantization
+                            Progressive
                             <Checkbox
-                              checked={qProgressiveAC}
+                              checked={progressiveAC}
                               onChange={this._inputChange(
-                                'qProgressiveAC',
+                                'progressiveAC',
                                 'boolean',
                               )}
                             />
                           </label>
-                          <label class={style.optionTextFirst}>
-                            Progressive DC:
-                            <Select
-                              value={progressiveDC}
-                              onChange={this._inputChange(
-                                'progressiveDC',
-                                'number',
-                              )}
-                            >
-                              <option value="0">Off</option>
-                              <option value="1">One pass</option>
-                              <option value="2">Two pass</option>
-                            </Select>
-                          </label>
-                          <label class={style.optionTextFirst}>
-                            Block order:
-                            <Select
-                              value={groupOrder}
-                              onChange={this._inputChange(
-                                'groupOrder',
-                                'number',
-                              )}
-                            >
-                              <option value="0">Scanline</option>
-                              <option value="1">From center</option>
-                            </Select>
-                          </label>
+                          <Expander>
+                            {progressiveAC && (
+                              <div>
+                                <label class={style.optionToggle}>
+                                  Progressive shift quantization
+                                  <Checkbox
+                                    checked={qProgressiveAC}
+                                    onChange={this._inputChange(
+                                      'qProgressiveAC',
+                                      'boolean',
+                                    )}
+                                  />
+                                </label>
+                                <label class={style.optionTextFirst}>
+                                  Progressive DC:
+                                  <Select
+                                    value={progressiveDC}
+                                    onChange={this._inputChange(
+                                      'progressiveDC',
+                                      'number',
+                                    )}
+                                  >
+                                    <option value="0">Off</option>
+                                    <option value="1">One pass</option>
+                                    <option value="2">Two pass</option>
+                                  </Select>
+                                </label>
+                                <label class={style.optionTextFirst}>
+                                  Block order:
+                                  <Select
+                                    value={groupOrder}
+                                    onChange={this._inputChange(
+                                      'groupOrder',
+                                      'number',
+                                    )}
+                                  >
+                                    <option value="0">Scanline</option>
+                                    <option value="1">From center</option>
+                                  </Select>
+                                </label>
+                              </div>
+                            )}
+                          </Expander>
                         </div>
                       )}
                     </Expander>

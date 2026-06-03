@@ -65,8 +65,11 @@ struct JXLOptions {
   bool lossless;
   // libjxl effort / speed tier, 1 (fastest) - 9 (slowest, best compression).
   int effort;
-  // Progressive AC for VarDCT (PROGRESSIVE_AC, ~ --progressive_ac). This is the
-  // flag that actually makes the image decode in visible passes.
+  // Encoding mode (MODULAR): false = VarDCT (photographic), true = modular.
+  // Only meaningful for lossy - lossless always uses modular internally.
+  bool modular;
+  // "Progressive" toggle. Routes to PROGRESSIVE_AC in VarDCT mode, or to
+  // RESPONSIVE in modular mode (responsive is modular's progressive knob).
   bool progressiveAC;
   // Progressive AC using LSB quantization (QPROGRESSIVE_AC, ~ --qprogressive_ac).
   // In libjxl this takes precedence over progressiveAC when both are set.
@@ -86,10 +89,10 @@ struct JXLOptions {
 val encode(std::string image, int width, int height, JXLOptions options) {
   JXL_ENC_LOG(
       "jxl_enc: encoding %dx%d (%zu bytes in), quality=%g qualityAlpha=%g lossless=%d effort=%d "
-      "progressiveAC=%d qProgressiveAC=%d progressiveDC=%d groupOrder=%d\n",
+      "modular=%d progressiveAC=%d qProgressiveAC=%d progressiveDC=%d groupOrder=%d\n",
       width, height, image.size(), options.quality, options.qualityAlpha, options.lossless,
-      options.effort, options.progressiveAC, options.qProgressiveAC, options.progressiveDC,
-      options.groupOrder);
+      options.effort, options.modular, options.progressiveAC, options.qProgressiveAC,
+      options.progressiveDC, options.groupOrder);
 
   JxlEncoderPtr enc = JxlEncoderMake(/*memory_manager=*/nullptr);
 
@@ -153,29 +156,40 @@ val encode(std::string image, int width, int height, JXLOptions options) {
   EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
       frame_settings, JXL_ENC_FRAME_SETTING_EFFORT, options.effort));
 
-  // Progressive AC is what actually yields a progressive decode. The two modes
-  // are independent flags in the API, but libjxl lets qprogressive take
-  // precedence when both are on, so we just forward both.
-  if (options.progressiveAC) {
+  // Mode only applies to lossy: lossless always uses modular internally, so we
+  // leave MODULAR at its default there and let libjxl force it.
+  bool modular = !options.lossless && options.modular;
+  if (modular) {
+    EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
+        frame_settings, JXL_ENC_FRAME_SETTING_MODULAR, 1));
+  }
+
+  // Modular is always responsive (progressive). Non-responsive modular produces
+  // much larger files for little benefit, so we don't expose the choice - the
+  // VarDCT-only "Progressive" toggle and its extras don't apply in modular mode.
+  if (modular) {
+    EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
+        frame_settings, JXL_ENC_FRAME_SETTING_RESPONSIVE, 1));
+  } else if (options.progressiveAC) {
+    // VarDCT progressive. The extras (qProgressiveAC, progressiveDC) and group
+    // order are VarDCT-only and only meaningful within a progressive encode.
     EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
         frame_settings, JXL_ENC_FRAME_SETTING_PROGRESSIVE_AC, 1));
-  }
-  if (options.qProgressiveAC) {
-    EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
-        frame_settings, JXL_ENC_FRAME_SETTING_QPROGRESSIVE_AC, 1));
-  }
+    if (options.qProgressiveAC) {
+      EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
+          frame_settings, JXL_ENC_FRAME_SETTING_QPROGRESSIVE_AC, 1));
+    }
 
-  // Extra DC passes only make sense as part of a progressive encode, so ignore
-  // them unless progressive AC is on. 0 = off, 1/2 = one/two extra passes.
-  if (options.progressiveAC && options.progressiveDC > 0) {
+    if (options.progressiveDC > 0) {
+      EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
+          frame_settings, JXL_ENC_FRAME_SETTING_PROGRESSIVE_DC, options.progressiveDC));
+    }
+    // Group order (scanline / center-first) only affects VarDCT progressive
+    // decode. We don't set CENTER_X/CENTER_Y (left at libjxl's default image
+    // middle) - see the struct comment.
     EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
-        frame_settings, JXL_ENC_FRAME_SETTING_PROGRESSIVE_DC, options.progressiveDC));
+        frame_settings, JXL_ENC_FRAME_SETTING_GROUP_ORDER, options.groupOrder));
   }
-
-  // Group order: 0 = scanline, 1 = center-first. We don't set CENTER_X/CENTER_Y
-  // (left at libjxl's default of the image middle) - see the struct comment.
-  EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
-      frame_settings, JXL_ENC_FRAME_SETTING_GROUP_ORDER, options.groupOrder));
 
   if (options.lossless) {
     EXPECT_SUCCESS(JxlEncoderSetFrameLossless(frame_settings, JXL_TRUE));
@@ -246,6 +260,7 @@ EMSCRIPTEN_BINDINGS(my_module) {
       .field("qualityAlpha", &JXLOptions::qualityAlpha)
       .field("lossless", &JXLOptions::lossless)
       .field("effort", &JXLOptions::effort)
+      .field("modular", &JXLOptions::modular)
       .field("progressiveAC", &JXLOptions::progressiveAC)
       .field("qProgressiveAC", &JXLOptions::qProgressiveAC)
       .field("progressiveDC", &JXLOptions::progressiveDC)
