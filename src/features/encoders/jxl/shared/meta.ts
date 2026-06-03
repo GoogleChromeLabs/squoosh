@@ -14,16 +14,11 @@ import type { EncodeOptions } from 'codecs/jxl/enc/jxl_enc';
 
 export { EncodeOptions };
 
-export const label = 'JPEG XL (beta)';
+export const label = 'JPEG XL';
 export const mimeType = 'image/jxl';
 export const extension = 'jxl';
 export const defaultOptions: EncodeOptions = {
-  effort: 7,
   quality: 75,
-  progressive: false,
-  epf: -1,
-  lossyPalette: false,
-  decodingSpeedTier: 0,
-  photonNoiseIso: 0,
-  lossyModular: false,
+  lossless: false,
+  effort: 7,
 };

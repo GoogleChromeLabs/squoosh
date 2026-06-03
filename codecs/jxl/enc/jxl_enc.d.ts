@@ -1,12 +1,7 @@
 export interface EncodeOptions {
-  effort: number;
   quality: number;
-  progressive: boolean;
-  epf: number;
-  lossyPalette: boolean;
-  decodingSpeedTier: number;
-  photonNoiseIso: number;
-  lossyModular: boolean;
+  lossless: boolean;
+  effort: number;
 }
 
 export interface JXLModule extends EmscriptenWasm.Module {

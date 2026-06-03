@@ -1,10 +1,13 @@
 #include <emscripten/bind.h>
 #include <emscripten/val.h>
 
-#include <jxl/decode.h>
-#include "lib/jxl/color_encoding_internal.h"
+#include <memory>
 
-#include "skcms.h"
+#include <jxl/cms.h>
+#include <jxl/decode.h>
+// For JxlColorEncodingSetToSRGB, which is declared in the encoder header but
+// backed by libjxl.a (which we link).
+#include <jxl/encode.h>
 
 using namespace emscripten;
 
@@ -50,48 +53,42 @@ val decode(std::string data) {
             JxlDecoderSubscribeEvents(
                 dec.get(), JXL_DEC_BASIC_INFO | JXL_DEC_COLOR_ENCODING | JXL_DEC_FULL_IMAGE));
 
-  auto next_in = (const uint8_t*)data.c_str();
-  auto avail_in = data.size();
-  JxlDecoderSetInput(dec.get(), next_in, avail_in);
+  // Let libjxl handle colour management and hand us sRGB pixels directly, rather
+  // than decoding to float + converting the image's ICC profile ourselves. This
+  // drops the skcms dependency, the intermediate float buffer and the manual
+  // transform. The CMS must be set before the output colour profile.
+  EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderSetCms(dec.get(), *JxlGetDefaultCms()));
+
+  // Browser ImageData wants straight (un-premultiplied) alpha. libjxl otherwise
+  // returns premultiplied colours as-is for images with associated alpha. Must
+  // be set before decoding starts.
+  EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderSetUnpremultiplyAlpha(dec.get(), JXL_TRUE));
+
+  JxlDecoderSetInput(dec.get(), (const uint8_t*)data.c_str(), data.size());
   EXPECT_EQ(JXL_DEC_BASIC_INFO, JxlDecoderProcessInput(dec.get()));
   JxlBasicInfo info;
   EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderGetBasicInfo(dec.get(), &info));
   size_t pixel_count = info.xsize * info.ysize;
   size_t component_count = pixel_count * COMPONENTS_PER_PIXEL;
 
+  // The output colour profile may only be set after the colour-encoding event,
+  // and before any later event.
   EXPECT_EQ(JXL_DEC_COLOR_ENCODING, JxlDecoderProcessInput(dec.get()));
-  static const JxlPixelFormat format = {COMPONENTS_PER_PIXEL, JXL_TYPE_FLOAT, JXL_LITTLE_ENDIAN, 0};
-  size_t icc_size;
-  EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderGetICCProfileSize(dec.get(), &format,
-                                                         JXL_COLOR_PROFILE_TARGET_DATA, &icc_size));
-  std::vector<uint8_t> icc_profile(icc_size);
+  JxlColorEncoding srgb;
+  JxlColorEncodingSetToSRGB(&srgb, /*is_gray=*/JXL_FALSE);
   EXPECT_EQ(JXL_DEC_SUCCESS,
-            JxlDecoderGetColorAsICCProfile(dec.get(), &format, JXL_COLOR_PROFILE_TARGET_DATA,
-                                           icc_profile.data(), icc_profile.size()));
+            JxlDecoderSetOutputColorProfile(dec.get(), &srgb, /*icc_data=*/nullptr, /*icc_size=*/0));
+
+  const JxlPixelFormat format = {COMPONENTS_PER_PIXEL, JXL_TYPE_UINT8, JXL_LITTLE_ENDIAN, 0};
 
   EXPECT_EQ(JXL_DEC_NEED_IMAGE_OUT_BUFFER, JxlDecoderProcessInput(dec.get()));
-  size_t buffer_size;
-  EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderImageOutBufferSize(dec.get(), &format, &buffer_size));
-  EXPECT_EQ(buffer_size, component_count * sizeof(float));
-
-  auto float_pixels = std::make_unique<float[]>(component_count);
-  EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderSetImageOutBuffer(dec.get(), &format, float_pixels.get(),
-                                                         component_count * sizeof(float)));
+  auto pixels = std::make_unique<uint8_t[]>(component_count);
+  EXPECT_EQ(JXL_DEC_SUCCESS,
+            JxlDecoderSetImageOutBuffer(dec.get(), &format, pixels.get(), component_count));
   EXPECT_EQ(JXL_DEC_FULL_IMAGE, JxlDecoderProcessInput(dec.get()));
 
-  auto byte_pixels = std::make_unique<uint8_t[]>(component_count);
-  // Convert to sRGB.
-  skcms_ICCProfile jxl_profile;
-  EXPECT_TRUE(skcms_Parse(icc_profile.data(), icc_profile.size(), &jxl_profile));
-  EXPECT_TRUE(skcms_Transform(
-      float_pixels.get(), skcms_PixelFormat_RGBA_ffff,
-      info.alpha_premultiplied ? skcms_AlphaFormat_PremulAsEncoded : skcms_AlphaFormat_Unpremul,
-      &jxl_profile, byte_pixels.get(), skcms_PixelFormat_RGBA_8888, skcms_AlphaFormat_Unpremul,
-      skcms_sRGB_profile(), pixel_count));
-
-  return ImageData.new_(
-      Uint8ClampedArray.new_(typed_memory_view(component_count, byte_pixels.get())), info.xsize,
-      info.ysize);
+  return ImageData.new_(Uint8ClampedArray.new_(typed_memory_view(component_count, pixels.get())),
+                        info.xsize, info.ysize);
 }
 
 EMSCRIPTEN_BINDINGS(my_module) {

@@ -1,114 +1,142 @@
+# Emscripten build for JPEG XL (libjxl), encoder + decoder.
+#
+# Updated to libjxl v0.11.2. The encoder wrapper (enc/jxl_enc.cpp) and decoder
+# wrapper (dec/jxl_dec.cpp) use libjxl's *stable public C API* (jxl/encode.h,
+# jxl/decode.h) rather than internal headers, so they survive version bumps.
+#
+# We produce a SINGLE build of each: WebAssembly SIMD enabled (-msimd128), no
+# pthreads. All modern browsers support SIMD; threads are a future experiment
+# (Highway codecs like libjxl gain far more from SIMD than from worker threads,
+# and spawning workers mid-encode can deadlock - see codecs/avif for the
+# threading exception). Dropping threads also removes the scalar / _mt /
+# _mt_simd variant matrix the old build carried.
+#
+# libjxl's third_party deps (highway, brotli, skcms, ...) are git submodules and
+# are NOT in the GitHub release tarball, and skcms lives on a googlesource git.
+# So we fetch the v0.11.2 *tag* via git and init the submodules, which pins
+# every dep to the exact revisions libjxl tested (deps.sh) - more reliable than
+# stitching together separate tarballs.
+#
+# Run inside the shared codecs Docker via ../build-cpp.sh (emscripten/emsdk),
+# whose CMD is `emmake make -j<nproc>`. CXXFLAGS / CFLAGS / LDFLAGS are exported
+# by codecs/cpp.Dockerfile.
+
 CODEC_URL = https://github.com/libjxl/libjxl.git
-CODEC_VERSION = 9f544641ec83f6abd9da598bdd08178ee8a003e0
+CODEC_VERSION = v0.11.2
 CODEC_DIR = node_modules/jxl
-CODEC_BUILD_ROOT := $(CODEC_DIR)/build
-CODEC_MT_BUILD_DIR := $(CODEC_BUILD_ROOT)/mt
-CODEC_MT_SIMD_BUILD_DIR := $(CODEC_BUILD_ROOT)/mt-simd
+CODEC_BUILD_DIR := $(CODEC_DIR)/build
+
 ENVIRONMENT = worker
 
-OUT_JS = enc/jxl_enc.js enc/jxl_enc_mt.js enc/jxl_enc_mt_simd.js dec/jxl_dec.js enc/jxl_node_enc.js dec/jxl_node_dec.js
+# Enable WebAssembly SIMD everywhere. Without it Highway compiles to its scalar
+# EMU128 target and libjxl's transforms stay scalar. Applied to the final link
+# and propagated into the libjxl CMake build. Mirrors codecs/jpegli.
+SIMD_FLAGS = -msimd128
+
+OUT_JS = enc/jxl_enc.js dec/jxl_dec.js
 OUT_WASM = $(OUT_JS:.js=.wasm)
-OUT_WORKER = $(OUT_JS:.js=.worker.js)
+
+# Rebuild outputs whenever the build configuration changes.
+MAKEFILE_DEPS := Makefile
+
+# Disable errors on deprecated SIMD intrinsics (Highway / libjxl lag emscripten).
+export CXXFLAGS += -Wno-deprecated-declarations
+
+# Set DEBUG_BUILD=1 to produce an unoptimised wasm with DWARF and assertions -
+# stack traces show real C++ names instead of `wasm-function[N]`.
+ifdef DEBUG_BUILD
+DEBUG_FLAGS = -O0 -g3 -gsource-map -fno-lto -s ASSERTIONS=2 -s STACK_OVERFLOW_CHECK=2
+CMAKE_BUILD_TYPE = Debug
+else
+DEBUG_FLAGS =
+CMAKE_BUILD_TYPE = Release
+endif
+
+LIBJXL_A      = $(CODEC_BUILD_DIR)/lib/libjxl.a
+# libjxl's colour-management code is its own static lib that libjxl.a depends on.
+# It backs JxlGetDefaultCms(), which the decoder uses to convert to sRGB.
+LIBJXLCMS_A   = $(CODEC_BUILD_DIR)/lib/libjxl_cms.a
+LIBHWY_A      = $(CODEC_BUILD_DIR)/third_party/highway/libhwy.a
+LIBBROTLI_A   = \
+	$(CODEC_BUILD_DIR)/third_party/brotli/libbrotlienc.a \
+	$(CODEC_BUILD_DIR)/third_party/brotli/libbrotlidec.a \
+	$(CODEC_BUILD_DIR)/third_party/brotli/libbrotlicommon.a
 
 .PHONY: all clean
 
 all: $(OUT_JS)
 
-# Define dependencies for all variations of build artifacts.
-$(filter enc/%,$(OUT_JS)): enc/jxl_enc.cpp
-$(filter dec/%,$(OUT_JS)): dec/jxl_dec.cpp
-
-enc/jxl_node_enc.js dec/jxl_node_dec.js: ENVIRONMENT = node
-
-# For single-threaded build, we compile with threads enabled, but then just don't use them nor link them in.
-enc/jxl_enc.js enc/jxl_node_enc.js enc/jxl_enc_mt.js dec/jxl_dec.js dec/jxl_node_dec.js: CODEC_BUILD_DIR:=$(CODEC_MT_BUILD_DIR)
-enc/jxl_enc_mt_simd.js: CODEC_BUILD_DIR:=$(CODEC_MT_SIMD_BUILD_DIR)
-
-enc/jxl_node_enc.js dec/jxl_node_dec.js enc/jxl_enc.js dec/jxl_dec.js: $(CODEC_MT_BUILD_DIR)/lib/libjxl.a $(CODEC_MT_BUILD_DIR)/third_party/libskcms.a
-enc/jxl_enc_mt.js: $(CODEC_MT_BUILD_DIR)/lib/libjxl.a $(CODEC_MT_BUILD_DIR)/lib/libjxl_threads.a $(CODEC_MT_BUILD_DIR)/third_party/libskcms.a
-enc/jxl_enc_mt_simd.js: $(CODEC_MT_SIMD_BUILD_DIR)/lib/libjxl.a $(CODEC_MT_SIMD_BUILD_DIR)/lib/libjxl_threads.a $(CODEC_MT_SIMD_BUILD_DIR)/third_party/libskcms.a
-
-# Disable errors on deprecated SIMD intrinsics.
-# JPEG-XL & Highway need to catch up, once they do, we can remove this suppression.
-export CXXFLAGS += -Wno-deprecated-declarations
-
-# Compile multithreaded wrappers with -pthread.
-enc/jxl_enc_mt.js enc/jxl_enc_mt_simd.js: CXXFLAGS+=-pthread
-
-# Multithreaded JXL builds need larger stacks than Emscripten's 64 KB default
-# (matching the bump applied to the AVIF MT encoder).
-enc/jxl_enc_mt.js enc/jxl_enc_mt_simd.js: STACK_FLAGS = -s STACK_SIZE=2MB -s DEFAULT_PTHREAD_STACK_SIZE=2MB
-
-# Set DEBUG_BUILD=1 to produce an unoptimised wasm with DWARF and assertions —
-# stack traces show real C++ function names instead of `wasm-function[N]`.
-ifdef DEBUG_BUILD
-DEBUG_FLAGS = -O0 -g3 -gsource-map -fno-lto -s ASSERTIONS=2 -s STACK_OVERFLOW_CHECK=2
-CMAKE_BUILD_TYPE = Debug
-else
-CMAKE_BUILD_TYPE = Release
-endif
+# ---- final links ------------------------------------------------------------
+# Include roots:
+#   $(CODEC_DIR)/lib/include       -> public "jxl/encode.h", "jxl/decode.h", ...
+#   $(CODEC_BUILD_DIR)/lib/include -> CMake-generated "jxl/jxl_export.h" etc.
+enc/jxl_enc.js: enc/jxl_enc.cpp $(LIBJXL_A) $(MAKEFILE_DEPS)
+dec/jxl_dec.js: dec/jxl_dec.cpp $(LIBJXL_A) $(MAKEFILE_DEPS)
 
 $(OUT_JS):
 	$(CXX) \
 		$(CXXFLAGS) \
+		$(SIMD_FLAGS) \
 		$(LDFLAGS) \
-		$(STACK_FLAGS) \
 		$(DEBUG_FLAGS) \
-		-I $(CODEC_DIR) \
-		-I $(CODEC_DIR)/lib \
 		-I $(CODEC_DIR)/lib/include \
 		-I $(CODEC_BUILD_DIR)/lib/include \
-		-I $(CODEC_DIR)/third_party/highway \
-		-I $(CODEC_DIR)/third_party/skcms \
 		--bind \
 		-s ENVIRONMENT=$(ENVIRONMENT) \
 		-s EXPORT_ES6=1 \
 		-o $@ \
-		$+ \
-		$(CODEC_BUILD_DIR)/third_party/brotli/libbrotlidec-static.a \
-		$(CODEC_BUILD_DIR)/third_party/brotli/libbrotlienc-static.a \
-		$(CODEC_BUILD_DIR)/third_party/brotli/libbrotlicommon-static.a \
-		$(CODEC_BUILD_DIR)/third_party/libskcms.a \
-		$(CODEC_BUILD_DIR)/third_party/highway/libhwy.a
+		$< \
+		$(LIBJXL_A) \
+		$(LIBJXLCMS_A) \
+		$(LIBBROTLI_A) \
+		$(LIBHWY_A)
 
-%/lib/libjxl.a: %/Makefile
-	$(MAKE) -C $(<D) jxl-static
+# ---- libjxl (libjxl.a + its in-tree third_party static libs) ----------------
+# Build only the core encoder+decoder library, with tools/tests/extras disabled.
+# JPEGXL_ENABLE_WASM_THREADS=0 keeps the library single-threaded to match our
+# no-pthread link. A single recipe produces every archive the links need, then
+# stamps a marker so make tracks one prerequisite rather than racing on each.
+$(LIBJXL_A) $(LIBJXLCMS_A) $(LIBHWY_A) $(LIBBROTLI_A): $(CODEC_BUILD_DIR)/libs.stamp
+$(CODEC_BUILD_DIR)/libs.stamp: $(CODEC_BUILD_DIR)/Makefile
+	$(MAKE) -C $(CODEC_BUILD_DIR) jxl jxl_cms brotlienc brotlidec brotlicommon hwy
+	touch $@
 
-%/lib/libjxl_threads.a: %/Makefile
-	$(MAKE) -C $(<D) jxl_threads-static
-
-# Enable SIMD on a SIMD build.
-$(CODEC_MT_SIMD_BUILD_DIR)/Makefile: CXXFLAGS+=-msimd128
-
-%/Makefile: $(CODEC_DIR)/CMakeLists.txt
+$(CODEC_BUILD_DIR)/Makefile: $(CODEC_DIR)/CMakeLists.txt $(MAKEFILE_DEPS)
 	emcmake cmake \
-	$(CMAKE_FLAGS) \
-	-DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) \
-	-DBUILD_SHARED_LIBS=0 \
-	-DJPEGXL_ENABLE_BENCHMARK=0 \
-	-DJPEGXL_ENABLE_EXAMPLES=0 \
-	-DBUILD_TESTING=0 \
-	-DCMAKE_CROSSCOMPILING_EMULATOR=node \
-	-B $(@D) \
-	$(<D)
+		-DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) \
+		-DCMAKE_C_FLAGS="$(SIMD_FLAGS)" \
+		-DCMAKE_CXX_FLAGS="$(SIMD_FLAGS)" \
+		-DBUILD_SHARED_LIBS=0 \
+		-DBUILD_TESTING=0 \
+		-DJPEGXL_STATIC=0 \
+		-DJPEGXL_ENABLE_TOOLS=0 \
+		-DJPEGXL_ENABLE_DEVTOOLS=0 \
+		-DJPEGXL_ENABLE_BENCHMARK=0 \
+		-DJPEGXL_ENABLE_EXAMPLES=0 \
+		-DJPEGXL_ENABLE_DOXYGEN=0 \
+		-DJPEGXL_ENABLE_MANPAGES=0 \
+		-DJPEGXL_ENABLE_JNI=0 \
+		-DJPEGXL_ENABLE_JPEGLI=0 \
+		-DJPEGXL_ENABLE_SJPEG=0 \
+		-DJPEGXL_ENABLE_OPENEXR=0 \
+		-DJPEGXL_ENABLE_PLUGINS=0 \
+		-DJPEGXL_ENABLE_VIEWERS=0 \
+		-DJPEGXL_ENABLE_SKCMS=1 \
+		-DJPEGXL_BUNDLE_LIBPNG=0 \
+		-DJPEGXL_ENABLE_FUZZERS=0 \
+		-DJPEGXL_ENABLE_WASM_THREADS=0 \
+		-DCMAKE_CROSSCOMPILING_EMULATOR=node \
+		-B $(CODEC_BUILD_DIR) \
+		$(CODEC_DIR)
 
-# Build skcms as a standalone static lib, once per build-dir (Release/Debug,
-# scalar/SIMD), so each variant gets its own consistent artefact.
-%/third_party/libskcms.a:
-	mkdir -p $(@D)
-	emcc -Wall -O3 -o $(@D)/../skcms.cc.o -I$(CODEC_DIR)/third_party/skcms -c $(CODEC_DIR)/third_party/skcms/skcms.cc
-	emar rc $@ $(@D)/../skcms.cc.o
-	rm $(@D)/../skcms.cc.o
-
+# ---- source fetch (git tag + submodules) ------------------------------------
 $(CODEC_DIR)/CMakeLists.txt:
 	$(RM) -r $(@D)
 	git init $(@D)
-	git -C $(@D) fetch $(CODEC_URL) $(CODEC_VERSION) --depth 1
+	git -C $(@D) fetch $(CODEC_URL) refs/tags/$(CODEC_VERSION) --depth 1
 	git -C $(@D) checkout FETCH_HEAD
 	git -C $(@D) submodule update --init --depth 1 --recursive --jobs `nproc`
 
 clean:
-	$(RM) $(OUT_JS) $(OUT_WASM) $(OUT_WORKER)
-	$(MAKE) -C $(CODEC_BUILD_DIR) clean
-	$(MAKE) -C $(CODEC_MT_BUILD_DIR) clean
-	$(MAKE) -C $(CODEC_MT_SIMD_BUILD_DIR) clean
+	$(RM) $(OUT_JS) $(OUT_WASM) $(OUT_WASM:.wasm=.wasm.map)
+	$(RM) -r $(CODEC_BUILD_DIR)

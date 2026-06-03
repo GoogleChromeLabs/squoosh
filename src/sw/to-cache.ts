@@ -29,8 +29,6 @@ import * as webpDec from 'entry-data:codecs/webp/dec/webp_dec';
 import * as avifEncMt from 'entry-data:codecs/avif/enc/avif_enc_mt';
 
 // JXL
-import * as jxlEncMtSimd from 'entry-data:codecs/jxl/enc/jxl_enc_mt_simd';
-import * as jxlEncMt from 'entry-data:codecs/jxl/enc/jxl_enc_mt';
 import * as jxlEnc from 'entry-data:codecs/jxl/enc/jxl_enc';
 
 // OXI
@@ -107,14 +105,8 @@ export const theRest = (async () => {
   // AVIF
   addWithDeps(avifEncMt);
 
-  // JXL
-  if (supportsThreads && supportsSimd) {
-    addWithDeps(jxlEncMtSimd);
-  } else if (supportsThreads) {
-    addWithDeps(jxlEncMt);
-  } else {
-    addWithDeps(jxlEnc);
-  }
+  // JXL (single SIMD build, no threads)
+  addWithDeps(jxlEnc);
 
   // OXI
   if (supportsThreads) {

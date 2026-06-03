@@ -21,16 +21,9 @@ interface Props {
 
 interface State {
   options: EncodeOptions;
-  effort: number;
   quality: number;
-  progressive: boolean;
-  edgePreservingFilter: number;
   lossless: boolean;
-  slightLoss: boolean;
-  autoEdgePreservingFilter: boolean;
-  decodingSpeedTier: number;
-  photonNoiseIso: number;
-  alternativeLossy: boolean;
+  effort: number;
 }
 
 export class Options extends Component<Props, State> {
@@ -47,16 +40,9 @@ export class Options extends Component<Props, State> {
     // Create default form state from options
     return {
       options,
-      effort: options.effort,
       quality: options.quality,
-      progressive: options.progressive,
-      edgePreservingFilter: options.epf === -1 ? 2 : options.epf,
-      lossless: options.quality === 100,
-      slightLoss: options.lossyPalette,
-      autoEdgePreservingFilter: options.epf === -1,
-      decodingSpeedTier: options.decodingSpeedTier,
-      photonNoiseIso: options.photonNoiseIso,
-      alternativeLossy: options.lossyModular,
+      lossless: options.lossless,
+      effort: options.effort,
     };
   }
 
@@ -89,16 +75,9 @@ export class Options extends Component<Props, State> {
         };
 
         const newOptions: EncodeOptions = {
+          quality: optionState.quality,
+          lossless: optionState.lossless,
           effort: optionState.effort,
-          quality: optionState.lossless ? 100 : optionState.quality,
-          progressive: optionState.progressive,
-          epf: optionState.autoEdgePreservingFilter
-            ? -1
-            : optionState.edgePreservingFilter,
-          lossyPalette: optionState.lossless ? optionState.slightLoss : false,
-          decodingSpeedTier: optionState.decodingSpeedTier,
-          photonNoiseIso: optionState.photonNoiseIso,
-          lossyModular: optionState.quality < 7 ? true : optionState.alternativeLossy,
         };
 
         // Updating options, so we don't recalculate in getDerivedStateFromProps.
@@ -113,23 +92,7 @@ export class Options extends Component<Props, State> {
     return this._inputChangeCallbacks.get(prop)!;
   };
 
-  render(
-    {}: Props,
-    {
-      effort,
-      quality,
-      progressive,
-      edgePreservingFilter,
-      lossless,
-      slightLoss,
-      autoEdgePreservingFilter,
-      decodingSpeedTier,
-      photonNoiseIso,
-      alternativeLossy,
-    }: State,
-  ) {
-    // I'm rendering both lossy and lossless forms, as it becomes much easier when
-    // gathering the data.
+  render({}: Props, { quality, lossless, effort }: State) {
     return (
       <form class={style.optionsSection} onSubmit={preventDefault}>
         <label class={style.optionToggle}>
@@ -141,98 +104,20 @@ export class Options extends Component<Props, State> {
           />
         </label>
         <Expander>
-          {lossless && (
-            <label class={style.optionToggle}>
-              Slight loss
-              <Checkbox
-                name="slightLoss"
-                checked={slightLoss}
-                onChange={this._inputChange('slightLoss', 'boolean')}
-              />
-            </label>
-          )}
-        </Expander>
-        <Expander>
           {!lossless && (
-            <div>
-              <div class={style.optionOneCell}>
-                <Range
-                  min="0"
-                  max="99.9"
-                  step="0.1"
-                  value={quality}
-                  onInput={this._inputChange('quality', 'number')}
-                >
-                  Quality:
-                </Range>
-              </div>
-              <label class={style.optionToggle}>
-                Alternative lossy mode
-                <Checkbox
-                  checked={quality < 7 ? true : alternativeLossy}
-                  disabled={quality < 7}
-                  onChange={this._inputChange('alternativeLossy', 'boolean')}
-                />
-              </label>
-              <label class={style.optionToggle}>
-                Auto edge filter
-                <Checkbox
-                  checked={autoEdgePreservingFilter}
-                  onChange={this._inputChange(
-                    'autoEdgePreservingFilter',
-                    'boolean',
-                  )}
-                />
-              </label>
-              <Expander>
-                {!autoEdgePreservingFilter && (
-                  <div class={style.optionOneCell}>
-                    <Range
-                      min="0"
-                      max="3"
-                      value={edgePreservingFilter}
-                      onInput={this._inputChange(
-                        'edgePreservingFilter',
-                        'number',
-                      )}
-                    >
-                      Edge preserving filter:
-                    </Range>
-                  </div>
-                )}
-              </Expander>
-              <div class={style.optionOneCell}>
-                <Range
-                  min="0"
-                  max="4"
-                  value={decodingSpeedTier}
-                  onInput={this._inputChange('decodingSpeedTier', 'number')}
-                >
-                  Optimise for decoding speed (worse compression):
-                </Range>
-              </div>
-              <div class={style.optionOneCell}>
-                <Range
-                  min="0"
-                  max="50000"
-                  step="100"
-                  value={photonNoiseIso}
-                  onInput={this._inputChange('photonNoiseIso', 'number')}
-                >
-                  Noise equivalent to ISO:
-                </Range>
-              </div>
+            <div class={style.optionOneCell}>
+              <Range
+                min="0"
+                max="100"
+                step="0.1"
+                value={quality}
+                onInput={this._inputChange('quality', 'number')}
+              >
+                Quality:
+              </Range>
             </div>
           )}
         </Expander>
-        <label class={style.optionToggle}>
-          Progressive rendering
-          <Checkbox
-            name="progressive"
-            checked={progressive}
-            onChange={this._inputChange('progressive', 'boolean')}
-          />
-        </label>
         <div class={style.optionOneCell}>
           <Range
             min="1"
