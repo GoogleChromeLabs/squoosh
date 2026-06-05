@@ -35,6 +35,7 @@ interface State {
   qProgressiveAC: boolean;
   progressiveDC: number;
   groupOrder: number;
+  photonNoiseIso: number;
 }
 
 export class Options extends Component<Props, State> {
@@ -65,6 +66,7 @@ export class Options extends Component<Props, State> {
       qProgressiveAC: options.qProgressiveAC,
       progressiveDC: options.progressiveDC,
       groupOrder: options.groupOrder,
+      photonNoiseIso: options.photonNoiseIso,
     };
   }
 
@@ -115,6 +117,7 @@ export class Options extends Component<Props, State> {
             : 0,
           // Group order only has an effect during progressive decode.
           groupOrder: optionState.progressiveAC ? optionState.groupOrder : 0,
+          photonNoiseIso: optionState.photonNoiseIso,
         };
 
         // Updating options, so we don't recalculate in getDerivedStateFromProps.
@@ -143,6 +146,7 @@ export class Options extends Component<Props, State> {
       qProgressiveAC,
       progressiveDC,
       groupOrder,
+      photonNoiseIso,
     }: State,
   ) {
     return (
@@ -218,11 +222,35 @@ export class Options extends Component<Props, State> {
                         </div>
                       )}
                     </Expander>
+                    <div class={style.optionOneCell}>
+                      <Range
+                        min="0"
+                        max="50000"
+                        step="100"
+                        value={photonNoiseIso}
+                        onInput={this._inputChange('photonNoiseIso', 'number')}
+                      >
+                        Noise equivalent to ISO:
+                      </Range>
+                    </div>
                     <Expander>
                       {/* Progressive is VarDCT-only; modular is always
                           responsive (progressive), so hide this in modular. */}
                       {!modular && (
                         <div>
+                          <label class={style.optionTextFirst}>
+                            Tile order:
+                            <Select
+                              value={groupOrder}
+                              onChange={this._inputChange(
+                                'groupOrder',
+                                'number',
+                              )}
+                            >
+                              <option value="0">Scanline</option>
+                              <option value="1">From center</option>
+                            </Select>
+                          </label>
                           <label class={style.optionToggle}>
                             Progressive
                             <Checkbox
@@ -258,19 +286,6 @@ export class Options extends Component<Props, State> {
                                     <option value="0">Off</option>
                                     <option value="1">One pass</option>
                                     <option value="2">Two pass</option>
-                                  </Select>
-                                </label>
-                                <label class={style.optionTextFirst}>
-                                  Block order:
-                                  <Select
-                                    value={groupOrder}
-                                    onChange={this._inputChange(
-                                      'groupOrder',
-                                      'number',
-                                    )}
-                                  >
-                                    <option value="0">Scanline</option>
-                                    <option value="1">From center</option>
                                   </Select>
                                 </label>
                               </div>

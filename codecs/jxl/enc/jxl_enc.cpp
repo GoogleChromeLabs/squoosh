@@ -84,15 +84,20 @@ struct JXLOptions {
   // can't be supported alongside progressive DC, since libjxl reuses one
   // unscaled pixel value across the full-res and reduced-resolution DC frames.
   int groupOrder;
+  // Synthesized photographic noise as an ISO film speed (PHOTON_NOISE,
+  // ~ --photon_noise_iso): 0 = off, higher = grainier (e.g. 100 low, 3200 high).
+  // Lossy only; set via the float option API. Works in VarDCT and modular.
+  float photonNoiseIso;
 };
 
 val encode(std::string image, int width, int height, JXLOptions options) {
   JXL_ENC_LOG(
       "jxl_enc: encoding %dx%d (%zu bytes in), quality=%g qualityAlpha=%g lossless=%d effort=%d "
-      "modular=%d progressiveAC=%d qProgressiveAC=%d progressiveDC=%d groupOrder=%d\n",
+      "modular=%d progressiveAC=%d qProgressiveAC=%d progressiveDC=%d groupOrder=%d "
+      "photonNoiseIso=%g\n",
       width, height, image.size(), options.quality, options.qualityAlpha, options.lossless,
       options.effort, options.modular, options.progressiveAC, options.qProgressiveAC,
-      options.progressiveDC, options.groupOrder);
+      options.progressiveDC, options.groupOrder, options.photonNoiseIso);
 
   JxlEncoderPtr enc = JxlEncoderMake(/*memory_manager=*/nullptr);
 
@@ -206,6 +211,13 @@ val encode(std::string image, int width, int height, JXLOptions options) {
           frame_settings, /*index=*/0,
           JxlEncoderDistanceFromQuality(options.qualityAlpha)));
     }
+
+    // Synthesized photographic noise (ISO film speed). Float option; only set
+    // when requested. Lossy only - it's in this branch by construction.
+    if (options.photonNoiseIso > 0) {
+      EXPECT_SUCCESS(JxlEncoderFrameSettingsSetFloatOption(
+          frame_settings, JXL_ENC_FRAME_SETTING_PHOTON_NOISE, options.photonNoiseIso));
+    }
   }
 
   // Feed RGBA as-is when there's alpha; otherwise repack to RGB so the pixel
@@ -264,7 +276,8 @@ EMSCRIPTEN_BINDINGS(my_module) {
       .field("progressiveAC", &JXLOptions::progressiveAC)
       .field("qProgressiveAC", &JXLOptions::qProgressiveAC)
       .field("progressiveDC", &JXLOptions::progressiveDC)
-      .field("groupOrder", &JXLOptions::groupOrder);
+      .field("groupOrder", &JXLOptions::groupOrder)
+      .field("photonNoiseIso", &JXLOptions::photonNoiseIso);
 
   function("encode", &encode);
 }

@@ -27,4 +27,5 @@ export const defaultOptions: EncodeOptions = {
   qProgressiveAC: false,
   progressiveDC: 1,
   groupOrder: 0,
+  photonNoiseIso: 0,
 };

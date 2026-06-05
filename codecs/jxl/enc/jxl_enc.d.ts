@@ -14,6 +14,8 @@ export interface EncodeOptions {
   progressiveDC: number;
   /** Group order: 0 = scanline, 1 = center-first ("Expand"). */
   groupOrder: number;
+  /** Synthesized noise as an ISO film speed: 0 = off, higher = grainier. Lossy only. */
+  photonNoiseIso: number;
 }
 
 export interface JXLModule extends EmscriptenWasm.Module {
