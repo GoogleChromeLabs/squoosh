@@ -12,7 +12,7 @@ export interface EncodeOptions {
   qProgressiveAC: boolean;
   /** Extra DC passes: 0 off, 1 one pass, 2 two passes. Ignored unless progressiveAC. */
   progressiveDC: number;
-  /** Group order: 0 = scanline, 1 = center-first ("Expand"). */
+  /** Group order: 0 = scanline, 1 = center-first. VarDCT only. */
   groupOrder: number;
   /** Synthesized noise as an ISO film speed: 0 = off, higher = grainier. Lossy only. */
   photonNoiseIso: number;

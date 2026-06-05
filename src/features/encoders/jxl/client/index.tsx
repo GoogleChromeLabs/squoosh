@@ -115,8 +115,7 @@ export class Options extends Component<Props, State> {
           progressiveDC: optionState.progressiveAC
             ? optionState.progressiveDC
             : 0,
-          // Group order only has an effect during progressive decode.
-          groupOrder: optionState.progressiveAC ? optionState.groupOrder : 0,
+          groupOrder: optionState.groupOrder,
           photonNoiseIso: optionState.photonNoiseIso,
         };
 

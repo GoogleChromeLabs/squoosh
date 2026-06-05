@@ -189,11 +189,28 @@ val encode(std::string image, int width, int height, JXLOptions options) {
       EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
           frame_settings, JXL_ENC_FRAME_SETTING_PROGRESSIVE_DC, options.progressiveDC));
     }
-    // Group order (scanline / center-first) only affects VarDCT progressive
-    // decode. We don't set CENTER_X/CENTER_Y (left at libjxl's default image
-    // middle) - see the struct comment.
+  }
+
+  if (!modular) {
+    // Group order: 0 = scanline (raster), 1 = center-first. We don't set
+    // CENTER_X/CENTER_Y (left at libjxl's default image middle) - see the
+    // struct comment.
     EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
         frame_settings, JXL_ENC_FRAME_SETTING_GROUP_ORDER, options.groupOrder));
+
+    // Center-first ordering is only applied on libjxl's *non-streaming* encode
+    // path (PermuteGroups in enc_frame.cc). The streaming path
+    // (ComputePermutationForStreaming) hardcodes raster order and ignores the
+    // centerfirst flag, and streaming is the default for large images (>8
+    // groups). Progressive incidentally disables streaming, which is why
+    // center-first otherwise only worked with progressive on. Force buffering
+    // off so the non-streaming path runs and center-first actually takes
+    // effect regardless of progressive. (Costs some memory/speed on large
+    // images, hence only when center-first is requested.)
+    if (options.groupOrder == 1) {
+      EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
+          frame_settings, JXL_ENC_FRAME_SETTING_BUFFERING, 0));
+    }
   }
 
   if (options.lossless) {
