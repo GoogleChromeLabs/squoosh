@@ -60,6 +60,8 @@ interface SideSettings {
 
 interface Side {
   processed?: ImageData;
+  /** Post-resize, pre-quantize image used as the reference for quality metrics. */
+  metricReference?: ImageData;
   file?: File;
   downloadUrl?: string;
   data?: ImageData;
@@ -152,18 +154,31 @@ async function preprocessImage(
   return processedData;
 }
 
+interface ProcessResult {
+  /** The fully processed image, ready to be encoded. */
+  processed: ImageData;
+  /**
+   * The version of the image to be considered the 'lossless' reference.
+   * For example, resize is considered 'preparation', so it creating a new lossless reference.
+   * Whereas quantization is considered a lossy step.
+   */
+  metricReference: ImageData;
+}
+
 async function processImage(
   signal: AbortSignal,
   source: SourceImage,
   processorState: ProcessorState,
   workerBridge: WorkerBridge,
-): Promise<ImageData> {
+): Promise<ProcessResult> {
   assertSignal(signal);
   let result = source.preprocessed;
 
   if (processorState.resize.enabled) {
     result = await resize(signal, source, processorState.resize, workerBridge);
   }
+  // After resizing but before quantize: the reference for quality metrics.
+  const metricReference = result;
   if (processorState.quantize.enabled) {
     result = await workerBridge.quantize(
       signal,
@@ -171,7 +186,7 @@ async function processImage(
       processorState.quantize,
     );
   }
-  return result;
+  return { processed: result, metricReference };
 }
 
 async function compressImage(
@@ -813,12 +828,14 @@ export default class Compress extends Component<Props, State> {
         let file: File;
         let data: ImageData;
         let processed: ImageData | undefined = undefined;
+        let metricReference: ImageData | undefined = undefined;
 
         // If there's no encoder state, this is "original image", which also
         // doesn't allow processing.
         if (!jobState.encoderState) {
           file = source.file;
           data = source.preprocessed;
+          metricReference = source.preprocessed;
         } else {
           const cacheResult = this.encodeCache.match(
             source.preprocessed,
@@ -827,7 +844,7 @@ export default class Compress extends Component<Props, State> {
           );
 
           if (cacheResult) {
-            ({ file, processed, data } = cacheResult);
+            ({ file, processed, data, metricReference } = cacheResult);
           } else {
             // Set loading state for this side
             this.setState((currentState) => {
@@ -839,12 +856,12 @@ export default class Compress extends Component<Props, State> {
             });
 
             if (sideWorkNeeded.processing) {
-              processed = await processImage(
+              ({ processed, metricReference } = await processImage(
                 signal,
                 source,
                 jobState.processorState,
                 workerBridge,
-              );
+              ));
 
               // Update state for process completion, including intermediate render
               this.setState((currentState) => {
@@ -853,6 +870,7 @@ export default class Compress extends Component<Props, State> {
                 const side: Side = {
                   ...currentSide,
                   processed,
+                  metricReference,
                   // Intermediate render
                   data: processed,
                   encodedSettings: {
@@ -865,6 +883,7 @@ export default class Compress extends Component<Props, State> {
               });
             } else {
               processed = currentState.sides[sideIndex].processed!;
+              metricReference = currentState.sides[sideIndex].metricReference!;
             }
 
             file = await compressImage(
@@ -879,29 +898,12 @@ export default class Compress extends Component<Props, State> {
             this.encodeCache.add({
               data,
               processed,
+              metricReference,
               file,
               preprocessed: source.preprocessed,
               encoderState: jobState.encoderState,
               processorState: jobState.processorState,
             });
-          }
-
-          // When the debug flag is set, score the encoded result against the
-          // processed (pre-encode) image with SSIMULACRA 2 and log it. Best
-          // effort: a metric failure must never break compression.
-          if (window.logQuality && processed && data) {
-            try {
-              const score = await workerBridge.ssimulacra2(
-                signal,
-                processed,
-                data,
-              );
-              console.log(`SSIMULACRA 2 (side ${sideIndex}): ${score}`);
-            } catch (err) {
-              if (!signal.aborted) {
-                console.error(`SSIMULACRA 2 (side ${sideIndex}) failed:`, err);
-              }
-            }
           }
         }
 
@@ -928,6 +930,21 @@ export default class Compress extends Component<Props, State> {
           const sides = cleanSet(currentState.sides, sideIndex, side);
           return { sides };
         });
+
+        if (window.logQuality) {
+          try {
+            const score = await workerBridge.ssimulacra2(
+              signal,
+              metricReference,
+              data,
+            );
+            console.log(`SSIMULACRA 2 (side ${sideIndex}): ${score}`);
+          } catch (err) {
+            if (!signal.aborted) {
+              console.error(`SSIMULACRA 2 (side ${sideIndex}) failed:`, err);
+            }
+          }
+        }
 
         this.activeSideJobs[sideIndex] = undefined;
       } catch (err) {
