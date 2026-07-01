@@ -25,6 +25,7 @@
     "cssnano": "^4.1.10",
     "dedent": "^0.7.0",
     "del": "^5.1.0",
+    "fflate": "^0.8.3",
     "file-drop-element": "^1.0.1",
     "husky": "^7.0.2",
     "idb-keyval": "^3.2.0",

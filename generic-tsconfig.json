@@ -6,6 +6,7 @@
     "jsx": "react",
     "jsxFactory": "h",
     "strict": true,
+    "skipLibCheck": true,
     "moduleResolution": "node",
     "composite": true,
     "declarationMap": true,
