@@ -1,4 +1,6 @@
 .tmp
+# BEN2 Netlify deploy-preview spike: build-time verified, never committed.
+.tmp/ben2/model_fp16.onnx
 node_modules
 *.scss.d.ts
 *.css.d.ts

@@ -32,6 +32,7 @@ import WorkerBridge from '../worker-bridge';
 import { resize } from 'features/processors/resize/client';
 import type SnackBarElement from 'shared/custom-els/snack-bar';
 import { drawableToImageData } from '../util/canvas';
+import { ben2CancellationAudit } from '../ben2-cancellation-audit';
 
 export type OutputType = EncoderType | 'identity';
 
@@ -74,6 +75,7 @@ interface State {
 }
 
 interface MainJob {
+  auditJobId?: number;
   file: File;
   preprocessorState: PreprocessorState;
 }
@@ -129,6 +131,8 @@ async function preprocessImage(
   data: ImageData,
   preprocessorState: PreprocessorState,
   workerBridge: WorkerBridge,
+  auditJobId?: number,
+  sourceFilename?: string,
 ): Promise<ImageData> {
   assertSignal(signal);
   let processedData = data;
@@ -139,6 +143,46 @@ async function preprocessImage(
       processedData,
       preprocessorState.rotate,
     );
+  }
+
+  const ben2Enabled =
+    preprocessorState.ben2.enabled ||
+    new URL(location.href).searchParams.has('ben2');
+  (window as any).__squooshBen2Requested = ben2Enabled;
+  if (ben2Enabled) {
+    ben2CancellationAudit('ben2-call-start', {
+      jobId: auditJobId,
+      sourceFilename,
+      signalAborted: signal.aborted,
+    });
+    let result;
+    try {
+      result = await workerBridge.ben2(signal, processedData);
+    } catch (error) {
+      ben2CancellationAudit('ben2-call-settled', {
+        jobId: auditJobId,
+        sourceFilename,
+        category:
+          error instanceof Error && error.name === 'AbortError'
+            ? 'AbortError'
+            : 'other-rejection',
+        name: error instanceof Error ? error.name : typeof error,
+        message: error instanceof Error ? error.message : String(error),
+        signalAborted: signal.aborted,
+      });
+      throw error;
+    }
+    processedData = result.imageData;
+    const { ben2CacheStatus } = await import('../sw-bridge');
+    const cacheStatus = await ben2CacheStatus(result.diagnostics);
+    (window as any).__squooshBen2Spike = {
+      diagnostics: result.diagnostics,
+      cacheStatus,
+    };
+    console.log('[BEN2 spike] shared preprocessing complete', {
+      diagnostics: result.diagnostics,
+      cacheStatus,
+    });
   }
 
   return processedData;
@@ -267,6 +311,7 @@ function processorStateEquivalent(a: ProcessorState, b: ProcessorState) {
 const loadingIndicator = '⏳ ';
 
 const originalDocumentTitle = document.title;
+const ben2SpikeEnabled = new URL(location.href).searchParams.has('ben2');
 
 function updateDocumentTitle(loadingFileInfo: LoadingFileInfo): void {
   const { loading, filename } = loadingFileInfo;
@@ -283,7 +328,12 @@ export default class Compress extends Component<Props, State> {
   state: State = {
     source: undefined,
     loading: false,
-    preprocessorState: defaultPreprocessorState,
+    preprocessorState: ben2SpikeEnabled
+      ? {
+          ...defaultPreprocessorState,
+          ben2: { enabled: true },
+        }
+      : defaultPreprocessorState,
     // Tasking catched side settings if available otherwise taking default settings
     sides: [
       localStorage.getItem('leftSideSettings')
@@ -391,6 +441,12 @@ export default class Compress extends Component<Props, State> {
   componentWillUnmount(): void {
     updateDocumentTitle({ loading: false });
     this.widthQuery.removeListener(this.onMobileWidthChange);
+    ben2CancellationAudit('main-component-unmount-abort', {
+      activeJobId: this.activeMainJob?.auditJobId,
+      sourceFilename: this.sourceFile.name,
+      loading: this.state.loading,
+      reason: 'normal-back-to-file-picker',
+    });
     this.mainAbortController.abort();
     for (const controller of this.sideAbortControllers) {
       controller.abort();
@@ -586,6 +642,7 @@ export default class Compress extends Component<Props, State> {
   }
 
   private sourceFile: File;
+  private nextAuditMainJobId = 0;
   /** The in-progress job for decoding and preprocessing */
   private activeMainJob?: MainJob;
   /** The in-progress job for each side (processing and encoding) */
@@ -657,10 +714,34 @@ export default class Compress extends Component<Props, State> {
 
     // Abort running tasks & cycle the controllers
     if (needsDecoding || needsPreprocessing) {
+      mainJobState.auditJobId = ++this.nextAuditMainJobId;
+      const cancellationReason = needsDecoding
+        ? 'source-change'
+        : 'preprocessor-change';
+      ben2CancellationAudit('main-job-replace', {
+        reason: cancellationReason,
+        previousJobId: this.activeMainJob?.auditJobId,
+        nextJobId: mainJobState.auditJobId,
+        nextSourceFilename: mainJobState.file.name,
+        previousSourceFilename: latestMainJobState.file?.name,
+        loading: this.state.loading,
+      });
       this.mainAbortController.abort();
+      ben2CancellationAudit('main-abort-invoked', {
+        reason: cancellationReason,
+        previousJobId: this.activeMainJob?.auditJobId,
+        nextJobId: mainJobState.auditJobId,
+        nextSourceFilename: mainJobState.file.name,
+        signalAborted: this.mainAbortController.signal.aborted,
+      });
       this.mainAbortController = new AbortController();
       jobNeeded = true;
       this.activeMainJob = mainJobState;
+      ben2CancellationAudit('main-job-active', {
+        jobId: mainJobState.auditJobId,
+        sourceFilename: mainJobState.file.name,
+        loading: this.state.loading,
+      });
     }
     for (const [i, sideWorkNeeded] of sideWorksNeeded.entries()) {
       if (sideWorkNeeded.processing || sideWorkNeeded.encoding) {
@@ -747,6 +828,8 @@ export default class Compress extends Component<Props, State> {
           mainJobState.preprocessorState,
           // Either worker is good enough here.
           this.workerBridges[0],
+          mainJobState.auditJobId,
+          mainJobState.file.name,
         );
 
         source = {
@@ -757,8 +840,27 @@ export default class Compress extends Component<Props, State> {
         };
 
         // Update state for process completion, including intermediate render
+        ben2CancellationAudit('source-preprocessed-publication-attempt', {
+          jobId: mainJobState.auditJobId,
+          sourceFilename: mainJobState.file.name,
+          signalAborted: mainSignal.aborted,
+          currentSourceFilename: this.sourceFile.name,
+        });
         this.setState((currentState) => {
-          if (mainSignal.aborted) return {};
+          if (mainSignal.aborted) {
+            ben2CancellationAudit('source-preprocessed-publication-skipped', {
+              jobId: mainJobState.auditJobId,
+              sourceFilename: mainJobState.file.name,
+              currentSourceFilename: this.sourceFile.name,
+              reason: 'signal-aborted',
+            });
+            return {};
+          }
+          ben2CancellationAudit('source-preprocessed-publication-success', {
+            jobId: mainJobState.auditJobId,
+            sourceFilename: mainJobState.file.name,
+            currentSourceFilename: this.sourceFile.name,
+          });
           let newState: State = {
             ...currentState,
             loading: false,
@@ -781,7 +883,15 @@ export default class Compress extends Component<Props, State> {
           return newState;
         });
       } catch (err) {
-        if (err instanceof Error && err.name === 'AbortError') return;
+        if (err instanceof Error && err.name === 'AbortError') {
+          ben2CancellationAudit('main-preprocess-abort-settled', {
+            jobId: mainJobState.auditJobId,
+            sourceFilename: mainJobState.file.name,
+            currentSourceFilename: this.sourceFile.name,
+            loading: this.state.loading,
+          });
+          return;
+        }
         this.setState({ loading: false });
         this.props.showSnack(`Preprocessing error: ${err}`);
         throw err;

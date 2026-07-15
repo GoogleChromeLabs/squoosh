@@ -53,6 +53,20 @@ export function shouldCacheDynamically(url: string) {
   return url.startsWith('/c/demo-');
 }
 
+/**
+ * Immutable BEN2 assets are dependencies of the generated feature worker, but
+ * are intentionally excluded from the editor-wide prefetch. The fetch handler
+ * caches these exact emitted paths in the current static cache on first use.
+ */
+export const ben2Assets = [
+  featuresWorker.main,
+  ...featuresWorker.deps.filter(
+    (url) =>
+      url.startsWith('/c/model_fp16-') ||
+      url.startsWith('/c/ort-wasm-simd-threaded.asyncify-'),
+  ),
+];
+
 let initialJs = new Set([
   compress.main,
   ...compress.deps,
@@ -148,5 +162,5 @@ export const theRest = (async () => {
     addWithDeps(wp2Enc);
   }
 
-  return [...new Set(items)];
+  return [...new Set(items)].filter((item) => !ben2Assets.includes(item));
 })();

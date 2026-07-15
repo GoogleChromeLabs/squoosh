@@ -1,4 +1,5 @@
 import {
+  cacheBen2Asset,
   cacheOrNetworkAndCache,
   cleanupCache,
   cacheOrNetwork,
@@ -7,7 +8,7 @@ import {
   serveShareTarget,
 } from './util';
 import { get } from 'idb-keyval';
-import { shouldCacheDynamically } from './to-cache';
+import { ben2Assets, shouldCacheDynamically } from './to-cache';
 
 // Give TypeScript the correct global.
 declare var self: ServiceWorkerGlobalScope;
@@ -71,6 +72,14 @@ self.addEventListener('fetch', (event) => {
   // We only care about GET from here on in.
   if (event.request.method !== 'GET') return;
 
+  // BEN2 remains lazy even after editor cache opt-in. Its exact immutable
+  // runtime assets are persisted in the existing versioned static cache only
+  // when the generated feature worker first fetches them.
+  if (ben2Assets.includes(url.pathname)) {
+    cacheBen2Asset(event, versionedCache);
+    return;
+  }
+
   if (shouldCacheDynamically(url.pathname)) {
     cacheOrNetworkAndCache(event, dynamicCache);
     cleanupCache(event, dynamicCache, ASSETS);
@@ -81,6 +90,31 @@ self.addEventListener('fetch', (event) => {
 });
 
 self.addEventListener('message', (event) => {
+  if (event.data?.action === 'ben2-cache-status') {
+    const urls: string[] = event.data.urls;
+    const port = event.ports[0];
+    event.waitUntil(
+      (async () => {
+        // Do not open a cache just to inspect it: cache status must not make
+        // an uncached app appear offline-ready.
+        const cacheExists = (await caches.keys()).includes(versionedCache);
+        const cache = cacheExists
+          ? await caches.open(versionedCache)
+          : undefined;
+        const entries = await Promise.all(
+          urls.map(
+            async (url) =>
+              !!(
+                cache && (await cache.match(new URL(url, location.origin).href))
+              ),
+          ),
+        );
+        port?.postMessage({ cacheName: versionedCache, entries });
+      })(),
+    );
+    return;
+  }
+
   switch (event.data) {
     case 'cache-all':
       event.waitUntil(cacheAdditionalProcessors(versionedCache));

@@ -126,7 +126,9 @@ export default async function ({ watch }) {
             }),
             ...commonPlugins(),
             commonjs(),
-            resolve(),
+            resolve({
+              exportConditions: ['onnxruntime-web-use-extern-wasm'],
+            }),
             replace({ __PRERENDER__: false, __PRODUCTION__: isProduction }),
             entryDataPlugin(),
             isProduction ? terser({ module: true }) : {},

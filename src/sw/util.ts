@@ -14,6 +14,48 @@ export function cacheOrNetwork(event: FetchEvent): void {
   );
 }
 
+/**
+ * BEN2 assets are immutable, lazy dependencies. Keep their cache contract
+ * deliberately narrower than the legacy general cache helper: only an exact
+ * canonical full GET may read/write the current versioned static cache.
+ */
+export function cacheBen2Asset(event: FetchEvent, cacheName: string): void {
+  event.respondWith(
+    (async function () {
+      const { request } = event;
+      const url = new URL(request.url);
+      const canonical =
+        request.method === 'GET' &&
+        url.origin === self.location.origin &&
+        url.search === '' &&
+        !request.headers.has('range');
+
+      // A query or Range request must always reach the origin. In particular,
+      // it must neither consume nor replace the canonical full response.
+      if (!canonical) return fetch(request);
+
+      // Do not use caches.match(): BEN2 must not read an old/unrelated cache.
+      const cacheNames = await caches.keys();
+      if (cacheNames.includes(cacheName)) {
+        const cached = await (await caches.open(cacheName)).match(request);
+        if (cached) return cached;
+      }
+
+      const response = await fetch(request);
+      // Cache Storage accepts partial and opaque responses, but neither is a
+      // valid offline copy of these exact immutable assets.
+      if (response.type !== 'opaque' && response.status === 200) {
+        // Await the write in the response pipeline. This keeps the SW alive
+        // until Cache Storage has consumed its clone, rather than relying on
+        // a late lifetime extension after fetch() has resolved.
+        const cache = await caches.open(cacheName);
+        await cache.put(request, response.clone());
+      }
+      return response;
+    })(),
+  );
+}
+
 export function cacheOrNetworkAndCache(
   event: FetchEvent,
   cacheName: string,
