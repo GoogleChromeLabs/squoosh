@@ -90,16 +90,43 @@ interface LoadingFileInfo {
   filename?: string;
 }
 
+function ben2IsEnabled(preprocessorState: PreprocessorState): boolean {
+  return (
+    preprocessorState.ben2.enabled ||
+    new URL(location.href).searchParams.has('ben2')
+  );
+}
+
 async function decodeImage(
   signal: AbortSignal,
   blob: Blob,
   workerBridge: WorkerBridge,
+  ben2SourceDecode = false,
 ): Promise<ImageData> {
   assertSignal(signal);
   const mimeType = await abortable(signal, sniffMimeType(blob));
-  const canDecode = await abortable(signal, canDecodeImageType(mimeType));
 
   try {
+    if (ben2SourceDecode && mimeType === 'image/png') {
+      console.info('[BEN2 preprocessing parity spike] source decode contract', {
+        mimeType,
+        route:
+          'source Blob -> existing WorkerBridge -> generated feature worker -> codecs/png/pkg',
+        hiddenRgbParity: true,
+      });
+      return await workerBridge.pngDecode(signal, blob);
+    }
+    if (ben2SourceDecode) {
+      console.warn('[BEN2 preprocessing parity spike] source decode contract', {
+        mimeType,
+        route: 'existing browser/codec fallback',
+        hiddenRgbParity: false,
+        limitation:
+          'authoritative hidden-RGB and color-management parity is not established for this format',
+      });
+    }
+
+    const canDecode = await abortable(signal, canDecodeImageType(mimeType));
     if (!canDecode) {
       if (mimeType === 'image/avif') {
         return await workerBridge.avifDecode(signal, blob);
@@ -145,9 +172,7 @@ async function preprocessImage(
     );
   }
 
-  const ben2Enabled =
-    preprocessorState.ben2.enabled ||
-    new URL(location.href).searchParams.has('ben2');
+  const ben2Enabled = ben2IsEnabled(preprocessorState);
   (window as any).__squooshBen2Requested = ben2Enabled;
   if (ben2Enabled) {
     ben2CancellationAudit('ben2-call-start', {
@@ -779,8 +804,10 @@ export default class Compress extends Component<Props, State> {
           decoded = await decodeImage(
             mainSignal,
             mainJobState.file,
-            // Either worker is good enough here.
+            // Either worker is good enough here. The source Blob is cloned
+            // directly to this existing bridge; no UI-thread ArrayBuffer copy.
             this.workerBridges[0],
+            ben2IsEnabled(mainJobState.preprocessorState),
           );
         }
 

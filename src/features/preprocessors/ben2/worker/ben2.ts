@@ -6,10 +6,9 @@ import wasmLoaderUrl from 'url:onnxruntime-web/ort-wasm-simd-threaded.asyncify.m
 import wasmUrl from 'url:onnxruntime-web/ort-wasm-simd-threaded.asyncify.wasm';
 import modelUrl from 'url:../../../../../.tmp/ben2/model_fp16.onnx';
 import { Diagnostics, Result } from '../shared/meta';
+import { makeNormalizedInput, makeResizedMatte } from '../shared/preprocessing';
 
 const INPUT_SIZE = 1024;
-const MEAN = [0.485, 0.456, 0.406];
-const STD = [0.229, 0.224, 0.225];
 const workerStartedAt = Date.now();
 
 let sessionPromise: Promise<ort.InferenceSession> | undefined;
@@ -120,67 +119,14 @@ async function getSession(): Promise<ort.InferenceSession> {
 }
 
 function makeInput(data: ImageData): Float32Array {
-  const canvas = new OffscreenCanvas(INPUT_SIZE, INPUT_SIZE);
-  const context = canvas.getContext('2d')!;
-  const source = new OffscreenCanvas(data.width, data.height);
-  const opaque = new Uint8ClampedArray(data.data);
-  for (let pixel = 0; pixel < data.width * data.height; pixel++) {
-    opaque[pixel * 4 + 3] = 255;
-  }
-  source
-    .getContext('2d')!
-    .putImageData(new ImageData(opaque, data.width, data.height), 0, 0);
-  context.drawImage(source, 0, 0, INPUT_SIZE, INPUT_SIZE);
-  const rgba = context.getImageData(0, 0, INPUT_SIZE, INPUT_SIZE).data;
-  const planeSize = INPUT_SIZE * INPUT_SIZE;
-  const input = new Float32Array(planeSize * 3);
-
-  for (let pixel = 0; pixel < planeSize; pixel++) {
-    for (let channel = 0; channel < 3; channel++) {
-      input[channel * planeSize + pixel] =
-        (rgba[pixel * 4 + channel] / 255 - MEAN[channel]) / STD[channel];
-    }
-  }
-  return input;
+  return makeNormalizedInput(data.data, data.width, data.height, INPUT_SIZE);
 }
 
 function applyMatte(source: ImageData, raw: Float32Array): ImageData {
-  let min = Infinity;
-  let max = -Infinity;
-  for (const value of raw) {
-    min = Math.min(min, value);
-    max = Math.max(max, value);
-  }
-  const needsSigmoid = min < -1e-5 || max > 1.00001;
-  const maskBytes = new Uint8ClampedArray(INPUT_SIZE * INPUT_SIZE * 4);
-  for (let pixel = 0; pixel < raw.length; pixel++) {
-    const probability = needsSigmoid
-      ? 1 / (1 + Math.exp(-raw[pixel]))
-      : raw[pixel];
-    const offset = pixel * 4;
-    maskBytes[offset] = 255;
-    maskBytes[offset + 1] = 255;
-    maskBytes[offset + 2] = 255;
-    maskBytes[offset + 3] = probability * 255;
-  }
-
-  const maskCanvas = new OffscreenCanvas(INPUT_SIZE, INPUT_SIZE);
-  maskCanvas
-    .getContext('2d')!
-    .putImageData(new ImageData(maskBytes, INPUT_SIZE, INPUT_SIZE), 0, 0);
-  const outputCanvas = new OffscreenCanvas(source.width, source.height);
-  const outputContext = outputCanvas.getContext('2d')!;
-  outputContext.drawImage(maskCanvas, 0, 0, source.width, source.height);
-  const resizedMask = outputContext.getImageData(
-    0,
-    0,
-    source.width,
-    source.height,
-  ).data;
-
+  const matte = makeResizedMatte(raw, source.width, source.height, INPUT_SIZE);
   const output = new Uint8ClampedArray(source.data);
   for (let pixel = 0; pixel < source.width * source.height; pixel++) {
-    output[pixel * 4 + 3] = resizedMask[pixel * 4 + 3];
+    output[pixel * 4 + 3] = matte[pixel];
   }
   return new ImageData(output, source.width, source.height);
 }
