@@ -40,6 +40,7 @@ include(
   'new Set(ben2AssetInventory.map((asset) => asset.path)).size !== 6',
   'to-cache',
 );
+include(toCache, 'export const ben2ModelBytes = 219_121_675;', 'to-cache');
 include(
   toCache,
   "export const initial = ['/', '/manifest.json', ...initialJs];",
@@ -56,7 +57,8 @@ include(sw, "event.data?.action === 'ben2-cache-status'", 'service worker');
 include(sw, "event.data?.action === 'ben2-download-model'", 'service worker');
 include(sw, 'ben2AssetInventory.filter(', 'service worker');
 include(sw, "({ role }) => role === 'model',", 'service worker');
-include(sw, 'serveBen2ModelFromCache(event, versionedCache)', 'service worker');
+include(sw, 'serveBen2ModelFromCache(', 'service worker');
+include(sw, 'ben2ModelBytes,', 'service worker');
 include(sw, 'const tracked = downloadBen2Model(', 'service worker');
 include(sw, 'ben2ModelAsset.path,', 'service worker');
 exclude(sw, 'event.data.urls', 'service worker');
@@ -92,7 +94,8 @@ for (const requirement of [
   'event.waitUntil(cacheWrite.catch(() => undefined))',
   'const cacheNames = await caches.keys()',
   'caches.match(request, { cacheName })',
-  'await cache.put(request, responseToCache)',
+  'await cache.put(stagingRequest, stagingResponse)',
+  "const ben2ValidationHeader = 'X-Squoosh-BEN2-Validated'",
 ])
   include(policy, requirement, 'BEN2 cache policy');
 exclude(policy, 'caches.match(event.request', 'BEN2 cache policy');

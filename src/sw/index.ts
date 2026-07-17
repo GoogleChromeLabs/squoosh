@@ -1,6 +1,7 @@
 import {
   cacheBen2Asset,
   downloadBen2Model,
+  matchValidatedBen2Model,
   serveBen2ModelFromCache,
   cacheOrNetworkAndCache,
   cleanupCache,
@@ -28,6 +29,13 @@ const ben2ModelAssets = ben2AssetInventory.filter(
 if (ben2ModelAssets.length !== 1)
   throw new Error(`Expected one BEN2 model, found ${ben2ModelAssets.length}`);
 const ben2ModelAsset = ben2ModelAssets[0];
+if (
+  !Number.isSafeInteger(ben2ModelAsset.bytes) ||
+  (ben2ModelAsset.bytes || 0) <= 0
+) {
+  throw new Error('Expected an exact BEN2 model byte count');
+}
+const ben2ModelBytes = ben2ModelAsset.bytes!;
 let ben2ModelDownload: Promise<void> | undefined;
 
 function currentBen2ModelDownload(): Promise<void> {
@@ -35,6 +43,7 @@ function currentBen2ModelDownload(): Promise<void> {
     const tracked = downloadBen2Model(
       ben2ModelAsset.path,
       versionedCache,
+      ben2ModelBytes,
     ).finally(() => {
       if (ben2ModelDownload === tracked) ben2ModelDownload = undefined;
     });
@@ -100,7 +109,12 @@ self.addEventListener('fetch', (event) => {
 
   // The model can only be populated by the explicit SW-owned command below.
   if (url.pathname === ben2ModelAsset.path) {
-    serveBen2ModelFromCache(event, versionedCache);
+    serveBen2ModelFromCache(
+      event,
+      ben2ModelAsset.path,
+      versionedCache,
+      ben2ModelBytes,
+    );
     return;
   }
 
@@ -161,10 +175,16 @@ self.addEventListener('message', (event) => {
             ben2AssetInventory.map(async ({ role, path }) => ({
               role,
               path,
-              cached: !!(await caches.match(
-                new URL(path, location.origin).href,
-                { cacheName: versionedCache },
-              )),
+              cached:
+                role === 'model'
+                  ? !!(await matchValidatedBen2Model(
+                      path,
+                      versionedCache,
+                      ben2ModelBytes,
+                    ))
+                  : !!(await caches.match(new URL(path, location.origin).href, {
+                      cacheName: versionedCache,
+                    })),
             })),
           );
           respond({ ok: true, cacheName: versionedCache, entries });

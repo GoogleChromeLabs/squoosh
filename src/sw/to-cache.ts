@@ -70,7 +70,11 @@ export type Ben2AssetRole =
 export interface Ben2Asset {
   role: Ben2AssetRole;
   path: string;
+  /** Exact body length for assets whose admission is SW-validated. */
+  bytes?: number;
 }
+
+export const ben2ModelBytes = 219_121_675;
 
 function assetForRole(
   role: Ben2AssetRole,
@@ -91,9 +95,12 @@ export const ben2AssetInventory: Ben2Asset[] = [
   assetForRole('features_worker', [featuresWorker.main], (path) =>
     path.endsWith('.js'),
   ),
-  assetForRole('model', featuresWorker.deps, (path) =>
-    path.startsWith('/c/model_fp16-'),
-  ),
+  {
+    ...assetForRole('model', featuresWorker.deps, (path) =>
+      path.startsWith('/c/model_fp16-'),
+    ),
+    bytes: ben2ModelBytes,
+  },
   assetForRole(
     'ort_asyncify_mjs',
     featuresWorker.deps,
