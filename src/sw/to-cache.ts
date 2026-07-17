@@ -2,6 +2,7 @@ import { simd } from 'wasm-feature-detect';
 import webpDataUrl from 'data-url:./tiny.webp';
 import avifDataUrl from 'data-url:./tiny.avif';
 import checkThreadsSupport from 'worker-shared/supports-wasm-threads';
+import { modelBytes as ben2ModelBytes } from 'features/processors/ben2/shared/meta';
 
 // Give TypeScript the correct global.
 declare var self: ServiceWorkerGlobalScope;
@@ -22,6 +23,7 @@ import * as blobAnim from 'entry-data:shared/prerendered-app/Intro/blob-anim';
 // The processors and codecs
 // Simple stuff everyone gets:
 import * as featuresWorker from 'entry-data:../features-worker';
+import * as pngDecoder from 'entry-data:codecs/png/pkg';
 
 // Decoders (some are feature detected)
 import * as avifDec from 'entry-data:codecs/avif/dec/avif_dec';
@@ -53,6 +55,79 @@ export function shouldCacheDynamically(url: string) {
   return url.startsWith('/c/demo-');
 }
 
+/**
+ * Immutable BEN2 assets are dependencies of the generated feature worker, but
+ * are intentionally excluded from the editor-wide prefetch. The fetch handler
+ * caches these exact emitted paths in the current static cache on first use.
+ */
+export type Ben2AssetRole =
+  | 'features_worker'
+  | 'model'
+  | 'ort_asyncify_mjs'
+  | 'ort_asyncify_wasm'
+  | 'png_decoder_js'
+  | 'png_decoder_wasm';
+
+export interface Ben2Asset {
+  role: Ben2AssetRole;
+  path: string;
+  /** Exact body length for assets whose admission is SW-validated. */
+  bytes?: number;
+}
+
+export { ben2ModelBytes };
+
+function assetForRole(
+  role: Ben2AssetRole,
+  paths: readonly string[],
+  matchesRole: (path: string) => boolean,
+): Ben2Asset {
+  const matches = paths.filter(matchesRole);
+  if (matches.length !== 1)
+    throw Error(`Expected one ${role} asset, found ${matches.length}`);
+  return { role, path: matches[0] };
+}
+
+/**
+ * Immutable BEN2 assets are build-owned dependencies. This exact inventory
+ * drives lazy fetch eligibility, status, and exclusion from editor prefetch.
+ */
+export const ben2AssetInventory: Ben2Asset[] = [
+  assetForRole('features_worker', [featuresWorker.main], (path) =>
+    path.endsWith('.js'),
+  ),
+  {
+    ...assetForRole('model', featuresWorker.deps, (path) =>
+      path.startsWith('/c/model_fp16-'),
+    ),
+    bytes: ben2ModelBytes,
+  },
+  assetForRole(
+    'ort_asyncify_mjs',
+    featuresWorker.deps,
+    (path) =>
+      path.startsWith('/c/ort-wasm-simd-threaded.asyncify-') &&
+      path.endsWith('.mjs'),
+  ),
+  assetForRole(
+    'ort_asyncify_wasm',
+    featuresWorker.deps,
+    (path) =>
+      path.startsWith('/c/ort-wasm-simd-threaded.asyncify-') &&
+      path.endsWith('.wasm'),
+  ),
+  assetForRole('png_decoder_js', [pngDecoder.main], (path) =>
+    path.endsWith('.js'),
+  ),
+  assetForRole('png_decoder_wasm', pngDecoder.deps, (path) =>
+    path.endsWith('.wasm'),
+  ),
+];
+
+export const ben2Assets = ben2AssetInventory.map((asset) => asset.path);
+if (new Set(ben2AssetInventory.map((asset) => asset.path)).size !== 6)
+  throw Error('BEN2 cache inventory must contain six unique assets');
+
 let initialJs = new Set([
   compress.main,
   ...compress.deps,
@@ -72,15 +147,15 @@ initialJs = subtractSets(
         // As well as large image deps we want to keep dynamic:
         shouldCacheDynamically(item),
     ),
-    // Exclude features Worker itself - it's referenced from the main app,
-    // but is meant to be cached lazily.
-    featuresWorker.main,
+    // Exclude the generated BEN2 inventory, including the model referenced by
+    // the direct cache module. These assets have their own lazy routes.
+    ...ben2Assets,
     // Also exclude Service Worker itself (we're inside right now).
     swUrl,
   ]),
 );
 
-export const initial = ['/', ...initialJs];
+export const initial = ['/', '/manifest.json', ...initialJs];
 
 export const theRest = (async () => {
   const [supportsThreads, supportsSimd, supportsWebP, supportsAvif] =
@@ -148,5 +223,5 @@ export const theRest = (async () => {
     addWithDeps(wp2Enc);
   }
 
-  return [...new Set(items)];
+  return [...new Set(items)].filter((item) => !ben2Assets.includes(item));
 })();

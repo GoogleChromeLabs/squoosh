@@ -14,6 +14,67 @@ export function cacheOrNetwork(event: FetchEvent): void {
   );
 }
 
+/** Whether a request is an exact, own-origin, full BEN2 asset GET. */
+export function isCanonicalBen2AssetRequest(request: Request): boolean {
+  const url = new URL(request.url);
+  return (
+    request.method === 'GET' &&
+    url.origin === self.location.origin &&
+    url.search === '' &&
+    !request.headers.has('range')
+  );
+}
+
+/** Whether a response is safe to persist as an immutable BEN2 asset. */
+export function isAdmissibleBen2AssetResponse(response: Response): boolean {
+  return response.type !== 'opaque' && response.status === 200;
+}
+
+/**
+ * BEN2 assets are immutable, lazy dependencies. Keep their cache contract
+ * deliberately narrower than the legacy general cache helper: only an exact
+ * canonical full GET may read/write the current versioned static cache.
+ */
+export function cacheBen2Asset(event: FetchEvent, cacheName: string): void {
+  event.respondWith(
+    (async function () {
+      const { request } = event;
+
+      // A query or Range request must always reach the origin. In particular,
+      // it must neither consume nor replace the canonical full response.
+      if (!isCanonicalBen2AssetRequest(request)) return fetch(request);
+
+      // Do not use caches.match(): BEN2 must not read an old/unrelated cache.
+      const cacheNames = await caches.keys();
+      if (cacheNames.includes(cacheName)) {
+        const cached = await (await caches.open(cacheName)).match(request);
+        if (cached) return cached;
+      }
+
+      const response = await fetch(request);
+      // Cache Storage accepts partial and opaque responses, but neither is a
+      // valid offline copy of these exact immutable assets.
+      if (isAdmissibleBen2AssetResponse(response)) {
+        // Clone before handing the original to the response consumer. A clone
+        // failure is cache-side-only, so it must not disrupt inference.
+        let responseToCache: Response;
+        try {
+          responseToCache = response.clone();
+        } catch {
+          return response;
+        }
+        // Cache Storage consumes the clone atomically; rejected/truncated body
+        // reads and quota errors leave no accepted write and remain non-fatal.
+        const cacheWrite = caches
+          .open(cacheName)
+          .then((cache) => cache.put(request, responseToCache));
+        event.waitUntil(cacheWrite.catch(() => undefined));
+      }
+      return response;
+    })(),
+  );
+}
+
 export function cacheOrNetworkAndCache(
   event: FetchEvent,
   cacheName: string,

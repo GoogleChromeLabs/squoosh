@@ -21,6 +21,7 @@ import { cleanSet } from '../../util/clean-modify';
 import type { SourceImage } from '../../Compress';
 import { linkRef } from 'shared/prerendered-app/util';
 import { drawDataToCanvas } from 'client/lazy-app/util/canvas';
+
 interface Props {
   source?: SourceImage;
   preprocessorState?: PreprocessorState;

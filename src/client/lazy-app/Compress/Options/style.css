@@ -82,6 +82,12 @@
   background: var(--off-black);
 }
 
+.ben2-panel {
+  composes: option-one-cell;
+  composes: options-section;
+  row-gap: 8px;
+}
+
 .text-field {
   background-color: var(--black);
   color: var(--white);
@@ -91,6 +97,43 @@
   width: 100%;
   box-sizing: border-box;
   border-radius: 4px;
+}
+
+.ben2-download {
+  composes: text-field;
+  cursor: pointer;
+  min-height: 31px;
+  text-align: left;
+  white-space: normal;
+  transition: background-color 200ms ease;
+
+  &:hover:not(:disabled) {
+    background-color: var(--dark-gray);
+  }
+
+  &:active:not(:disabled) {
+    background-color: var(--main-theme-color);
+    color: var(--black);
+  }
+
+  &:focus-visible {
+    outline: var(--white) solid 2px;
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    color: var(--less-light-gray);
+    cursor: not-allowed;
+  }
+}
+
+.ben2-download loading-spinner {
+  --size: 18px;
+  --stroke-width: 2px;
+  --delay: 0ms;
+  --color: currentColor;
+  margin: 0 auto;
+  vertical-align: middle;
 }
 
 .title-and-buttons {

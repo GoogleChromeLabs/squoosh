@@ -18,16 +18,30 @@ class WorkerBridge {
   /** ID from setTimeout */
   protected _workerTimeout?: number;
 
-  protected _terminateWorker() {
-    if (!this._worker) return;
-    this._worker.terminate();
+  protected _terminateWorker(): void {
+    clearTimeout(this._workerTimeout);
+    this._workerTimeout = undefined;
+    if (this._worker) this._worker.terminate();
     this._worker = undefined;
     this._workerApi = undefined;
   }
 
-  protected _startWorker() {
+  protected _startWorker(): void {
     this._worker = new Worker(workerURL);
     this._workerApi = wrap<ProcessorWorkerApi>(this._worker);
+  }
+
+  /** Terminate the worker after calls already in the queue have settled. */
+  reset(): Promise<void> {
+    clearTimeout(this._workerTimeout);
+    this._workerTimeout = undefined;
+    const reset = this._queue
+      .catch(() => {})
+      .then(() => {
+        this._terminateWorker();
+      });
+    this._queue = reset;
+    return reset;
   }
 }
 
@@ -44,6 +58,7 @@ for (const methodName of methodNames) {
         if (signal.aborted) throw new DOMException('AbortError', 'AbortError');
 
         clearTimeout(this._workerTimeout);
+        this._workerTimeout = undefined;
         if (!this._worker) this._startWorker();
 
         const onAbort = () => this._terminateWorker();

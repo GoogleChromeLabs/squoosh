@@ -4,7 +4,8 @@
   "version": "2.0.0",
   "license": "apache-2.0",
   "scripts": {
-    "build": "rollup -c && node lib/move-output.js",
+    "build": "npm run prepare:ben2-model && rollup -c && node lib/move-output.js",
+    "prepare:ben2-model": "node lib/prepare-ben2-model.js",
     "debug": "node --inspect-brk node_modules/.bin/rollup -c",
     "dev": "DEV_PORT=\"${DEV_PORT:=5000}\" run-p watch serve",
     "watch": "rollup -cw",
@@ -53,5 +54,8 @@
     "*.{js,css,json,md,ts,tsx}": "prettier --write",
     "*.{c,h,cpp,hpp}": "clang-format -i",
     "*.rs": "rustfmt"
+  },
+  "dependencies": {
+    "onnxruntime-web": "1.27.0"
   }
 }

@@ -29,9 +29,25 @@ import { cleanMerge, cleanSet } from '../util/clean-modify';
 import './custom-els/MultiPanel';
 import Results from './Results';
 import WorkerBridge from '../worker-bridge';
-import { resize } from 'features/processors/resize/client';
 import type SnackBarElement from 'shared/custom-els/snack-bar';
 import { drawableToImageData } from '../util/canvas';
+import { Ben2Capability, probeBen2Capability } from './ben2-capability';
+import {
+  mainJobSchedulingDecision,
+  preprocessImage,
+  runMainPreprocessingJob,
+} from './main-job';
+import {
+  BEN2_TERMINAL_MESSAGE,
+  Ben2SideJobScheduler,
+  Ben2TerminalToggleRetry,
+  ben2ResizeOptions,
+  ben2TerminalSideState,
+  createBen2Coordinator,
+  normaliseBen2SideSettings,
+  processSideImage,
+} from './ben2-processing';
+import { Ben2CacheLifecycle } from './ben2-cache-lifecycle';
 
 export type OutputType = EncoderType | 'identity';
 
@@ -42,7 +58,7 @@ export interface SourceImage {
   vectorImage?: HTMLImageElement;
 }
 
-interface SideSettings {
+export interface SideSettings {
   processorState: ProcessorState;
   encoderState?: EncoderState;
 }
@@ -71,6 +87,10 @@ interface State {
   mobileView: boolean;
   preprocessorState: PreprocessorState;
   encodedPreprocessorState?: PreprocessorState;
+  ben2Capability: Ben2Capability;
+  ben2ModelCached: boolean;
+  ben2Downloading: boolean;
+  ben2TerminalErrors: [string?, string?];
 }
 
 interface MainJob {
@@ -78,14 +98,59 @@ interface MainJob {
   preprocessorState: PreprocessorState;
 }
 
-interface SideJob {
-  processorState: ProcessorState;
-  encoderState?: EncoderState;
-}
-
 interface LoadingFileInfo {
   loading: boolean;
   filename?: string;
+}
+
+interface PersistedSideSettings {
+  latestSettings?: Partial<SideSettings>;
+  encodedSettings?: Partial<SideSettings>;
+}
+
+/** Normalize persisted settings only; runtime side state never enters here. */
+export function normalizeSideSettings(
+  saved: PersistedSideSettings | undefined,
+  fallback: SideSettings,
+): { latestSettings: SideSettings; encodedSettings?: SideSettings } {
+  const normalised = normaliseBen2SideSettings(
+    {
+      latestSettings: {
+        ...fallback,
+        ...saved?.latestSettings,
+        processorState: {
+          ...fallback.processorState,
+          ...saved?.latestSettings?.processorState,
+        },
+      },
+      encodedSettings: saved?.encodedSettings
+        ? {
+            ...saved.encodedSettings,
+            processorState: {
+              ...defaultProcessorState,
+              ...saved.encodedSettings.processorState,
+            },
+          }
+        : undefined,
+    },
+    defaultProcessorState,
+  );
+
+  return {
+    latestSettings: normalised.latestSettings!,
+    encodedSettings: normalised.encodedSettings,
+  };
+}
+
+function loadStoredSideSettings(
+  key: string,
+  fallback: SideSettings,
+): { latestSettings: SideSettings; encodedSettings?: SideSettings } {
+  const stored = localStorage.getItem(key);
+  return normalizeSideSettings(
+    stored ? JSON.parse(stored) : undefined,
+    fallback,
+  );
 }
 
 async function decodeImage(
@@ -95,9 +160,9 @@ async function decodeImage(
 ): Promise<ImageData> {
   assertSignal(signal);
   const mimeType = await abortable(signal, sniffMimeType(blob));
-  const canDecode = await abortable(signal, canDecodeImageType(mimeType));
 
   try {
+    const canDecode = await abortable(signal, canDecodeImageType(mimeType));
     if (!canDecode) {
       if (mimeType === 'image/avif') {
         return await workerBridge.avifDecode(signal, blob);
@@ -124,46 +189,8 @@ async function decodeImage(
   }
 }
 
-async function preprocessImage(
-  signal: AbortSignal,
-  data: ImageData,
-  preprocessorState: PreprocessorState,
-  workerBridge: WorkerBridge,
-): Promise<ImageData> {
-  assertSignal(signal);
-  let processedData = data;
-
-  if (preprocessorState.rotate.rotate !== 0) {
-    processedData = await workerBridge.rotate(
-      signal,
-      processedData,
-      preprocessorState.rotate,
-    );
-  }
-
-  return processedData;
-}
-
-async function processImage(
-  signal: AbortSignal,
-  source: SourceImage,
-  processorState: ProcessorState,
-  workerBridge: WorkerBridge,
-): Promise<ImageData> {
-  assertSignal(signal);
-  let result = source.preprocessed;
-
-  if (processorState.resize.enabled) {
-    result = await resize(signal, source, processorState.resize, workerBridge);
-  }
-  if (processorState.quantize.enabled) {
-    result = await workerBridge.quantize(
-      signal,
-      result,
-      processorState.quantize,
-    );
-  }
-  return result;
+function ben2IsEnabled(processorState: ProcessorState): boolean {
+  return processorState.ben2.enabled;
 }
 
 async function compressImage(
@@ -199,11 +226,11 @@ function stateForNewSourceData(state: State): State {
 
   for (const i of [0, 1]) {
     // Ditch previous encodings
-    const downloadUrl = state.sides[i].downloadUrl;
+    const downloadUrl = newState.sides[i].downloadUrl;
     if (downloadUrl) URL.revokeObjectURL(downloadUrl);
 
-    newState = cleanMerge(state, `sides.${i}`, {
-      preprocessed: undefined,
+    newState = cleanMerge(newState, `sides.${i}`, {
+      processed: undefined,
       file: undefined,
       downloadUrl: undefined,
       data: undefined,
@@ -246,24 +273,6 @@ async function processSvg(
   );
 }
 
-/**
- * If two processors are disabled, they're considered equivalent, otherwise
- * equivalence is based on ===
- */
-function processorStateEquivalent(a: ProcessorState, b: ProcessorState) {
-  // Quick exit
-  if (a === b) return true;
-
-  // All processors have the same keys
-  for (const key of Object.keys(a) as Array<keyof ProcessorState>) {
-    // If both processors are disabled, they're the same.
-    if (!a[key].enabled && !b[key].enabled) continue;
-    if (a !== b) return false;
-  }
-
-  return true;
-}
-
 const loadingIndicator = '⏳ ';
 
 const originalDocumentTitle = document.title;
@@ -284,40 +293,63 @@ export default class Compress extends Component<Props, State> {
     source: undefined,
     loading: false,
     preprocessorState: defaultPreprocessorState,
-    // Tasking catched side settings if available otherwise taking default settings
+    ben2Capability: { state: 'checking' },
+    ben2ModelCached: false,
+    ben2Downloading: false,
+    ben2TerminalErrors: [undefined, undefined],
     sides: [
-      localStorage.getItem('leftSideSettings')
-        ? {
-            ...JSON.parse(localStorage.getItem('leftSideSettings') as string),
-            loading: false,
-          }
-        : {
-            latestSettings: {
-              processorState: defaultProcessorState,
-              encoderState: undefined,
-            },
-            loading: false,
+      {
+        ...loadStoredSideSettings('leftSideSettings', {
+          processorState: defaultProcessorState,
+          encoderState: undefined,
+        }),
+        loading: false,
+      },
+      {
+        ...loadStoredSideSettings('rightSideSettings', {
+          processorState: defaultProcessorState,
+          encoderState: {
+            type: 'mozJPEG',
+            options: encoderMap.mozJPEG.meta.defaultOptions,
           },
-      localStorage.getItem('rightSideSettings')
-        ? {
-            ...JSON.parse(localStorage.getItem('rightSideSettings') as string),
-            loading: false,
-          }
-        : {
-            latestSettings: {
-              processorState: defaultProcessorState,
-              encoderState: {
-                type: 'mozJPEG',
-                options: encoderMap.mozJPEG.meta.defaultOptions,
-              },
-            },
-            loading: false,
-          },
+        }),
+        loading: false,
+      },
     ],
     mobileView: this.widthQuery.matches,
   };
 
   private readonly encodeCache = new ResultCache();
+  private readonly ben2Coordinator = createBen2Coordinator(new WorkerBridge());
+  private readonly sideJobScheduler = new Ben2SideJobScheduler(
+    defaultProcessorState,
+  );
+  private readonly ben2TerminalToggleRetry = new Ben2TerminalToggleRetry(
+    this.ben2Coordinator,
+    this.sideJobScheduler,
+  );
+  private readonly ben2CacheLifecycle = new Ben2CacheLifecycle({
+    isEnabled: () =>
+      this.state.sides.some((side) =>
+        ben2IsEnabled(side.latestSettings.processorState),
+      ),
+    readCached: async () => {
+      const { ben2ModelIsCached } = await import(
+        'features/processors/ben2/shared/model-cache'
+      );
+      return ben2ModelIsCached();
+    },
+    download: async () => {
+      const { downloadBen2Model } = await import(
+        'features/processors/ben2/shared/model-cache'
+      );
+      await downloadBen2Model();
+    },
+    setCached: (cached) => this.setBen2ModelCached(cached),
+    setDownloading: (ben2Downloading) => {
+      if (!this.unmounted) this.setState({ ben2Downloading });
+    },
+  });
   // One for each side
   private readonly workerBridges = [new WorkerBridge(), new WorkerBridge()];
   /** Abort controller for actions that impact both sites, like source image decoding and preprocessing */
@@ -326,6 +358,7 @@ export default class Compress extends Component<Props, State> {
   private sideAbortControllers = [new AbortController(), new AbortController()];
   /** For debouncing calls to updateImage for each side. */
   private updateImageTimeout?: number;
+  private unmounted = false;
 
   constructor(props: Props) {
     super(props);
@@ -336,12 +369,87 @@ export default class Compress extends Component<Props, State> {
     import('../sw-bridge').then(({ mainAppLoaded }) => mainAppLoaded());
   }
 
+  componentDidMount(): void {
+    probeBen2Capability().then((ben2Capability) => {
+      if (this.unmounted) return;
+      this.setState((state) => ({
+        ben2Capability,
+        sides:
+          ben2Capability.state !== 'supported' || !state.source?.vectorImage
+            ? state.sides
+            : (state.sides.map((side) => ({
+                ...side,
+                latestSettings: {
+                  ...side.latestSettings,
+                  processorState:
+                    state.ben2ModelCached &&
+                    side.latestSettings.processorState.ben2.enabled &&
+                    side.latestSettings.processorState.resize.method ===
+                      'vector'
+                      ? cleanMerge(
+                          side.latestSettings.processorState,
+                          'resize',
+                          { method: 'lanczos3' },
+                        )
+                      : side.latestSettings.processorState,
+                },
+              })) as [Side, Side]),
+      }));
+    });
+    this.ben2CacheLifecycle.mount();
+  }
+
+  private setBen2ModelCached(cached: boolean): void {
+    if (this.unmounted) return;
+    if (this.state.ben2ModelCached && !cached) {
+      this.ben2Coordinator.invalidate();
+      this.ben2TerminalToggleRetry.invalidate();
+    }
+    this.setState((state) => ({
+      ben2ModelCached: cached,
+      sides:
+        cached && !state.ben2ModelCached && state.source?.vectorImage
+          ? (state.sides.map((side) => ({
+              ...side,
+              latestSettings: {
+                ...side.latestSettings,
+                processorState: this.normalizeBen2Resize(
+                  side.latestSettings.processorState,
+                  true,
+                ),
+              },
+            })) as [Side, Side])
+          : state.sides,
+    }));
+  }
+
   private onMobileWidthChange = () => {
     this.setState({ mobileView: this.widthQuery.matches });
   };
 
+  private normalizeBen2Resize(
+    options: ProcessorState,
+    modelCached = this.state.ben2ModelCached,
+  ): ProcessorState {
+    const resize = ben2ResizeOptions(
+      options.resize,
+      ben2IsEnabled(options) &&
+        modelCached &&
+        this.state.ben2Capability.state === 'supported' &&
+        !!this.state.source?.vectorImage,
+    );
+    return resize === options.resize ? options : { ...options, resize };
+  }
+
+  private clearSideTerminal(index: 0 | 1): [string?, string?] {
+    this.ben2TerminalToggleRetry.clear(index);
+    this.sideJobScheduler.clearTerminal(index);
+    return cleanSet(this.state.ben2TerminalErrors, index, undefined);
+  }
+
   private onEncoderTypeChange = (index: 0 | 1, newType: OutputType): void => {
     this.setState({
+      ben2TerminalErrors: this.clearSideTerminal(index),
       sides: cleanSet(
         this.state.sides,
         `${index}.latestSettings.encoderState`,
@@ -359,11 +467,26 @@ export default class Compress extends Component<Props, State> {
     index: 0 | 1,
     options: ProcessorState,
   ): void => {
+    const previous = this.state.sides[index].latestSettings.processorState;
+    const changed = this.ben2TerminalToggleRetry.processorChange(
+      index,
+      previous,
+      options,
+      this.state.source,
+    );
+    // The retry controller has already remembered an eligible terminal
+    // on→off transition before this side's scheduler identity is cleared.
+    this.sideJobScheduler.clearTerminal(index);
     this.setState({
+      ben2TerminalErrors: cleanSet(
+        this.state.ben2TerminalErrors,
+        index,
+        undefined,
+      ),
       sides: cleanSet(
         this.state.sides,
         `${index}.latestSettings.processorState`,
-        options,
+        this.normalizeBen2Resize(changed),
       ),
     });
   };
@@ -373,6 +496,7 @@ export default class Compress extends Component<Props, State> {
     options: EncoderOptions,
   ): void => {
     this.setState({
+      ben2TerminalErrors: this.clearSideTerminal(index),
       sides: cleanSet(
         this.state.sides,
         `${index}.latestSettings.encoderState.options`,
@@ -383,15 +507,23 @@ export default class Compress extends Component<Props, State> {
 
   componentWillReceiveProps(nextProps: Props): void {
     if (nextProps.file !== this.props.file) {
+      this.ben2Coordinator.invalidate();
+      this.sideJobScheduler.invalidate();
+      this.ben2TerminalToggleRetry.invalidate();
       this.sourceFile = nextProps.file;
       this.queueUpdateImage({ immediate: true });
     }
   }
 
   componentWillUnmount(): void {
+    this.unmounted = true;
     updateDocumentTitle({ loading: false });
     this.widthQuery.removeListener(this.onMobileWidthChange);
+    this.ben2CacheLifecycle.dispose();
     this.mainAbortController.abort();
+    this.ben2Coordinator.invalidate();
+    this.sideJobScheduler.invalidate();
+    this.ben2TerminalToggleRetry.invalidate();
     for (const controller of this.sideAbortControllers) {
       controller.abort();
     }
@@ -413,13 +545,22 @@ export default class Compress extends Component<Props, State> {
         filename: this.state.source?.file.name,
       });
     }
+    this.ben2CacheLifecycle.updatePolling();
     this.queueUpdateImage();
   }
 
   private onCopyToOtherClick = async (index: 0 | 1) => {
-    const otherIndex = index ? 0 : 1;
+    const otherIndex: 0 | 1 = index ? 0 : 1;
     const oldSettings = this.state.sides[otherIndex];
-    const newSettings = { ...this.state.sides[index] };
+    const newSettings = {
+      ...this.state.sides[index],
+      latestSettings: {
+        ...this.state.sides[index].latestSettings,
+        processorState: this.normalizeBen2Resize(
+          this.state.sides[index].latestSettings.processorState,
+        ),
+      },
+    };
 
     // Create a new object URL for the new settings. This avoids both sides sharing a URL, which
     // means it can be safely revoked without impacting the other side.
@@ -428,6 +569,7 @@ export default class Compress extends Component<Props, State> {
     }
 
     this.setState({
+      ben2TerminalErrors: this.clearSideTerminal(otherIndex),
       sides: cleanSet(this.state.sides, otherIndex, newSettings),
     });
 
@@ -492,11 +634,22 @@ export default class Compress extends Component<Props, State> {
 
     if (index === 0 && leftSideSettingsString) {
       const oldLeftSideSettings = this.state.sides[index];
+      const normalized = normalizeSideSettings(
+        JSON.parse(leftSideSettingsString),
+        this.state.sides[index].latestSettings,
+      );
       const newLeftSideSettings = {
         ...this.state.sides[index],
-        ...JSON.parse(leftSideSettingsString),
+        ...normalized,
+        latestSettings: {
+          ...normalized.latestSettings,
+          processorState: this.normalizeBen2Resize(
+            normalized.latestSettings.processorState,
+          ),
+        },
       };
       this.setState({
+        ben2TerminalErrors: this.clearSideTerminal(index),
         sides: cleanSet(this.state.sides, index, newLeftSideSettings),
       });
       const result = await this.props.showSnack('Left side settings imported', {
@@ -513,11 +666,22 @@ export default class Compress extends Component<Props, State> {
 
     if (index === 1 && rightSideSettingsString) {
       const oldRightSideSettings = this.state.sides[index];
+      const normalized = normalizeSideSettings(
+        JSON.parse(rightSideSettingsString),
+        this.state.sides[index].latestSettings,
+      );
       const newRightSideSettings = {
         ...this.state.sides[index],
-        ...JSON.parse(rightSideSettingsString),
+        ...normalized,
+        latestSettings: {
+          ...normalized.latestSettings,
+          processorState: this.normalizeBen2Resize(
+            normalized.latestSettings.processorState,
+          ),
+        },
       };
       this.setState({
+        ben2TerminalErrors: this.clearSideTerminal(index),
         sides: cleanSet(this.state.sides, index, newRightSideSettings),
       });
       const result = await this.props.showSnack(
@@ -546,9 +710,13 @@ export default class Compress extends Component<Props, State> {
     const newRotate = preprocessorState.rotate.rotate;
     const orientationChanged = oldRotate % 180 !== newRotate % 180;
 
+    this.ben2Coordinator.invalidate();
+    this.sideJobScheduler.invalidate();
+    this.ben2TerminalToggleRetry.invalidate();
     this.setState((state) => ({
       loading: true,
       preprocessorState,
+      ben2TerminalErrors: [undefined, undefined],
       // Flip resize values if orientation has changed
       sides: !orientationChanged
         ? state.sides
@@ -588,8 +756,9 @@ export default class Compress extends Component<Props, State> {
   private sourceFile: File;
   /** The in-progress job for decoding and preprocessing */
   private activeMainJob?: MainJob;
-  /** The in-progress job for each side (processing and encoding) */
-  private activeSideJobs: [SideJob?, SideJob?] = [undefined, undefined];
+  private onBen2Completed = (): void => {
+    void this.ben2CacheLifecycle.refresh();
+  };
 
   /**
    * Perform image processing.
@@ -601,57 +770,38 @@ export default class Compress extends Component<Props, State> {
   private async updateImage() {
     const currentState = this.state;
 
-    // State of the last completed job, or ongoing job
-    const latestMainJobState: Partial<MainJob> = this.activeMainJob || {
-      file: currentState.source && currentState.source.file,
-      preprocessorState: currentState.encodedPreprocessorState,
-    };
-    const latestSideJobStates: Partial<SideJob>[] = currentState.sides.map(
-      (side, i) =>
-        this.activeSideJobs[i] || {
-          processorState:
-            side.encodedSettings && side.encodedSettings.processorState,
-          encoderState:
-            side.encodedSettings && side.encodedSettings.encoderState,
-        },
-    );
-
     // State for this job
     const mainJobState: MainJob = {
       file: this.sourceFile,
       preprocessorState: currentState.preprocessorState,
     };
-    const sideJobStates: SideJob[] = currentState.sides.map((side) => ({
-      // If there isn't an encoder selected, we don't process either
-      processorState: side.latestSettings.encoderState
-        ? side.latestSettings.processorState
-        : defaultProcessorState,
-      encoderState: side.latestSettings.encoderState,
-    }));
+    const mainDecision = mainJobSchedulingDecision(
+      {
+        active: this.activeMainJob,
+        completed: {
+          file: currentState.source && currentState.source.file,
+          preprocessorState: currentState.encodedPreprocessorState,
+        },
+      },
+      mainJobState,
+    );
 
-    // Figure out what needs doing:
-    const needsDecoding = latestMainJobState.file != mainJobState.file;
-    const needsPreprocessing =
-      needsDecoding ||
-      latestMainJobState.preprocessorState !== mainJobState.preprocessorState;
-    const sideWorksNeeded = latestSideJobStates.map((latestSideJob, i) => {
-      const needsProcessing =
-        needsPreprocessing ||
-        !latestSideJob.processorState ||
-        // If we're going to or from 'original image' we should reprocess
-        !!latestSideJob.encoderState !== !!sideJobStates[i].encoderState ||
-        !processorStateEquivalent(
-          latestSideJob.processorState,
-          sideJobStates[i].processorState,
-        );
-
-      return {
-        processing: needsProcessing,
-        encoding:
-          needsProcessing ||
-          latestSideJob.encoderState !== sideJobStates[i].encoderState,
-      };
-    });
+    const needsDecoding = mainDecision.decoding;
+    const needsPreprocessing = mainDecision.preprocessing;
+    const { jobs: sideJobStates, work: sideWorksNeeded } =
+      this.sideJobScheduler.plan(
+        currentState.sides.map((side) => side.latestSettings) as [
+          SideSettings,
+          SideSettings,
+        ],
+        currentState.sides.map((side) => side.encodedSettings) as [
+          SideSettings | undefined,
+          SideSettings | undefined,
+        ],
+        currentState.ben2Capability,
+        currentState.ben2ModelCached,
+        needsPreprocessing,
+      );
 
     let jobNeeded = false;
 
@@ -661,13 +811,16 @@ export default class Compress extends Component<Props, State> {
       this.mainAbortController = new AbortController();
       jobNeeded = true;
       this.activeMainJob = mainJobState;
+      this.ben2Coordinator.invalidate();
+      this.sideJobScheduler.invalidate();
+      this.ben2TerminalToggleRetry.invalidate();
     }
     for (const [i, sideWorkNeeded] of sideWorksNeeded.entries()) {
       if (sideWorkNeeded.processing || sideWorkNeeded.encoding) {
         this.sideAbortControllers[i].abort();
         this.sideAbortControllers[i] = new AbortController();
         jobNeeded = true;
-        this.activeSideJobs[i] = sideJobStates[i];
+        this.sideJobScheduler.start(i as 0 | 1, sideJobStates[i]);
       }
     }
 
@@ -683,10 +836,7 @@ export default class Compress extends Component<Props, State> {
     if (needsDecoding) {
       try {
         assertSignal(mainSignal);
-        this.setState({
-          source: undefined,
-          loading: true,
-        });
+        this.setState({ loading: true });
 
         // Special-case SVG. We need to avoid createImageBitmap because of
         // https://bugs.chromium.org/p/chromium/issues/detail?id=606319.
@@ -698,7 +848,6 @@ export default class Compress extends Component<Props, State> {
           decoded = await decodeImage(
             mainSignal,
             mainJobState.file,
-            // Either worker is good enough here.
             this.workerBridges[0],
           );
         }
@@ -710,7 +859,15 @@ export default class Compress extends Component<Props, State> {
             const resizeState: Partial<ProcessorState['resize']> = {
               width: decoded.width,
               height: decoded.height,
-              method: vectorImage ? 'vector' : 'lanczos3',
+              method:
+                vectorImage &&
+                !(
+                  side.latestSettings.processorState.ben2.enabled &&
+                  currentState.ben2Capability.state === 'supported' &&
+                  currentState.ben2ModelCached
+                )
+                  ? 'vector'
+                  : 'lanczos3',
               // Disable resizing, to make it clearer to the user that something changed here
               enabled: false,
             };
@@ -733,65 +890,52 @@ export default class Compress extends Component<Props, State> {
 
     let source: SourceImage;
 
-    // Handle preprocessing
+    // Handle shared preprocessing (Rotate only).
     if (needsPreprocessing) {
-      try {
-        assertSignal(mainSignal);
-        this.setState({
-          loading: true,
-        });
+      assertSignal(mainSignal);
+      this.setState({
+        loading: true,
+        ben2TerminalErrors: [undefined, undefined],
+      });
 
-        const preprocessed = await preprocessImage(
-          mainSignal,
-          decoded,
-          mainJobState.preprocessorState,
-          // Either worker is good enough here.
-          this.workerBridges[0],
-        );
-
-        source = {
+      const outcome = await runMainPreprocessingJob({
+        signal: mainSignal,
+        run: async () => ({
           decoded,
           vectorImage,
-          preprocessed,
+          preprocessed: await preprocessImage(
+            mainSignal,
+            decoded,
+            mainJobState.preprocessorState,
+            // Either side worker is good enough for shared rotation.
+            this.workerBridges[0],
+          ),
           file: mainJobState.file,
-        };
-
-        // Update state for process completion, including intermediate render
-        this.setState((currentState) => {
-          if (mainSignal.aborted) return {};
-          let newState: State = {
-            ...currentState,
-            loading: false,
-            source,
-            encodedPreprocessorState: mainJobState.preprocessorState,
-            sides: currentState.sides.map((side) => {
-              if (side.downloadUrl) URL.revokeObjectURL(side.downloadUrl);
-
-              const newSide: Side = {
-                ...side,
-                // Intermediate render
-                data: preprocessed,
-                processed: undefined,
-                encodedSettings: undefined,
-              };
-              return newSide;
-            }) as [Side, Side],
-          };
-          newState = stateForNewSourceData(newState);
-          return newState;
-        });
-      } catch (err) {
-        if (err instanceof Error && err.name === 'AbortError') return;
-        this.setState({ loading: false });
-        this.props.showSnack(`Preprocessing error: ${err}`);
-        throw err;
-      }
+        }),
+        isCurrent: () => this.activeMainJob === mainJobState,
+        publish: (completedSource) => {
+          source = completedSource;
+          this.activeMainJob = undefined;
+          this.setState((currentState) =>
+            stateForNewSourceData({
+              ...currentState,
+              loading: false,
+              source,
+              encodedPreprocessorState: mainJobState.preprocessorState,
+              ben2TerminalErrors: [undefined, undefined],
+            }),
+          );
+        },
+        fail: (err) => {
+          this.activeMainJob = undefined;
+          this.setState({ loading: false });
+          this.props.showSnack(`Preprocessing error: ${err}`);
+        },
+      });
+      if (outcome !== 'published') return;
     } else {
       source = currentState.source!;
     }
-
-    // That's the main part of the job done.
-    this.activeMainJob = undefined;
 
     // Allow side jobs to happen in parallel
     sideWorksNeeded.forEach(async (sideWorkNeeded, sideIndex) => {
@@ -831,16 +975,27 @@ export default class Compress extends Component<Props, State> {
             });
 
             if (sideWorkNeeded.processing) {
-              processed = await processImage(
+              processed = await processSideImage(
                 signal,
                 source,
+                mainJobState.preprocessorState,
                 jobState.processorState,
                 workerBridge,
+                this.ben2Coordinator,
+                this.ben2CacheLifecycle.refresh,
+                this.onBen2Completed,
               );
 
               // Update state for process completion, including intermediate render
               this.setState((currentState) => {
-                if (signal.aborted) return {};
+                if (
+                  !this.sideJobScheduler.isCurrent(
+                    sideIndex as 0 | 1,
+                    jobState,
+                    signal,
+                  )
+                )
+                  return {};
                 const currentSide = currentState.sides[sideIndex];
                 const side: Side = {
                   ...currentSide,
@@ -879,48 +1034,101 @@ export default class Compress extends Component<Props, State> {
           }
         }
 
-        this.setState((currentState) => {
-          if (signal.aborted) return {};
-          const currentSide = currentState.sides[sideIndex];
+        this.setState(
+          (currentState) => {
+            if (
+              !this.sideJobScheduler.isCurrent(
+                sideIndex as 0 | 1,
+                jobState,
+                signal,
+              )
+            )
+              return {};
+            const currentSide = currentState.sides[sideIndex];
 
-          if (currentSide.downloadUrl) {
-            URL.revokeObjectURL(currentSide.downloadUrl);
-          }
+            if (currentSide.downloadUrl) {
+              URL.revokeObjectURL(currentSide.downloadUrl);
+            }
 
-          const side: Side = {
-            ...currentSide,
-            data,
-            file,
-            downloadUrl: URL.createObjectURL(file),
-            loading: false,
-            processed,
-            encodedSettings: {
-              processorState: jobState.processorState,
-              encoderState: jobState.encoderState,
-            },
-          };
-          const sides = cleanSet(currentState.sides, sideIndex, side);
-          return { sides };
-        });
-
-        this.activeSideJobs[sideIndex] = undefined;
+            const side: Side = {
+              ...currentSide,
+              data,
+              file,
+              downloadUrl: URL.createObjectURL(file),
+              loading: false,
+              processed,
+              encodedSettings: {
+                processorState: jobState.processorState,
+                encoderState: jobState.encoderState,
+              },
+            };
+            const sides = cleanSet(currentState.sides, sideIndex, side);
+            return { sides };
+          },
+          () => {
+            this.sideJobScheduler.complete(sideIndex as 0 | 1, jobState);
+          },
+        );
       } catch (err) {
-        if (err instanceof Error && err.name === 'AbortError') return;
-        this.setState((currentState) => {
-          const sides = cleanMerge(currentState.sides, sideIndex, {
+        const jobState = sideJobStates[sideIndex];
+        const settlement = this.sideJobScheduler.settleFailure(
+          sideIndex as 0 | 1,
+          jobState,
+          sideSignals[sideIndex],
+          err,
+        );
+        if (settlement === 'stale') return;
+
+        if (settlement === 'model-not-cached') {
+          this.ben2Coordinator.invalidate();
+          this.ben2TerminalToggleRetry.invalidate();
+          void this.ben2CacheLifecycle.refresh();
+          this.setState((currentState) => ({
+            sides: cleanMerge(currentState.sides, sideIndex, {
+              loading: false,
+            }),
+          }));
+          return;
+        }
+
+        if (settlement === 'terminal') {
+          this.setState((currentState) => ({
+            ben2TerminalErrors: cleanSet(
+              currentState.ben2TerminalErrors,
+              sideIndex,
+              BEN2_TERMINAL_MESSAGE,
+            ),
+            sides: cleanSet(
+              currentState.sides,
+              sideIndex,
+              ben2TerminalSideState(currentState.sides[sideIndex]),
+            ),
+          }));
+          return;
+        }
+
+        this.setState((currentState) => ({
+          sides: cleanMerge(currentState.sides, sideIndex, {
             loading: false,
-          });
-          return { sides };
-        });
+          }),
+        }));
         this.props.showSnack(`Processing error: ${err}`);
-        throw err;
       }
     });
   }
 
   render(
     { onBack }: Props,
-    { loading, sides, source, mobileView, preprocessorState }: State,
+    {
+      loading,
+      sides,
+      source,
+      mobileView,
+      preprocessorState,
+      ben2Capability,
+      ben2ModelCached,
+      ben2Downloading,
+    }: State,
   ) {
     const [leftSide, rightSide] = sides;
     const [leftImageData, rightImageData] = sides.map((i) => i.data);
@@ -932,12 +1140,16 @@ export default class Compress extends Component<Props, State> {
         mobileView={mobileView}
         processorState={side.latestSettings.processorState}
         encoderState={side.latestSettings.encoderState}
+        ben2Capability={ben2Capability}
+        ben2ModelCached={ben2ModelCached}
+        ben2Downloading={ben2Downloading}
         onEncoderTypeChange={this.onEncoderTypeChange}
         onEncoderOptionsChange={this.onEncoderOptionsChange}
         onProcessorOptionsChange={this.onProcessorOptionsChange}
         onCopyToOtherSideClick={this.onCopyToOtherClick}
         onSaveSideSettingsClick={this.onSaveSideSettingsClick}
         onImportSideSettingsClick={this.onImportSideSettingsClick}
+        onBen2Download={() => void this.ben2CacheLifecycle.download()}
       />
     ));
 
