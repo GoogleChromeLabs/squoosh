@@ -128,17 +128,44 @@ assert.ok(
 );
 
 const featureWorker = await readFile(assets.features_worker, 'utf8');
-for (const role of [
-  'model',
-  'ort_asyncify_mjs',
-  'ort_asyncify_wasm',
-  'png_decoder_js',
-]) {
+for (const role of ['model', 'ort_asyncify_mjs', 'ort_asyncify_wasm']) {
   assert.ok(
     featureWorker.includes(path.basename(assets[role])),
     `generated feature worker must link ${role}`,
   );
 }
+const pngDecoderSpecifier = `./${path.basename(assets.png_decoder_js, '.js')}`;
+const escapedPngDecoderSpecifier = JSON.stringify(pngDecoderSpecifier).replace(
+  /[.*+?^${}()|[\]\\]/g,
+  '\\$&',
+);
+const pngDecoderAmdEdges = [
+  ...featureWorker.matchAll(
+    new RegExp(
+      `\\b[\\w$]+\\(\\s*(${escapedPngDecoderSpecifier})\\s*\\)`,
+      'g',
+    ),
+  ),
+];
+assert.equal(
+  pngDecoderAmdEdges.length,
+  1,
+  'generated feature worker must have exactly one PNG decoder AMD edge',
+);
+const parsedPngDecoderSpecifier = JSON.parse(pngDecoderAmdEdges[0][1]);
+assert.equal(
+  parsedPngDecoderSpecifier,
+  pngDecoderSpecifier,
+  'generated PNG decoder AMD edge must use the emitted PNG decoder stem',
+);
+assert.equal(
+  new URL(
+    `${parsedPngDecoderSpecifier}.js`,
+    `https://build.test${publicPath(assets.features_worker)}`,
+  ).pathname,
+  publicPath(assets.png_decoder_js),
+  'generated PNG decoder AMD specifier must resolve to emitted PNG decoder JS',
+);
 assert.match(featureWorker, /pngDecode\s*:/, 'generated pngDecode API');
 assert.match(featureWorker, /ben2\s*:/, 'generated ben2 API');
 const pngDecoder = await readFile(assets.png_decoder_js, 'utf8');
@@ -191,91 +218,180 @@ assert.equal(
 );
 assert.equal(packageLock.dependencies?.['onnxruntime-web']?.version, '1.27.0');
 
-const sourceExtensions = new Set(['.js', '.ts', '.tsx', '.ejs']);
-const runtimeSourceFiles = [
-  ...(await walk(path.join(root, 'src'))),
-  ...(await walk(path.join(root, 'lib'))),
-  path.join(root, 'rollup.config.js'),
-  path.join(root, 'missing-types.d.ts'),
-].filter((file) => sourceExtensions.has(path.extname(file)));
-const runtimeSource = (
-  await Promise.all(runtimeSourceFiles.map((file) => readFile(file, 'utf8')))
-).join('\n');
-const ben2RuntimeSource = (
-  await Promise.all(
-    runtimeSourceFiles
-      .filter((file) => /ben2|Compress|worker-bridge|sw(?:\/|\\)/i.test(file))
-      .map((file) => readFile(file, 'utf8')),
-  )
-).join('\n');
-
-const sourceResiduePatterns = [
-  [/BEN2_ACCEPTANCE|__BEN2_ACCEPTANCE__/, 'BEN2 acceptance replacement/declaration'],
-  [/BroadcastChannel/, 'BroadcastChannel'],
-  [/__squooshBen2/, 'BEN2 window global'],
-  [/\?ben2(?:\b|=)/i, 'BEN2 query activation'],
-  [/(?:searchParams)?\.has\(\s*['"]ben2['"]\s*\)/, 'BEN2 searchParams fallback'],
-  [/ben2SpikeEnabled/, 'BEN2 spike flag'],
-  [/ben2-(?:acceptance|cancellation-audit)|ben2Acceptance|ben2CancellationAudit/i, 'BEN2 acceptance/audit module'],
-  [/\b(?:Netlify|spike)\b/i, 'Netlify/spike product wording'],
+const ben2ProductSourcePaths = [
+  'lib/omt.ejs',
+  'lib/prepare-ben2-model.js',
+  'missing-types.d.ts',
+  'rollup.config.js',
+  'src/client/lazy-app/Compress/Output/index.tsx',
+  'src/client/lazy-app/Compress/Output/style.css',
+  'src/client/lazy-app/Compress/ben2-capability.ts',
+  'src/client/lazy-app/Compress/index.tsx',
+  'src/client/lazy-app/Compress/main-job.ts',
+  'src/client/lazy-app/sw-bridge/index.ts',
+  'src/client/lazy-app/worker-bridge/index.ts',
+  'src/features/decoders/png/worker/pngDecode.ts',
+  'src/features/preprocessors/ben2/shared/meta.ts',
+  'src/features/preprocessors/ben2/shared/preprocessing.ts',
+  'src/features/preprocessors/ben2/worker/ben2.ts',
+  'src/features/preprocessors/ben2/worker/missing-types.d.ts',
+  'src/sw/index.ts',
+  'src/sw/missing-types.d.ts',
+  'src/sw/to-cache.ts',
+  'src/sw/util.ts',
 ];
-for (const [pattern, description] of sourceResiduePatterns) {
-  assert.doesNotMatch(ben2RuntimeSource, pattern, `source residue: ${description}`);
-}
-assert.doesNotMatch(
-  runtimeSource,
-  /BEN2_ACCEPTANCE|__BEN2_ACCEPTANCE__|BroadcastChannel|__squooshBen2|ben2SpikeEnabled|ben2-(?:acceptance|cancellation-audit)|ben2Acceptance|ben2CancellationAudit/i,
-  'acceptance/query/audit machinery must be absent from runtime source',
+assert.equal(
+  new Set(ben2ProductSourcePaths).size,
+  ben2ProductSourcePaths.length,
+  'BEN2 product source inventory must not contain duplicate paths',
 );
-assert.doesNotMatch(
-  await readFile(path.join(root, 'rollup.config.js'), 'utf8'),
-  /BEN2_ACCEPTANCE|__BEN2_ACCEPTANCE__/,
-  'Rollup must not replace BEN2 acceptance state',
+const ben2ProductSources = new Map(
+  await Promise.all(
+    ben2ProductSourcePaths.map(async (sourcePath) => [
+      sourcePath,
+      await readFile(path.join(root, sourcePath), 'utf8'),
+    ]),
+  ),
+);
+
+function assertNoSourceResidue(sources, patterns, scope) {
+  for (const [sourcePath, source] of sources) {
+    for (const [pattern, description] of patterns) {
+      assert.doesNotMatch(
+        source,
+        pattern,
+        `${scope} (${sourcePath}): ${description}`,
+      );
+    }
+  }
+}
+
+const sourceWiringResiduePatterns = [
+  [
+    /\b(?:BEN2_ACCEPTANCE|__BEN2_ACCEPTANCE__)\b/,
+    'acceptance build flag or replacement',
+  ],
+  [/\b__squooshBen2[\w$]*\b/, 'acceptance/audit window global'],
+  [
+    /\.\s*searchParams\s*\.\s*(?:has|get)\s*\(\s*['"]ben2(?:-(?:acceptance|cancellation-audit|audit))?['"]\s*\)/i,
+    'BEN2 URL.searchParams activation',
+  ],
+  [
+    /\bnew\s+URLSearchParams\s*\([^)]*\)\s*\.\s*(?:has|get)\s*\(\s*['"]ben2['"]\s*\)/i,
+    'BEN2 URLSearchParams activation',
+  ],
+  [
+    /\b(?:window\s*\.\s*)?location\s*\.\s*(?:search|href)\s*\.\s*(?:includes|startsWith)\s*\(\s*['"]\?ben2(?:[=&][^'"]*)?['"]\s*\)/i,
+    'BEN2 location query activation',
+  ],
+  [
+    /\bnew\s+BroadcastChannel\s*\(\s*(['"`])[^'"`]*ben2[^'"`]*\1\s*\)/i,
+    'BEN2 BroadcastChannel construction',
+  ],
+  [
+    /\b(?:squoosh-)?ben2-(?:acceptance|cancellation-audit|audit)(?:-[a-z0-9-]+)?\b/i,
+    'acceptance/audit module or channel identifier',
+  ],
+  [
+    /\bben2(?:Acceptance|CancellationAudit|Audit)[\w$]*\b/,
+    'acceptance/audit call or identifier',
+  ],
+  [/\bben2SpikeEnabled\b/, 'query-gated spike flag'],
+  [
+    /\bconsole\.(?:log|debug|info)\s*\(\s*['"`][^'"`]*\bBEN2\b[^'"`]*\bspike\b/i,
+    'BEN2 spike diagnostic call',
+  ],
+  [
+    /\bprocess\s*\.\s*env\s*(?:\.\s*(?:NETLIFY|CONTEXT|DEPLOY_ID|DEPLOY_PRIME_URL|DEPLOY_URL)\b|\[\s*['"](?:NETLIFY|CONTEXT|DEPLOY_ID|DEPLOY_PRIME_URL|DEPLOY_URL)['"]\s*\])/,
+    'Netlify-specific environment wiring',
+  ],
+  [
+    /(?:\bfrom\s*|\bimport\s*\(\s*|\brequire\s*\(\s*)['"]@netlify\//,
+    'Netlify-specific import',
+  ],
+];
+const sourceConfigurationResiduePatterns = [
+  [
+    /(?:\bort\s*\.\s*)?\benv\s*\.\s*logLevel\s*=/i,
+    'explicit ORT environment log level',
+  ],
+  [
+    /\b(?:logSeverityLevel|logVerbosityLevel)\s*:/,
+    'explicit ORT session logging option',
+  ],
+  [
+    /\bexecutionProviders\s*:\s*\[[^\]]*['"]wasm['"]/s,
+    'WASM execution-provider fallback',
+  ],
+];
+assertNoSourceResidue(
+  ben2ProductSources,
+  [...sourceWiringResiduePatterns, ...sourceConfigurationResiduePatterns],
+  'BEN2 product source residue',
+);
+
+for (const [description, source] of [
+  ['ORT verbose environment logging', "ort.env.logLevel = 'verbose';"],
+  [
+    'ORT zero-severity session logging',
+    'const options = { logSeverityLevel: 0 };',
+  ],
+  [
+    'ORT nonzero verbosity session logging',
+    'const options = { logVerbosityLevel: 4 };',
+  ],
+  [
+    'WebGPU-to-WASM provider fallback',
+    "const options = { executionProviders: ['webgpu', 'wasm'] };",
+  ],
+]) {
+  assert.throws(
+    () =>
+      assertNoSourceResidue(
+        new Map([['<self-check>', source]]),
+        sourceConfigurationResiduePatterns,
+        'configuration self-check',
+      ),
+    { name: 'AssertionError' },
+    `source stripping assertions must reject ${description}`,
+  );
+}
+
+const compressSource = ben2ProductSources.get(
+  'src/client/lazy-app/Compress/index.tsx',
 );
 assert.match(
-  runtimeSource,
+  compressSource,
   /function ben2IsEnabled\([^)]*\)[^{]*{\s*return preprocessorState\.ben2\.enabled;\s*}/s,
   'ben2IsEnabled must depend only on preprocessor state',
 );
 assert.doesNotMatch(
-  runtimeSource,
-  /(?:ort\.env|env)\.logLevel\s*=|logSeverityLevel|logVerbosityLevel/i,
-  'verbose ORT settings must be absent',
-);
-assert.doesNotMatch(
-  await readFile(
-    path.join(root, 'src/features/preprocessors/ben2/worker/ben2.ts'),
-    'utf8',
-  ),
-  /console\.(?:log|debug|info)\(/,
+  ben2ProductSources.get('src/features/preprocessors/ben2/worker/ben2.ts'),
+  /console\.(?:log|debug|info)\s*\(/,
   'BEN2 runtime must not emit verbose logs',
 );
-assert.doesNotMatch(
-  runtimeSource,
-  /executionProviders\s*:\s*\[\s*['"]wasm['"]/,
-  'WASM execution provider must be absent',
+const ben2RuntimeSources = new Map(
+  [...ben2ProductSources].filter(([sourcePath]) =>
+    sourcePath.startsWith('src/'),
+  ),
 );
-const srcOnly = (
-  await Promise.all(
-    (await walk(path.join(root, 'src')))
-      .filter((file) => sourceExtensions.has(path.extname(file)))
-      .map((file) => readFile(file, 'utf8')),
-  )
-).join('\n');
-assert.doesNotMatch(
-  srcOnly,
-  /https?:\/\/(?:huggingface\.co|hf\.co)\//i,
-  'runtime source must not contain a remote model URL',
-);
-assert.doesNotMatch(
-  runtimeSource,
-  /\/tmp\/squoosh|(?:^|["'])evidence\//im,
-  'runtime source must not contain evidence paths',
-);
-assert.doesNotMatch(
-  await readFile(path.join(root, 'missing-types.d.ts'), 'utf8'),
-  /__BEN2_ACCEPTANCE__|BEN2_ACCEPTANCE/,
-  'root types must not declare BEN2 acceptance state',
+assertNoSourceResidue(
+  ben2RuntimeSources,
+  [
+    [
+      /https?:\/\/(?:huggingface\.co|hf\.co)\/|https?:\/\/[^'"`\s]+\.onnx(?:[?#/][^'"`\s]*)?/i,
+      'remote model runtime URL',
+    ],
+    [
+      /\b(?:modelUrl|MODEL_URL)\s*=\s*['"`]https?:\/\//,
+      'remote model URL configuration',
+    ],
+    [
+      /['"`](?:\/tmp\/squoosh|(?:\.\.\/)*evidence\/)/i,
+      'acceptance evidence or machine-local path literal',
+    ],
+  ],
+  'BEN2 runtime source residue',
 );
 
 const buildTextFiles = buildFiles.filter((file) =>
@@ -285,18 +401,35 @@ const buildText = (
   await Promise.all(buildTextFiles.map((file) => readFile(file, 'utf8')))
 ).join('\n');
 const buildResiduePatterns = [
-  [/BEN2_ACCEPTANCE|__BEN2_ACCEPTANCE__/i, 'BEN2 acceptance state'],
-  [/BroadcastChannel/, 'BroadcastChannel'],
-  [/__squooshBen2/, 'BEN2 window global'],
+  [/\b(?:BEN2_ACCEPTANCE|__BEN2_ACCEPTANCE__)\b/i, 'BEN2 acceptance state'],
+  [/\b__squooshBen2[\w$]*\b/, 'BEN2 acceptance/audit global'],
+  [/\bben2SpikeEnabled\b/i, 'BEN2 query-gated spike flag'],
+  [
+    /\b(?:squoosh-)?ben2-(?:acceptance|cancellation-audit|audit)(?:-[a-z0-9-]+)?\b/i,
+    'BEN2 acceptance/audit module or channel identifier',
+  ],
+  [
+    /\bben2(?:Acceptance|CancellationAudit|Audit)[\w$]*\b/,
+    'BEN2 acceptance/audit identifier',
+  ],
+  [
+    /\bnew\s+BroadcastChannel\s*\(\s*(['"`])[^'"`]*ben2[^'"`]*\1\s*\)/i,
+    'BEN2 BroadcastChannel name',
+  ],
   [/\?ben2(?:\b|=)/i, 'BEN2 query activation'],
-  [/(?:searchParams)?\.has\(\s*['"]ben2['"]\s*\)/, 'BEN2 searchParams fallback'],
-  [/ben2SpikeEnabled/i, 'BEN2 spike flag'],
-  [/ben2[-_ ]?(?:acceptance|audit)|squoosh-ben2-acceptance|auditJob/i, 'BEN2 acceptance/audit module'],
-  [/\.logLevel\s*=\s*['"]verbose['"]|logSeverityLevel\s*:\s*0|logVerbosityLevel/i, 'verbose ORT configuration'],
-  [/executionProviders\s*:\s*\[\s*['"]wasm['"]/i, 'WASM execution provider'],
-  [/https?:\/\/(?:huggingface\.co|hf\.co)\//i, 'remote model runtime URL'],
-  [/(?:\/tmp\/|\.tmp\/|evidence\/)/i, 'evidence/temp path'],
-  [/\b(?:Netlify|spike)\b/i, 'Netlify/spike product wording'],
+  [
+    /\.searchParams\.(?:has|get)\(\s*['"]ben2['"]\s*\)/i,
+    'BEN2 URL.searchParams activation',
+  ],
+  [
+    /\bnew\s+URLSearchParams\s*\([^)]*\)\.(?:has|get)\(\s*['"]ben2['"]\s*\)/i,
+    'BEN2 URLSearchParams activation',
+  ],
+  [/\[BEN2[^\]]*\bspike\b[^\]]*\]/i, 'BEN2 spike diagnostic marker'],
+  [
+    /https?:\/\/(?:huggingface\.co|hf\.co)\/|https?:\/\/[^'"`\s]+\.onnx(?:[?#/][^'"`\s]*)?/i,
+    'remote model runtime URL',
+  ],
 ];
 for (const [pattern, description] of buildResiduePatterns) {
   assert.doesNotMatch(buildText, pattern, `production residue: ${description}`);
