@@ -98,6 +98,10 @@ export class Ben2ProcessingCoordinator {
     })()
       .catch(async (error) => {
         if (errorName(error) === 'AbortError') throw error;
+        if (errorName(error) === 'Ben2ModelNotCachedError') {
+          if (this.current === record) this.current = undefined;
+          throw error;
+        }
 
         record.terminal = true;
         record.reset = true;

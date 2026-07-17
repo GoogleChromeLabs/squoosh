@@ -1,7 +1,7 @@
 import * as ort from 'onnxruntime-web/webgpu';
 import wasmLoaderUrl from 'url:onnxruntime-web/ort-wasm-simd-threaded.asyncify.mjs';
 import wasmUrl from 'url:onnxruntime-web/ort-wasm-simd-threaded.asyncify.wasm';
-import modelUrl from 'url:../../../../../.tmp/ben2/model_fp16.onnx';
+import { readCachedBen2ModelBytes } from '../shared/model-cache';
 import { applyMatte, makeNormalizedInput } from '../shared/preprocessing';
 
 const INPUT_SIZE = 1024;
@@ -94,9 +94,10 @@ async function createSession(): Promise<ort.InferenceSession> {
   };
   ort.env.webgpu.adapter = adapter;
 
+  const model = await readCachedBen2ModelBytes();
   let created: ort.InferenceSession;
   try {
-    created = await ort.InferenceSession.create(modelUrl, {
+    created = await ort.InferenceSession.create(model, {
       executionProviders: ['webgpu'],
       graphOptimizationLevel: 'disabled',
     });

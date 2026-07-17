@@ -773,6 +773,47 @@ async function clientAssertions() {
     'non-PNG coordinator path uses already-rotated shared preprocessing',
   );
 
+  let cacheRaceCalls = 0;
+  let cacheRaceResets = 0;
+  const cacheRaceCoordinator = createBen2Coordinator({
+    async pngDecode() {
+      return decoded;
+    },
+    async rotate() {
+      return rotated;
+    },
+    async ben2() {
+      cacheRaceCalls++;
+      if (cacheRaceCalls === 1) {
+        const error = new Error('The current BEN2 model is not cached');
+        error.name = 'Ben2ModelNotCachedError';
+        throw error;
+      }
+      return matte;
+    },
+    async reset() {
+      cacheRaceResets++;
+    },
+  });
+  await assert.rejects(
+    cacheRaceCoordinator.acquire(
+      jpegSource,
+      { rotate: 90 },
+      new AbortController().signal,
+    ),
+    (error) => error?.name === 'Ben2ModelNotCachedError',
+  );
+  assert.equal(cacheRaceResets, 0, 'cache eviction is not terminal cleanup');
+  assert.equal(
+    await cacheRaceCoordinator.acquire(
+      jpegSource,
+      { rotate: 90 },
+      new AbortController().signal,
+    ),
+    matte,
+    'cache eviction clears the shared record for retry',
+  );
+
   let invalidationResets = 0;
   const invalidatedCoordinator = createBen2Coordinator({
     async pngDecode() {
@@ -1398,13 +1439,11 @@ async function clientAssertions() {
   const lifecycleWindow = new FakeEventTarget();
   const lifecycleDocument = new FakeEventTarget();
   lifecycleDocument.visibilityState = 'visible';
-  const lifecycleServiceWorker = new FakeEventTarget();
   const lifecycleTimers = new Map();
   let nextLifecycleTimer = 0;
   const lifecycleEnvironment = {
     window: lifecycleWindow,
     document: lifecycleDocument,
-    serviceWorker: lifecycleServiceWorker,
     setInterval(callback, delay) {
       assert.equal(delay, 2_000);
       const id = ++nextLifecycleTimer;
@@ -1437,12 +1476,11 @@ async function clientAssertions() {
   assert.equal(lifecycleTimers.size, 1, 'one shared polling interval');
   lifecycleWindow.dispatch('focus');
   lifecycleDocument.dispatch('visibilitychange');
-  lifecycleServiceWorker.dispatch('controllerchange');
   for (const callback of lifecycleTimers.values()) callback();
   assert.equal(
     lifecycleStatusCalls,
     1,
-    'focus/visibility/controller/poll share one non-overlapping status request',
+    'focus/visibility/poll share one non-overlapping status request',
   );
   statusGate.resolve(true);
   await lifecycle.refresh();
@@ -1467,14 +1505,12 @@ async function clientAssertions() {
   lifecycle.dispose();
   assert.equal(lifecycleWindow.listenerCount(), 0);
   assert.equal(lifecycleDocument.listenerCount(), 0);
-  assert.equal(lifecycleServiceWorker.listenerCount(), 0);
   lifecycleWindow.dispatch('focus');
   assert.equal(lifecycleStatusCalls, 2, 'disposed lifecycle cannot refresh');
 
   const downloadWindow = new FakeEventTarget();
   const downloadDocument = new FakeEventTarget();
   downloadDocument.visibilityState = 'visible';
-  const downloadServiceWorker = new FakeEventTarget();
   let downloadAttempts = 0;
   let downloadStatusCalls = 0;
   const downloadingStates = [];
@@ -1498,7 +1534,6 @@ async function clientAssertions() {
     {
       window: downloadWindow,
       document: downloadDocument,
-      serviceWorker: downloadServiceWorker,
       setInterval: () => assert.fail('disabled lifecycle cannot poll'),
       clearInterval: () => {},
     },
@@ -1540,7 +1575,6 @@ async function clientAssertions() {
       document: Object.assign(new FakeEventTarget(), {
         visibilityState: 'visible',
       }),
-      serviceWorker: new FakeEventTarget(),
       setInterval: () => assert.fail('disabled lifecycle cannot poll'),
       clearInterval: () => {},
     },
@@ -1617,15 +1651,16 @@ async function clientAssertions() {
     1,
   );
   assert.match(options, /prettyBytes\(modelBytes\)/);
-  assert.match(options, /Download BEN2 Neural Network/);
+  assert.match(options, /shared\/custom-els\/loading-spinner/);
+  assert.match(options, /download \(\$\{ben2ModelSize\.value\}\$\{ben2ModelSize\.unit\}\)/);
   assert.match(
     options,
     /<section class={style\.ben2Panel} aria-live="polite">/,
   );
   assert.match(
     options,
-    /<button\s+class={style\.ben2Download}\s+type="button"\s+disabled={ben2Downloading}\s+onClick={onBen2Download}\s*>/,
-    'BEN2 download retains its native button behavior under the local class',
+    /<button\s+class={style\.ben2Download}\s+type="button"\s+aria-label={ben2DownloadLabel}\s+aria-busy={ben2Downloading}\s+disabled={ben2Downloading}\s+onClick={onBen2Download}\s*>/,
+    'BEN2 download retains native behavior and exposes busy state',
   );
   assert.match(
     optionsCss,
@@ -1654,6 +1689,11 @@ async function clientAssertions() {
     /\.ben2-download[\s\S]*?&:disabled\s*{[^}]*opacity:/,
     'disabled BEN2 download keeps its dark control surface fully opaque',
   );
+  assert.match(optionsCss, /\.ben2-download loading-spinner/);
+  assert.match(optionsCss, /--size:\s*18px/);
+  assert.match(optionsCss, /--stroke-width:\s*2px/);
+  assert.match(optionsCss, /--delay:\s*0ms/);
+  assert.match(optionsCss, /--color:\s*currentColor/);
   const ben2Panel = options.slice(
     options.indexOf('Remove background'),
     options.indexOf('{encoderState ?'),
@@ -1719,443 +1759,31 @@ async function clientAssertions() {
 }
 
 async function cacheAssertions() {
-  const require = createRequire(import.meta.url);
-  let ts;
-  try {
-    ts = require('typescript');
-  } catch {
-    throw new Error(
-      'lifecycle --cache requires the repository TypeScript dependency',
-    );
-  }
-
-  const bridgeSource = await readFile(
+  const compress = await readFile(
+    new URL('src/client/lazy-app/Compress/index.tsx', root),
+    'utf8',
+  );
+  const lifecycle = await readFile(
+    new URL('src/client/lazy-app/Compress/ben2-cache-lifecycle.ts', root),
+    'utf8',
+  );
+  const bridge = await readFile(
     new URL('src/client/lazy-app/sw-bridge/index.ts', root),
     'utf8',
   );
-  const bridgeCompiled = ts.transpileModule(bridgeSource, {
-    compilerOptions: {
-      module: ts.ModuleKind.CommonJS,
-      target: ts.ScriptTarget.ES2020,
-    },
-  }).outputText;
 
-  class FakePort {
-    constructor() {
-      this.onmessage = null;
-      this.onmessageerror = null;
-      this.closed = false;
-      this.peer = undefined;
-    }
-    postMessage(data) {
-      this.peer?.onmessage?.({ data });
-    }
-    close() {
-      this.closed = true;
-    }
-  }
-  const channels = [];
-  class FakeMessageChannel {
-    constructor() {
-      this.port1 = new FakePort();
-      this.port2 = new FakePort();
-      this.port1.peer = this.port2;
-      this.port2.peer = this.port1;
-      channels.push(this);
-    }
-  }
-  const timers = new Map();
-  let nextTimer = 0;
-  let timerNow = 0;
-  function advanceTimersBy(duration) {
-    const target = timerNow + duration;
-    while (true) {
-      const next = [...timers.entries()]
-        .filter(([, timer]) => timer.due <= target)
-        .sort((left, right) => left[1].due - right[1].due)[0];
-      if (!next) break;
-      const [id, timer] = next;
-      timers.delete(id);
-      timerNow = timer.due;
-      timer.callback();
-    }
-    timerNow = target;
-  }
-  const listeners = new Set();
-  const serviceWorker = {
-    controller: undefined,
-    addEventListener(type, listener) {
-      if (type === 'controllerchange') listeners.add(listener);
-    },
-    removeEventListener(type, listener) {
-      if (type === 'controllerchange') listeners.delete(listener);
-    },
-  };
-  const bridgeModule = { exports: {} };
-  vm.runInNewContext(bridgeCompiled, {
-    exports: bridgeModule.exports,
-    module: bridgeModule,
-    require(specifier) {
-      if (specifier === 'idb-keyval') {
-        return { get: async () => undefined, set: async () => undefined };
-      }
-      if (specifier === 'service-worker:sw') return 'sw.js';
-      throw new Error(`Unexpected SW bridge import: ${specifier}`);
-    },
-    navigator: { serviceWorker },
-    location: { reload() {} },
-    MessageChannel: FakeMessageChannel,
-    Promise,
-    Array,
-    clearTimeout(id) {
-      timers.delete(id);
-    },
-    setTimeout(callback, delay) {
-      assert.ok(delay > 0 && delay <= 30_000, 'transport timeout is bounded');
-      const id = ++nextTimer;
-      timers.set(id, { callback, delay, due: timerNow + delay });
-      return id;
-    },
-  });
-  const { ben2CacheStatus, ben2ModelIsCached, downloadBen2Model } =
-    bridgeModule.exports;
-  assert.equal(typeof ben2ModelIsCached, 'function');
-  assert.equal(typeof downloadBen2Model, 'function');
-  const fallback = { controlled: false, entries: [], offlineReady: false };
-
-  assert.deepEqual(
-    JSON.parse(JSON.stringify(await ben2CacheStatus())),
-    fallback,
+  assert.match(
+    compress,
+    /features\/processors\/ben2\/shared\/model-cache/g,
+    'Compress dynamically imports the direct cache authority',
   );
-
-  serviceWorker.controller = { postMessage() {} };
-  const timeoutStatus = ben2CacheStatus();
-  assert.equal(timers.size, 1);
-  advanceTimersBy([...timers.values()][0].delay);
-  assert.deepEqual(JSON.parse(JSON.stringify(await timeoutStatus)), fallback);
-  assert.equal(channels.at(-1).port1.closed, true);
-  assert.equal(listeners.size, 0, 'timeout cleans controller listener');
-  assert.equal(timers.size, 0, 'timeout cleans timer');
-
-  serviceWorker.controller = {
-    postMessage(_message, ports) {
-      ports[0].postMessage({ ok: false, error: 'cache lookup failed' });
-    },
-  };
-  assert.deepEqual(
-    JSON.parse(JSON.stringify(await ben2CacheStatus())),
-    fallback,
+  assert.doesNotMatch(compress, /ben2CacheStatus/);
+  assert.doesNotMatch(lifecycle, /serviceWorker|controllerchange/);
+  assert.doesNotMatch(
+    bridge,
+    /ben2-cache-status|ben2-download-model|MessageChannel|Ben2CacheStatus/,
   );
-
-  serviceWorker.controller = {
-    postMessage(_message, ports) {
-      ports[0].peer.onmessageerror();
-    },
-  };
-  assert.deepEqual(
-    JSON.parse(JSON.stringify(await ben2CacheStatus())),
-    fallback,
-  );
-
-  serviceWorker.controller = { postMessage() {} };
-  const changedStatus = ben2CacheStatus();
-  for (const listener of [...listeners]) listener();
-  assert.deepEqual(JSON.parse(JSON.stringify(await changedStatus)), fallback);
-  assert.equal(listeners.size, 0);
-
-  serviceWorker.controller = {
-    postMessage() {
-      throw new Error('detached controller');
-    },
-  };
-  assert.deepEqual(
-    JSON.parse(JSON.stringify(await ben2CacheStatus())),
-    fallback,
-  );
-
-  const entries = [
-    'features_worker',
-    'model',
-    'ort_asyncify_mjs',
-    'ort_asyncify_wasm',
-    'png_decoder_js',
-    'png_decoder_wasm',
-  ].map((role) => ({ role, path: `/${role}`, cached: true }));
-  serviceWorker.controller = {
-    postMessage(_message, ports) {
-      ports[0].postMessage({ ok: true, cacheName: 'static-v1', entries });
-    },
-  };
-  const success = await ben2CacheStatus();
-  assert.equal(success.controlled, true);
-  assert.equal(success.offlineReady, true);
-  assert.equal(success.entries.length, 6);
-  assert.equal(ben2ModelIsCached(success), true);
-  assert.equal(
-    ben2ModelIsCached({ ...success, offlineReady: false }),
-    true,
-    'model eligibility does not require the other five cached roles',
-  );
-  assert.equal(
-    ben2ModelIsCached({
-      ...success,
-      entries: success.entries.map((entry) =>
-        entry.role === 'model' ? { ...entry, cached: false } : entry,
-      ),
-    }),
-    false,
-  );
-  assert.equal(
-    ben2ModelIsCached({
-      ...success,
-      entries: [
-        ...success.entries,
-        { role: 'model', path: '/duplicate', cached: true },
-      ],
-    }),
-    false,
-    'duplicate model roles are never confirmation',
-  );
-  assert.equal(ben2ModelIsCached(fallback), false);
-  assert.equal(listeners.size, 0);
-  assert.equal(timers.size, 0);
-
-  serviceWorker.controller = {
-    postMessage(_message, ports) {
-      ports[0].postMessage({
-        ok: true,
-        cacheName: 'static-v1',
-        entries: [...entries, entries[1]],
-      });
-    },
-  };
-  assert.deepEqual(
-    JSON.parse(JSON.stringify(await ben2CacheStatus())),
-    fallback,
-    'malformed duplicate-role status is conservative',
-  );
-
-  let downloadPosts = 0;
-  let downloadPort;
-  let downloadMessage;
-  serviceWorker.controller = {
-    postMessage(message, ports) {
-      downloadPosts++;
-      downloadMessage = message;
-      downloadPort = ports[0];
-    },
-  };
-  const firstDownload = downloadBen2Model();
-  const secondDownload = downloadBen2Model();
-  assert.equal(downloadPosts, 1, 'client deduplicates simultaneous downloads');
-  assert.deepEqual(
-    JSON.parse(JSON.stringify(downloadMessage)),
-    { action: 'ben2-download-model' },
-    'client sends no model identity fields',
-  );
-  let longDownloadSettled = false;
-  firstDownload.finally(() => {
-    longDownloadSettled = true;
-  });
-  const watchdogDelay = [...timers.values()][0].delay;
-  assert.ok(watchdogDelay > 5_000, 'watchdog exceeds heartbeat cadence');
-  for (let elapsed = 0; elapsed <= watchdogDelay; elapsed += 5_000) {
-    advanceTimersBy(5_000);
-    downloadPort.postMessage({ type: 'heartbeat' });
-  }
-  assert.equal(
-    longDownloadSettled,
-    false,
-    'heartbeats keep a transfer alive beyond one watchdog duration',
-  );
-  downloadPort.postMessage({ ok: true });
-  await Promise.all([firstDownload, secondDownload]);
-  assert.equal(listeners.size, 0, 'successful download cleans listeners');
-  assert.equal(
-    channels.at(-1).port1.closed,
-    true,
-    'successful download closes ports',
-  );
-  assert.equal(timers.size, 0, 'successful download clears watchdog');
-
-  let silentPosts = 0;
-  serviceWorker.controller = {
-    postMessage() {
-      silentPosts++;
-    },
-  };
-  const silentDownload = downloadBen2Model();
-  const silentWatchdog = [...timers.values()][0];
-  advanceTimersBy(silentWatchdog.delay);
-  await assert.rejects(silentDownload, /stopped responding/i);
-  assert.equal(channels.at(-1).port1.closed, true);
-  assert.equal(listeners.size, 0);
-  assert.equal(timers.size, 0);
-  serviceWorker.controller = {
-    postMessage(_message, ports) {
-      silentPosts++;
-      ports[0].postMessage({ ok: true });
-    },
-  };
-  await downloadBen2Model();
-  assert.equal(silentPosts, 2, 'watchdog rejection clears dedupe for retry');
-
-  serviceWorker.controller = {
-    postMessage(_message, ports) {
-      ports[0].postMessage({ ok: false, error: 'model-download-failed' });
-    },
-  };
-  await assert.rejects(downloadBen2Model(), /model download failed/i);
-  assert.equal(listeners.size, 0, 'failure cleans controller listener');
-  assert.equal(timers.size, 0, 'failure clears watchdog');
-  assert.equal(channels.at(-1).port1.closed, true, 'failure closes ports');
-  const postsBeforeRetry = downloadPosts;
-  serviceWorker.controller = {
-    postMessage(_message, ports) {
-      downloadPosts++;
-      ports[0].postMessage({ ok: true });
-    },
-  };
-  await downloadBen2Model();
-  assert.equal(
-    downloadPosts,
-    postsBeforeRetry + 1,
-    'failed client operation clears dedupe for retry',
-  );
-
-  serviceWorker.controller = {
-    postMessage() {},
-  };
-  const changedDownload = downloadBen2Model();
-  for (const listener of [...listeners]) listener();
-  await assert.rejects(changedDownload, /controller changed/i);
-  assert.equal(listeners.size, 0);
-  assert.equal(timers.size, 0, 'controller change clears watchdog');
-  assert.equal(channels.at(-1).port1.closed, true);
-
-  serviceWorker.controller = {
-    postMessage(_message, ports) {
-      ports[0].postMessage({ ok: 'yes' });
-    },
-  };
-  await assert.rejects(downloadBen2Model(), /invalid model download response/i);
-  assert.equal(listeners.size, 0);
-  assert.equal(timers.size, 0, 'malformed response clears watchdog');
-  assert.equal(channels.at(-1).port1.closed, true);
-
-  serviceWorker.controller = undefined;
-  await assert.rejects(downloadBen2Model(), /not controlled/i);
-
-  // Execute the production service-worker message handler and prove rejected
-  // CacheStorage reads still produce an explicit response without opening (and
-  // therefore without creating) a cache.
-  const swSource = await readFile(new URL('src/sw/index.ts', root), 'utf8');
-  const swCompiled = ts.transpileModule(swSource, {
-    compilerOptions: {
-      module: ts.ModuleKind.CommonJS,
-      target: ts.ScriptTarget.ES2020,
-    },
-  }).outputText;
-  const swListeners = new Map();
-  const inventory = entries.map(({ role, path }) => ({
-    role,
-    path,
-    ...(role === 'model' ? { bytes: 219_121_675 } : {}),
-  }));
-  let opens = 0;
-  let stagingReaps = 0;
-  const matchedUrls = [];
-  const swContext = {
-    exports: {},
-    module: { exports: {} },
-    require(specifier) {
-      if (specifier === './util') {
-        return {
-          cacheBen2Asset() {},
-          cacheOrNetworkAndCache() {},
-          cleanupCache() {},
-          cacheOrNetwork() {},
-          deleteBen2ModelStaging: async () => {
-            stagingReaps++;
-          },
-          cacheBasics: async () => {},
-          cacheAdditionalProcessors: async () => {},
-          serveShareTarget() {},
-          matchValidatedBen2Model: (path, cacheName) =>
-            swContext.caches.match(
-              new URL(path, swContext.location.origin).href,
-              { cacheName },
-            ),
-        };
-      }
-      if (specifier === 'idb-keyval') return { get: async () => false };
-      if (specifier === './to-cache') {
-        return {
-          ben2AssetInventory: inventory,
-          ben2Assets: [],
-          shouldCacheDynamically: () => false,
-        };
-      }
-      throw new Error(`Unexpected service worker import: ${specifier}`);
-    },
-    self: {
-      clients: { claim() {} },
-      addEventListener(type, listener) {
-        swListeners.set(type, listener);
-      },
-      skipWaiting() {},
-    },
-    VERSION: 'v1',
-    ASSETS: [],
-    location: { origin: 'https://squoosh.test' },
-    URL,
-    Promise,
-    caches: {
-      async match(url) {
-        matchedUrls.push(String(url));
-        throw new Error('CacheStorage rejected');
-      },
-      async open() {
-        opens++;
-        throw new Error('must not open');
-      },
-      async keys() {
-        return [];
-      },
-      async delete() {},
-    },
-  };
-  swContext.exports = swContext.module.exports;
-  vm.runInNewContext(swCompiled, swContext);
-  const replies = [];
-  const lifetimes = [];
-  swListeners.get('message')({
-    data: {
-      action: 'ben2-cache-status',
-      urls: ['https://attacker.test/not-owned'],
-    },
-    ports: [{ postMessage: (message) => replies.push(message) }],
-    waitUntil(promise) {
-      lifetimes.push(promise);
-    },
-  });
-  await Promise.all(lifetimes);
-  assert.equal(
-    stagingReaps,
-    1,
-    'fresh status delegates one body-free staging reap',
-  );
-  assert.equal(opens, 0, 'inventory reads do not open or create a cache');
-  assert.equal(matchedUrls.length, 6);
-  assert.ok(
-    matchedUrls.every((url) => url.startsWith('https://squoosh.test/')),
-    'status lookup derives canonical URLs only from owned inventory',
-  );
-  assert.ok(matchedUrls.every((url) => !url.includes('attacker.test')));
-  assert.equal(replies.length, 1);
-  assert.equal(replies[0].ok, false, 'cache rejection gets explicit fallback');
-
-  console.log('BEN2 cache-status lifecycle assertion passed');
+  console.log('BEN2 direct cache lifecycle assertion passed');
 }
 
 async function workerAssertions() {
@@ -2178,16 +1806,22 @@ async function workerAssertions() {
     },
   }).outputText;
 
-  function loadWorker({ create, gpu, runtimeDevice }) {
+  function loadWorker({
+    create,
+    gpu,
+    runtimeDevice,
+    readModel = async () => new Uint8Array([1, 2, 3]),
+  }) {
     const createCalls = [];
+    let fetchCalls = 0;
     const ort = {
       env: {
         wasm: {},
         webgpu: { device: Promise.resolve(runtimeDevice) },
       },
       InferenceSession: {
-        async create(url, options) {
-          createCalls.push({ url, options });
+        async create(model, options) {
+          createCalls.push({ model, options });
           return create();
         },
       },
@@ -2204,7 +1838,9 @@ async function workerAssertions() {
       require(specifier) {
         if (specifier === 'onnxruntime-web/webgpu') return ort;
         if (specifier.startsWith('url:onnxruntime-web/')) return specifier;
-        if (specifier.startsWith('url:../../../../../')) return 'model.onnx';
+        if (specifier === '../shared/model-cache') {
+          return { readCachedBen2ModelBytes: readModel };
+        }
         if (specifier === '../shared/preprocessing') {
           return {
             makeNormalizedInput: () => new Float32Array(3 * 1024 * 1024),
@@ -2221,11 +1857,19 @@ async function workerAssertions() {
       Promise,
       Float32Array,
       Uint8ClampedArray,
+      Uint8Array,
+      fetch() {
+        fetchCalls++;
+        throw new Error('worker model fetch is forbidden');
+      },
     };
     vm.runInNewContext(compiled, context);
     return {
       ben2: module.exports.default,
       createCalls,
+      get fetchCalls() {
+        return fetchCalls;
+      },
     };
   }
 
@@ -2271,7 +1915,10 @@ async function workerAssertions() {
     assert.equal(await worker.ben2(image), image);
     assert.equal(await worker.ben2(image), image);
     assert.equal(worker.createCalls.length, 1);
+    assert.equal(worker.fetchCalls, 0);
     assert.equal(runs, 2);
+    assert.equal(worker.createCalls[0].model instanceof Uint8Array, true);
+    assert.deepEqual([...worker.createCalls[0].model], [1, 2, 3]);
     assert.equal(
       JSON.stringify(worker.createCalls[0].options.executionProviders),
       JSON.stringify(['webgpu']),
@@ -2280,6 +1927,32 @@ async function workerAssertions() {
       worker.createCalls[0].options.graphOptimizationLevel,
       'disabled',
     );
+  }
+
+  {
+    let reads = 0;
+    const worker = loadWorker({
+      create: () => assert.fail('cache miss must not create a session'),
+      gpu,
+      runtimeDevice: { lost: new Promise(() => {}) },
+      readModel: async () => {
+        reads++;
+        const error = new Error('The current BEN2 model is not cached');
+        error.name = 'Ben2ModelNotCachedError';
+        throw error;
+      },
+    });
+    await assert.rejects(
+      worker.ben2(image),
+      (error) => error?.name === 'Ben2ModelNotCachedError',
+    );
+    await assert.rejects(
+      worker.ben2(image),
+      (error) => error?.name === 'Ben2ModelNotCachedError',
+    );
+    assert.equal(reads, 2, 'a cache miss remains intrinsically retryable');
+    assert.equal(worker.createCalls.length, 0);
+    assert.equal(worker.fetchCalls, 0);
   }
 
   {
