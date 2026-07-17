@@ -97,6 +97,23 @@ function ben2ModelRequest(path: string): Request {
   return new Request(new URL(path, self.location.origin).href);
 }
 
+function ben2ModelStagingRequest(path: string): Request {
+  const request = ben2ModelRequest(path);
+  return new Request(`${request.url}?sw-model-validation-staging`);
+}
+
+/** Delete an interrupted validation write without reading its model body. */
+export async function deleteBen2ModelStaging(
+  path: string,
+  cacheName: string,
+): Promise<void> {
+  const request = ben2ModelRequest(path);
+  if (!isCanonicalBen2Request(request)) {
+    throw new Error('Invalid BEN2 model inventory entry');
+  }
+  await (await caches.open(cacheName)).delete(ben2ModelStagingRequest(path));
+}
+
 /**
  * Match only the persisted form produced after the explicit streaming
  * validation operation. The marker avoids rereading 219 MB for every status
@@ -166,53 +183,56 @@ export async function downloadBen2Model(
   ) {
     throw new Error('Invalid BEN2 model inventory entry');
   }
-  if (await matchValidatedBen2Model(path, cacheName, expectedBytes)) return;
-
-  const response = await fetch(request);
-  if (!isAdmissibleBen2Response(response)) {
-    throw new Error('BEN2 model response was not accepted');
-  }
-  const responseToCache = response.clone();
-  // Response.clone() tees the body. Cancel the unused original branch before
-  // reading the clone so the tee cannot buffer the full 219 MB without
-  // backpressure. Cancellation is advisory; validation still owns the clone.
-  void response.body?.cancel().catch(() => undefined);
-  if (!responseToCache.body) {
-    throw new Error('BEN2 model response had no body');
-  }
-
-  // The staging key cannot qualify for status or model routing. Counting in a
-  // TransformStream keeps memory bounded; promotion occurs only after a clean,
-  // exact end-of-stream and a completed staging write.
-  const stagingRequest = new Request(`${request.url}?ben2-validation-staging`);
-  let receivedBytes = 0;
-  const validatingBody = responseToCache.body.pipeThrough(
-    new TransformStream<Uint8Array, Uint8Array>({
-      transform(chunk, controller) {
-        receivedBytes += chunk.byteLength;
-        if (receivedBytes > expectedBytes) {
-          throw new Error('BEN2 model response was overlong');
-        }
-        controller.enqueue(chunk);
-      },
-      flush() {
-        if (receivedBytes !== expectedBytes) {
-          throw new Error('BEN2 model response was short');
-        }
-      },
-    }),
-  );
-  const stagingHeaders = new Headers(responseToCache.headers);
-  stagingHeaders.delete(ben2ValidationHeader);
-  const stagingResponse = new Response(validatingBody, {
-    status: responseToCache.status,
-    statusText: responseToCache.statusText,
-    headers: stagingHeaders,
-  });
-
+  const stagingRequest = ben2ModelStagingRequest(path);
   let cache: Cache | undefined;
   try {
+    // Reap a prior process's orphan before any network or clone failure can
+    // strand it through another attempt. Cache.delete does not read the body.
     cache = await caches.open(cacheName);
+    await cache.delete(stagingRequest);
+    if (await matchValidatedBen2Model(path, cacheName, expectedBytes)) return;
+
+    const response = await fetch(request);
+    if (!isAdmissibleBen2Response(response)) {
+      throw new Error('BEN2 model response was not accepted');
+    }
+    const responseToCache = response.clone();
+    // Response.clone() tees the body. Cancel the unused original branch before
+    // reading the clone so the tee cannot buffer the full 219 MB without
+    // backpressure. Cancellation is advisory; validation still owns the clone.
+    void response.body?.cancel().catch(() => undefined);
+    if (!responseToCache.body) {
+      throw new Error('BEN2 model response had no body');
+    }
+
+    // The staging key cannot qualify for status or model routing. Counting in
+    // a TransformStream keeps memory bounded; promotion occurs only after a
+    // clean, exact end-of-stream and a completed staging write.
+    let receivedBytes = 0;
+    const validatingBody = responseToCache.body.pipeThrough(
+      new TransformStream<Uint8Array, Uint8Array>({
+        transform(chunk, controller) {
+          receivedBytes += chunk.byteLength;
+          if (receivedBytes > expectedBytes) {
+            throw new Error('BEN2 model response was overlong');
+          }
+          controller.enqueue(chunk);
+        },
+        flush() {
+          if (receivedBytes !== expectedBytes) {
+            throw new Error('BEN2 model response was short');
+          }
+        },
+      }),
+    );
+    const stagingHeaders = new Headers(responseToCache.headers);
+    stagingHeaders.delete(ben2ValidationHeader);
+    const stagingResponse = new Response(validatingBody, {
+      status: responseToCache.status,
+      statusText: responseToCache.statusText,
+      headers: stagingHeaders,
+    });
+
     await cache.put(stagingRequest, stagingResponse);
     const staged = await cache.match(stagingRequest);
     if (!staged?.body) throw new Error('BEN2 staging write was unavailable');

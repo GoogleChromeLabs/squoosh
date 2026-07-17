@@ -31,6 +31,7 @@ const plain = (value) => JSON.parse(JSON.stringify(value));
 const origin = 'https://squoosh.test';
 const modelPath = '/c/model_fp16-current.onnx';
 const modelBytes = 219_121_675;
+const stagingUrl = `${origin}${modelPath}?sw-model-validation-staging`;
 const inventory = [
   { role: 'features_worker', path: '/c/features-worker.js' },
   { role: 'model', path: modelPath, bytes: modelBytes },
@@ -122,12 +123,16 @@ let openFailure;
 let putFailure;
 let putGate;
 let putStarted;
+let stagingStored;
+let stagingReadGate;
 const stored = new Map();
 const keyFor = (request) =>
   typeof request === 'string' ? request : request.url;
 const cache = {
   async match(request) {
-    const snapshot = stored.get(keyFor(request));
+    const key = keyFor(request);
+    if (key === stagingUrl && stagingReadGate) await stagingReadGate.promise;
+    const snapshot = stored.get(key);
     return snapshot && restoreResponse(snapshot);
   },
   async put(request, response) {
@@ -135,7 +140,9 @@ const cache = {
     putStarted?.resolve();
     if (putGate) await putGate.promise;
     if (putFailure) throw putFailure;
-    stored.set(keyFor(request), await snapshotResponse(response));
+    const key = keyFor(request);
+    stored.set(key, await snapshotResponse(response));
+    if (key === stagingUrl) stagingStored?.resolve();
   },
   async delete(request) {
     deleteCalls++;
@@ -189,43 +196,64 @@ vm.runInNewContext(await compile('src/sw/util.ts'), {
   Map,
 });
 
-const swModule = { exports: {} };
-vm.runInNewContext(await compile('src/sw/index.ts'), {
-  exports: swModule.exports,
-  module: swModule,
-  require(specifier) {
-    if (specifier === './util') return utilModule.exports;
-    if (specifier === 'idb-keyval') return { get: async () => false };
-    if (specifier === './to-cache') {
-      return {
-        ben2AssetInventory: inventory,
-        ben2Assets,
-        shouldCacheDynamically: () => false,
-      };
-    }
-    throw new Error(`Unexpected SW import: ${specifier}`);
-  },
-  self: {
+const swCompiled = await compile('src/sw/index.ts');
+function loadServiceWorker() {
+  const swListeners = new Map();
+  const heartbeatTimers = new Map();
+  let nextHeartbeatTimer = 0;
+  const swModule = { exports: {} };
+  vm.runInNewContext(swCompiled, {
+    exports: swModule.exports,
+    module: swModule,
+    require(specifier) {
+      if (specifier === './util') return utilModule.exports;
+      if (specifier === 'idb-keyval') return { get: async () => false };
+      if (specifier === './to-cache') {
+        return {
+          ben2AssetInventory: inventory,
+          ben2Assets,
+          shouldCacheDynamically: () => false,
+        };
+      }
+      throw new Error(`Unexpected SW import: ${specifier}`);
+    },
+    self: {
+      location: { origin },
+      clients: { claim() {} },
+      addEventListener(type, listener) {
+        const values = swListeners.get(type) || [];
+        values.push(listener);
+        swListeners.set(type, values);
+      },
+      skipWaiting() {},
+    },
     location: { origin },
-    clients: { claim() {} },
-    addEventListener: addListener,
-    skipWaiting() {},
-  },
-  location: { origin },
-  VERSION: 'v1',
-  ASSETS: [],
-  caches,
-  fetch,
-  URL,
-  Request,
-  Response,
-  Headers,
-  TransformStream,
-  Promise,
-});
+    VERSION: 'v1',
+    ASSETS: [],
+    caches,
+    fetch,
+    URL,
+    Request,
+    Response,
+    Headers,
+    TransformStream,
+    Promise,
+    setInterval(callback, delay) {
+      assert.ok(delay > 0 && delay <= 10_000, 'heartbeat cadence is bounded');
+      const id = ++nextHeartbeatTimer;
+      heartbeatTimers.set(id, callback);
+      return id;
+    },
+    clearInterval(id) {
+      heartbeatTimers.delete(id);
+    },
+  });
+  return { listeners: swListeners, heartbeatTimers };
+}
 
-const fetchListener = listeners.get('fetch').at(-1);
-const messageListener = listeners.get('message').at(-1);
+const activeServiceWorker = loadServiceWorker();
+const fetchListener = activeServiceWorker.listeners.get('fetch').at(-1);
+const messageListener = activeServiceWorker.listeners.get('message').at(-1);
 assert.equal(typeof fetchListener, 'function');
 assert.equal(typeof messageListener, 'function');
 
@@ -240,6 +268,8 @@ function reset() {
   putFailure = undefined;
   putGate = undefined;
   putStarted = deferred();
+  stagingStored = deferred();
+  stagingReadGate = undefined;
   fetchImplementation = async () => networkResponse(modelBytes);
 }
 
@@ -266,10 +296,13 @@ async function dispatchFetch(url = `${origin}${modelPath}`) {
   return responsePromise;
 }
 
-function dispatchMessage(data = { action: 'ben2-download-model' }) {
+function dispatchMessage(
+  data = { action: 'ben2-download-model' },
+  listener = messageListener,
+) {
   const replies = [];
   const lifetimes = [];
-  messageListener({
+  listener({
     data,
     ports: [{ postMessage: (message) => replies.push(message) }],
     waitUntil(promise) {
@@ -280,8 +313,19 @@ function dispatchMessage(data = { action: 'ben2-download-model' }) {
   return { replies, done: Promise.all(lifetimes) };
 }
 
-async function statusModelCached() {
-  const request = dispatchMessage({ action: 'ben2-cache-status' });
+async function dispatchActivate(serviceWorker = activeServiceWorker) {
+  const lifetimes = [];
+  serviceWorker.listeners.get('activate').at(-1)({
+    waitUntil(promise) {
+      lifetimes.push(Promise.resolve(promise));
+    },
+  });
+  assert.equal(lifetimes.length, 1, 'activation owns one event lifetime');
+  await Promise.all(lifetimes);
+}
+
+async function statusModelCached(listener = messageListener) {
+  const request = dispatchMessage({ action: 'ben2-cache-status' }, listener);
   await request.done;
   assert.equal(request.replies[0].ok, true);
   return request.replies[0].entries.find(({ role }) => role === 'model').cached;
@@ -306,6 +350,18 @@ async function assertFailedAttempt(label, configure) {
     `${label} canonical entry is absent`,
   );
 }
+
+const utilSource = await readFile(new URL('src/sw/util.ts', root), 'utf8');
+assert.match(
+  utilSource,
+  /\?sw-model-validation-staging/,
+  'staging uses a neutral SW-owned validation key',
+);
+assert.doesNotMatch(
+  utilSource,
+  /\?ben2(?:\b|=)/i,
+  'staging cannot resemble legacy BEN2 query transport',
+);
 
 // Ordinary model requests are current-cache-only, and stale unmarked entries
 // are evicted rather than served or reported as cached.
@@ -380,11 +436,77 @@ assert.equal(await statusModelCached(), false);
 assert.equal((await dispatchFetch()).status, 404);
 assert.deepEqual(first.replies, []);
 assert.deepEqual(second.replies, []);
+assert.equal(
+  activeServiceWorker.heartbeatTimers.size,
+  2,
+  'each live deduplicated port owns a heartbeat',
+);
+for (const heartbeat of activeServiceWorker.heartbeatTimers.values())
+  heartbeat();
+assert.deepEqual(plain(first.replies), [{ type: 'heartbeat' }]);
+assert.deepEqual(plain(second.replies), [{ type: 'heartbeat' }]);
 putGate.resolve();
 await Promise.all([first.done, second.done]);
-assert.deepEqual(plain(first.replies), [{ ok: true }]);
-assert.deepEqual(plain(second.replies), [{ ok: true }]);
+assert.deepEqual(plain(first.replies), [{ type: 'heartbeat' }, { ok: true }]);
+assert.deepEqual(plain(second.replies), [{ type: 'heartbeat' }, { ok: true }]);
+assert.equal(
+  activeServiceWorker.heartbeatTimers.size,
+  0,
+  'final settlement clears every port heartbeat',
+);
 assert.equal(putCalls, 2, 'second write promotes validated canonical entry');
+assert.equal(await statusModelCached(), true);
+
+// Status polling in the active process cannot reap the stage owned by the
+// in-flight global operation or qualify it before canonical promotion.
+reset();
+stagingReadGate = deferred();
+const activeStaging = dispatchMessage();
+await stagingStored.promise;
+assert.equal(stored.has(stagingUrl), true);
+const deletesBeforeActiveStatus = deleteCalls;
+assert.equal(await statusModelCached(), false);
+assert.equal(deleteCalls, deletesBeforeActiveStatus);
+assert.equal(stored.has(stagingUrl), true, 'active stage survives status reap');
+stagingReadGate.resolve();
+await activeStaging.done;
+assert.equal(await statusModelCached(), true);
+assert.equal(stored.has(stagingUrl), false);
+
+// A fresh worker reaps process-loss staging on status and activation without
+// reading its model-sized body.
+reset();
+await storeRaw(stagingUrl, modelBytes);
+const statusRestart = loadServiceWorker();
+assert.equal(
+  await statusModelCached(statusRestart.listeners.get('message').at(-1)),
+  false,
+);
+assert.equal(stored.has(stagingUrl), false, 'restart status reaps orphan');
+reset();
+await storeRaw(stagingUrl, modelBytes);
+const activationRestart = loadServiceWorker();
+await dispatchActivate(activationRestart);
+assert.equal(stored.has(stagingUrl), false, 'activation reaps orphan');
+
+// Both failed and successful explicit retries reap a process-loss orphan
+// before fetch; success leaves only the canonical validated entry.
+reset();
+await storeRaw(stagingUrl, modelBytes);
+fetchImplementation = async () => {
+  assert.equal(stored.has(stagingUrl), false, 'retry reaps before fetch');
+  throw new Error('network failed after restart');
+};
+const failedRestartRetry = dispatchMessage();
+await failedRestartRetry.done;
+assert.equal(failedRestartRetry.replies.at(-1).ok, false);
+assert.equal(stored.has(stagingUrl), false);
+reset();
+await storeRaw(stagingUrl, modelBytes);
+const successfulRestartRetry = dispatchMessage();
+await successfulRestartRetry.done;
+assert.deepEqual(plain(successfulRestartRetry.replies.at(-1)), { ok: true });
+assert.deepEqual([...stored.keys()], [`${origin}${modelPath}`]);
 assert.equal(await statusModelCached(), true);
 
 await assertFailedAttempt('clean short body', () => {

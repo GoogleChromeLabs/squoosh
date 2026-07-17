@@ -141,6 +141,7 @@ const ben2CacheRoles: Ben2CacheAssetRole[] = [
 ];
 const ben2CacheRoleSet = new Set<string>(ben2CacheRoles);
 const ben2CacheStatusTimeout = 2_000;
+const ben2ModelDownloadLivenessTimeout = 15_000;
 
 function unavailableBen2CacheStatus(): Ben2CacheStatus {
   return {
@@ -299,9 +300,13 @@ function requestBen2ModelDownload(): Promise<void> {
       return;
     }
     let settled = false;
+    let watchdog: number | undefined;
     let listeningForControllerChange = false;
 
     const cleanup = () => {
+      try {
+        if (watchdog !== undefined) clearTimeout(watchdog);
+      } catch {}
       channel.port1.onmessage = null;
       channel.port1.onmessageerror = null;
       try {
@@ -328,8 +333,24 @@ function requestBen2ModelDownload(): Promise<void> {
     };
     const onControllerChange = () =>
       finish(new Error('Service worker controller changed'));
+    const resetWatchdog = () => {
+      if (settled) return;
+      try {
+        if (watchdog !== undefined) clearTimeout(watchdog);
+        watchdog = setTimeout(
+          () => finish(new Error('Service worker stopped responding')),
+          ben2ModelDownloadLivenessTimeout,
+        );
+      } catch {
+        finish(new Error('Service worker stopped responding'));
+      }
+    };
 
     channel.port1.onmessage = (event: MessageEvent) => {
+      if (event.data?.type === 'heartbeat') {
+        resetWatchdog();
+        return;
+      }
       if (event.data?.ok === true) {
         finish();
         return;
@@ -349,6 +370,7 @@ function requestBen2ModelDownload(): Promise<void> {
         onControllerChange,
       );
       listeningForControllerChange = true;
+      resetWatchdog();
       controller.postMessage({ action: 'ben2-download-model' }, [
         channel.port2,
       ]);

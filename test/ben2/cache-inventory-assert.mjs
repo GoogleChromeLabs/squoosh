@@ -59,7 +59,9 @@ include(sw, 'ben2AssetInventory.filter(', 'service worker');
 include(sw, "({ role }) => role === 'model',", 'service worker');
 include(sw, 'serveBen2ModelFromCache(', 'service worker');
 include(sw, 'ben2ModelBytes,', 'service worker');
-include(sw, 'const tracked = downloadBen2Model(', 'service worker');
+include(sw, 'await downloadBen2Model(', 'service worker');
+include(sw, 'await reapStaleBen2ModelStaging();', 'service worker');
+include(sw, "respond({ type: 'heartbeat' })", 'service worker');
 include(sw, 'ben2ModelAsset.path,', 'service worker');
 exclude(sw, 'event.data.urls', 'service worker');
 exclude(sw, 'event.data.url', 'service worker');
@@ -72,6 +74,8 @@ include(bridge, 'ben2CacheStatus(): Promise<Ben2CacheStatus>', 'SW bridge');
 include(bridge, 'downloadBen2Model(): Promise<void>', 'SW bridge');
 include(bridge, "action: 'ben2-cache-status'", 'SW bridge');
 include(bridge, "action: 'ben2-download-model'", 'SW bridge');
+include(bridge, "event.data?.type === 'heartbeat'", 'SW bridge');
+include(bridge, 'ben2ModelDownloadLivenessTimeout', 'SW bridge');
 exclude(bridge, 'modelUrl:', 'SW bridge');
 exclude(bridge, 'wasmLoaderUrl:', 'SW bridge');
 exclude(bridge, 'wasmUrl:', 'SW bridge');
@@ -95,6 +99,8 @@ for (const requirement of [
   'const cacheNames = await caches.keys()',
   'caches.match(request, { cacheName })',
   'await cache.put(stagingRequest, stagingResponse)',
+  'await cache.delete(stagingRequest)',
+  '?sw-model-validation-staging',
   "const ben2ValidationHeader = 'X-Squoosh-BEN2-Validated'",
 ])
   include(policy, requirement, 'BEN2 cache policy');

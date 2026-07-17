@@ -148,6 +148,10 @@ assert.ok(
   'production model fetch route must retain its cache-only miss',
 );
 assert.ok(
+  serviceWorker.includes('?sw-model-validation-staging'),
+  'production SW must retain the neutral internal validation staging key',
+);
+assert.ok(
   buildFiles.some((file) => relative(file) === 'manifest.json'),
   'manifest.json must be emitted',
 );
@@ -300,7 +304,20 @@ function assertNoSourceResidue(sources, patterns, scope) {
   }
 }
 
+const legacyBen2QueryTransport = /\?ben2(?:\b|=)/i;
+assert.match(
+  '?ben2=model',
+  legacyBen2QueryTransport,
+  'legacy remote query transport remains rejected',
+);
+assert.doesNotMatch(
+  '?sw-model-validation-staging',
+  legacyBen2QueryTransport,
+  'neutral SW-owned staging is not legacy query transport',
+);
+
 const sourceWiringResiduePatterns = [
+  [legacyBen2QueryTransport, 'legacy BEN2 query transport'],
   [
     /\b(?:BEN2_ACCEPTANCE|__BEN2_ACCEPTANCE__)\b/,
     'acceptance build flag or replacement',
@@ -539,7 +556,7 @@ const buildResiduePatterns = [
     /\bnew\s+BroadcastChannel\s*\(\s*(['"`])[^'"`]*ben2[^'"`]*\1\s*\)/i,
     'BEN2 BroadcastChannel name',
   ],
-  [/\?ben2(?:\b|=)/i, 'BEN2 query activation'],
+  [legacyBen2QueryTransport, 'BEN2 query activation'],
   [
     /\.searchParams\.(?:has|get)\(\s*['"]ben2['"]\s*\)/i,
     'BEN2 URL.searchParams activation',

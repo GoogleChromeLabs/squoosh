@@ -1478,6 +1478,7 @@ async function clientAssertions() {
   let downloadAttempts = 0;
   let downloadStatusCalls = 0;
   const downloadingStates = [];
+  const refreshedDownloadStates = [];
   const downloadLifecycle = new Ben2CacheLifecycle(
     {
       isEnabled: () => false,
@@ -1487,9 +1488,11 @@ async function clientAssertions() {
       },
       download: async () => {
         downloadAttempts++;
-        if (downloadAttempts === 1) throw new Error('network failed');
+        if (downloadAttempts === 1) {
+          throw new Error('Service worker stopped responding');
+        }
       },
-      setCached: () => {},
+      setCached: (cached) => refreshedDownloadStates.push(cached),
       setDownloading: (downloading) => downloadingStates.push(downloading),
     },
     {
@@ -1507,11 +1510,49 @@ async function clientAssertions() {
   assert.deepEqual(downloadingStates, [true, false]);
   assert.equal(downloadAttempts, 1, 'shared failing download is deduplicated');
   assert.equal(downloadStatusCalls, 1, 'failure performs one status refresh');
+  assert.deepEqual(
+    refreshedDownloadStates,
+    [false],
+    'orphan-only restart remains absent after liveness loss',
+  );
   await downloadLifecycle.download();
-  assert.equal(downloadAttempts, 2, 'failed download remains retryable');
+  assert.equal(downloadAttempts, 2, 'liveness failure remains retryable');
   assert.equal(downloadStatusCalls, 2);
+  assert.deepEqual(refreshedDownloadStates, [false, true]);
   assert.deepEqual(downloadingStates, [true, false, true, false]);
   downloadLifecycle.dispose();
+
+  const canonicalDownloadingStates = [];
+  const canonicalCachedStates = [];
+  const canonicalLifecycle = new Ben2CacheLifecycle(
+    {
+      isEnabled: () => false,
+      readCached: async () => true,
+      download: async () => {
+        throw new Error('Service worker stopped responding');
+      },
+      setCached: (cached) => canonicalCachedStates.push(cached),
+      setDownloading: (downloading) =>
+        canonicalDownloadingStates.push(downloading),
+    },
+    {
+      window: new FakeEventTarget(),
+      document: Object.assign(new FakeEventTarget(), {
+        visibilityState: 'visible',
+      }),
+      serviceWorker: new FakeEventTarget(),
+      setInterval: () => assert.fail('disabled lifecycle cannot poll'),
+      clearInterval: () => {},
+    },
+  );
+  await canonicalLifecycle.download();
+  assert.deepEqual(canonicalCachedStates, [true]);
+  assert.deepEqual(
+    canonicalDownloadingStates,
+    [true, false],
+    'liveness loss refreshes a surviving canonical model and reenables UI',
+  );
+  canonicalLifecycle.dispose();
 
   const compress = await readFile(
     new URL('src/client/lazy-app/Compress/index.tsx', root),
@@ -1666,6 +1707,21 @@ async function cacheAssertions() {
   }
   const timers = new Map();
   let nextTimer = 0;
+  let timerNow = 0;
+  function advanceTimersBy(duration) {
+    const target = timerNow + duration;
+    while (true) {
+      const next = [...timers.entries()]
+        .filter(([, timer]) => timer.due <= target)
+        .sort((left, right) => left[1].due - right[1].due)[0];
+      if (!next) break;
+      const [id, timer] = next;
+      timers.delete(id);
+      timerNow = timer.due;
+      timer.callback();
+    }
+    timerNow = target;
+  }
   const listeners = new Set();
   const serviceWorker = {
     controller: undefined,
@@ -1696,9 +1752,9 @@ async function cacheAssertions() {
       timers.delete(id);
     },
     setTimeout(callback, delay) {
-      assert.ok(delay > 0 && delay <= 5_000, 'status timeout must be bounded');
+      assert.ok(delay > 0 && delay <= 30_000, 'transport timeout is bounded');
       const id = ++nextTimer;
-      timers.set(id, callback);
+      timers.set(id, { callback, delay, due: timerNow + delay });
       return id;
     },
   });
@@ -1716,7 +1772,7 @@ async function cacheAssertions() {
   serviceWorker.controller = { postMessage() {} };
   const timeoutStatus = ben2CacheStatus();
   assert.equal(timers.size, 1);
-  for (const callback of [...timers.values()]) callback();
+  advanceTimersBy([...timers.values()][0].delay);
   assert.deepEqual(JSON.parse(JSON.stringify(await timeoutStatus)), fallback);
   assert.equal(channels.at(-1).port1.closed, true);
   assert.equal(listeners.size, 0, 'timeout cleans controller listener');
@@ -1838,6 +1894,21 @@ async function cacheAssertions() {
     { action: 'ben2-download-model' },
     'client sends no model identity fields',
   );
+  let longDownloadSettled = false;
+  firstDownload.finally(() => {
+    longDownloadSettled = true;
+  });
+  const watchdogDelay = [...timers.values()][0].delay;
+  assert.ok(watchdogDelay > 5_000, 'watchdog exceeds heartbeat cadence');
+  for (let elapsed = 0; elapsed <= watchdogDelay; elapsed += 5_000) {
+    advanceTimersBy(5_000);
+    downloadPort.postMessage({ type: 'heartbeat' });
+  }
+  assert.equal(
+    longDownloadSettled,
+    false,
+    'heartbeats keep a transfer alive beyond one watchdog duration',
+  );
   downloadPort.postMessage({ ok: true });
   await Promise.all([firstDownload, secondDownload]);
   assert.equal(listeners.size, 0, 'successful download cleans listeners');
@@ -1846,6 +1917,29 @@ async function cacheAssertions() {
     true,
     'successful download closes ports',
   );
+  assert.equal(timers.size, 0, 'successful download clears watchdog');
+
+  let silentPosts = 0;
+  serviceWorker.controller = {
+    postMessage() {
+      silentPosts++;
+    },
+  };
+  const silentDownload = downloadBen2Model();
+  const silentWatchdog = [...timers.values()][0];
+  advanceTimersBy(silentWatchdog.delay);
+  await assert.rejects(silentDownload, /stopped responding/i);
+  assert.equal(channels.at(-1).port1.closed, true);
+  assert.equal(listeners.size, 0);
+  assert.equal(timers.size, 0);
+  serviceWorker.controller = {
+    postMessage(_message, ports) {
+      silentPosts++;
+      ports[0].postMessage({ ok: true });
+    },
+  };
+  await downloadBen2Model();
+  assert.equal(silentPosts, 2, 'watchdog rejection clears dedupe for retry');
 
   serviceWorker.controller = {
     postMessage(_message, ports) {
@@ -1853,6 +1947,9 @@ async function cacheAssertions() {
     },
   };
   await assert.rejects(downloadBen2Model(), /model download failed/i);
+  assert.equal(listeners.size, 0, 'failure cleans controller listener');
+  assert.equal(timers.size, 0, 'failure clears watchdog');
+  assert.equal(channels.at(-1).port1.closed, true, 'failure closes ports');
   const postsBeforeRetry = downloadPosts;
   serviceWorker.controller = {
     postMessage(_message, ports) {
@@ -1874,6 +1971,8 @@ async function cacheAssertions() {
   for (const listener of [...listeners]) listener();
   await assert.rejects(changedDownload, /controller changed/i);
   assert.equal(listeners.size, 0);
+  assert.equal(timers.size, 0, 'controller change clears watchdog');
+  assert.equal(channels.at(-1).port1.closed, true);
 
   serviceWorker.controller = {
     postMessage(_message, ports) {
@@ -1882,6 +1981,8 @@ async function cacheAssertions() {
   };
   await assert.rejects(downloadBen2Model(), /invalid model download response/i);
   assert.equal(listeners.size, 0);
+  assert.equal(timers.size, 0, 'malformed response clears watchdog');
+  assert.equal(channels.at(-1).port1.closed, true);
 
   serviceWorker.controller = undefined;
   await assert.rejects(downloadBen2Model(), /not controlled/i);
@@ -1903,6 +2004,7 @@ async function cacheAssertions() {
     ...(role === 'model' ? { bytes: 219_121_675 } : {}),
   }));
   let opens = 0;
+  let stagingReaps = 0;
   const matchedUrls = [];
   const swContext = {
     exports: {},
@@ -1914,6 +2016,9 @@ async function cacheAssertions() {
           cacheOrNetworkAndCache() {},
           cleanupCache() {},
           cacheOrNetwork() {},
+          deleteBen2ModelStaging: async () => {
+            stagingReaps++;
+          },
           cacheBasics: async () => {},
           cacheAdditionalProcessors: async () => {},
           serveShareTarget() {},
@@ -1976,7 +2081,12 @@ async function cacheAssertions() {
     },
   });
   await Promise.all(lifetimes);
-  assert.equal(opens, 0, 'read-only status never opens or creates a cache');
+  assert.equal(
+    stagingReaps,
+    1,
+    'fresh status delegates one body-free staging reap',
+  );
+  assert.equal(opens, 0, 'inventory reads do not open or create a cache');
   assert.equal(matchedUrls.length, 6);
   assert.ok(
     matchedUrls.every((url) => url.startsWith('https://squoosh.test/')),

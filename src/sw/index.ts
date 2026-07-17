@@ -1,5 +1,6 @@
 import {
   cacheBen2Asset,
+  deleteBen2ModelStaging,
   downloadBen2Model,
   matchValidatedBen2Model,
   serveBen2ModelFromCache,
@@ -36,15 +37,35 @@ if (
   throw new Error('Expected an exact BEN2 model byte count');
 }
 const ben2ModelBytes = ben2ModelAsset.bytes!;
+const ben2HeartbeatCadence = 5_000;
 let ben2ModelDownload: Promise<void> | undefined;
+let ben2StagingReap: Promise<void> | undefined;
+
+function reapStaleBen2ModelStaging(): Promise<void> {
+  // The active operation exclusively owns its staging key. A reap that starts
+  // first is recorded so a subsequent download waits rather than racing it.
+  if (ben2ModelDownload) return Promise.resolve();
+  if (!ben2StagingReap) {
+    const tracked = deleteBen2ModelStaging(ben2ModelAsset.path, versionedCache)
+      .catch(() => undefined)
+      .finally(() => {
+        if (ben2StagingReap === tracked) ben2StagingReap = undefined;
+      });
+    ben2StagingReap = tracked;
+  }
+  return ben2StagingReap;
+}
 
 function currentBen2ModelDownload(): Promise<void> {
   if (!ben2ModelDownload) {
-    const tracked = downloadBen2Model(
-      ben2ModelAsset.path,
-      versionedCache,
-      ben2ModelBytes,
-    ).finally(() => {
+    const tracked = (async () => {
+      await ben2StagingReap;
+      await downloadBen2Model(
+        ben2ModelAsset.path,
+        versionedCache,
+        ben2ModelBytes,
+      );
+    })().finally(() => {
       if (ben2ModelDownload === tracked) ben2ModelDownload = undefined;
     });
     ben2ModelDownload = tracked;
@@ -73,6 +94,8 @@ self.addEventListener('activate', (event) => {
 
   event.waitUntil(
     (async function () {
+      await reapStaleBen2ModelStaging();
+
       // Remove old caches.
       const promises = (await caches.keys()).map((cacheName) => {
         if (!expectedCaches.includes(cacheName))
@@ -144,6 +167,10 @@ self.addEventListener('message', (event) => {
         // The transfer still belongs to the shared SW operation.
       }
     };
+    const heartbeat = setInterval(
+      () => respond({ type: 'heartbeat' }),
+      ben2HeartbeatCadence,
+    );
     event.waitUntil(
       (async () => {
         try {
@@ -151,6 +178,8 @@ self.addEventListener('message', (event) => {
           respond({ ok: true });
         } catch {
           respond({ ok: false, error: 'model-download-failed' });
+        } finally {
+          clearInterval(heartbeat);
         }
       })(),
     );
@@ -169,8 +198,9 @@ self.addEventListener('message', (event) => {
     event.waitUntil(
       (async () => {
         try {
-          // CacheStorage.match with cacheName is a read-only lookup. Unlike
-          // caches.open(), it cannot create an empty current-build cache.
+          // A fresh process owns no active stage, so status doubles as bounded
+          // orphan cleanup. An in-process download skips this reap.
+          await reapStaleBen2ModelStaging();
           const entries = await Promise.all(
             ben2AssetInventory.map(async ({ role, path }) => ({
               role,
