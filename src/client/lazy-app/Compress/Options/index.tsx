@@ -22,6 +22,7 @@ import type { Ben2Capability } from '../ben2-capability';
 import { ben2OptionsDecision } from '../ben2-processing';
 import prettyBytes from '../Results/pretty-bytes';
 import { modelBytes } from 'features/processors/ben2/shared/meta';
+import 'shared/custom-els/loading-spinner';
 
 interface Props {
   index: 0 | 1;
@@ -52,6 +53,7 @@ type PartialButNotUndefined<T> = {
 };
 
 const ben2ModelSize = prettyBytes(modelBytes);
+const ben2DownloadLabel = `download (${ben2ModelSize.value}${ben2ModelSize.unit})`;
 
 const supportedEncoderMapP: Promise<PartialButNotUndefined<typeof encoderMap>> =
   (async () => {
@@ -252,11 +254,16 @@ export default class Options extends Component<Props, State> {
                     <button
                       class={style.ben2Download}
                       type="button"
+                      aria-label={ben2DownloadLabel}
+                      aria-busy={ben2Downloading}
                       disabled={ben2Downloading}
                       onClick={onBen2Download}
                     >
-                      Download BEN2 Neural Network ({ben2ModelSize.value}{' '}
-                      {ben2ModelSize.unit})
+                      {ben2Downloading ? (
+                        <loading-spinner aria-hidden="true" />
+                      ) : (
+                        ben2DownloadLabel
+                      )}
                     </button>
                   )}
                 </section>

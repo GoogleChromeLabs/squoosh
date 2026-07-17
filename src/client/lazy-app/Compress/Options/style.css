@@ -127,6 +127,15 @@
   }
 }
 
+.ben2-download loading-spinner {
+  --size: 18px;
+  --stroke-width: 2px;
+  --delay: 0ms;
+  --color: currentColor;
+  margin: 0 auto;
+  vertical-align: middle;
+}
+
 .title-and-buttons {
   grid-template-columns: 1fr;
   grid-auto-columns: max-content;
