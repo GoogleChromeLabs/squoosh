@@ -266,7 +266,9 @@ export default class Options extends Component<Props, State> {
               {processorState.ben2.enabled && !encoderState && (
                 <div>Select an output format to apply BEN2.</div>
               )}
-              {ben2Processing && <div>Removing background…</div>}
+              {ben2Effective && ben2Processing && (
+                <div>Removing background…</div>
+              )}
               {ben2TerminalError && (
                 <div role="alert">
                   {ben2TerminalError}{' '}

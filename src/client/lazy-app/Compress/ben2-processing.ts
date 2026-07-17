@@ -1,7 +1,7 @@
 import type { ProcessorState, PreprocessorState } from '../feature-meta';
-import WorkerBridge from '../worker-bridge';
-import { assertSignal, sniffMimeType } from '../util';
-import type { SourceImage } from '.';
+import type WorkerBridge from '../worker-bridge';
+import { sniffMimeType } from '../util';
+import type { SideSettings, SourceImage } from '.';
 
 type Ben2Bridge = Pick<WorkerBridge, 'pngDecode' | 'rotate' | 'ben2' | 'reset'>;
 
@@ -33,7 +33,7 @@ function waitForConsumer<T>(
   signal: AbortSignal,
   promise: Promise<T>,
 ): Promise<T> {
-  assertSignal(signal);
+  if (signal.aborted) throw new DOMException('AbortError', 'AbortError');
   return new Promise<T>((resolve, reject) => {
     const onAbort = () => reject(new DOMException('AbortError', 'AbortError'));
     signal.addEventListener('abort', onAbort, { once: true });
@@ -50,7 +50,7 @@ function waitForConsumer<T>(
 export class Ben2ProcessingCoordinator {
   private current?: Ben2Record;
 
-  constructor(private readonly bridge: Ben2Bridge = new WorkerBridge()) {}
+  constructor(private readonly bridge: Ben2Bridge) {}
 
   private createRecord(
     source: SourceImage,
@@ -107,12 +107,12 @@ export class Ben2ProcessingCoordinator {
     return record;
   }
 
-  async process(
+  async acquire(
     source: SourceImage,
     rotateOptions: PreprocessorState['rotate'],
     signal: AbortSignal,
   ): Promise<ImageData> {
-    assertSignal(signal);
+    if (signal.aborted) throw new DOMException('AbortError', 'AbortError');
     if (this.current && this.current.source !== source) this.invalidate();
     const record =
       this.current || (this.current = this.createRecord(source, rotateOptions));
@@ -134,8 +134,17 @@ export class Ben2ProcessingCoordinator {
     }
   }
 
+  /** Backwards-compatible name for the coordinator's acquisition operation. */
+  process(
+    source: SourceImage,
+    rotateOptions: PreprocessorState['rotate'],
+    signal: AbortSignal,
+  ): Promise<ImageData> {
+    return this.acquire(source, rotateOptions, signal);
+  }
+
   /** Invalidate only a latched terminal result for an explicit side Retry. */
-  invalidateTerminal(source: SourceImage): void {
+  retry(source: SourceImage): void {
     if (
       this.current?.source === source &&
       this.current.settled &&
@@ -158,6 +167,83 @@ export class Ben2ProcessingCoordinator {
   }
 }
 
+export function createBen2Coordinator(
+  bridge: Ben2Bridge,
+): Ben2ProcessingCoordinator {
+  return new Ben2ProcessingCoordinator(bridge);
+}
+
+interface PersistedSideSettings {
+  latestSettings?: Partial<SideSettings>;
+  encodedSettings?: Partial<SideSettings>;
+}
+
+/** Add BEN2's default to both old persisted settings slots. */
+export function normaliseBen2SideSettings(
+  saved: PersistedSideSettings,
+  defaults: ProcessorState,
+): { latestSettings?: SideSettings; encodedSettings?: SideSettings } {
+  const normaliseSlot = (
+    slot: Partial<SideSettings> | undefined,
+  ): SideSettings | undefined => {
+    if (!slot) return;
+    return {
+      ...slot,
+      processorState: {
+        ...defaults,
+        ...slot.processorState,
+        ben2: {
+          ...defaults.ben2,
+          ...(slot.processorState && slot.processorState.ben2),
+        },
+      },
+    } as SideSettings;
+  };
+
+  return {
+    latestSettings: normaliseSlot(saved.latestSettings),
+    encodedSettings: normaliseSlot(saved.encodedSettings),
+  };
+}
+
 export function ben2RetryProcessorState(state: ProcessorState): ProcessorState {
   return { ...state, ben2: { ...state.ben2 } };
+}
+
+export function ben2WorkNeeded({
+  processorState,
+  encoderState,
+  capability,
+}: {
+  processorState: ProcessorState;
+  encoderState: unknown;
+  capability: { state: string };
+}): boolean {
+  return (
+    !!encoderState &&
+    processorState.ben2.enabled &&
+    capability.state === 'supported'
+  );
+}
+
+export function ben2ResizeSource(
+  source: SourceImage,
+  preprocessed: ImageData,
+): SourceImage {
+  return { ...source, preprocessed };
+}
+
+export function ben2ResizeOptions(
+  options: ProcessorState['resize'],
+  ben2Effective: boolean,
+): ProcessorState['resize'] {
+  if (ben2Effective && options.method === 'vector') {
+    return {
+      ...options,
+      method: 'lanczos3',
+      premultiply: true,
+      linearRGB: true,
+    };
+  }
+  return options;
 }

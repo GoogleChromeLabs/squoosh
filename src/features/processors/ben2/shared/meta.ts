@@ -1,3 +1,3 @@
-export type Options = Record<string, never>;
+export type Options = Record<never, never>;
 
-export const defaultOptions: Options = {};
+export const defaultOptions = {};

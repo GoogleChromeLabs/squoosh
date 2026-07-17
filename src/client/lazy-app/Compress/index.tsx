@@ -37,8 +37,12 @@ import { mainJobSchedulingDecision, preprocessImage } from './main-job';
 import {
   BEN2_TERMINAL_MESSAGE,
   Ben2ProcessingCoordinator,
+  ben2ResizeOptions,
+  ben2ResizeSource,
   ben2RetryProcessorState,
+  createBen2Coordinator,
   errorName,
+  normaliseBen2SideSettings,
 } from './ben2-processing';
 
 export type OutputType = EncoderType | 'identity';
@@ -102,22 +106,6 @@ interface LoadingFileInfo {
   filename?: string;
 }
 
-function normalizeProcessorState(
-  saved: Partial<ProcessorState> | undefined,
-  fallback: ProcessorState,
-): ProcessorState {
-  return {
-    ...defaultProcessorState,
-    ...fallback,
-    ...saved,
-    ben2: {
-      ...defaultProcessorState.ben2,
-      ...fallback.ben2,
-      ...(saved && saved.ben2),
-    },
-  };
-}
-
 interface PersistedSideSettings {
   latestSettings?: Partial<SideSettings>;
   encodedSettings?: Partial<SideSettings>;
@@ -128,28 +116,32 @@ export function normalizeSideSettings(
   saved: PersistedSideSettings | undefined,
   fallback: SideSettings,
 ): { latestSettings: SideSettings; encodedSettings?: SideSettings } {
-  const normalizeSlot = (
-    slot: Partial<SideSettings> | undefined,
-    slotFallback: SideSettings,
-  ): SideSettings => ({
-    processorState: normalizeProcessorState(
-      slot?.processorState,
-      slotFallback.processorState,
-    ),
-    encoderState:
-      slot && 'encoderState' in slot
-        ? slot.encoderState
-        : slotFallback.encoderState,
-  });
+  const normalised = normaliseBen2SideSettings(
+    {
+      latestSettings: {
+        ...fallback,
+        ...saved?.latestSettings,
+        processorState: {
+          ...fallback.processorState,
+          ...saved?.latestSettings?.processorState,
+        },
+      },
+      encodedSettings: saved?.encodedSettings
+        ? {
+            ...saved.encodedSettings,
+            processorState: {
+              ...defaultProcessorState,
+              ...saved.encodedSettings.processorState,
+            },
+          }
+        : undefined,
+    },
+    defaultProcessorState,
+  );
 
   return {
-    latestSettings: normalizeSlot(saved?.latestSettings, fallback),
-    encodedSettings: saved?.encodedSettings
-      ? normalizeSlot(saved.encodedSettings, {
-          processorState: defaultProcessorState,
-          encoderState: undefined,
-        })
-      : undefined,
+    latestSettings: normalised.latestSettings!,
+    encodedSettings: normalised.encodedSettings,
   };
 }
 
@@ -200,6 +192,10 @@ async function decodeImage(
   }
 }
 
+function ben2IsEnabled(processorState: ProcessorState): boolean {
+  return processorState.ben2.enabled;
+}
+
 async function processImage(
   signal: AbortSignal,
   source: SourceImage,
@@ -213,20 +209,23 @@ async function processImage(
   let processingSource = source;
   let result = source.preprocessed;
 
-  if (processorState.ben2.enabled) {
-    result = await ben2Coordinator.process(
+  if (ben2IsEnabled(processorState)) {
+    result = await ben2Coordinator.acquire(
       source,
       preprocessorState.rotate,
       signal,
     );
     onBen2Completed();
-    processingSource = { ...source, preprocessed: result };
+    processingSource = ben2ResizeSource(source, result);
   }
   if (processorState.resize.enabled) {
     result = await resize(
       signal,
       processingSource,
-      processorState.resize,
+      ben2ResizeOptions(
+        processorState.resize,
+        ben2IsEnabled(processorState) && !!source.vectorImage,
+      ),
       workerBridge,
     );
   }
@@ -385,7 +384,7 @@ export default class Compress extends Component<Props, State> {
   };
 
   private readonly encodeCache = new ResultCache();
-  private readonly ben2Coordinator = new Ben2ProcessingCoordinator();
+  private readonly ben2Coordinator = createBen2Coordinator(new WorkerBridge());
   // One for each side
   private readonly workerBridges = [new WorkerBridge(), new WorkerBridge()];
   private readonly ineffectiveBen2States = new WeakMap<
@@ -475,19 +474,19 @@ export default class Compress extends Component<Props, State> {
   };
 
   private normalizeBen2Resize(options: ProcessorState): ProcessorState {
-    if (
-      options.ben2.enabled &&
-      this.state.source?.vectorImage &&
-      options.resize.method === 'vector'
-    ) {
-      return cleanMerge(options, 'resize', { method: 'lanczos3' });
-    }
-    return options;
+    const resize = ben2ResizeOptions(
+      options.resize,
+      ben2IsEnabled(options) && !!this.state.source?.vectorImage,
+    );
+    return resize === options.resize ? options : { ...options, resize };
   }
 
   private effectiveProcessorState(side: Side): ProcessorState {
     const raw = side.latestSettings.processorState;
-    if (!raw.ben2.enabled || this.state.ben2Capability.state === 'supported') {
+    if (
+      !ben2IsEnabled(raw) ||
+      this.state.ben2Capability.state === 'supported'
+    ) {
       return raw;
     }
     let ineffective = this.ineffectiveBen2States.get(raw);
@@ -795,7 +794,7 @@ export default class Compress extends Component<Props, State> {
   private onBen2Retry = (index: 0 | 1): void => {
     const source = this.state.source;
     if (!source) return;
-    this.ben2Coordinator.invalidateTerminal(source);
+    this.ben2Coordinator.retry(source);
     this.terminalSideJobs[index] = undefined;
     this.setState((state) => ({
       ben2TerminalErrors: cleanSet(state.ben2TerminalErrors, index, undefined),
@@ -1206,12 +1205,7 @@ export default class Compress extends Component<Props, State> {
         ben2Capability={ben2Capability}
         ben2CacheState={ben2CacheState}
         ben2FirstUse={!ben2HasCompleted}
-        ben2Processing={
-          side.loading &&
-          !!side.latestSettings.encoderState &&
-          side.latestSettings.processorState.ben2.enabled &&
-          ben2Capability.state === 'supported'
-        }
+        ben2Processing={side.loading}
         ben2TerminalError={ben2TerminalErrors[index]}
         onEncoderTypeChange={this.onEncoderTypeChange}
         onEncoderOptionsChange={this.onEncoderOptionsChange}

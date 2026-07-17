@@ -153,47 +153,44 @@ async function bridgeAssertions() {
 }
 
 async function clientAssertions() {
-  const mainJobPath = new URL(
-    'src/client/lazy-app/Compress/main-job.ts',
-    root,
-  );
+  const require = createRequire(import.meta.url);
+  let ts;
+  try {
+    ts = require('typescript');
+  } catch {
+    throw new Error(
+      'lifecycle --client requires the repository TypeScript dependency',
+    );
+  }
+
+  const mainJobPath = new URL('src/client/lazy-app/Compress/main-job.ts', root);
   const mainJobSource = await readFile(mainJobPath, 'utf8');
-  const mainHelperSource = mainJobSource
-    .slice(
-      mainJobSource.indexOf('export function errorName'),
-      mainJobSource.indexOf('export interface PreprocessingJobOptions'),
-    )
-    .replaceAll('export function', 'function')
-    .replaceAll('export async function', 'async function')
-    .replaceAll(': string | undefined', '')
-    .replaceAll('error as { name: unknown }', 'error')
-    .replaceAll(': unknown', '')
-    .replaceAll(': string', '')
-    .replaceAll(': Error', '')
-    .replaceAll(': AbortSignal', '')
-    .replaceAll(': ImageData', '')
-    .replaceAll(': File', '')
-    .replaceAll(': PreprocessorState', '')
-    .replaceAll(": Pick<WorkerBridge, 'pngDecode' | 'rotate' | 'ben2'>", '')
-    .replaceAll(': Promise<ImageData>', '');
-  assert.ok(mainHelperSource.includes('async function preprocessImage'));
-  const mainJobModule = { exports: {} };
-  vm.runInNewContext(
-    `${mainHelperSource}\nmodule.exports.preprocessImage = preprocessImage;`,
-    {
-      module: mainJobModule,
-      AbortController,
-      AbortSignal,
-      DOMException,
-      Error,
-      Promise,
-      assertSignal(signal) {
-        if (signal.aborted) throw new DOMException('AbortError', 'AbortError');
-      },
-      abortable: async (_signal, promise) => promise,
-      sniffMimeType: async (file) => file.type,
+  const mainJobCompiled = ts.transpileModule(mainJobSource, {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2020,
     },
-  );
+  }).outputText;
+  const mainJobModule = { exports: {} };
+  vm.runInNewContext(mainJobCompiled, {
+    exports: mainJobModule.exports,
+    module: mainJobModule,
+    require(specifier) {
+      if (specifier === '../util') {
+        return {
+          assertSignal(signal) {
+            if (signal.aborted) {
+              throw new DOMException('AbortError', 'AbortError');
+            }
+          },
+        };
+      }
+      throw new Error(`Unexpected main-job import: ${specifier}`);
+    },
+    DOMException,
+    Error,
+    Promise,
+  });
 
   const { preprocessImage } = mainJobModule.exports;
   const calls = [];
@@ -208,7 +205,6 @@ async function clientAssertions() {
     await preprocessImage(
       new AbortController().signal,
       decoded,
-      file,
       { rotate: { rotate: 90 } },
       {
         async pngDecode() {
@@ -234,7 +230,7 @@ async function clientAssertions() {
     root,
   );
   const processorMeta = await readFile(processorMetaPath, 'utf8');
-  assert.match(processorMeta, /Options\s*=\s*Record<string, never>/);
+  assert.match(processorMeta, /Options\s*=\s*Record<never, never>/);
   assert.match(processorMeta, /defaultOptions\s*=\s*\{\}/);
   await assert.rejects(
     readFile(
@@ -249,15 +245,6 @@ async function clientAssertions() {
   // rather than reproducing its scheduler in this test. Its small public
   // contract is the seam used by Compress for persistence, shared work, and
   // per-consumer cancellation/Retry behavior.
-  const require = createRequire(import.meta.url);
-  let ts;
-  try {
-    ts = require('typescript');
-  } catch {
-    throw new Error(
-      'lifecycle --client requires the repository TypeScript dependency to execute ben2-processing.ts',
-    );
-  }
   const helperPath = new URL(
     'src/client/lazy-app/Compress/ben2-processing.ts',
     root,
@@ -282,9 +269,9 @@ async function clientAssertions() {
               const abort = () =>
                 reject(new DOMException('AbortError', 'AbortError'));
               signal.addEventListener('abort', abort, { once: true });
-              Promise.resolve(promise).then(resolve, reject).finally(() =>
-                signal.removeEventListener('abort', abort),
-              );
+              Promise.resolve(promise)
+                .then(resolve, reject)
+                .finally(() => signal.removeEventListener('abort', abort));
             });
           },
           sniffMimeType: async (input) => input.type,
@@ -398,13 +385,19 @@ async function clientAssertions() {
   const leftAbort = new AbortController();
   const rightAbort = new AbortController();
   const commonSource = { file, decoded, preprocessed: rotated };
-  const left = coordinator.acquire(commonSource, { rotate: 90 }, leftAbort.signal);
+  const left = coordinator.acquire(
+    commonSource,
+    { rotate: 90 },
+    leftAbort.signal,
+  );
   const right = coordinator.acquire(
     commonSource,
     { rotate: 90 },
     rightAbort.signal,
   );
-  for (let tick = 0; tick < 4; tick++) await Promise.resolve();
+  for (let tick = 0; tick < 12 && ben2Calls === 0; tick++) {
+    await Promise.resolve();
+  }
   assert.deepEqual(
     [pngCalls, rotateCalls, ben2Calls],
     [1, 1, 1],
@@ -454,7 +447,11 @@ async function clientAssertions() {
     abandonedRightWork,
     (error) => error?.name === 'AbortError',
   );
-  assert.equal(abandonedResets, 1, 'last consumer cancellation resets shared work');
+  assert.equal(
+    abandonedResets,
+    1,
+    'last consumer cancellation resets shared work',
+  );
 
   const rasterSource = ben2ResizeSource(
     { ...commonSource, vectorImage: { id: 'svg' } },
@@ -507,7 +504,11 @@ async function clientAssertions() {
   assert.equal(attempts, 1, 'terminal state never implicitly retries');
   terminalCoordinator.retry(commonSource);
   assert.equal(
-    await terminalCoordinator.acquire(commonSource, { rotate: 90 }, terminalSignal),
+    await terminalCoordinator.acquire(
+      commonSource,
+      { rotate: 90 },
+      terminalSignal,
+    ),
     matte,
   );
   assert.equal(attempts, 2, 'one explicit Retry starts exactly one fresh call');
@@ -811,10 +812,7 @@ async function workerAssertions() {
     );
   }
 
-  const filename = new URL(
-    'src/features/processors/ben2/worker/ben2.ts',
-    root,
-  );
+  const filename = new URL('src/features/processors/ben2/worker/ben2.ts', root);
   const source = await readFile(filename, 'utf8');
   const compiled = ts.transpileModule(source, {
     compilerOptions: {
