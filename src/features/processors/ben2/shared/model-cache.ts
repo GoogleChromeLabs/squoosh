@@ -210,7 +210,11 @@ async function performDownload(serialized: boolean): Promise<void> {
 }
 
 async function lockedDownload(): Promise<void> {
-  const locks = (navigator as Navigator & { locks?: LockManagerLike }).locks;
+  const locks = (
+    globalThis as typeof globalThis & {
+      navigator?: { locks?: LockManagerLike };
+    }
+  ).navigator?.locks;
   if (!locks?.request) return performDownload(false);
   return locks.request(downloadLockName, () => performDownload(true));
 }
