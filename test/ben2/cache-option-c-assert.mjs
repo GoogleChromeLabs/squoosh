@@ -5,23 +5,27 @@
  * persistence remains non-fatal and deferred.
  */
 import assert from 'node:assert/strict';
+import { createRequire } from 'node:module';
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
 
 const root = process.cwd();
 const source = fs.readFileSync(path.join(root, 'src/sw/util.ts'), 'utf8');
-const cacheBen2AssetSource = source.slice(
-  source.indexOf('export function cacheBen2Asset'),
+const ben2CacheHelpersSource = source.slice(
+  source.indexOf('export function isCanonicalBen2Request'),
   source.indexOf('export function cacheOrNetworkAndCache'),
 );
-// This focused test evaluates only the target function, whose TypeScript
-// surface has two annotations that can be removed without a compiler.
-const compiled = cacheBen2AssetSource
-  .replace('export function cacheBen2Asset', 'function cacheBen2Asset')
-  .replace('(event: FetchEvent, cacheName: string): void', '(event, cacheName)')
-  .replace('let responseToCache: Response;', 'let responseToCache;')
-  .concat('\nmodule.exports.cacheBen2Asset = cacheBen2Asset;');
+// Transpile and execute the production helper block so this test exercises the
+// predicates shared by lazy asset caching and explicit model downloading.
+const require = createRequire(import.meta.url);
+const ts = require('typescript');
+const compiled = ts.transpileModule(ben2CacheHelpersSource, {
+  compilerOptions: {
+    module: ts.ModuleKind.CommonJS,
+    target: ts.ScriptTarget.ES2020,
+  },
+}).outputText;
 
 function deferred() {
   let resolve;

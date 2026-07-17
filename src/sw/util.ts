@@ -14,6 +14,22 @@ export function cacheOrNetwork(event: FetchEvent): void {
   );
 }
 
+/** Whether a request is an exact, own-origin, full BEN2 asset GET. */
+export function isCanonicalBen2Request(request: Request): boolean {
+  const url = new URL(request.url);
+  return (
+    request.method === 'GET' &&
+    url.origin === self.location.origin &&
+    url.search === '' &&
+    !request.headers.has('range')
+  );
+}
+
+/** Whether a response is safe to persist as an immutable BEN2 asset. */
+export function isAdmissibleBen2Response(response: Response): boolean {
+  return response.type !== 'opaque' && response.status === 200;
+}
+
 /**
  * BEN2 assets are immutable, lazy dependencies. Keep their cache contract
  * deliberately narrower than the legacy general cache helper: only an exact
@@ -23,16 +39,10 @@ export function cacheBen2Asset(event: FetchEvent, cacheName: string): void {
   event.respondWith(
     (async function () {
       const { request } = event;
-      const url = new URL(request.url);
-      const canonical =
-        request.method === 'GET' &&
-        url.origin === self.location.origin &&
-        url.search === '' &&
-        !request.headers.has('range');
 
       // A query or Range request must always reach the origin. In particular,
       // it must neither consume nor replace the canonical full response.
-      if (!canonical) return fetch(request);
+      if (!isCanonicalBen2Request(request)) return fetch(request);
 
       // Do not use caches.match(): BEN2 must not read an old/unrelated cache.
       const cacheNames = await caches.keys();
@@ -44,7 +54,7 @@ export function cacheBen2Asset(event: FetchEvent, cacheName: string): void {
       const response = await fetch(request);
       // Cache Storage accepts partial and opaque responses, but neither is a
       // valid offline copy of these exact immutable assets.
-      if (response.type !== 'opaque' && response.status === 200) {
+      if (isAdmissibleBen2Response(response)) {
         // Clone before handing the original to the response consumer. A clone
         // failure is cache-side-only, so it must not disrupt inference.
         let responseToCache: Response;
@@ -63,6 +73,57 @@ export function cacheBen2Asset(event: FetchEvent, cacheName: string): void {
       return response;
     })(),
   );
+}
+
+/** Serve the model only when it is already in the exact current cache. */
+export function serveBen2ModelFromCache(
+  event: FetchEvent,
+  cacheName: string,
+): void {
+  event.respondWith(
+    (async () => {
+      const { request } = event;
+      if (!isCanonicalBen2Request(request)) {
+        return new Response('Invalid BEN2 model request', { status: 400 });
+      }
+      const cached = await caches.match(request, { cacheName });
+      return (
+        cached || new Response('BEN2 model is not cached', { status: 404 })
+      );
+    })(),
+  );
+}
+
+/** Download and completely persist the SW inventory's current BEN2 model. */
+export async function downloadBen2Model(
+  path: string,
+  cacheName: string,
+): Promise<void> {
+  const request = new Request(new URL(path, self.location.origin).href);
+  if (!isCanonicalBen2Request(request)) {
+    throw new Error('Invalid BEN2 model inventory entry');
+  }
+  if (await caches.match(request, { cacheName })) return;
+
+  const response = await fetch(request);
+  if (!isAdmissibleBen2Response(response)) {
+    throw new Error('BEN2 model response was not accepted');
+  }
+  const responseToCache = response.clone();
+  let cache: Cache | undefined;
+  try {
+    cache = await caches.open(cacheName);
+    await cache.put(request, responseToCache);
+  } catch (error) {
+    // The entry did not exist before this attempt. Cache.put is atomic, and the
+    // delete is additional defense for non-conforming/failed implementations.
+    if (cache) {
+      try {
+        await cache.delete(request);
+      } catch {}
+    }
+    throw error;
+  }
 }
 
 export function cacheOrNetworkAndCache(

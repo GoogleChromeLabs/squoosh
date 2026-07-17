@@ -1,5 +1,7 @@
 import {
   cacheBen2Asset,
+  downloadBen2Model,
+  serveBen2ModelFromCache,
   cacheOrNetworkAndCache,
   cleanupCache,
   cacheOrNetwork,
@@ -20,6 +22,26 @@ declare var self: ServiceWorkerGlobalScope;
 const versionedCache = 'static-' + VERSION;
 const dynamicCache = 'dynamic';
 const expectedCaches = [versionedCache, dynamicCache];
+const ben2ModelAssets = ben2AssetInventory.filter(
+  ({ role }) => role === 'model',
+);
+if (ben2ModelAssets.length !== 1)
+  throw new Error(`Expected one BEN2 model, found ${ben2ModelAssets.length}`);
+const ben2ModelAsset = ben2ModelAssets[0];
+let ben2ModelDownload: Promise<void> | undefined;
+
+function currentBen2ModelDownload(): Promise<void> {
+  if (!ben2ModelDownload) {
+    const tracked = downloadBen2Model(
+      ben2ModelAsset.path,
+      versionedCache,
+    ).finally(() => {
+      if (ben2ModelDownload === tracked) ben2ModelDownload = undefined;
+    });
+    ben2ModelDownload = tracked;
+  }
+  return ben2ModelDownload;
+}
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -76,9 +98,14 @@ self.addEventListener('fetch', (event) => {
   // We only care about GET from here on in.
   if (event.request.method !== 'GET') return;
 
-  // BEN2 remains lazy even after editor cache opt-in. Its exact immutable
-  // runtime assets are persisted in the existing versioned static cache only
-  // when the generated feature worker first fetches them.
+  // The model can only be populated by the explicit SW-owned command below.
+  if (url.pathname === ben2ModelAsset.path) {
+    serveBen2ModelFromCache(event, versionedCache);
+    return;
+  }
+
+  // The other five BEN2 assets remain lazy after editor cache opt-in and are
+  // persisted when the generated feature worker first fetches them.
   if (ben2Assets.includes(url.pathname)) {
     cacheBen2Asset(event, versionedCache);
     return;
@@ -94,6 +121,28 @@ self.addEventListener('fetch', (event) => {
 });
 
 self.addEventListener('message', (event) => {
+  if (event.data?.action === 'ben2-download-model') {
+    const port = event.ports[0];
+    const respond = (response: unknown) => {
+      try {
+        port?.postMessage(response);
+      } catch {
+        // The transfer still belongs to the shared SW operation.
+      }
+    };
+    event.waitUntil(
+      (async () => {
+        try {
+          await currentBen2ModelDownload();
+          respond({ ok: true });
+        } catch {
+          respond({ ok: false, error: 'model-download-failed' });
+        }
+      })(),
+    );
+    return;
+  }
+
   if (event.data?.action === 'ben2-cache-status') {
     const port = event.ports[0];
     const respond = (response: unknown) => {

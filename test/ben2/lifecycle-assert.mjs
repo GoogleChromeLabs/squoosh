@@ -1030,7 +1030,10 @@ async function cacheAssertions() {
       return id;
     },
   });
-  const { ben2CacheStatus } = bridgeModule.exports;
+  const { ben2CacheStatus, ben2ModelIsCached, downloadBen2Model } =
+    bridgeModule.exports;
+  assert.equal(typeof ben2ModelIsCached, 'function');
+  assert.equal(typeof downloadBen2Model, 'function');
   const fallback = { controlled: false, entries: [], offlineReady: false };
 
   assert.deepEqual(
@@ -1100,8 +1103,116 @@ async function cacheAssertions() {
   assert.equal(success.controlled, true);
   assert.equal(success.offlineReady, true);
   assert.equal(success.entries.length, 6);
+  assert.equal(ben2ModelIsCached(success), true);
+  assert.equal(
+    ben2ModelIsCached({ ...success, offlineReady: false }),
+    true,
+    'model eligibility does not require the other five cached roles',
+  );
+  assert.equal(
+    ben2ModelIsCached({
+      ...success,
+      entries: success.entries.map((entry) =>
+        entry.role === 'model' ? { ...entry, cached: false } : entry,
+      ),
+    }),
+    false,
+  );
+  assert.equal(
+    ben2ModelIsCached({
+      ...success,
+      entries: [
+        ...success.entries,
+        { role: 'model', path: '/duplicate', cached: true },
+      ],
+    }),
+    false,
+    'duplicate model roles are never confirmation',
+  );
+  assert.equal(ben2ModelIsCached(fallback), false);
   assert.equal(listeners.size, 0);
   assert.equal(timers.size, 0);
+
+  serviceWorker.controller = {
+    postMessage(_message, ports) {
+      ports[0].postMessage({
+        ok: true,
+        cacheName: 'static-v1',
+        entries: [...entries, entries[1]],
+      });
+    },
+  };
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(await ben2CacheStatus())),
+    fallback,
+    'malformed duplicate-role status is conservative',
+  );
+
+  let downloadPosts = 0;
+  let downloadPort;
+  let downloadMessage;
+  serviceWorker.controller = {
+    postMessage(message, ports) {
+      downloadPosts++;
+      downloadMessage = message;
+      downloadPort = ports[0];
+    },
+  };
+  const firstDownload = downloadBen2Model();
+  const secondDownload = downloadBen2Model();
+  assert.equal(downloadPosts, 1, 'client deduplicates simultaneous downloads');
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(downloadMessage)),
+    { action: 'ben2-download-model' },
+    'client sends no model identity fields',
+  );
+  downloadPort.postMessage({ ok: true });
+  await Promise.all([firstDownload, secondDownload]);
+  assert.equal(listeners.size, 0, 'successful download cleans listeners');
+  assert.equal(
+    channels.at(-1).port1.closed,
+    true,
+    'successful download closes ports',
+  );
+
+  serviceWorker.controller = {
+    postMessage(_message, ports) {
+      ports[0].postMessage({ ok: false, error: 'model-download-failed' });
+    },
+  };
+  await assert.rejects(downloadBen2Model(), /model download failed/i);
+  const postsBeforeRetry = downloadPosts;
+  serviceWorker.controller = {
+    postMessage(_message, ports) {
+      downloadPosts++;
+      ports[0].postMessage({ ok: true });
+    },
+  };
+  await downloadBen2Model();
+  assert.equal(
+    downloadPosts,
+    postsBeforeRetry + 1,
+    'failed client operation clears dedupe for retry',
+  );
+
+  serviceWorker.controller = {
+    postMessage() {},
+  };
+  const changedDownload = downloadBen2Model();
+  for (const listener of [...listeners]) listener();
+  await assert.rejects(changedDownload, /controller changed/i);
+  assert.equal(listeners.size, 0);
+
+  serviceWorker.controller = {
+    postMessage(_message, ports) {
+      ports[0].postMessage({ ok: 'yes' });
+    },
+  };
+  await assert.rejects(downloadBen2Model(), /invalid model download response/i);
+  assert.equal(listeners.size, 0);
+
+  serviceWorker.controller = undefined;
+  await assert.rejects(downloadBen2Model(), /not controlled/i);
 
   // Execute the production service-worker message handler and prove rejected
   // CacheStorage reads still produce an explicit response without opening (and

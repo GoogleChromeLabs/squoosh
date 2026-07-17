@@ -161,6 +161,25 @@ function isBen2CacheEntry(value: unknown): value is Ben2CacheEntry {
   );
 }
 
+function hasCompleteUniqueBen2Inventory(
+  entries: readonly Ben2CacheEntry[],
+): boolean {
+  return (
+    entries.length === ben2CacheRoles.length &&
+    ben2CacheRoles.every(
+      (role) => entries.filter((entry) => entry.role === role).length === 1,
+    )
+  );
+}
+
+/** Confirm only the unique model entry in a complete current-build status. */
+export function ben2ModelIsCached(status: Ben2CacheStatus): boolean {
+  if (!status.controlled || !hasCompleteUniqueBen2Inventory(status.entries)) {
+    return false;
+  }
+  return status.entries.find((entry) => entry.role === 'model')!.cached;
+}
+
 /**
  * Inspect the service worker-owned current-build inventory. This read-only,
  * advisory request is bounded and degrades to uncontrolled on transport,
@@ -226,7 +245,8 @@ export async function ben2CacheStatus(): Promise<Ben2CacheStatus> {
         response?.ok !== true ||
         typeof response.cacheName !== 'string' ||
         !Array.isArray(response.entries) ||
-        !response.entries.every(isBen2CacheEntry)
+        !response.entries.every(isBen2CacheEntry) ||
+        !hasCompleteUniqueBen2Inventory(response.entries)
       ) {
         finish();
         return;
@@ -236,11 +256,7 @@ export async function ben2CacheStatus(): Promise<Ben2CacheStatus> {
         controlled: true,
         cacheName: response.cacheName,
         entries,
-        offlineReady:
-          entries.length === ben2CacheRoles.length &&
-          ben2CacheRoles.every((role) =>
-            entries.some((entry) => entry.role === role && entry.cached),
-          ),
+        offlineReady: entries.every((entry) => entry.cached),
       });
     };
     channel.port1.onmessageerror = () => finish();
@@ -257,4 +273,98 @@ export async function ben2CacheStatus(): Promise<Ben2CacheStatus> {
       finish();
     }
   });
+}
+
+let ben2ModelDownload: Promise<void> | undefined;
+
+function requestBen2ModelDownload(): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    let controller: ServiceWorker | null;
+    try {
+      controller = navigator.serviceWorker.controller;
+    } catch {
+      reject(new Error('Service worker is not controlled'));
+      return;
+    }
+    if (!controller) {
+      reject(new Error('Service worker is not controlled'));
+      return;
+    }
+
+    let channel: MessageChannel;
+    try {
+      channel = new MessageChannel();
+    } catch {
+      reject(new Error('Could not create model download channel'));
+      return;
+    }
+    let settled = false;
+    let listeningForControllerChange = false;
+
+    const cleanup = () => {
+      channel.port1.onmessage = null;
+      channel.port1.onmessageerror = null;
+      try {
+        channel.port1.close();
+      } catch {}
+      try {
+        channel.port2.close();
+      } catch {}
+      if (listeningForControllerChange) {
+        try {
+          navigator.serviceWorker.removeEventListener(
+            'controllerchange',
+            onControllerChange,
+          );
+        } catch {}
+      }
+    };
+    const finish = (error?: Error) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      if (error) reject(error);
+      else resolve();
+    };
+    const onControllerChange = () =>
+      finish(new Error('Service worker controller changed'));
+
+    channel.port1.onmessage = (event: MessageEvent) => {
+      if (event.data?.ok === true) {
+        finish();
+        return;
+      }
+      if (event.data?.ok === false) {
+        finish(new Error('BEN2 model download failed'));
+        return;
+      }
+      finish(new Error('Invalid model download response'));
+    };
+    channel.port1.onmessageerror = () =>
+      finish(new Error('Invalid model download response'));
+
+    try {
+      navigator.serviceWorker.addEventListener(
+        'controllerchange',
+        onControllerChange,
+      );
+      listeningForControllerChange = true;
+      controller.postMessage({ action: 'ben2-download-model' }, [
+        channel.port2,
+      ]);
+    } catch {
+      finish(new Error('BEN2 model download failed'));
+    }
+  });
+}
+
+/** Ask the SW to persist its current model, shared by all callers in this page. */
+export function downloadBen2Model(): Promise<void> {
+  if (!ben2ModelDownload) {
+    const tracked = requestBen2ModelDownload().finally(() => {
+      if (ben2ModelDownload === tracked) ben2ModelDownload = undefined;
+    });
+    ben2ModelDownload = tracked;
+  }
+  return ben2ModelDownload;
 }

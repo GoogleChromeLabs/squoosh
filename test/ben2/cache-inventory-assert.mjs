@@ -53,18 +53,30 @@ include(
 
 include(sw, 'ben2AssetInventory.map(async ({ role, path })', 'service worker');
 include(sw, "event.data?.action === 'ben2-cache-status'", 'service worker');
+include(sw, "event.data?.action === 'ben2-download-model'", 'service worker');
+include(sw, 'ben2AssetInventory.filter(', 'service worker');
+include(sw, "({ role }) => role === 'model',", 'service worker');
+include(sw, 'serveBen2ModelFromCache(event, versionedCache)', 'service worker');
+include(sw, 'const tracked = downloadBen2Model(', 'service worker');
+include(sw, 'ben2ModelAsset.path,', 'service worker');
 exclude(sw, 'event.data.urls', 'service worker');
+exclude(sw, 'event.data.url', 'service worker');
+exclude(sw, 'event.data.path', 'service worker');
+exclude(sw, 'event.data.role', 'service worker');
+exclude(sw, 'event.data.cacheName', 'service worker');
 exclude(sw, 'const urls:', 'service worker');
 
 include(bridge, 'ben2CacheStatus(): Promise<Ben2CacheStatus>', 'SW bridge');
+include(bridge, 'downloadBen2Model(): Promise<void>', 'SW bridge');
 include(bridge, "action: 'ben2-cache-status'", 'SW bridge');
+include(bridge, "action: 'ben2-download-model'", 'SW bridge');
 exclude(bridge, 'modelUrl:', 'SW bridge');
 exclude(bridge, 'wasmLoaderUrl:', 'SW bridge');
 exclude(bridge, 'wasmUrl:', 'SW bridge');
 exclude(bridge, 'workerUrl:', 'SW bridge');
 
 const policy = util.slice(
-  util.indexOf('export function cacheBen2Asset'),
+  util.indexOf('export function isCanonicalBen2Request'),
   util.indexOf('export function cacheOrNetworkAndCache'),
 );
 for (const requirement of [
@@ -73,13 +85,16 @@ for (const requirement of [
   "url.search === ''",
   "!request.headers.has('range')",
   "response.type !== 'opaque' && response.status === 200",
+  'isCanonicalBen2Request(request)',
+  'isAdmissibleBen2Response(response)',
   'responseToCache = response.clone()',
   'cache.put(request, responseToCache)',
   'event.waitUntil(cacheWrite.catch(() => undefined))',
   'const cacheNames = await caches.keys()',
+  'caches.match(request, { cacheName })',
+  'await cache.put(request, responseToCache)',
 ])
   include(policy, requirement, 'BEN2 cache policy');
 exclude(policy, 'caches.match(event.request', 'BEN2 cache policy');
-exclude(policy, 'await cache.put', 'BEN2 cache policy');
 
 console.log('PASS six-role BEN2 inventory and current-cache source contract');
