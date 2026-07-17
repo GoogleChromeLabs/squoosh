@@ -1574,6 +1574,25 @@ async function clientAssertions() {
     new URL('src/client/lazy-app/Compress/Output/style.css', root),
     'utf8',
   );
+  let cssModuleExports;
+  await require('postcss')([
+    require('postcss-nested'),
+    require('postcss-simple-vars')(),
+    require('postcss-modules')({
+      getJSON(_, json) {
+        cssModuleExports = json;
+      },
+      root: '',
+    }),
+  ]).process(optionsCss, {
+    from: new URL('src/client/lazy-app/Compress/Options/style.css', root)
+      .pathname,
+  });
+  assert.match(
+    cssModuleExports['ben2-download'],
+    /text-field/,
+    'BEN2 download CSS module composes the native text-field recipe',
+  );
   assert.doesNotMatch(compress, /preprocessorState\.ben2/);
   assert.match(options, />\s*Remove background\s*</);
   assert.doesNotMatch(options, /Remove background \(BEN2\)/);
@@ -1620,9 +1639,9 @@ async function clientAssertions() {
   );
   for (const contract of [
     /&:hover:not\(:disabled\)\s*{\s*background-color:\s*var\(--dark-gray\);/,
-    /&:active:not\(:disabled\)\s*{\s*background-color:\s*var\(--main-theme-color\);\s*color:\s*var\(--header-text-color\);/,
+    /&:active:not\(:disabled\)\s*{\s*background-color:\s*var\(--main-theme-color\);\s*color:\s*var\(--black\);/,
     /&:focus-visible\s*{\s*outline:\s*var\(--white\) solid 2px;/,
-    /&:disabled\s*{\s*color:\s*var\(--less-light-gray\);/,
+    /&:disabled\s*{\s*color:\s*var\(--less-light-gray\);\s*cursor:\s*not-allowed;/,
   ]) {
     assert.match(
       optionsCss,
@@ -1630,6 +1649,11 @@ async function clientAssertions() {
       `BEN2 download style contract: ${contract}`,
     );
   }
+  assert.doesNotMatch(
+    optionsCss,
+    /\.ben2-download[\s\S]*?&:disabled\s*{[^}]*opacity:/,
+    'disabled BEN2 download keeps its dark control surface fully opaque',
+  );
   const ben2Panel = options.slice(
     options.indexOf('Remove background'),
     options.indexOf('{encoderState ?'),
