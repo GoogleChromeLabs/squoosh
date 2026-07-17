@@ -147,9 +147,9 @@ initialJs = subtractSets(
         // As well as large image deps we want to keep dynamic:
         shouldCacheDynamically(item),
     ),
-    // Exclude features Worker itself - it's referenced from the main app,
-    // but is meant to be cached lazily.
-    featuresWorker.main,
+    // Exclude the generated BEN2 inventory, including the model referenced by
+    // the direct cache module. These assets have their own lazy routes.
+    ...ben2Assets,
     // Also exclude Service Worker itself (we're inside right now).
     swUrl,
   ]),

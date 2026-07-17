@@ -46,6 +46,7 @@ include(
   'new Set(ben2AssetInventory.map((asset) => asset.path)).size !== 6',
   'to-cache',
 );
+include(toCache, '...ben2Assets,', 'to-cache');
 include(
   toCache,
   "export const initial = ['/', '/manifest.json', ...initialJs];",
