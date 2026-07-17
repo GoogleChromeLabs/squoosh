@@ -53,7 +53,11 @@ async function assertCleanFailure(fetchImpl, pattern, overrides = {}) {
     if (error.code === 'ENOENT') return [];
     throw error;
   });
-  assert.deepEqual(entries, [], 'failure must leave no canonical or temporary file');
+  assert.deepEqual(
+    entries,
+    [],
+    'failure must leave no canonical or temporary file',
+  );
 }
 
 try {
@@ -187,7 +191,11 @@ try {
       },
     });
     await new Promise((resolve) => setImmediate(resolve));
-    assert.equal(successFetches, 0, 'same-target replacement must wait its turn');
+    assert.equal(
+      successFetches,
+      0,
+      'same-target replacement must wait its turn',
+    );
 
     releaseFailure();
     await failureRejection;
@@ -262,7 +270,8 @@ try {
     { expectedSha256: '0'.repeat(64) },
   );
   await assertCleanFailure(
-    async () => response(null, { status: 302, headers: { location: '/again' } }),
+    async () =>
+      response(null, { status: 302, headers: { location: '/again' } }),
     /redirect limit/,
   );
   await assertCleanFailure(

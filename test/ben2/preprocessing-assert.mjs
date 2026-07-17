@@ -101,12 +101,7 @@ assert.deepEqual(
   'probabilities are clamped and truncated before resize',
 );
 assert.deepEqual(
-  makeResizedMatte(
-    new Float32Array([0, 1, -0.000009, 1.000009]),
-    2,
-    2,
-    2,
-  ),
+  makeResizedMatte(new Float32Array([0, 1, -0.000009, 1.000009]), 2, 2, 2),
   new Uint8ClampedArray([0, 255, 0, 255]),
   'values inside probability tolerance must not be sigmoid transformed',
 );
@@ -127,11 +122,7 @@ const source = new ImageData(
   2,
   2,
 );
-const composed = applyMatte(
-  source,
-  new Float32Array([0, 0.25, 0.5, 1]),
-  2,
-);
+const composed = applyMatte(source, new Float32Array([0, 0.25, 0.5, 1]), 2);
 assert.equal(composed.width, 2);
 assert.equal(composed.height, 2);
 assert.deepEqual(

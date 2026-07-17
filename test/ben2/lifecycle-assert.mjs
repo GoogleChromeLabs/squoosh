@@ -407,7 +407,11 @@ async function clientAssertions() {
 
   assert.equal(scheduleProductionPass().quiescent, true);
   assert.equal(scheduleProductionPass().quiescent, true);
-  assert.equal(requests, 1, 'terminal publication schedules no implicit request');
+  assert.equal(
+    requests,
+    1,
+    'terminal publication schedules no implicit request',
+  );
   assert.equal(workers, 1, 'terminal publication creates no implicit worker');
 
   requestedJob = {

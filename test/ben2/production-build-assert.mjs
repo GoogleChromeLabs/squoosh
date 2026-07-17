@@ -8,7 +8,10 @@ const root = process.cwd();
 const buildArg = process.argv[2];
 assert.ok(buildArg, 'usage: production-build-assert.mjs <build-directory>');
 const buildRoot = path.resolve(root, buildArg);
-assert.ok((await stat(buildRoot)).isDirectory(), `${buildArg} must be a directory`);
+assert.ok(
+  (await stat(buildRoot)).isDirectory(),
+  `${buildArg} must be a directory`,
+);
 
 async function walk(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -21,7 +24,8 @@ async function walk(directory) {
   return files;
 }
 
-const relative = (file) => path.relative(buildRoot, file).split(path.sep).join('/');
+const relative = (file) =>
+  path.relative(buildRoot, file).split(path.sep).join('/');
 const publicPath = (file) => `/${relative(file)}`;
 const buildFiles = await walk(buildRoot);
 
@@ -30,7 +34,9 @@ function oneAsset(pattern, role) {
   assert.equal(
     matches.length,
     1,
-    `expected exactly one ${role}, found ${matches.map(relative).join(', ') || 'none'}`,
+    `expected exactly one ${role}, found ${
+      matches.map(relative).join(', ') || 'none'
+    }`,
   );
   return matches[0];
 }
@@ -46,7 +52,10 @@ async function assertIdentity(file, { bytes, sha256 }, role) {
 }
 
 const assets = {
-  features_worker: oneAsset(/^c\/features-worker-[^.]+\.js$/, 'generated feature worker'),
+  features_worker: oneAsset(
+    /^c\/features-worker-[^.]+\.js$/,
+    'generated feature worker',
+  ),
   model: oneAsset(/^c\/model_fp16-[^.]+\.onnx$/, 'BEN2 model'),
   ort_asyncify_mjs: oneAsset(
     /^c\/ort-wasm-simd-threaded\.asyncify-[^.]+\.mjs$/,
@@ -115,13 +124,19 @@ const serviceWorker = await readFile(
   'utf8',
 );
 for (const [role, file] of Object.entries(assets)) {
-  assert.ok(serviceWorker.includes(role), `service worker must retain ${role} role`);
+  assert.ok(
+    serviceWorker.includes(role),
+    `service worker must retain ${role} role`,
+  );
   assert.ok(
     serviceWorker.includes(publicPath(file)),
     `service worker must link ${role} to its emitted path`,
   );
 }
-assert.ok(serviceWorker.includes('/manifest.json'), 'manifest must be in the app shell');
+assert.ok(
+  serviceWorker.includes('/manifest.json'),
+  'manifest must be in the app shell',
+);
 assert.ok(
   buildFiles.some((file) => relative(file) === 'manifest.json'),
   'manifest.json must be emitted',
@@ -141,10 +156,7 @@ const escapedPngDecoderSpecifier = JSON.stringify(pngDecoderSpecifier).replace(
 );
 const pngDecoderAmdEdges = [
   ...featureWorker.matchAll(
-    new RegExp(
-      `\\b[\\w$]+\\(\\s*(${escapedPngDecoderSpecifier})\\s*\\)`,
-      'g',
-    ),
+    new RegExp(`\\b[\\w$]+\\(\\s*(${escapedPngDecoderSpecifier})\\s*\\)`, 'g'),
   ),
 ];
 assert.equal(
@@ -203,7 +215,9 @@ for (const eagerFile of eagerFiles) {
   }
 }
 
-const packageJson = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
+const packageJson = JSON.parse(
+  await readFile(path.join(root, 'package.json'), 'utf8'),
+);
 const packageLock = JSON.parse(
   await readFile(path.join(root, 'package-lock.json'), 'utf8'),
 );
@@ -435,4 +449,6 @@ for (const [pattern, description] of buildResiduePatterns) {
   assert.doesNotMatch(buildText, pattern, `production residue: ${description}`);
 }
 
-console.log('PASS BEN2 production asset, lazy-linkage, and stripping assertions');
+console.log(
+  'PASS BEN2 production asset, lazy-linkage, and stripping assertions',
+);
