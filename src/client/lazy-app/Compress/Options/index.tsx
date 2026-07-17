@@ -19,6 +19,7 @@ import { Options as QuantOptionsComponent } from 'features/processors/quantize/c
 import { Options as ResizeOptionsComponent } from 'features/processors/resize/client';
 import { ImportIcon, SaveIcon, SwapIcon } from 'client/lazy-app/icons';
 import type { Ben2Capability } from '../ben2-capability';
+import { ben2OptionsDecision } from '../ben2-processing';
 
 interface Props {
   index: 0 | 1;
@@ -174,10 +175,13 @@ export default class Options extends Component<Props, State> {
     const encoder = encoderState && encoderMap[encoderState.type];
     const EncoderOptionComponent =
       encoder && 'Options' in encoder ? encoder.Options : undefined;
-    const ben2Effective =
-      !!encoderState &&
-      processorState.ben2.enabled &&
-      ben2Capability.state === 'supported';
+    const ben2Decision = ben2OptionsDecision({
+      sourceHasVector: !!source?.vectorImage,
+      encoderState,
+      processorState,
+      capability: ben2Capability,
+    });
+    const ben2Effective = ben2Decision.effective;
 
     return (
       <div
@@ -295,9 +299,7 @@ export default class Options extends Component<Props, State> {
                 <Expander>
                   {processorState.resize.enabled ? (
                     <ResizeOptionsComponent
-                      isVector={Boolean(
-                        source && source.vectorImage && !ben2Effective,
-                      )}
+                      isVector={ben2Decision.resizeIsVector}
                       inputWidth={source ? source.preprocessed.width : 1}
                       inputHeight={source ? source.preprocessed.height : 1}
                       options={processorState.resize}

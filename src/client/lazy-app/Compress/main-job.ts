@@ -36,6 +36,43 @@ export function mainJobSchedulingDecision(
   return mainJobWorkNeeded(state.active || state.completed, next);
 }
 
+export interface MainPreprocessingJobOptions<T> {
+  signal: AbortSignal;
+  run: () => Promise<T>;
+  isCurrent: () => boolean;
+  publish: (result: T) => void;
+  fail: (error: unknown) => void;
+}
+
+export type MainPreprocessingJobOutcome = 'published' | 'stale';
+
+/** Settle shared preprocessing without letting obsolete work mutate UI state. */
+export async function runMainPreprocessingJob<T>({
+  signal,
+  run,
+  isCurrent,
+  publish,
+  fail,
+}: MainPreprocessingJobOptions<T>): Promise<MainPreprocessingJobOutcome> {
+  try {
+    const result = await run();
+    if (signal.aborted || !isCurrent()) return 'stale';
+    publish(result);
+    return 'published';
+  } catch (error) {
+    const errorName =
+      typeof error === 'object' &&
+      error !== null &&
+      'name' in error &&
+      String((error as { name: unknown }).name);
+    if (signal.aborted || !isCurrent() || errorName === 'AbortError') {
+      return 'stale';
+    }
+    fail(error);
+    throw error;
+  }
+}
+
 /** Rotate is the only shared main preprocessing step. */
 export async function preprocessImage(
   signal: AbortSignal,

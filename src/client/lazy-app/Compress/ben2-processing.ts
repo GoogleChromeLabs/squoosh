@@ -1,6 +1,11 @@
-import type { ProcessorState, PreprocessorState } from '../feature-meta';
+import type {
+  EncoderState,
+  ProcessorState,
+  PreprocessorState,
+} from '../feature-meta';
 import type WorkerBridge from '../worker-bridge';
-import { sniffMimeType } from '../util';
+import { assertSignal, sniffMimeType } from '../util';
+import { resize } from 'features/processors/resize/client';
 import type { SideSettings, SourceImage } from '.';
 
 type Ben2Bridge = Pick<WorkerBridge, 'pngDecode' | 'rotate' | 'ben2' | 'reset'>;
@@ -210,20 +215,171 @@ export function ben2RetryProcessorState(state: ProcessorState): ProcessorState {
   return { ...state, ben2: { ...state.ben2 } };
 }
 
-export function ben2WorkNeeded({
-  processorState,
+export interface Ben2SideJob {
+  processorState: ProcessorState;
+  encoderState?: EncoderState;
+}
+
+export interface Ben2SideWork {
+  processing: boolean;
+  encoding: boolean;
+}
+
+function processorStateEquivalent(
+  left: ProcessorState,
+  right: ProcessorState,
+): boolean {
+  if (left === right) return true;
+  for (const key of Object.keys(left) as Array<keyof ProcessorState>) {
+    if (!left[key].enabled && !right[key].enabled) continue;
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Owns the per-side scheduling identities used by Compress. Terminal work is
+ * settled but distinct from completed output, so unrelated updates stay idle.
+ */
+export class Ben2SideJobScheduler {
+  private readonly active: [Ben2SideJob?, Ben2SideJob?] = [
+    undefined,
+    undefined,
+  ];
+  private readonly terminal: [Ben2SideJob?, Ben2SideJob?] = [
+    undefined,
+    undefined,
+  ];
+  private readonly ineffectiveStates = new WeakMap<
+    ProcessorState,
+    ProcessorState
+  >();
+
+  constructor(private readonly defaultProcessorState: ProcessorState) {}
+
+  private effectiveJob(
+    settings: SideSettings,
+    capability: { state: string },
+  ): Ben2SideJob {
+    if (!settings.encoderState) {
+      return { processorState: this.defaultProcessorState };
+    }
+
+    const raw = settings.processorState;
+    if (!raw.ben2.enabled || capability.state === 'supported') {
+      return { processorState: raw, encoderState: settings.encoderState };
+    }
+
+    let ineffective = this.ineffectiveStates.get(raw);
+    if (!ineffective) {
+      ineffective = {
+        ...raw,
+        ben2: { ...raw.ben2, enabled: false },
+      };
+      this.ineffectiveStates.set(raw, ineffective);
+    }
+    return { processorState: ineffective, encoderState: settings.encoderState };
+  }
+
+  plan(
+    settings: readonly [SideSettings, SideSettings],
+    completed: readonly [SideSettings | undefined, SideSettings | undefined],
+    capability: { state: string },
+    mainPreprocessing: boolean,
+  ): { jobs: [Ben2SideJob, Ben2SideJob]; work: [Ben2SideWork, Ben2SideWork] } {
+    const jobs = settings.map((side) =>
+      this.effectiveJob(side, capability),
+    ) as [Ben2SideJob, Ben2SideJob];
+    const work = jobs.map((job, index) => {
+      const latest: Partial<Ben2SideJob> =
+        this.active[index] || this.terminal[index] || completed[index] || {};
+      const processing =
+        mainPreprocessing ||
+        !latest.processorState ||
+        !!latest.encoderState !== !!job.encoderState ||
+        !processorStateEquivalent(latest.processorState, job.processorState);
+      return {
+        processing,
+        encoding: processing || latest.encoderState !== job.encoderState,
+      };
+    }) as [Ben2SideWork, Ben2SideWork];
+    return { jobs, work };
+  }
+
+  start(index: 0 | 1, job: Ben2SideJob): void {
+    this.active[index] = job;
+    this.terminal[index] = undefined;
+  }
+
+  isCurrent(index: 0 | 1, job: Ben2SideJob, signal: AbortSignal): boolean {
+    return !signal.aborted && this.active[index] === job;
+  }
+
+  complete(index: 0 | 1, job: Ben2SideJob): boolean {
+    if (this.active[index] !== job) return false;
+    this.active[index] = undefined;
+    return true;
+  }
+
+  settleFailure(
+    index: 0 | 1,
+    job: Ben2SideJob,
+    signal: AbortSignal,
+    error: unknown,
+  ): 'stale' | 'terminal' | 'error' {
+    if (
+      errorName(error) === 'AbortError' ||
+      !this.isCurrent(index, job, signal)
+    ) {
+      return 'stale';
+    }
+    this.active[index] = undefined;
+    if (errorName(error) === 'Ben2TerminalError') {
+      this.terminal[index] = job;
+      return 'terminal';
+    }
+    return 'error';
+  }
+
+  clearTerminal(index: 0 | 1): void {
+    this.terminal[index] = undefined;
+  }
+
+  invalidate(): void {
+    this.active[0] = this.active[1] = undefined;
+    this.terminal[0] = this.terminal[1] = undefined;
+  }
+
+  terminalJob(index: 0 | 1): Ben2SideJob | undefined {
+    return this.terminal[index];
+  }
+}
+
+export function ben2TerminalSideState<T extends { loading: boolean }>(
+  side: T,
+): T {
+  return { ...side, loading: false };
+}
+
+export function ben2OptionsDecision({
+  sourceHasVector,
   encoderState,
+  processorState,
   capability,
 }: {
+  sourceHasVector: boolean;
+  encoderState?: EncoderState;
   processorState: ProcessorState;
-  encoderState: unknown;
   capability: { state: string };
-}): boolean {
-  return (
+}): { effective: boolean; resizeIsVector: boolean } {
+  const effective =
     !!encoderState &&
     processorState.ben2.enabled &&
-    capability.state === 'supported'
-  );
+    capability.state === 'supported';
+  return {
+    effective,
+    resizeIsVector: sourceHasVector && !effective,
+  };
 }
 
 export function ben2ResizeSource(
@@ -246,4 +402,48 @@ export function ben2ResizeOptions(
     };
   }
   return options;
+}
+
+/** Execute the exact per-side BEN2 → Resize → Quantize production route. */
+export async function processSideImage(
+  signal: AbortSignal,
+  source: SourceImage,
+  preprocessorState: PreprocessorState,
+  processorState: ProcessorState,
+  workerBridge: WorkerBridge,
+  ben2Coordinator: Pick<Ben2ProcessingCoordinator, 'acquire'>,
+  onBen2Completed: () => void,
+): Promise<ImageData> {
+  assertSignal(signal);
+  let processingSource = source;
+  let result = source.preprocessed;
+
+  if (processorState.ben2.enabled) {
+    result = await ben2Coordinator.acquire(
+      source,
+      preprocessorState.rotate,
+      signal,
+    );
+    onBen2Completed();
+    processingSource = ben2ResizeSource(source, result);
+  }
+  if (processorState.resize.enabled) {
+    result = await resize(
+      signal,
+      processingSource,
+      ben2ResizeOptions(
+        processorState.resize,
+        processorState.ben2.enabled && !!source.vectorImage,
+      ),
+      workerBridge,
+    );
+  }
+  if (processorState.quantize.enabled) {
+    result = await workerBridge.quantize(
+      signal,
+      result,
+      processorState.quantize,
+    );
+  }
+  return result;
 }
