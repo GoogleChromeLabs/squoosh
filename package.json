@@ -6,6 +6,8 @@
   "scripts": {
     "build": "npm run prepare:ben2-model && rollup -c && node lib/move-output.js",
     "prepare:ben2-model": "node lib/prepare-ben2-model.js",
+    "test:ben2": "node test/ben2/prepare-model-assert.mjs && node test/ben2/preprocessing-assert.mjs && node test/ben2/png-decode-assert.mjs && node test/ben2/capability-assert.mjs && node test/ben2/lifecycle-assert.mjs --worker && node test/ben2/lifecycle-assert.mjs --bridge && node test/ben2/lifecycle-assert.mjs --client && node test/ben2/cache-option-c-assert.mjs && node test/ben2/cache-inventory-assert.mjs && node test/ben2/export-contract-assert.mjs && node test/ben2/output-parity-assert.mjs",
+    "test:ben2:build": "node test/ben2/production-build-assert.mjs build",
     "debug": "node --inspect-brk node_modules/.bin/rollup -c",
     "dev": "DEV_PORT=\"${DEV_PORT:=5000}\" run-p watch serve",
     "watch": "rollup -cw",

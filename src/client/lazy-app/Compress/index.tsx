@@ -387,11 +387,7 @@ export default class Compress extends Component<Props, State> {
   private refreshBen2CacheStatus = async (): Promise<void> => {
     try {
       const { ben2CacheStatus } = await import('../sw-bridge');
-      const getStatus = ben2CacheStatus as unknown as () => Promise<{
-        controlled: boolean;
-        entries: Array<{ cached: boolean }>;
-      }>;
-      const status = await getStatus();
+      const status = await ben2CacheStatus();
       if (this.unmounted) return;
       let ben2CacheState: Ben2CacheState = 'uncontrolled';
       if (status.controlled) {

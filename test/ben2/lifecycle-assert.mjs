@@ -187,7 +187,8 @@ async function clientAssertions() {
     compress,
     /ben2:\s*{\s*\.\.\.state\.preprocessorState\.ben2\s*}/s,
   );
-  assert.match(compress, /ben2CacheStatus as unknown as \(\) => Promise/);
+  assert.match(compress, /const status = await ben2CacheStatus\(\)/);
+  assert.doesNotMatch(compress, /ben2CacheStatus as unknown/);
   assert.match(output, /Remove background \(BEN2\)/);
   assert.equal(
     (output.match(/Remove background \(BEN2\)/g) || []).length,
