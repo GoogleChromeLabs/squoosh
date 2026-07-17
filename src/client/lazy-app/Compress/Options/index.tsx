@@ -18,6 +18,7 @@ import Select from './Select';
 import { Options as QuantOptionsComponent } from 'features/processors/quantize/client';
 import { Options as ResizeOptionsComponent } from 'features/processors/resize/client';
 import { ImportIcon, SaveIcon, SwapIcon } from 'client/lazy-app/icons';
+import type { Ben2Capability } from '../ben2-capability';
 
 interface Props {
   index: 0 | 1;
@@ -25,12 +26,18 @@ interface Props {
   source?: SourceImage;
   encoderState?: EncoderState;
   processorState: ProcessorState;
+  ben2Capability: Ben2Capability;
+  ben2CacheState: 'uncontrolled' | 'not-cached' | 'partial' | 'cached';
+  ben2FirstUse: boolean;
+  ben2Processing: boolean;
+  ben2TerminalError?: string;
   onEncoderTypeChange(index: 0 | 1, newType: OutputType): void;
   onEncoderOptionsChange(index: 0 | 1, newOptions: EncoderOptions): void;
   onProcessorOptionsChange(index: 0 | 1, newOptions: ProcessorState): void;
   onCopyToOtherSideClick(index: 0 | 1): void;
   onSaveSideSettingsClick(index: 0 | 1): void;
   onImportSideSettingsClick(index: 0 | 1): void;
+  onBen2Retry(index: 0 | 1): void;
 }
 
 interface State {
@@ -147,13 +154,30 @@ export default class Options extends Component<Props, State> {
     this.props.onImportSideSettingsClick(this.props.index);
   };
 
+  private onBen2Retry = () => {
+    this.props.onBen2Retry(this.props.index);
+  };
+
   render(
-    { source, encoderState, processorState }: Props,
+    {
+      source,
+      encoderState,
+      processorState,
+      ben2Capability,
+      ben2CacheState,
+      ben2FirstUse,
+      ben2Processing,
+      ben2TerminalError,
+    }: Props,
     { supportedEncoderMap }: State,
   ) {
     const encoder = encoderState && encoderMap[encoderState.type];
     const EncoderOptionComponent =
       encoder && 'Options' in encoder ? encoder.Options : undefined;
+    const ben2Effective =
+      !!encoderState &&
+      processorState.ben2.enabled &&
+      ben2Capability.state === 'supported';
 
     return (
       <div
@@ -164,88 +188,141 @@ export default class Options extends Component<Props, State> {
         }
       >
         <Expander>
-          {!encoderState ? null : (
-            <div>
-              <h3 class={style.optionsTitle}>
-                <div class={style.titleAndButtons}>
-                  Edit
-                  <button
-                    class={style.copyOverButton}
-                    title="Copy settings to other side"
-                    onClick={this.onCopyToOtherSideClick}
-                  >
-                    <SwapIcon />
-                  </button>
-                  <button
-                    class={style.saveButton}
-                    title="Save side settings"
-                    onClick={this.onSaveSideSettingClick}
-                  >
-                    <SaveIcon />
-                  </button>
-                  <button
-                    class={
-                      style.importButton +
-                      ' ' +
-                      (!this.state.leftSideSettings && this.props.index === 0
-                        ? style.buttonOpacity
-                        : '') +
-                      ' ' +
-                      (!this.state.rightSideSettings && this.props.index === 1
-                        ? style.buttonOpacity
-                        : '')
-                    }
-                    title="Import saved side settings"
-                    onClick={this.onImportSideSettingsClick}
-                    disabled={
-                      // Disabled if this side's settings haven't been saved
-                      (!this.state.leftSideSettings &&
-                        this.props.index === 0) ||
-                      (!this.state.rightSideSettings && this.props.index === 1)
-                    }
-                  >
-                    <ImportIcon />
+          <div>
+            <h3 class={style.optionsTitle}>
+              <div class={style.titleAndButtons}>
+                Edit
+                <button
+                  class={style.copyOverButton}
+                  title="Copy settings to other side"
+                  onClick={this.onCopyToOtherSideClick}
+                >
+                  <SwapIcon />
+                </button>
+                <button
+                  class={style.saveButton}
+                  title="Save side settings"
+                  onClick={this.onSaveSideSettingClick}
+                >
+                  <SaveIcon />
+                </button>
+                <button
+                  class={
+                    style.importButton +
+                    ' ' +
+                    (!this.state.leftSideSettings && this.props.index === 0
+                      ? style.buttonOpacity
+                      : '') +
+                    ' ' +
+                    (!this.state.rightSideSettings && this.props.index === 1
+                      ? style.buttonOpacity
+                      : '')
+                  }
+                  title="Import saved side settings"
+                  onClick={this.onImportSideSettingsClick}
+                  disabled={
+                    // Disabled if this side's settings haven't been saved
+                    (!this.state.leftSideSettings && this.props.index === 0) ||
+                    (!this.state.rightSideSettings && this.props.index === 1)
+                  }
+                >
+                  <ImportIcon />
+                </button>
+              </div>
+            </h3>
+            <label class={style.sectionEnabler}>
+              Remove background (BEN2)
+              <Toggle
+                name="ben2.enable"
+                checked={!!processorState.ben2.enabled}
+                disabled={ben2Capability.state !== 'supported' || !source}
+                onChange={this.onProcessorEnabledChange}
+              />
+            </label>
+            <section
+              class={`${style.optionOneCell} ${style.optionsSection}`}
+              aria-live="polite"
+            >
+              {ben2Capability.state === 'checking' &&
+                'Checking WebGPU support…'}
+              {ben2Capability.state === 'unsupported' && ben2Capability.reason}
+              {ben2Capability.state === 'supported' && (
+                <div>
+                  {ben2CacheState === 'uncontrolled' &&
+                    'Offline cache is waiting for service worker control.'}
+                  {ben2CacheState === 'not-cached' &&
+                    'Runtime assets are not cached.'}
+                  {ben2CacheState === 'partial' &&
+                    'Runtime assets are partially cached; reconnect to finish.'}
+                  {ben2CacheState === 'cached' &&
+                    'Runtime assets are cached for this app version.'}
+                </div>
+              )}
+              {ben2FirstUse && ben2Capability.state === 'supported' && (
+                <div>
+                  First use downloads a 208.971 MiB model plus runtime files.
+                </div>
+              )}
+              {processorState.ben2.enabled && !encoderState && (
+                <div>Select an output format to apply BEN2.</div>
+              )}
+              {ben2Processing && <div>Removing background…</div>}
+              {ben2TerminalError && (
+                <div role="alert">
+                  {ben2TerminalError}{' '}
+                  <button type="button" onClick={this.onBen2Retry}>
+                    Retry
                   </button>
                 </div>
-              </h3>
-              <label class={style.sectionEnabler}>
-                Resize
-                <Toggle
-                  name="resize.enable"
-                  checked={!!processorState.resize.enabled}
-                  onChange={this.onProcessorEnabledChange}
-                />
-              </label>
-              <Expander>
-                {processorState.resize.enabled ? (
-                  <ResizeOptionsComponent
-                    isVector={Boolean(source && source.vectorImage)}
-                    inputWidth={source ? source.preprocessed.width : 1}
-                    inputHeight={source ? source.preprocessed.height : 1}
-                    options={processorState.resize}
-                    onChange={this.onResizeOptionsChange}
+              )}
+              <div>
+                JPEG cannot preserve transparency; choose OxiPNG or Browser PNG
+                to keep it.
+              </div>
+            </section>
+            {encoderState ? (
+              <div>
+                <label class={style.sectionEnabler}>
+                  Resize
+                  <Toggle
+                    name="resize.enable"
+                    checked={!!processorState.resize.enabled}
+                    onChange={this.onProcessorEnabledChange}
                   />
-                ) : null}
-              </Expander>
+                </label>
+                <Expander>
+                  {processorState.resize.enabled ? (
+                    <ResizeOptionsComponent
+                      isVector={Boolean(
+                        source && source.vectorImage && !ben2Effective,
+                      )}
+                      inputWidth={source ? source.preprocessed.width : 1}
+                      inputHeight={source ? source.preprocessed.height : 1}
+                      options={processorState.resize}
+                      onChange={this.onResizeOptionsChange}
+                    />
+                  ) : null}
+                </Expander>
 
-              <label class={style.sectionEnabler}>
-                Reduce palette
-                <Toggle
-                  name="quantize.enable"
-                  checked={!!processorState.quantize.enabled}
-                  onChange={this.onProcessorEnabledChange}
-                />
-              </label>
-              <Expander>
-                {processorState.quantize.enabled ? (
-                  <QuantOptionsComponent
-                    options={processorState.quantize}
-                    onChange={this.onQuantizerOptionsChange}
+                <label class={style.sectionEnabler}>
+                  Reduce palette
+                  <Toggle
+                    name="quantize.enable"
+                    checked={!!processorState.quantize.enabled}
+                    onChange={this.onProcessorEnabledChange}
                   />
-                ) : null}
-              </Expander>
-            </div>
-          )}
+                </label>
+                <Expander>
+                  {processorState.quantize.enabled ? (
+                    <QuantOptionsComponent
+                      options={processorState.quantize}
+                      onChange={this.onQuantizerOptionsChange}
+                    />
+                  ) : null}
+                </Expander>
+              </div>
+            ) : null}
+          </div>
         </Expander>
 
         <h3 class={style.optionsTitle}>Compress</h3>

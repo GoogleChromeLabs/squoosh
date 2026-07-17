@@ -487,10 +487,7 @@ export default class Compress extends Component<Props, State> {
 
   private effectiveProcessorState(side: Side): ProcessorState {
     const raw = side.latestSettings.processorState;
-    if (
-      !raw.ben2.enabled ||
-      this.state.ben2Capability.state === 'supported'
-    ) {
+    if (!raw.ben2.enabled || this.state.ben2Capability.state === 'supported') {
       return raw;
     }
     let ineffective = this.ineffectiveBen2States.get(raw);
@@ -801,11 +798,7 @@ export default class Compress extends Component<Props, State> {
     this.ben2Coordinator.invalidateTerminal(source);
     this.terminalSideJobs[index] = undefined;
     this.setState((state) => ({
-      ben2TerminalErrors: cleanSet(
-        state.ben2TerminalErrors,
-        index,
-        undefined,
-      ),
+      ben2TerminalErrors: cleanSet(state.ben2TerminalErrors, index, undefined),
       sides: cleanSet(
         state.sides,
         `${index}.latestSettings.processorState`,
@@ -1123,10 +1116,7 @@ export default class Compress extends Component<Props, State> {
 
         this.setState(
           (currentState) => {
-            if (
-              signal.aborted ||
-              this.activeSideJobs[sideIndex] !== jobState
-            )
+            if (signal.aborted || this.activeSideJobs[sideIndex] !== jobState)
               return {};
             const currentSide = currentState.sides[sideIndex];
 
@@ -1197,6 +1187,10 @@ export default class Compress extends Component<Props, State> {
       source,
       mobileView,
       preprocessorState,
+      ben2Capability,
+      ben2CacheState,
+      ben2HasCompleted,
+      ben2TerminalErrors,
     }: State,
   ) {
     const [leftSide, rightSide] = sides;
@@ -1209,12 +1203,23 @@ export default class Compress extends Component<Props, State> {
         mobileView={mobileView}
         processorState={side.latestSettings.processorState}
         encoderState={side.latestSettings.encoderState}
+        ben2Capability={ben2Capability}
+        ben2CacheState={ben2CacheState}
+        ben2FirstUse={!ben2HasCompleted}
+        ben2Processing={
+          side.loading &&
+          !!side.latestSettings.encoderState &&
+          side.latestSettings.processorState.ben2.enabled &&
+          ben2Capability.state === 'supported'
+        }
+        ben2TerminalError={ben2TerminalErrors[index]}
         onEncoderTypeChange={this.onEncoderTypeChange}
         onEncoderOptionsChange={this.onEncoderOptionsChange}
         onProcessorOptionsChange={this.onProcessorOptionsChange}
         onCopyToOtherSideClick={this.onCopyToOtherClick}
         onSaveSideSettingsClick={this.onSaveSideSettingsClick}
         onImportSideSettingsClick={this.onImportSideSettingsClick}
+        onBen2Retry={this.onBen2Retry}
       />
     ));
 
