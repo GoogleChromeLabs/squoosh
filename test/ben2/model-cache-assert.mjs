@@ -243,6 +243,7 @@ function entries(storage, name = cacheName) {
   assert.equal(loaded.fetchCalls.length, 1);
   assert.equal(loaded.fetchCalls[0].url, modelUrl);
   assert.equal(loaded.fetchCalls[0].method, 'GET');
+  assert.equal(loaded.fetchCalls[0].redirect, 'error');
   assert.equal(
     loaded.fetchCalls[0].headers.get('X-Squoosh-BEN2-Download'),
     'v1',

@@ -126,6 +126,7 @@ function explicitDownloadRequest(): Request {
     method: 'GET',
     headers,
     credentials: 'same-origin',
+    redirect: 'error',
   });
 }
 
