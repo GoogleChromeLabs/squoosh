@@ -87,12 +87,11 @@ interface State {
   preprocessorState: PreprocessorState;
   encodedPreprocessorState?: PreprocessorState;
   ben2Capability: Ben2Capability;
-  ben2CacheState: Ben2CacheState;
+  ben2ModelCached: boolean;
+  ben2Downloading: boolean;
   ben2HasCompleted: boolean;
   ben2TerminalErrors: [string?, string?];
 }
-
-type Ben2CacheState = 'uncontrolled' | 'not-cached' | 'partial' | 'cached';
 
 interface MainJob {
   file: File;
@@ -295,7 +294,8 @@ export default class Compress extends Component<Props, State> {
     loading: false,
     preprocessorState: defaultPreprocessorState,
     ben2Capability: { state: 'checking' },
-    ben2CacheState: 'uncontrolled',
+    ben2ModelCached: false,
+    ben2Downloading: false,
     ben2HasCompleted: false,
     ben2TerminalErrors: [undefined, undefined],
     sides: [
@@ -335,6 +335,9 @@ export default class Compress extends Component<Props, State> {
   private updateImageTimeout?: number;
   private unmounted = false;
   private ben2CompletionReported = false;
+  private ben2CacheRefresh?: Promise<boolean>;
+  private ben2Download?: Promise<void>;
+  private ben2Poll?: number;
 
   constructor(props: Props) {
     super(props);
@@ -358,6 +361,7 @@ export default class Compress extends Component<Props, State> {
                 latestSettings: {
                   ...side.latestSettings,
                   processorState:
+                    state.ben2ModelCached &&
                     side.latestSettings.processorState.ben2.enabled &&
                     side.latestSettings.processorState.resize.method ===
                       'vector'
@@ -375,44 +379,124 @@ export default class Compress extends Component<Props, State> {
       'controllerchange',
       this.onServiceWorkerControllerChange,
     );
-    this.refreshBen2CacheStatus();
+    window.addEventListener('focus', this.onBen2StatusFocus);
+    document.addEventListener('visibilitychange', this.onBen2VisibilityChange);
+    this.updateBen2Polling();
+    void this.refreshBen2CacheStatus();
   }
 
   private onServiceWorkerControllerChange = (): void => {
-    this.refreshBen2CacheStatus();
+    void this.refreshBen2CacheStatus();
   };
 
-  private refreshBen2CacheStatus = async (): Promise<void> => {
-    try {
-      const { ben2CacheStatus } = await import('../sw-bridge');
-      const status = await ben2CacheStatus();
-      if (this.unmounted) return;
-      let ben2CacheState: Ben2CacheState = 'uncontrolled';
-      if (status.controlled) {
-        const cachedCount = status.entries.filter(
-          (entry) => entry.cached,
-        ).length;
-        ben2CacheState =
-          cachedCount === 0
-            ? 'not-cached'
-            : cachedCount === status.entries.length
-            ? 'cached'
-            : 'partial';
-      }
-      this.setState({ ben2CacheState });
-    } catch {
-      // Cache status is advisory and must not fail image processing.
+  private onBen2StatusFocus = (): void => {
+    void this.refreshBen2CacheStatus();
+  };
+
+  private onBen2VisibilityChange = (): void => {
+    if (document.visibilityState === 'visible') {
+      void this.refreshBen2CacheStatus();
     }
+  };
+
+  private setBen2ModelCached(cached: boolean): void {
+    if (this.unmounted) return;
+    if (this.state.ben2ModelCached && !cached) {
+      this.ben2Coordinator.invalidate();
+    }
+    this.setState((state) => ({
+      ben2ModelCached: cached,
+      sides:
+        cached && !state.ben2ModelCached && state.source?.vectorImage
+          ? (state.sides.map((side) => ({
+              ...side,
+              latestSettings: {
+                ...side.latestSettings,
+                processorState: this.normalizeBen2Resize(
+                  side.latestSettings.processorState,
+                  true,
+                ),
+              },
+            })) as [Side, Side])
+          : state.sides,
+    }));
+  }
+
+  private refreshBen2CacheStatus = (): Promise<boolean> => {
+    if (!this.ben2CacheRefresh) {
+      const tracked = (async () => {
+        let cached = false;
+        try {
+          const { ben2CacheStatus, ben2ModelIsCached } = await import(
+            '../sw-bridge'
+          );
+          cached = ben2ModelIsCached(await ben2CacheStatus());
+        } catch {
+          // Missing or malformed status is conservatively not cached.
+        }
+        this.setBen2ModelCached(cached);
+        return cached;
+      })().finally(() => {
+        if (this.ben2CacheRefresh === tracked) {
+          this.ben2CacheRefresh = undefined;
+        }
+      });
+      this.ben2CacheRefresh = tracked;
+    }
+    return this.ben2CacheRefresh;
+  };
+
+  private onBen2Download = (): void => {
+    if (this.ben2Download) return;
+    this.setState({ ben2Downloading: true });
+    const tracked = (async () => {
+      try {
+        const { downloadBen2Model } = await import('../sw-bridge');
+        await downloadBen2Model();
+      } finally {
+        try {
+          await this.ben2CacheRefresh;
+          await this.refreshBen2CacheStatus();
+        } finally {
+          if (!this.unmounted) this.setState({ ben2Downloading: false });
+        }
+      }
+    })().finally(() => {
+      if (this.ben2Download === tracked) this.ben2Download = undefined;
+    });
+    this.ben2Download = tracked;
+    void tracked.catch(() => undefined);
   };
 
   private onMobileWidthChange = () => {
     this.setState({ mobileView: this.widthQuery.matches });
   };
 
-  private normalizeBen2Resize(options: ProcessorState): ProcessorState {
+  private updateBen2Polling(): void {
+    const enabled = this.state.sides.some((side) =>
+      ben2IsEnabled(side.latestSettings.processorState),
+    );
+    if (enabled && this.ben2Poll === undefined) {
+      this.ben2Poll = window.setInterval(
+        () => void this.refreshBen2CacheStatus(),
+        2_000,
+      );
+    } else if (!enabled && this.ben2Poll !== undefined) {
+      clearInterval(this.ben2Poll);
+      this.ben2Poll = undefined;
+    }
+  }
+
+  private normalizeBen2Resize(
+    options: ProcessorState,
+    modelCached = this.state.ben2ModelCached,
+  ): ProcessorState {
     const resize = ben2ResizeOptions(
       options.resize,
-      ben2IsEnabled(options) && !!this.state.source?.vectorImage,
+      ben2IsEnabled(options) &&
+        modelCached &&
+        this.state.ben2Capability.state === 'supported' &&
+        !!this.state.source?.vectorImage,
     );
     return resize === options.resize ? options : { ...options, resize };
   }
@@ -483,6 +567,12 @@ export default class Compress extends Component<Props, State> {
       'controllerchange',
       this.onServiceWorkerControllerChange,
     );
+    window.removeEventListener('focus', this.onBen2StatusFocus);
+    document.removeEventListener(
+      'visibilitychange',
+      this.onBen2VisibilityChange,
+    );
+    if (this.ben2Poll !== undefined) clearInterval(this.ben2Poll);
     this.mainAbortController.abort();
     this.ben2Coordinator.invalidate();
     this.sideJobScheduler.invalidate();
@@ -507,6 +597,7 @@ export default class Compress extends Component<Props, State> {
         filename: this.state.source?.file.name,
       });
     }
+    this.updateBen2Polling();
     this.queueUpdateImage();
   }
 
@@ -779,6 +870,7 @@ export default class Compress extends Component<Props, State> {
           SideSettings | undefined,
         ],
         currentState.ben2Capability,
+        currentState.ben2ModelCached,
         needsPreprocessing,
       );
 
@@ -841,7 +933,8 @@ export default class Compress extends Component<Props, State> {
                 vectorImage &&
                 !(
                   side.latestSettings.processorState.ben2.enabled &&
-                  currentState.ben2Capability.state === 'supported'
+                  currentState.ben2Capability.state === 'supported' &&
+                  currentState.ben2ModelCached
                 )
                   ? 'vector'
                   : 'lanczos3',
@@ -959,6 +1052,7 @@ export default class Compress extends Component<Props, State> {
                 jobState.processorState,
                 workerBridge,
                 this.ben2Coordinator,
+                this.refreshBen2CacheStatus,
                 this.onBen2Completed,
               );
 
@@ -1055,6 +1149,16 @@ export default class Compress extends Component<Props, State> {
         );
         if (settlement === 'stale') return;
 
+        if (settlement === 'model-not-cached') {
+          this.ben2Coordinator.invalidate();
+          this.setState((currentState) => ({
+            sides: cleanMerge(currentState.sides, sideIndex, {
+              loading: false,
+            }),
+          }));
+          return;
+        }
+
         if (settlement === 'terminal') {
           this.setState((currentState) => ({
             ben2TerminalErrors: cleanSet(
@@ -1090,7 +1194,7 @@ export default class Compress extends Component<Props, State> {
       mobileView,
       preprocessorState,
       ben2Capability,
-      ben2CacheState,
+      ben2ModelCached,
       ben2HasCompleted,
       ben2TerminalErrors,
     }: State,
@@ -1106,7 +1210,7 @@ export default class Compress extends Component<Props, State> {
         processorState={side.latestSettings.processorState}
         encoderState={side.latestSettings.encoderState}
         ben2Capability={ben2Capability}
-        ben2CacheState={ben2CacheState}
+        ben2CacheState={ben2ModelCached ? 'cached' : 'not-cached'}
         ben2FirstUse={!ben2HasCompleted}
         ben2Processing={side.loading}
         ben2TerminalError={ben2TerminalErrors[index]}

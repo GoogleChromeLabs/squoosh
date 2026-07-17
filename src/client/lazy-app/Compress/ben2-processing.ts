@@ -34,6 +34,12 @@ function terminalError(message: string): Error {
   return error;
 }
 
+function modelNotCachedError(): Error {
+  const error = new Error('The current BEN2 model is not cached');
+  error.name = 'Ben2ModelNotCachedError';
+  return error;
+}
+
 function waitForConsumer<T>(
   signal: AbortSignal,
   promise: Promise<T>,
@@ -260,13 +266,17 @@ export class Ben2SideJobScheduler {
   private effectiveJob(
     settings: SideSettings,
     capability: { state: string },
+    modelCached: boolean,
   ): Ben2SideJob {
     if (!settings.encoderState) {
       return { processorState: this.defaultProcessorState };
     }
 
     const raw = settings.processorState;
-    if (!raw.ben2.enabled || capability.state === 'supported') {
+    if (
+      !raw.ben2.enabled ||
+      (capability.state === 'supported' && modelCached)
+    ) {
       return { processorState: raw, encoderState: settings.encoderState };
     }
 
@@ -285,10 +295,11 @@ export class Ben2SideJobScheduler {
     settings: readonly [SideSettings, SideSettings],
     completed: readonly [SideSettings | undefined, SideSettings | undefined],
     capability: { state: string },
+    modelCached: boolean,
     mainPreprocessing: boolean,
   ): { jobs: [Ben2SideJob, Ben2SideJob]; work: [Ben2SideWork, Ben2SideWork] } {
     const jobs = settings.map((side) =>
-      this.effectiveJob(side, capability),
+      this.effectiveJob(side, capability, modelCached),
     ) as [Ben2SideJob, Ben2SideJob];
     const work = jobs.map((job, index) => {
       const latest: Partial<Ben2SideJob> =
@@ -326,7 +337,7 @@ export class Ben2SideJobScheduler {
     job: Ben2SideJob,
     signal: AbortSignal,
     error: unknown,
-  ): 'stale' | 'terminal' | 'error' {
+  ): 'stale' | 'model-not-cached' | 'terminal' | 'error' {
     if (
       errorName(error) === 'AbortError' ||
       !this.isCurrent(index, job, signal)
@@ -334,6 +345,9 @@ export class Ben2SideJobScheduler {
       return 'stale';
     }
     this.active[index] = undefined;
+    if (errorName(error) === 'Ben2ModelNotCachedError') {
+      return 'model-not-cached';
+    }
     if (errorName(error) === 'Ben2TerminalError') {
       this.terminal[index] = job;
       return 'terminal';
@@ -366,16 +380,19 @@ export function ben2OptionsDecision({
   encoderState,
   processorState,
   capability,
+  modelCached = false,
 }: {
   sourceHasVector: boolean;
   encoderState?: EncoderState;
   processorState: ProcessorState;
   capability: { state: string };
+  modelCached?: boolean;
 }): { effective: boolean; resizeIsVector: boolean } {
   const effective =
     !!encoderState &&
     processorState.ben2.enabled &&
-    capability.state === 'supported';
+    capability.state === 'supported' &&
+    modelCached;
   return {
     effective,
     resizeIsVector: sourceHasVector && !effective,
@@ -412,6 +429,7 @@ export async function processSideImage(
   processorState: ProcessorState,
   workerBridge: WorkerBridge,
   ben2Coordinator: Pick<Ben2ProcessingCoordinator, 'acquire'>,
+  ben2ModelPreflight: () => Promise<boolean>,
   onBen2Completed: () => void,
 ): Promise<ImageData> {
   assertSignal(signal);
@@ -419,6 +437,8 @@ export async function processSideImage(
   let result = source.preprocessed;
 
   if (processorState.ben2.enabled) {
+    if (!(await ben2ModelPreflight())) throw modelNotCachedError();
+    assertSignal(signal);
     result = await ben2Coordinator.acquire(
       source,
       preprocessorState.rotate,

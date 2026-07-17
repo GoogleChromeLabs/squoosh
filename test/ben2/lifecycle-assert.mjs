@@ -429,15 +429,22 @@ async function clientAssertions() {
   assert.notEqual(retryState.ben2, leftProcessorState.ben2);
 
   const gatingScheduler = new Ben2SideJobScheduler(defaults);
-  for (const [label, capability, settings] of [
-    ['identity', { state: 'supported' }, [identitySettings, identitySettings]],
-    ['checking', { state: 'checking' }, encodedSettings],
-    ['unsupported', { state: 'unsupported' }, encodedSettings],
+  for (const [label, capability, modelCached, settings] of [
+    [
+      'identity',
+      { state: 'supported' },
+      true,
+      [identitySettings, identitySettings],
+    ],
+    ['checking', { state: 'checking' }, true, encodedSettings],
+    ['unsupported', { state: 'unsupported' }, true, encodedSettings],
+    ['model-absent', { state: 'supported' }, false, encodedSettings],
   ]) {
     const plan = gatingScheduler.plan(
       settings,
       [undefined, undefined],
       capability,
+      modelCached,
       false,
     );
     assert.ok(
@@ -457,6 +464,7 @@ async function clientAssertions() {
               assert.fail(`${label} must not call BEN2`);
             },
           },
+          async () => assert.fail(`${label} cannot preflight BEN2`),
           () => assert.fail(`${label} cannot complete BEN2`),
         ),
         rotated,
@@ -467,13 +475,64 @@ async function clientAssertions() {
     encodedSettings,
     [undefined, undefined],
     { state: 'supported' },
+    true,
     false,
   );
   assert.ok(
     enabledPlan.jobs.every((job) => job.processorState.ben2.enabled),
-    'supported encoded sides schedule effective per-side BEN2 work',
+    'supported cached encoded sides schedule effective per-side BEN2 work',
   );
   assert.ok(enabledPlan.work.every((work) => work.processing && work.encoding));
+
+  const independentlyDisabled = [
+    encodedSettings[0],
+    {
+      ...encodedSettings[1],
+      processorState: {
+        ...rightProcessorState,
+        ben2: { enabled: false },
+      },
+    },
+  ];
+  const absentPlan = gatingScheduler.plan(
+    independentlyDisabled,
+    [undefined, undefined],
+    { state: 'supported' },
+    false,
+    false,
+  );
+  assert.equal(
+    independentlyDisabled[0].processorState.ben2.enabled,
+    true,
+    'left raw intent remains enabled',
+  );
+  assert.equal(
+    independentlyDisabled[1].processorState.ben2.enabled,
+    false,
+    'right raw intent remains independently disabled',
+  );
+  assert.ok(
+    absentPlan.jobs.every((job) => !job.processorState.ben2.enabled),
+    'an absent model masks BEN2 in both effective jobs only',
+  );
+  const previouslyCompleted = encodedSettings.map((side) => ({
+    ...side,
+    processorState: {
+      ...side.processorState,
+      ben2: { enabled: false },
+    },
+  }));
+  const absentEnablePlan = new Ben2SideJobScheduler(defaults).plan(
+    encodedSettings,
+    previouslyCompleted,
+    { state: 'supported' },
+    false,
+    false,
+  );
+  assert.ok(
+    absentEnablePlan.work.every((work) => !work.processing && !work.encoding),
+    'enabling BEN2 while the model is absent schedules zero worker work',
+  );
 
   let release;
   let pngCalls = 0;
@@ -641,6 +700,71 @@ async function clientAssertions() {
   await assert.rejects(invalidated, (error) => error?.name === 'AbortError');
   assert.equal(invalidationResets, 1, 'source invalidation resets shared work');
 
+  let preflightAcquireCalls = 0;
+  let preflightWorkerCalls = 0;
+  let preflightError;
+  await assert.rejects(
+    processSideImage(
+      new AbortController().signal,
+      commonSource,
+      { rotate: { rotate: 90 } },
+      leftProcessorState,
+      {
+        async pngDecode() {
+          preflightWorkerCalls++;
+        },
+        async rotate() {
+          preflightWorkerCalls++;
+        },
+        async ben2() {
+          preflightWorkerCalls++;
+        },
+        async quantize() {
+          preflightWorkerCalls++;
+        },
+      },
+      {
+        async acquire() {
+          preflightAcquireCalls++;
+        },
+      },
+      async () => false,
+      () => assert.fail('an absent preflight cannot complete BEN2'),
+    ),
+    (error) => {
+      preflightError = error;
+      return error?.name === 'Ben2ModelNotCachedError';
+    },
+  );
+  assert.deepEqual(
+    [preflightAcquireCalls, preflightWorkerCalls],
+    [0, 0],
+    'final model preflight prevents coordinator and bridge work',
+  );
+  const preflightScheduler = new Ben2SideJobScheduler(defaults);
+  const preflightPlan = preflightScheduler.plan(
+    encodedSettings,
+    [undefined, undefined],
+    { state: 'supported' },
+    true,
+    false,
+  );
+  preflightScheduler.start(0, preflightPlan.jobs[0]);
+  let preflightSnackbars = 0;
+  const preflightSettlement = preflightScheduler.settleFailure(
+    0,
+    preflightPlan.jobs[0],
+    new AbortController().signal,
+    preflightError,
+  );
+  if (preflightSettlement === 'error') preflightSnackbars++;
+  assert.equal(preflightSettlement, 'model-not-cached');
+  assert.equal(
+    preflightSnackbars,
+    0,
+    'preflight cache miss is not a generic processing snackbar failure',
+  );
+
   const vectorSource = { ...commonSource, vectorImage: { id: 'svg' } };
   const resized = { id: 'resized', width: 2, height: 2 };
   let completedBen2 = 0;
@@ -675,6 +799,7 @@ async function clientAssertions() {
           return matte;
         },
       },
+      async () => true,
       () => completedBen2++,
     ),
     resized,
@@ -688,6 +813,7 @@ async function clientAssertions() {
           encoderState,
           processorState: leftProcessorState,
           capability: { state: 'supported' },
+          modelCached: true,
         }),
       ),
     ),
@@ -700,8 +826,61 @@ async function clientAssertions() {
       encoderState: undefined,
       processorState: leftProcessorState,
       capability: { state: 'supported' },
+      modelCached: true,
     }).resizeIsVector,
     true,
+  );
+  assert.deepEqual(
+    JSON.parse(
+      JSON.stringify(
+        ben2OptionsDecision({
+          sourceHasVector: true,
+          encoderState,
+          processorState: leftProcessorState,
+          capability: { state: 'supported' },
+          modelCached: false,
+        }),
+      ),
+    ),
+    { effective: false, resizeIsVector: true },
+    'absent model does not suppress vector resize UI',
+  );
+
+  const processingOrder = [];
+  resizeImplementation = async (_signal, resizeSource) => {
+    processingOrder.push('resize');
+    assert.equal(resizeSource.preprocessed, matte);
+    return resized;
+  };
+  await processSideImage(
+    new AbortController().signal,
+    commonSource,
+    { rotate: { rotate: 90 } },
+    {
+      ...leftProcessorState,
+      resize: { enabled: true, method: 'lanczos3' },
+      quantize: { enabled: true },
+    },
+    {
+      async quantize(_signal, input) {
+        processingOrder.push('quantize');
+        assert.equal(input, resized);
+        return input;
+      },
+    },
+    {
+      async acquire() {
+        processingOrder.push('ben2');
+        return matte;
+      },
+    },
+    async () => true,
+    () => {},
+  );
+  assert.deepEqual(
+    processingOrder,
+    ['ben2', 'resize', 'quantize'],
+    'cached preflight preserves BEN2 → Resize → Quantize order',
   );
 
   // A terminal coordinator record is latched until explicit Retry. It cannot
@@ -753,6 +932,7 @@ async function clientAssertions() {
     encodedSettings,
     [undefined, undefined],
     { state: 'supported' },
+    true,
     false,
   );
   const previousSides = [
@@ -798,6 +978,7 @@ async function clientAssertions() {
       encodedSettings,
       encodedSettings,
       { state: 'supported' },
+      true,
       false,
     );
     assert.ok(
@@ -818,6 +999,7 @@ async function clientAssertions() {
     retriedSettings,
     encodedSettings,
     { state: 'supported' },
+    true,
     false,
   );
   assert.equal(
@@ -834,6 +1016,7 @@ async function clientAssertions() {
     encodedSettings,
     [undefined, undefined],
     { state: 'supported' },
+    true,
     false,
   );
   disableScheduler.start(0, disablePlan.jobs[0]);
@@ -861,6 +1044,7 @@ async function clientAssertions() {
     disabledSettings,
     encodedSettings,
     { state: 'supported' },
+    true,
     false,
   );
   disableScheduler.start(0, disableSupersession.jobs[0]);
@@ -878,10 +1062,42 @@ async function clientAssertions() {
         encodedSettings,
         [undefined, undefined],
         { state: 'supported' },
+        true,
         false,
       )
       .work.every((work) => work.encoding),
     'source invalidation clears terminal scheduling identities',
+  );
+
+  const evictionScheduler = new Ben2SideJobScheduler(defaults);
+  const beforeEviction = evictionScheduler.plan(
+    encodedSettings,
+    [undefined, undefined],
+    { state: 'supported' },
+    true,
+    false,
+  );
+  assert.ok(
+    beforeEviction.jobs.every((job) => job.processorState.ben2.enabled),
+  );
+  const afterEviction = evictionScheduler.plan(
+    encodedSettings,
+    beforeEviction.jobs,
+    { state: 'supported' },
+    false,
+    false,
+  );
+  assert.ok(
+    afterEviction.jobs.every((job) => !job.processorState.ben2.enabled),
+    'eviction masks both effective jobs',
+  );
+  assert.ok(
+    encodedSettings.every((side) => side.processorState.ben2.enabled),
+    'eviction preserves both raw side intents',
+  );
+  assert.ok(
+    afterEviction.work.every((work) => work.processing && work.encoding),
+    'eviction schedules both sides back to non-BEN2 output',
   );
 
   const staleScheduler = new Ben2SideJobScheduler(defaults);
