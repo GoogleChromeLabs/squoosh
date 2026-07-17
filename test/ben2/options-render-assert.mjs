@@ -21,6 +21,26 @@ const compiled = ts.transpileModule(source, {
     jsxFactory: 'h',
   },
 }).outputText;
+const prettyBytesModule = { exports: {} };
+vm.runInNewContext(
+  ts.transpileModule(
+    await readFile(
+      new URL('src/client/lazy-app/Compress/Results/pretty-bytes.ts', root),
+      'utf8',
+    ),
+    {
+      compilerOptions: {
+        module: ts.ModuleKind.CommonJS,
+        target: ts.ScriptTarget.ES2020,
+      },
+    },
+  ).outputText,
+  {
+    exports: prettyBytesModule.exports,
+    module: prettyBytesModule,
+    Math,
+  },
+);
 
 const passthrough = ({ children }) => preact.h('div', null, children);
 const empty = () => null;
@@ -39,15 +59,15 @@ vm.runInNewContext(compiled, {
     if (specifier === './Expander') return { default: passthrough };
     if (specifier === './Toggle') return { default: empty };
     if (specifier === './Select') return { default: passthrough };
+    if (specifier === 'features/processors/ben2/shared/meta')
+      return { modelBytes: 219_121_675 };
     if (specifier.startsWith('features/processors/')) return { Options: empty };
     if (specifier === 'client/lazy-app/icons')
       return { ImportIcon: empty, SaveIcon: empty, SwapIcon: empty };
     if (specifier === '../ben2-processing')
       return { ben2OptionsDecision: () => ({ resizeIsVector: false }) };
     if (specifier === '../Results/pretty-bytes')
-      return { default: () => ({ value: '219', unit: 'MB' }) };
-    if (specifier === 'features/processors/ben2/shared/meta')
-      return { modelBytes: 219_121_675 };
+      return prettyBytesModule.exports;
     if (specifier === 'shared/custom-els/loading-spinner') return {};
     throw new Error(`Unexpected Options import: ${specifier}`);
   },
