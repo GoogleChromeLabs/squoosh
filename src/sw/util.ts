@@ -173,6 +173,10 @@ export async function downloadBen2Model(
     throw new Error('BEN2 model response was not accepted');
   }
   const responseToCache = response.clone();
+  // Response.clone() tees the body. Cancel the unused original branch before
+  // reading the clone so the tee cannot buffer the full 219 MB without
+  // backpressure. Cancellation is advisory; validation still owns the clone.
+  void response.body?.cancel().catch(() => undefined);
   if (!responseToCache.body) {
     throw new Error('BEN2 model response had no body');
   }
