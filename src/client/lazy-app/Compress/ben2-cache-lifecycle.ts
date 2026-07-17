@@ -14,7 +14,6 @@ interface Ben2EventTarget {
 export interface Ben2CacheLifecycleEnvironment {
   window: Ben2EventTarget;
   document: Ben2EventTarget & { visibilityState: string };
-  serviceWorker: Ben2EventTarget;
   setInterval(callback: () => void, delay: number): number;
   clearInterval(id: number): void;
 }
@@ -23,7 +22,6 @@ function browserEnvironment(): Ben2CacheLifecycleEnvironment {
   return {
     window,
     document,
-    serviceWorker: navigator.serviceWorker,
     setInterval: (callback, delay) => window.setInterval(callback, delay),
     clearInterval: (id) => window.clearInterval(id),
   };
@@ -42,10 +40,6 @@ export class Ben2CacheLifecycle {
     private readonly environment: Ben2CacheLifecycleEnvironment = browserEnvironment(),
   ) {}
 
-  private readonly onControllerChange = (): void => {
-    void this.refresh();
-  };
-
   private readonly onFocus = (): void => {
     void this.refresh();
   };
@@ -59,10 +53,6 @@ export class Ben2CacheLifecycle {
   mount(): void {
     if (this.mounted || this.disposed) return;
     this.mounted = true;
-    this.environment.serviceWorker.addEventListener(
-      'controllerchange',
-      this.onControllerChange,
-    );
     this.environment.window.addEventListener('focus', this.onFocus);
     this.environment.document.addEventListener(
       'visibilitychange',
@@ -130,10 +120,6 @@ export class Ben2CacheLifecycle {
     if (this.disposed) return;
     this.disposed = true;
     if (this.mounted) {
-      this.environment.serviceWorker.removeEventListener(
-        'controllerchange',
-        this.onControllerChange,
-      );
       this.environment.window.removeEventListener('focus', this.onFocus);
       this.environment.document.removeEventListener(
         'visibilitychange',

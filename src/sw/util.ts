@@ -15,7 +15,7 @@ export function cacheOrNetwork(event: FetchEvent): void {
 }
 
 /** Whether a request is an exact, own-origin, full BEN2 asset GET. */
-export function isCanonicalBen2Request(request: Request): boolean {
+export function isCanonicalBen2AssetRequest(request: Request): boolean {
   const url = new URL(request.url);
   return (
     request.method === 'GET' &&
@@ -26,7 +26,7 @@ export function isCanonicalBen2Request(request: Request): boolean {
 }
 
 /** Whether a response is safe to persist as an immutable BEN2 asset. */
-export function isAdmissibleBen2Response(response: Response): boolean {
+export function isAdmissibleBen2AssetResponse(response: Response): boolean {
   return response.type !== 'opaque' && response.status === 200;
 }
 
@@ -42,7 +42,7 @@ export function cacheBen2Asset(event: FetchEvent, cacheName: string): void {
 
       // A query or Range request must always reach the origin. In particular,
       // it must neither consume nor replace the canonical full response.
-      if (!isCanonicalBen2Request(request)) return fetch(request);
+      if (!isCanonicalBen2AssetRequest(request)) return fetch(request);
 
       // Do not use caches.match(): BEN2 must not read an old/unrelated cache.
       const cacheNames = await caches.keys();
@@ -54,7 +54,7 @@ export function cacheBen2Asset(event: FetchEvent, cacheName: string): void {
       const response = await fetch(request);
       // Cache Storage accepts partial and opaque responses, but neither is a
       // valid offline copy of these exact immutable assets.
-      if (isAdmissibleBen2Response(response)) {
+      if (isAdmissibleBen2AssetResponse(response)) {
         // Clone before handing the original to the response consumer. A clone
         // failure is cache-side-only, so it must not disrupt inference.
         let responseToCache: Response;
@@ -73,199 +73,6 @@ export function cacheBen2Asset(event: FetchEvent, cacheName: string): void {
       return response;
     })(),
   );
-}
-
-const ben2ValidationHeader = 'X-Squoosh-BEN2-Validated';
-
-function ben2ValidationMarker(path: string, expectedBytes: number): string {
-  return `${encodeURIComponent(path)};bytes=${expectedBytes}`;
-}
-
-function isValidatedBen2ModelResponse(
-  response: Response,
-  path: string,
-  expectedBytes: number,
-): boolean {
-  return (
-    isAdmissibleBen2Response(response) &&
-    response.headers.get(ben2ValidationHeader) ===
-      ben2ValidationMarker(path, expectedBytes)
-  );
-}
-
-function ben2ModelRequest(path: string): Request {
-  return new Request(new URL(path, self.location.origin).href);
-}
-
-function ben2ModelStagingRequest(path: string): Request {
-  const request = ben2ModelRequest(path);
-  return new Request(`${request.url}?sw-model-validation-staging`);
-}
-
-/** Delete an interrupted validation write without reading its model body. */
-export async function deleteBen2ModelStaging(
-  path: string,
-  cacheName: string,
-): Promise<void> {
-  const request = ben2ModelRequest(path);
-  if (!isCanonicalBen2Request(request)) {
-    throw new Error('Invalid BEN2 model inventory entry');
-  }
-  await (await caches.open(cacheName)).delete(ben2ModelStagingRequest(path));
-}
-
-/**
- * Match only the persisted form produced after the explicit streaming
- * validation operation. The marker avoids rereading 219 MB for every status
- * poll while an unmarked legacy/partial entry is evicted and never exposed.
- */
-export async function matchValidatedBen2Model(
-  path: string,
-  cacheName: string,
-  expectedBytes: number,
-): Promise<Response | undefined> {
-  const request = ben2ModelRequest(path);
-  if (
-    !isCanonicalBen2Request(request) ||
-    !Number.isSafeInteger(expectedBytes)
-  ) {
-    throw new Error('Invalid BEN2 model inventory entry');
-  }
-  const cached = await caches.match(request, { cacheName });
-  if (!cached) return;
-  if (isValidatedBen2ModelResponse(cached, path, expectedBytes)) return cached;
-
-  // A stale entry is not trusted even if eviction itself is unavailable.
-  try {
-    await (await caches.open(cacheName)).delete(request);
-  } catch {}
-}
-
-/** Serve the model only in its explicitly validated persisted form. */
-export function serveBen2ModelFromCache(
-  event: FetchEvent,
-  path: string,
-  cacheName: string,
-  expectedBytes: number,
-): void {
-  event.respondWith(
-    (async () => {
-      const { request } = event;
-      if (
-        request.url !== ben2ModelRequest(path).url ||
-        !isCanonicalBen2Request(request)
-      ) {
-        return new Response('Invalid BEN2 model request', { status: 400 });
-      }
-      const cached = await matchValidatedBen2Model(
-        path,
-        cacheName,
-        expectedBytes,
-      );
-      return (
-        cached || new Response('BEN2 model is not cached', { status: 404 })
-      );
-    })(),
-  );
-}
-
-/** Download, stream-validate, and atomically admit the current BEN2 model. */
-export async function downloadBen2Model(
-  path: string,
-  cacheName: string,
-  expectedBytes: number,
-): Promise<void> {
-  const request = ben2ModelRequest(path);
-  if (
-    !isCanonicalBen2Request(request) ||
-    !Number.isSafeInteger(expectedBytes) ||
-    expectedBytes <= 0
-  ) {
-    throw new Error('Invalid BEN2 model inventory entry');
-  }
-  const stagingRequest = ben2ModelStagingRequest(path);
-  let cache: Cache | undefined;
-  try {
-    // Reap a prior process's orphan before any network or clone failure can
-    // strand it through another attempt. Cache.delete does not read the body.
-    cache = await caches.open(cacheName);
-    await cache.delete(stagingRequest);
-    if (await matchValidatedBen2Model(path, cacheName, expectedBytes)) return;
-
-    const response = await fetch(request);
-    if (!isAdmissibleBen2Response(response)) {
-      throw new Error('BEN2 model response was not accepted');
-    }
-    const responseToCache = response.clone();
-    // Response.clone() tees the body. Cancel the unused original branch before
-    // reading the clone so the tee cannot buffer the full 219 MB without
-    // backpressure. Cancellation is advisory; validation still owns the clone.
-    void response.body?.cancel().catch(() => undefined);
-    if (!responseToCache.body) {
-      throw new Error('BEN2 model response had no body');
-    }
-
-    // The staging key cannot qualify for status or model routing. Counting in
-    // a TransformStream keeps memory bounded; promotion occurs only after a
-    // clean, exact end-of-stream and a completed staging write.
-    let receivedBytes = 0;
-    const validatingBody = responseToCache.body.pipeThrough(
-      new TransformStream<Uint8Array, Uint8Array>({
-        transform(chunk, controller) {
-          receivedBytes += chunk.byteLength;
-          if (receivedBytes > expectedBytes) {
-            throw new Error('BEN2 model response was overlong');
-          }
-          controller.enqueue(chunk);
-        },
-        flush() {
-          if (receivedBytes !== expectedBytes) {
-            throw new Error('BEN2 model response was short');
-          }
-        },
-      }),
-    );
-    const stagingHeaders = new Headers(responseToCache.headers);
-    stagingHeaders.delete(ben2ValidationHeader);
-    const stagingResponse = new Response(validatingBody, {
-      status: responseToCache.status,
-      statusText: responseToCache.statusText,
-      headers: stagingHeaders,
-    });
-
-    await cache.put(stagingRequest, stagingResponse);
-    const staged = await cache.match(stagingRequest);
-    if (!staged?.body) throw new Error('BEN2 staging write was unavailable');
-
-    const admittedHeaders = new Headers(staged.headers);
-    admittedHeaders.set('Content-Length', String(expectedBytes));
-    admittedHeaders.set(
-      ben2ValidationHeader,
-      ben2ValidationMarker(path, expectedBytes),
-    );
-    await cache.put(
-      request,
-      new Response(staged.body, {
-        status: staged.status,
-        statusText: staged.statusText,
-        headers: admittedHeaders,
-      }),
-    );
-    if (!(await matchValidatedBen2Model(path, cacheName, expectedBytes))) {
-      throw new Error('BEN2 final cache write was unavailable');
-    }
-    await cache.delete(stagingRequest);
-  } catch (error) {
-    // Neither a failed validation nor a failed final write may leave a
-    // qualifying canonical entry or an orphaned staging body.
-    if (cache) {
-      await Promise.all([
-        cache.delete(request).catch(() => false),
-        cache.delete(stagingRequest).catch(() => false),
-      ]);
-    }
-    throw error;
-  }
 }
 
 export function cacheOrNetworkAndCache(

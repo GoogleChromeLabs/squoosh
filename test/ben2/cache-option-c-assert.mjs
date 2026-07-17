@@ -13,7 +13,7 @@ import vm from 'node:vm';
 const root = process.cwd();
 const source = fs.readFileSync(path.join(root, 'src/sw/util.ts'), 'utf8');
 const ben2CacheHelpersSource = source.slice(
-  source.indexOf('export function isCanonicalBen2Request'),
+  source.indexOf('export function isCanonicalBen2AssetRequest'),
   source.indexOf('export function cacheOrNetworkAndCache'),
 );
 // Transpile and execute the production helper block so this test exercises the

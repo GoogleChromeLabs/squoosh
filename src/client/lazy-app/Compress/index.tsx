@@ -334,13 +334,15 @@ export default class Compress extends Component<Props, State> {
         ben2IsEnabled(side.latestSettings.processorState),
       ),
     readCached: async () => {
-      const { ben2CacheStatus, ben2ModelIsCached } = await import(
-        '../sw-bridge'
+      const { ben2ModelIsCached } = await import(
+        'features/processors/ben2/shared/model-cache'
       );
-      return ben2ModelIsCached(await ben2CacheStatus());
+      return ben2ModelIsCached();
     },
     download: async () => {
-      const { downloadBen2Model } = await import('../sw-bridge');
+      const { downloadBen2Model } = await import(
+        'features/processors/ben2/shared/model-cache'
+      );
       await downloadBen2Model();
     },
     setCached: (cached) => this.setBen2ModelCached(cached),
@@ -1080,6 +1082,7 @@ export default class Compress extends Component<Props, State> {
         if (settlement === 'model-not-cached') {
           this.ben2Coordinator.invalidate();
           this.ben2TerminalToggleRetry.invalidate();
+          void this.ben2CacheLifecycle.refresh();
           this.setState((currentState) => ({
             sides: cleanMerge(currentState.sides, sideIndex, {
               loading: false,

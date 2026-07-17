@@ -1,9 +1,5 @@
 import {
   cacheBen2Asset,
-  deleteBen2ModelStaging,
-  downloadBen2Model,
-  matchValidatedBen2Model,
-  serveBen2ModelFromCache,
   cacheOrNetworkAndCache,
   cleanupCache,
   cacheOrNetwork,
@@ -11,6 +7,11 @@ import {
   cacheAdditionalProcessors,
   serveShareTarget,
 } from './util';
+import {
+  ben2ModelCacheName,
+  isBen2ModelDownloadRequest,
+  matchValidatedBen2Model,
+} from 'features/processors/ben2/shared/model-cache';
 import { get } from 'idb-keyval';
 import {
   ben2AssetInventory,
@@ -23,54 +24,19 @@ declare var self: ServiceWorkerGlobalScope;
 
 const versionedCache = 'static-' + VERSION;
 const dynamicCache = 'dynamic';
-const expectedCaches = [versionedCache, dynamicCache];
+const expectedCaches = [versionedCache, dynamicCache, ben2ModelCacheName];
 const ben2ModelAssets = ben2AssetInventory.filter(
   ({ role }) => role === 'model',
 );
 if (ben2ModelAssets.length !== 1)
   throw new Error(`Expected one BEN2 model, found ${ben2ModelAssets.length}`);
 const ben2ModelAsset = ben2ModelAssets[0];
-if (
-  !Number.isSafeInteger(ben2ModelAsset.bytes) ||
-  (ben2ModelAsset.bytes || 0) <= 0
-) {
-  throw new Error('Expected an exact BEN2 model byte count');
-}
-const ben2ModelBytes = ben2ModelAsset.bytes!;
-const ben2HeartbeatCadence = 5_000;
-let ben2ModelDownload: Promise<void> | undefined;
-let ben2StagingReap: Promise<void> | undefined;
-
-function reapStaleBen2ModelStaging(): Promise<void> {
-  // The active operation exclusively owns its staging key. A reap that starts
-  // first is recorded so a subsequent download waits rather than racing it.
-  if (ben2ModelDownload) return Promise.resolve();
-  if (!ben2StagingReap) {
-    const tracked = deleteBen2ModelStaging(ben2ModelAsset.path, versionedCache)
-      .catch(() => undefined)
-      .finally(() => {
-        if (ben2StagingReap === tracked) ben2StagingReap = undefined;
-      });
-    ben2StagingReap = tracked;
-  }
-  return ben2StagingReap;
-}
-
-function currentBen2ModelDownload(): Promise<void> {
-  if (!ben2ModelDownload) {
-    const tracked = (async () => {
-      await ben2StagingReap;
-      await downloadBen2Model(
-        ben2ModelAsset.path,
-        versionedCache,
-        ben2ModelBytes,
-      );
-    })().finally(() => {
-      if (ben2ModelDownload === tracked) ben2ModelDownload = undefined;
-    });
-    ben2ModelDownload = tracked;
-  }
-  return ben2ModelDownload;
+const inventoryModelRequest = new Request(
+  new URL(ben2ModelAsset.path, location.origin).href,
+  { headers: { 'X-Squoosh-BEN2-Download': 'v1' } },
+);
+if (!isBen2ModelDownloadRequest(inventoryModelRequest)) {
+  throw new Error('BEN2 model inventory does not match the shared model URL');
 }
 
 self.addEventListener('install', (event) => {
@@ -94,9 +60,7 @@ self.addEventListener('activate', (event) => {
 
   event.waitUntil(
     (async function () {
-      await reapStaleBen2ModelStaging();
-
-      // Remove old caches.
+      // Remove old caches while preserving the current dedicated model cache.
       const promises = (await caches.keys()).map((cacheName) => {
         if (!expectedCaches.includes(cacheName))
           return caches.delete(cacheName);
@@ -130,13 +94,31 @@ self.addEventListener('fetch', (event) => {
   // We only care about GET from here on in.
   if (event.request.method !== 'GET') return;
 
-  // The model can only be populated by the explicit SW-owned command below.
   if (url.pathname === ben2ModelAsset.path) {
-    serveBen2ModelFromCache(
-      event,
-      ben2ModelAsset.path,
-      versionedCache,
-      ben2ModelBytes,
+    if (isBen2ModelDownloadRequest(event.request)) {
+      // The page owns admission. The SW only removes its routing sentinel and
+      // lets this one explicit request reach the origin.
+      const headers = new Headers(event.request.headers);
+      headers.delete('X-Squoosh-BEN2-Download');
+      event.respondWith(fetch(new Request(event.request, { headers })));
+      return;
+    }
+
+    // Every ordinary model GET is intrinsically cache-only in production.
+    event.respondWith(
+      (async () => {
+        if (
+          event.request.url !== inventoryModelRequest.url ||
+          url.search !== '' ||
+          event.request.headers.has('range')
+        ) {
+          return new Response('Invalid BEN2 model request', { status: 400 });
+        }
+        return (
+          (await matchValidatedBen2Model()) ||
+          new Response('BEN2 model is not cached', { status: 404 })
+        );
+      })(),
     );
     return;
   }
@@ -158,74 +140,6 @@ self.addEventListener('fetch', (event) => {
 });
 
 self.addEventListener('message', (event) => {
-  if (event.data?.action === 'ben2-download-model') {
-    const port = event.ports[0];
-    const respond = (response: unknown) => {
-      try {
-        port?.postMessage(response);
-      } catch {
-        // The transfer still belongs to the shared SW operation.
-      }
-    };
-    const heartbeat = setInterval(
-      () => respond({ type: 'heartbeat' }),
-      ben2HeartbeatCadence,
-    );
-    event.waitUntil(
-      (async () => {
-        try {
-          await currentBen2ModelDownload();
-          respond({ ok: true });
-        } catch {
-          respond({ ok: false, error: 'model-download-failed' });
-        } finally {
-          clearInterval(heartbeat);
-        }
-      })(),
-    );
-    return;
-  }
-
-  if (event.data?.action === 'ben2-cache-status') {
-    const port = event.ports[0];
-    const respond = (response: unknown) => {
-      try {
-        port?.postMessage(response);
-      } catch {
-        // The requesting client disappeared; status remains advisory.
-      }
-    };
-    event.waitUntil(
-      (async () => {
-        try {
-          // A fresh process owns no active stage, so status doubles as bounded
-          // orphan cleanup. An in-process download skips this reap.
-          await reapStaleBen2ModelStaging();
-          const entries = await Promise.all(
-            ben2AssetInventory.map(async ({ role, path }) => ({
-              role,
-              path,
-              cached:
-                role === 'model'
-                  ? !!(await matchValidatedBen2Model(
-                      path,
-                      versionedCache,
-                      ben2ModelBytes,
-                    ))
-                  : !!(await caches.match(new URL(path, location.origin).href, {
-                      cacheName: versionedCache,
-                    })),
-            })),
-          );
-          respond({ ok: true, cacheName: versionedCache, entries });
-        } catch {
-          respond({ ok: false, error: 'cache-status-unavailable' });
-        }
-      })(),
-    );
-    return;
-  }
-
   switch (event.data) {
     case 'cache-all':
       event.waitUntil(cacheAdditionalProcessors(versionedCache));

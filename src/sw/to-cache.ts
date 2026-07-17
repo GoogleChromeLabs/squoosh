@@ -2,6 +2,7 @@ import { simd } from 'wasm-feature-detect';
 import webpDataUrl from 'data-url:./tiny.webp';
 import avifDataUrl from 'data-url:./tiny.avif';
 import checkThreadsSupport from 'worker-shared/supports-wasm-threads';
+import { modelBytes as ben2ModelBytes } from 'features/processors/ben2/shared/meta';
 
 // Give TypeScript the correct global.
 declare var self: ServiceWorkerGlobalScope;
@@ -74,7 +75,7 @@ export interface Ben2Asset {
   bytes?: number;
 }
 
-export const ben2ModelBytes = 219_121_675;
+export { ben2ModelBytes };
 
 function assetForRole(
   role: Ben2AssetRole,

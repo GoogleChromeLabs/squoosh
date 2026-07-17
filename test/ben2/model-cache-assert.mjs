@@ -186,7 +186,7 @@ function loadModule({ storage = createStorage(), fetchImpl, locks } = {}) {
     exports: module.exports,
     module,
     require(specifier) {
-      if (specifier.startsWith('url:../../../../../')) return modelPath;
+      if (specifier.startsWith('url:../../../../../')) return { default: modelPath };
       if (specifier === './meta') return { modelBytes: expectedBytes };
       throw new Error(`Unexpected model-cache import: ${specifier}`);
     },
@@ -262,7 +262,7 @@ function entries(storage, name = cacheName) {
   const first = loaded.api.downloadBen2Model();
   const second = loaded.api.downloadBen2Model();
   assert.equal(first, second);
-  await Promise.resolve();
+  while (!release) await Promise.resolve();
   release();
   await assert.rejects(first, /offline/);
   assert.equal(await loaded.api.ben2ModelIsCached(), false);
@@ -357,6 +357,58 @@ for (const failure of ['open', 'stage-put', 'final-put']) {
   assert.deepEqual([...entries(storage).keys()], [modelUrl]);
   await loaded.api.evictBen2Model();
   assert.equal(entries(storage).size, 0);
+}
+
+// The worker-facing read materializes exactly one typed view and never fetches.
+{
+  const marker = `v1;url=${encodeURIComponent(modelUrl)};bytes=${expectedBytes}`;
+  let deleted = 0;
+  const response = {
+    type: 'basic',
+    status: 200,
+    headers: new Headers({
+      'Content-Length': String(expectedBytes),
+      'X-Squoosh-BEN2-Validated': marker,
+    }),
+    async arrayBuffer() {
+      return new ArrayBuffer(expectedBytes);
+    },
+  };
+  const storage = {
+    caches: {
+      async keys() {
+        return [cacheName];
+      },
+      async open(name) {
+        assert.equal(name, cacheName);
+        return {
+          async match() {
+            return response;
+          },
+          async delete() {
+            deleted++;
+            return true;
+          },
+        };
+      },
+    },
+  };
+  const loaded = loadModule({
+    storage,
+    fetchImpl: () => assert.fail('cached-byte read must not fetch'),
+  });
+  const bytes = await loaded.api.readCachedBen2ModelBytes();
+  assert.equal(bytes instanceof Uint8Array, true);
+  assert.equal(bytes.byteLength, expectedBytes);
+  assert.equal(loaded.fetchCalls.length, 0);
+  assert.equal(deleted, 0);
+
+  response.arrayBuffer = async () => new ArrayBuffer(7);
+  await assert.rejects(
+    loaded.api.readCachedBen2ModelBytes(),
+    (error) => error?.name === 'Ben2ModelNotCachedError',
+  );
+  assert.equal(deleted, 1, 'a corrupt body is evicted');
 }
 
 // The SW predicate admits only the fixed canonical internal request.
