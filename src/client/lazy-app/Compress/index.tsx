@@ -41,7 +41,6 @@ import {
   BEN2_TERMINAL_MESSAGE,
   Ben2SideJobScheduler,
   ben2ResizeOptions,
-  ben2RetryProcessorState,
   ben2TerminalSideState,
   createBen2Coordinator,
   normaliseBen2SideSettings,
@@ -89,7 +88,6 @@ interface State {
   ben2Capability: Ben2Capability;
   ben2ModelCached: boolean;
   ben2Downloading: boolean;
-  ben2HasCompleted: boolean;
   ben2TerminalErrors: [string?, string?];
 }
 
@@ -296,7 +294,6 @@ export default class Compress extends Component<Props, State> {
     ben2Capability: { state: 'checking' },
     ben2ModelCached: false,
     ben2Downloading: false,
-    ben2HasCompleted: false,
     ben2TerminalErrors: [undefined, undefined],
     sides: [
       {
@@ -334,7 +331,6 @@ export default class Compress extends Component<Props, State> {
   /** For debouncing calls to updateImage for each side. */
   private updateImageTimeout?: number;
   private unmounted = false;
-  private ben2CompletionReported = false;
   private ben2CacheRefresh?: Promise<boolean>;
   private ben2Download?: Promise<void>;
   private ben2Poll?: number;
@@ -804,30 +800,10 @@ export default class Compress extends Component<Props, State> {
     }
   }
 
-  private onBen2Retry = (index: 0 | 1): void => {
-    const source = this.state.source;
-    if (!source) return;
-    this.ben2Coordinator.retry(source);
-    this.sideJobScheduler.clearTerminal(index);
-    this.setState((state) => ({
-      ben2TerminalErrors: cleanSet(state.ben2TerminalErrors, index, undefined),
-      sides: cleanSet(
-        state.sides,
-        `${index}.latestSettings.processorState`,
-        ben2RetryProcessorState(
-          state.sides[index].latestSettings.processorState,
-        ),
-      ),
-    }));
-  };
-
   private sourceFile: File;
   /** The in-progress job for decoding and preprocessing */
   private activeMainJob?: MainJob;
   private onBen2Completed = (): void => {
-    if (this.ben2CompletionReported) return;
-    this.ben2CompletionReported = true;
-    this.setState({ ben2HasCompleted: true });
     void this.refreshBen2CacheStatus();
   };
 
@@ -1195,8 +1171,7 @@ export default class Compress extends Component<Props, State> {
       preprocessorState,
       ben2Capability,
       ben2ModelCached,
-      ben2HasCompleted,
-      ben2TerminalErrors,
+      ben2Downloading,
     }: State,
   ) {
     const [leftSide, rightSide] = sides;
@@ -1210,17 +1185,15 @@ export default class Compress extends Component<Props, State> {
         processorState={side.latestSettings.processorState}
         encoderState={side.latestSettings.encoderState}
         ben2Capability={ben2Capability}
-        ben2CacheState={ben2ModelCached ? 'cached' : 'not-cached'}
-        ben2FirstUse={!ben2HasCompleted}
-        ben2Processing={side.loading}
-        ben2TerminalError={ben2TerminalErrors[index]}
+        ben2ModelCached={ben2ModelCached}
+        ben2Downloading={ben2Downloading}
         onEncoderTypeChange={this.onEncoderTypeChange}
         onEncoderOptionsChange={this.onEncoderOptionsChange}
         onProcessorOptionsChange={this.onProcessorOptionsChange}
         onCopyToOtherSideClick={this.onCopyToOtherClick}
         onSaveSideSettingsClick={this.onSaveSideSettingsClick}
         onImportSideSettingsClick={this.onImportSideSettingsClick}
-        onBen2Retry={this.onBen2Retry}
+        onBen2Download={this.onBen2Download}
       />
     ));
 

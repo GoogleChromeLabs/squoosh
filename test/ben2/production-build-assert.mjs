@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import { createRequire } from 'node:module';
+import vm from 'node:vm';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -138,6 +140,14 @@ assert.ok(
   'manifest must be in the app shell',
 );
 assert.ok(
+  serviceWorker.includes('ben2-download-model'),
+  'production SW must expose the explicit model command',
+);
+assert.ok(
+  serviceWorker.includes('BEN2 model is not cached'),
+  'production model fetch route must retain its cache-only miss',
+);
+assert.ok(
   buildFiles.some((file) => relative(file) === 'manifest.json'),
   'manifest.json must be emitted',
 );
@@ -193,6 +203,15 @@ assert.ok(
   compressChunk.includes(path.basename(assets.features_worker)),
   'normal Compress UI must link the generated worker',
 );
+for (const copy of [
+  'Remove background',
+  'BEN2 Neural Network is cached.',
+  'BEN2 Neural Network is not cached.',
+  'Download BEN2 Neural Network (',
+]) {
+  assert.ok(compressChunk.includes(copy), `Compress UI must contain ${copy}`);
+}
+assert.ok(!compressChunk.includes('Remove background (BEN2)'));
 
 const eagerFiles = [
   oneAsset(/^index\.html$/, 'application HTML'),
@@ -242,6 +261,7 @@ const ben2ProductSourcePaths = [
   'src/client/lazy-app/Compress/ben2-processing.ts',
   'src/client/lazy-app/Compress/index.tsx',
   'src/client/lazy-app/Compress/main-job.ts',
+  'src/client/lazy-app/Compress/Results/pretty-bytes.ts',
   'src/client/lazy-app/sw-bridge/index.ts',
   'src/client/lazy-app/worker-bridge/index.ts',
   'src/features/decoders/png/worker/pngDecode.ts',
@@ -407,9 +427,56 @@ assert.match(coordinatorSource, /ben2/);
 const optionsSource = ben2ProductSources.get(
   'src/client/lazy-app/Compress/Options/index.tsx',
 );
-assert.match(optionsSource, /Remove background \(BEN2\)/);
+assert.match(optionsSource, />\s*Remove background\s*</);
+assert.doesNotMatch(optionsSource, /Remove background \(BEN2\)/);
 assert.match(optionsSource, /name="ben2\.enable"/);
 assert.match(optionsSource, /onChange={this\.onProcessorEnabledChange}/);
+assert.match(optionsSource, /prettyBytes\(modelBytes\)/);
+for (const forbidden of [
+  /Checking WebGPU support/i,
+  /service worker/i,
+  /Runtime assets/i,
+  /partially cached/i,
+  /First use/i,
+  /Select an output format/i,
+  /Removing background/i,
+  /Retry/i,
+  /JPEG/i,
+  /OxiPNG/i,
+  /Browser PNG/i,
+  /transparen/i,
+]) {
+  assert.doesNotMatch(
+    optionsSource,
+    forbidden,
+    `forbidden UI copy: ${forbidden}`,
+  );
+}
+const metaSource = ben2ProductSources.get(
+  'src/features/processors/ben2/shared/meta.ts',
+);
+assert.match(metaSource, /modelBytes\s*=\s*219_121_675/);
+const require = createRequire(import.meta.url);
+const ts = require('typescript');
+const prettyBytesModule = { exports: {} };
+vm.runInNewContext(
+  ts.transpileModule(
+    ben2ProductSources.get(
+      'src/client/lazy-app/Compress/Results/pretty-bytes.ts',
+    ),
+    {
+      compilerOptions: {
+        module: ts.ModuleKind.CommonJS,
+        target: ts.ScriptTarget.ES2020,
+      },
+    },
+  ).outputText,
+  { exports: prettyBytesModule.exports, module: prettyBytesModule, Math },
+);
+assert.deepEqual(
+  JSON.parse(JSON.stringify(prettyBytesModule.exports.default(219_121_675))),
+  { value: '219', unit: 'MB' },
+);
 for (const outputPath of [
   'src/client/lazy-app/Compress/Output/index.tsx',
   'src/client/lazy-app/Compress/Output/style.css',

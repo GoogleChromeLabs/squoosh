@@ -20,6 +20,8 @@ import { Options as ResizeOptionsComponent } from 'features/processors/resize/cl
 import { ImportIcon, SaveIcon, SwapIcon } from 'client/lazy-app/icons';
 import type { Ben2Capability } from '../ben2-capability';
 import { ben2OptionsDecision } from '../ben2-processing';
+import prettyBytes from '../Results/pretty-bytes';
+import { modelBytes } from 'features/processors/ben2/shared/meta';
 
 interface Props {
   index: 0 | 1;
@@ -28,17 +30,15 @@ interface Props {
   encoderState?: EncoderState;
   processorState: ProcessorState;
   ben2Capability: Ben2Capability;
-  ben2CacheState: 'uncontrolled' | 'not-cached' | 'partial' | 'cached';
-  ben2FirstUse: boolean;
-  ben2Processing: boolean;
-  ben2TerminalError?: string;
+  ben2ModelCached: boolean;
+  ben2Downloading: boolean;
   onEncoderTypeChange(index: 0 | 1, newType: OutputType): void;
   onEncoderOptionsChange(index: 0 | 1, newOptions: EncoderOptions): void;
   onProcessorOptionsChange(index: 0 | 1, newOptions: ProcessorState): void;
   onCopyToOtherSideClick(index: 0 | 1): void;
   onSaveSideSettingsClick(index: 0 | 1): void;
   onImportSideSettingsClick(index: 0 | 1): void;
-  onBen2Retry(index: 0 | 1): void;
+  onBen2Download(): void;
 }
 
 interface State {
@@ -50,6 +50,8 @@ interface State {
 type PartialButNotUndefined<T> = {
   [P in keyof T]: T[P];
 };
+
+const ben2ModelSize = prettyBytes(modelBytes);
 
 const supportedEncoderMapP: Promise<PartialButNotUndefined<typeof encoderMap>> =
   (async () => {
@@ -155,20 +157,15 @@ export default class Options extends Component<Props, State> {
     this.props.onImportSideSettingsClick(this.props.index);
   };
 
-  private onBen2Retry = () => {
-    this.props.onBen2Retry(this.props.index);
-  };
-
   render(
     {
       source,
       encoderState,
       processorState,
       ben2Capability,
-      ben2CacheState,
-      ben2FirstUse,
-      ben2Processing,
-      ben2TerminalError,
+      ben2ModelCached,
+      ben2Downloading,
+      onBen2Download,
     }: Props,
     { supportedEncoderMap }: State,
   ) {
@@ -180,8 +177,8 @@ export default class Options extends Component<Props, State> {
       encoderState,
       processorState,
       capability: ben2Capability,
+      modelCached: ben2ModelCached,
     });
-    const ben2Effective = ben2Decision.effective;
 
     return (
       <div
@@ -235,7 +232,7 @@ export default class Options extends Component<Props, State> {
               </div>
             </h3>
             <label class={style.sectionEnabler}>
-              Remove background (BEN2)
+              Remove background
               <Toggle
                 name="ben2.enable"
                 checked={!!processorState.ben2.enabled}
@@ -243,49 +240,30 @@ export default class Options extends Component<Props, State> {
                 onChange={this.onProcessorEnabledChange}
               />
             </label>
-            <section
-              class={`${style.optionOneCell} ${style.optionsSection}`}
-              aria-live="polite"
-            >
-              {ben2Capability.state === 'checking' &&
-                'Checking WebGPU support…'}
-              {ben2Capability.state === 'unsupported' && ben2Capability.reason}
-              {ben2Capability.state === 'supported' && (
-                <div>
-                  {ben2CacheState === 'uncontrolled' &&
-                    'Offline cache is waiting for service worker control.'}
-                  {ben2CacheState === 'not-cached' &&
-                    'Runtime assets are not cached.'}
-                  {ben2CacheState === 'partial' &&
-                    'Runtime assets are partially cached; reconnect to finish.'}
-                  {ben2CacheState === 'cached' &&
-                    'Runtime assets are cached for this app version.'}
-                </div>
-              )}
-              {ben2FirstUse && ben2Capability.state === 'supported' && (
-                <div>
-                  First use downloads a 208.971 MiB model plus runtime files.
-                </div>
-              )}
-              {processorState.ben2.enabled && !encoderState && (
-                <div>Select an output format to apply BEN2.</div>
-              )}
-              {ben2Effective && ben2Processing && (
-                <div>Removing background…</div>
-              )}
-              {ben2TerminalError && (
-                <div role="alert">
-                  {ben2TerminalError}{' '}
-                  <button type="button" onClick={this.onBen2Retry}>
-                    Retry
-                  </button>
-                </div>
-              )}
-              <div>
-                JPEG cannot preserve transparency; choose OxiPNG or Browser PNG
-                to keep it.
-              </div>
-            </section>
+            <Expander>
+              {processorState.ben2.enabled ? (
+                <section
+                  class={`${style.optionOneCell} ${style.optionsSection}`}
+                  aria-live="polite"
+                >
+                  <div>
+                    {ben2ModelCached
+                      ? 'BEN2 Neural Network is cached.'
+                      : 'BEN2 Neural Network is not cached.'}
+                  </div>
+                  {!ben2ModelCached && (
+                    <button
+                      type="button"
+                      disabled={ben2Downloading}
+                      onClick={onBen2Download}
+                    >
+                      Download BEN2 Neural Network ({ben2ModelSize.value}{' '}
+                      {ben2ModelSize.unit})
+                    </button>
+                  )}
+                </section>
+              ) : null}
+            </Expander>
             {encoderState ? (
               <div>
                 <label class={style.sectionEnabler}>

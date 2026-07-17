@@ -1151,9 +1151,86 @@ async function clientAssertions() {
     'utf8',
   );
   assert.doesNotMatch(compress, /preprocessorState\.ben2/);
-  assert.match(options, /Remove background \(BEN2\)/);
+  assert.match(options, />\s*Remove background\s*</);
+  assert.doesNotMatch(options, /Remove background \(BEN2\)/);
   assert.match(options, /name="ben2\.enable"/);
   assert.match(options, /onChange={this\.onProcessorEnabledChange}/);
+  assert.match(
+    options,
+    /<label class={style\.sectionEnabler}>\s*Remove background\s*<Toggle[\s\S]*?name="ben2\.enable"[\s\S]*?<\/label>\s*<Expander>/,
+    'BEN2 uses the native label/Toggle/immediately-following Expander shape',
+  );
+  assert.match(
+    options,
+    /<Expander>\s*{processorState\.ben2\.enabled \? \(/,
+    'each side expands from its own raw BEN2 intent',
+  );
+  assert.equal(
+    (options.match(/BEN2 Neural Network is cached\./g) || []).length,
+    1,
+  );
+  assert.equal(
+    (options.match(/BEN2 Neural Network is not cached\./g) || []).length,
+    1,
+  );
+  assert.match(options, /prettyBytes\(modelBytes\)/);
+  assert.match(options, /Download BEN2 Neural Network/);
+  const ben2Panel = options.slice(
+    options.indexOf('Remove background'),
+    options.indexOf('{encoderState ?'),
+  );
+  assert.equal(
+    (ben2Panel.match(/<button/g) || []).length,
+    1,
+    'absent BEN2 panel has exactly one button declaration',
+  );
+  for (const forbidden of [
+    /Checking WebGPU support/i,
+    /service worker/i,
+    /Runtime assets/i,
+    /partially cached/i,
+    /First use/i,
+    /Select an output format/i,
+    /Removing background/i,
+    /Retry/i,
+    /JPEG/i,
+    /OxiPNG/i,
+    /Browser PNG/i,
+    /transparen/i,
+  ]) {
+    assert.doesNotMatch(
+      options,
+      forbidden,
+      `forbidden BEN2 copy: ${forbidden}`,
+    );
+  }
+
+  const prettyBytesPath = new URL(
+    'src/client/lazy-app/Compress/Results/pretty-bytes.ts',
+    root,
+  );
+  const prettyBytesModule = { exports: {} };
+  vm.runInNewContext(
+    ts.transpileModule(await readFile(prettyBytesPath, 'utf8'), {
+      compilerOptions: {
+        module: ts.ModuleKind.CommonJS,
+        target: ts.ScriptTarget.ES2020,
+      },
+    }).outputText,
+    {
+      exports: prettyBytesModule.exports,
+      module: prettyBytesModule,
+      Math,
+    },
+  );
+  const modelBytesMatch = processorMeta.match(/modelBytes\s*=\s*([\d_]+)/);
+  assert.ok(modelBytesMatch, 'BEN2 metadata exports modelBytes');
+  const modelBytes = Number(modelBytesMatch[1].replaceAll('_', ''));
+  assert.equal(modelBytes, 219_121_675);
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(prettyBytesModule.exports.default(modelBytes))),
+    { value: '219', unit: 'MB' },
+  );
   assert.doesNotMatch(output, /BEN2|ben2[A-Z]|ben2-/);
   assert.doesNotMatch(outputCss, /\.ben2-/);
   assert.match(outputCss, /overflow:\s*hidden/);
