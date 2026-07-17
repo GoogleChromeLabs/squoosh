@@ -33,6 +33,13 @@ import { resize } from 'features/processors/resize/client';
 import type SnackBarElement from 'shared/custom-els/snack-bar';
 import { drawableToImageData } from '../util/canvas';
 import { Ben2Capability, probeBen2Capability } from './ben2-capability';
+import {
+  ben2RetryPreprocessorState,
+  ben2TerminalStatePatch,
+  mainJobWorkNeeded,
+  preprocessImage,
+  runPreprocessingJob,
+} from './main-job';
 
 export type OutputType = EncoderType | 'identity';
 
@@ -99,11 +106,6 @@ function ben2IsEnabled(preprocessorState: PreprocessorState): boolean {
   return preprocessorState.ben2.enabled;
 }
 
-function errorName(error: unknown): string | undefined {
-  if (!error || typeof error !== 'object' || !('name' in error)) return;
-  return String((error as { name: unknown }).name);
-}
-
 async function decodeImage(
   signal: AbortSignal,
   blob: Blob,
@@ -138,38 +140,6 @@ async function decodeImage(
     console.log(err);
     throw Error("Couldn't decode image");
   }
-}
-
-async function preprocessImage(
-  signal: AbortSignal,
-  data: ImageData,
-  sourceFile: File,
-  preprocessorState: PreprocessorState,
-  workerBridge: WorkerBridge,
-): Promise<ImageData> {
-  assertSignal(signal);
-  let processedData = data;
-
-  if (ben2IsEnabled(preprocessorState)) {
-    const mimeType = await abortable(signal, sniffMimeType(sourceFile));
-    if (mimeType === 'image/png') {
-      processedData = await workerBridge.pngDecode(signal, sourceFile);
-    }
-  }
-
-  if (preprocessorState.rotate.rotate !== 0) {
-    processedData = await workerBridge.rotate(
-      signal,
-      processedData,
-      preprocessorState.rotate,
-    );
-  }
-
-  if (ben2IsEnabled(preprocessorState)) {
-    processedData = await workerBridge.ben2(signal, processedData);
-  }
-
-  return processedData;
 }
 
 async function processImage(
@@ -666,10 +636,7 @@ export default class Compress extends Component<Props, State> {
     this.setState((state) => ({
       loading: true,
       ben2TerminalError: undefined,
-      preprocessorState: {
-        ...state.preprocessorState,
-        ben2: { ...state.preprocessorState.ben2 },
-      },
+      preprocessorState: ben2RetryPreprocessorState(state.preprocessorState),
     }));
   };
 
@@ -718,10 +685,9 @@ export default class Compress extends Component<Props, State> {
     }));
 
     // Figure out what needs doing:
-    const needsDecoding = latestMainJobState.file != mainJobState.file;
-    const needsPreprocessing =
-      needsDecoding ||
-      latestMainJobState.preprocessorState !== mainJobState.preprocessorState;
+    const mainWorkNeeded = mainJobWorkNeeded(latestMainJobState, mainJobState);
+    const needsDecoding = mainWorkNeeded.decoding;
+    const needsPreprocessing = mainWorkNeeded.preprocessing;
     const sideWorksNeeded = latestSideJobStates.map((latestSideJob, i) => {
       const needsProcessing =
         needsPreprocessing ||
@@ -821,78 +787,72 @@ export default class Compress extends Component<Props, State> {
     if (needsPreprocessing) {
       try {
         assertSignal(mainSignal);
-        this.setState({
-          loading: true,
-        });
+        this.setState({ loading: true });
 
-        const preprocessed = await preprocessImage(
-          mainSignal,
-          decoded,
-          mainJobState.file,
-          mainJobState.preprocessorState,
-          // Either worker is good enough here.
-          this.workerBridges[0],
-        );
-        if (ben2IsEnabled(mainJobState.preprocessorState)) {
-          await this.refreshBen2CacheStatus();
-        }
+        const outcome = await runPreprocessingJob({
+          signal: mainSignal,
+          ben2Enabled: ben2IsEnabled(mainJobState.preprocessorState),
+          run: async () => {
+            const preprocessed = await preprocessImage(
+              mainSignal,
+              decoded,
+              mainJobState.file,
+              mainJobState.preprocessorState,
+              // Either worker is good enough here.
+              this.workerBridges[0],
+            );
+            return {
+              decoded,
+              vectorImage,
+              preprocessed,
+              file: mainJobState.file,
+            };
+          },
+          isCurrent: () => this.activeMainJob === mainJobState,
+          reset: () => this.workerBridges[0].reset(),
+          publish: (completedSource) => {
+            source = completedSource;
+            this.activeMainJob = undefined;
 
-        source = {
-          decoded,
-          vectorImage,
-          preprocessed,
-          file: mainJobState.file,
-        };
+            // Update state for process completion, including intermediate render.
+            this.setState((currentState) => {
+              let newState: State = {
+                ...currentState,
+                loading: false,
+                source,
+                encodedPreprocessorState: mainJobState.preprocessorState,
+                ben2HasCompleted:
+                  currentState.ben2HasCompleted ||
+                  ben2IsEnabled(mainJobState.preprocessorState),
+                ben2TerminalError: undefined,
+                sides: currentState.sides.map((side) => {
+                  if (side.downloadUrl) URL.revokeObjectURL(side.downloadUrl);
 
-        // Update state for process completion, including intermediate render
-        this.setState((currentState) => {
-          if (mainSignal.aborted) return {};
-          let newState: State = {
-            ...currentState,
-            loading: false,
-            source,
-            encodedPreprocessorState: mainJobState.preprocessorState,
-            ben2HasCompleted:
-              currentState.ben2HasCompleted ||
-              ben2IsEnabled(mainJobState.preprocessorState),
-            ben2TerminalError: undefined,
-            sides: currentState.sides.map((side) => {
-              if (side.downloadUrl) URL.revokeObjectURL(side.downloadUrl);
-
-              const newSide: Side = {
-                ...side,
-                // Intermediate render
-                data: preprocessed,
-                processed: undefined,
-                encodedSettings: undefined,
+                  const newSide: Side = {
+                    ...side,
+                    // Intermediate render
+                    data: completedSource.preprocessed,
+                    processed: undefined,
+                    encodedSettings: undefined,
+                  };
+                  return newSide;
+                }) as [Side, Side],
               };
-              return newSide;
-            }) as [Side, Side],
-          };
-          newState = stateForNewSourceData(newState);
-          return newState;
-        });
-      } catch (err) {
-        if (mainSignal.aborted || errorName(err) === 'AbortError') return;
-        if (errorName(err) === 'Ben2TerminalError') {
-          // The failed bridge call has settled before reset is queued.
-          await this.workerBridges[0].reset();
-          if (mainSignal.aborted) return;
-          if (this.activeMainJob === mainJobState) {
+              newState = stateForNewSourceData(newState);
+              return newState;
+            });
+          },
+          publishTerminal: () => {
             this.activeMainJob = undefined;
             this.activeSideJobs = [undefined, undefined];
-            this.setState((currentState) => ({
-              loading: false,
-              ben2TerminalError:
-                'Background removal failed. Reconnect if needed, then retry.',
-              sides: currentState.sides.map((side) => ({
-                ...side,
-                loading: false,
-              })) as [Side, Side],
-            }));
-          }
-          return;
-        }
+            this.setState((currentState) =>
+              ben2TerminalStatePatch(currentState.sides),
+            );
+          },
+          refreshCacheStatus: this.refreshBen2CacheStatus,
+        });
+        if (outcome !== 'published') return;
+      } catch (err) {
         if (this.activeMainJob === mainJobState) {
           this.activeMainJob = undefined;
         }
@@ -903,9 +863,6 @@ export default class Compress extends Component<Props, State> {
     } else {
       source = currentState.source!;
     }
-
-    // That's the main part of the job done.
-    this.activeMainJob = undefined;
 
     // Allow side jobs to happen in parallel
     sideWorksNeeded.forEach(async (sideWorkNeeded, sideIndex) => {

@@ -34,7 +34,7 @@ exclude(sw, 'event.data.urls', 'service worker');
 exclude(sw, 'const urls:', 'service worker');
 
 include(bridge, 'ben2CacheStatus(): Promise<Ben2CacheStatus>', 'SW bridge');
-include(bridge, "controller.postMessage({ action: 'ben2-cache-status' }", 'SW bridge');
+include(bridge, "action: 'ben2-cache-status'", 'SW bridge');
 exclude(bridge, 'modelUrl:', 'SW bridge');
 exclude(bridge, 'wasmLoaderUrl:', 'SW bridge');
 exclude(bridge, 'wasmUrl:', 'SW bridge');

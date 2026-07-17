@@ -96,24 +96,32 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('message', (event) => {
   if (event.data?.action === 'ben2-cache-status') {
     const port = event.ports[0];
+    const respond = (response: unknown) => {
+      try {
+        port?.postMessage(response);
+      } catch {
+        // The requesting client disappeared; status remains advisory.
+      }
+    };
     event.waitUntil(
       (async () => {
-        // Status is read-only: do not create an empty cache merely to inspect
-        // the current build's owned inventory.
-        const cacheExists = (await caches.keys()).includes(versionedCache);
-        const cache = cacheExists
-          ? await caches.open(versionedCache)
-          : undefined;
-        const entries = await Promise.all(
-          ben2AssetInventory.map(async ({ role, path }) => ({
-            role,
-            path,
-            cached: !!(
-              cache && (await cache.match(new URL(path, location.origin).href))
-            ),
-          })),
-        );
-        port?.postMessage({ cacheName: versionedCache, entries });
+        try {
+          // CacheStorage.match with cacheName is a read-only lookup. Unlike
+          // caches.open(), it cannot create an empty current-build cache.
+          const entries = await Promise.all(
+            ben2AssetInventory.map(async ({ role, path }) => ({
+              role,
+              path,
+              cached: !!(await caches.match(
+                new URL(path, location.origin).href,
+                { cacheName: versionedCache },
+              )),
+            })),
+          );
+          respond({ ok: true, cacheName: versionedCache, entries });
+        } catch {
+          respond({ ok: false, error: 'cache-status-unavailable' });
+        }
       })(),
     );
     return;
