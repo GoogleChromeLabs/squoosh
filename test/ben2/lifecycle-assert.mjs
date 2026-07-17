@@ -218,6 +218,7 @@ async function clientAssertions() {
     ben2RetryPreprocessorState,
     ben2TerminalStatePatch,
     errorName,
+    mainJobSchedulingDecision,
     mainJobWorkNeeded,
     preprocessImage,
     runPreprocessingJob,
@@ -321,17 +322,6 @@ async function clientAssertions() {
     'ordinary PNG decode errors do not become BEN2 terminal failures',
   );
 
-  // A single explicit Retry changes identity once; after that request
-  // completes, unchanged state does not schedule another request.
-  const retryState = ben2RetryPreprocessorState(enabled);
-  let retryRequests = 0;
-  let latest = { file, preprocessorState: enabled };
-  const retryJob = { file, preprocessorState: retryState };
-  if (mainJobWorkNeeded(latest, retryJob).preprocessing) retryRequests++;
-  latest = retryJob;
-  if (mainJobWorkNeeded(latest, retryJob).preprocessing) retryRequests++;
-  assert.equal(retryRequests, 1, 'one Retry schedules exactly one fresh job');
-
   // A terminal call is allowed to settle before reset. Its state patch only
   // changes lifecycle fields, preserving the last completed source and output.
   let rejectRun;
@@ -352,6 +342,13 @@ async function clientAssertions() {
     },
   ];
   let state = { source: oldSource, sides: oldSides, loading: true };
+  const completedJob = { file, preprocessorState: disabled };
+  const failedJob = { file, preprocessorState: enabled };
+  const scheduler = {
+    active: failedJob,
+    terminal: undefined,
+    completed: completedJob,
+  };
   const terminalRun = runPreprocessingJob({
     signal,
     ben2Enabled: true,
@@ -369,6 +366,8 @@ async function clientAssertions() {
     },
     publishTerminal() {
       events.push('terminal');
+      scheduler.terminal = scheduler.active;
+      scheduler.active = undefined;
       state = { ...state, ...ben2TerminalStatePatch(state.sides) };
     },
   });
@@ -387,6 +386,68 @@ async function clientAssertions() {
   assert.equal(state.sides[1].downloadUrl, 'blob:right');
   assert.equal(state.loading, false);
   assert.equal(state.sides[0].loading, false);
+
+  // Execute the production main-job scheduling decision around the terminal
+  // publication transition. Ordinary component updates must stay quiescent;
+  // Retry changes request identity once and therefore creates one fresh job.
+  let requestedJob = failedJob;
+  let requests = 1;
+  let workers = 1;
+  const scheduleProductionPass = () => {
+    const decision = mainJobSchedulingDecision(scheduler, requestedJob);
+    if (decision.quiescent) return decision;
+    if (decision.decoding || decision.preprocessing) {
+      requests++;
+      workers++;
+      scheduler.active = requestedJob;
+      scheduler.terminal = undefined;
+    }
+    return decision;
+  };
+
+  assert.equal(scheduleProductionPass().quiescent, true);
+  assert.equal(scheduleProductionPass().quiescent, true);
+  assert.equal(requests, 1, 'terminal publication schedules no implicit request');
+  assert.equal(workers, 1, 'terminal publication creates no implicit worker');
+
+  requestedJob = {
+    file,
+    preprocessorState: ben2RetryPreprocessorState(enabled),
+  };
+  assert.equal(scheduleProductionPass().preprocessing, true);
+  assert.equal(scheduleProductionPass().preprocessing, false);
+  assert.equal(requests, 2, 'one Retry schedules exactly one fresh request');
+  assert.equal(workers, 2, 'one Retry creates exactly one fresh worker');
+
+  scheduler.terminal = scheduler.active;
+  scheduler.active = undefined;
+  assert.equal(scheduleProductionPass().quiescent, true);
+
+  const beforeChange = requests;
+  requestedJob = {
+    file,
+    preprocessorState: {
+      rotate: { rotate: 90 },
+      ben2: { enabled: true },
+    },
+  };
+  assert.equal(scheduleProductionPass().preprocessing, true);
+  assert.equal(
+    requests,
+    beforeChange + 1,
+    'changing preprocessor state after failure schedules new-state work',
+  );
+
+  scheduler.terminal = scheduler.active;
+  scheduler.active = undefined;
+  const beforeDisable = requests;
+  requestedJob = { file, preprocessorState: disabled };
+  assert.equal(scheduleProductionPass().preprocessing, true);
+  assert.equal(
+    requests,
+    beforeDisable + 1,
+    'disabling after a terminal failure schedules normal identity work',
+  );
 
   // Once superseded, stale success and failure jobs cannot publish or clear
   // the newer active job.

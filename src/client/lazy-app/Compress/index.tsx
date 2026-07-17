@@ -36,7 +36,7 @@ import { Ben2Capability, probeBen2Capability } from './ben2-capability';
 import {
   ben2RetryPreprocessorState,
   ben2TerminalStatePatch,
-  mainJobWorkNeeded,
+  mainJobSchedulingDecision,
   preprocessImage,
   runPreprocessingJob,
 } from './main-job';
@@ -643,6 +643,8 @@ export default class Compress extends Component<Props, State> {
   private sourceFile: File;
   /** The in-progress job for decoding and preprocessing */
   private activeMainJob?: MainJob;
+  /** A failed request settled for scheduling without replacing completed output. */
+  private terminalMainJob?: MainJob;
   /** The in-progress job for each side (processing and encoding) */
   private activeSideJobs: [SideJob?, SideJob?] = [undefined, undefined];
 
@@ -656,11 +658,7 @@ export default class Compress extends Component<Props, State> {
   private async updateImage() {
     const currentState = this.state;
 
-    // State of the last completed job, or ongoing job
-    const latestMainJobState: Partial<MainJob> = this.activeMainJob || {
-      file: currentState.source && currentState.source.file,
-      preprocessorState: currentState.encodedPreprocessorState,
-    };
+    // State of the last completed side jobs, or ongoing side jobs
     const latestSideJobStates: Partial<SideJob>[] = currentState.sides.map(
       (side, i) =>
         this.activeSideJobs[i] || {
@@ -684,10 +682,23 @@ export default class Compress extends Component<Props, State> {
       encoderState: side.latestSettings.encoderState,
     }));
 
-    // Figure out what needs doing:
-    const mainWorkNeeded = mainJobWorkNeeded(latestMainJobState, mainJobState);
-    const needsDecoding = mainWorkNeeded.decoding;
-    const needsPreprocessing = mainWorkNeeded.preprocessing;
+    // Figure out what needs doing. A request which reached terminal state is
+    // settled for scheduling, so unrelated component updates remain quiescent.
+    const mainDecision = mainJobSchedulingDecision(
+      {
+        active: this.activeMainJob,
+        terminal: this.terminalMainJob,
+        completed: {
+          file: currentState.source && currentState.source.file,
+          preprocessorState: currentState.encodedPreprocessorState,
+        },
+      },
+      mainJobState,
+    );
+    if (mainDecision.quiescent) return;
+
+    const needsDecoding = mainDecision.decoding;
+    const needsPreprocessing = mainDecision.preprocessing;
     const sideWorksNeeded = latestSideJobStates.map((latestSideJob, i) => {
       const needsProcessing =
         needsPreprocessing ||
@@ -715,6 +726,7 @@ export default class Compress extends Component<Props, State> {
       this.mainAbortController = new AbortController();
       jobNeeded = true;
       this.activeMainJob = mainJobState;
+      this.terminalMainJob = undefined;
     }
     for (const [i, sideWorkNeeded] of sideWorksNeeded.entries()) {
       if (sideWorkNeeded.processing || sideWorkNeeded.encoding) {
@@ -813,6 +825,7 @@ export default class Compress extends Component<Props, State> {
           publish: (completedSource) => {
             source = completedSource;
             this.activeMainJob = undefined;
+            this.terminalMainJob = undefined;
 
             // Update state for process completion, including intermediate render.
             this.setState((currentState) => {
@@ -844,6 +857,7 @@ export default class Compress extends Component<Props, State> {
           },
           publishTerminal: () => {
             this.activeMainJob = undefined;
+            this.terminalMainJob = mainJobState;
             this.activeSideJobs = [undefined, undefined];
             this.setState((currentState) =>
               ben2TerminalStatePatch(currentState.sides),

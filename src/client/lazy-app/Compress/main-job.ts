@@ -12,6 +12,16 @@ export interface MainJobWork {
   preprocessing: boolean;
 }
 
+export interface MainJobSchedulerState {
+  active?: MainJobDescriptor;
+  terminal?: MainJobDescriptor;
+  completed: MainJobDescriptor;
+}
+
+export interface MainJobSchedulingDecision extends MainJobWork {
+  quiescent: boolean;
+}
+
 export function mainJobWorkNeeded(
   latest: MainJobDescriptor,
   next: Required<MainJobDescriptor>,
@@ -22,6 +32,23 @@ export function mainJobWorkNeeded(
     preprocessing:
       decoding || latest.preprocessorState !== next.preprocessorState,
   };
+}
+
+/**
+ * Compare a requested main job with active, terminal, or completed work. A
+ * terminal request is settled for scheduling purposes, but remains separate
+ * from completed output state so failed output is never published.
+ */
+export function mainJobSchedulingDecision(
+  state: MainJobSchedulerState,
+  next: Required<MainJobDescriptor>,
+): MainJobSchedulingDecision {
+  const quiescent =
+    !state.active &&
+    state.terminal?.file === next.file &&
+    state.terminal.preprocessorState === next.preprocessorState;
+  const latest = state.active || state.terminal || state.completed;
+  return { ...mainJobWorkNeeded(latest, next), quiescent };
 }
 
 export function ben2RetryPreprocessorState(
