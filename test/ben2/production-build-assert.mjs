@@ -237,18 +237,18 @@ const ben2ProductSourcePaths = [
   'lib/prepare-ben2-model.js',
   'missing-types.d.ts',
   'rollup.config.js',
-  'src/client/lazy-app/Compress/Output/index.tsx',
-  'src/client/lazy-app/Compress/Output/style.css',
+  'src/client/lazy-app/Compress/Options/index.tsx',
   'src/client/lazy-app/Compress/ben2-capability.ts',
+  'src/client/lazy-app/Compress/ben2-processing.ts',
   'src/client/lazy-app/Compress/index.tsx',
   'src/client/lazy-app/Compress/main-job.ts',
   'src/client/lazy-app/sw-bridge/index.ts',
   'src/client/lazy-app/worker-bridge/index.ts',
   'src/features/decoders/png/worker/pngDecode.ts',
-  'src/features/preprocessors/ben2/shared/meta.ts',
-  'src/features/preprocessors/ben2/shared/preprocessing.ts',
-  'src/features/preprocessors/ben2/worker/ben2.ts',
-  'src/features/preprocessors/ben2/worker/missing-types.d.ts',
+  'src/features/processors/ben2/shared/meta.ts',
+  'src/features/processors/ben2/shared/preprocessing.ts',
+  'src/features/processors/ben2/worker/ben2.ts',
+  'src/features/processors/ben2/worker/missing-types.d.ts',
   'src/sw/index.ts',
   'src/sw/missing-types.d.ts',
   'src/sw/to-cache.ts',
@@ -376,11 +376,53 @@ const compressSource = ben2ProductSources.get(
 );
 assert.match(
   compressSource,
-  /function ben2IsEnabled\([^)]*\)[^{]*{\s*return preprocessorState\.ben2\.enabled;\s*}/s,
-  'ben2IsEnabled must depend only on preprocessor state',
+  /function ben2IsEnabled\([^)]*processorState[^)]*\)[^{]*{\s*return processorState\.ben2\.enabled;\s*}/s,
+  'effective BEN2 enablement must derive only from per-side processor state',
 );
 assert.doesNotMatch(
-  ben2ProductSources.get('src/features/preprocessors/ben2/worker/ben2.ts'),
+  compressSource,
+  /preprocessorState\.ben2/,
+  'main Rotate preprocessing must not own BEN2',
+);
+assert.match(
+  compressSource,
+  /from ['"]\.\/ben2-processing['"]/,
+  'Compress must use the dedicated shared BEN2 coordinator',
+);
+const mainJobSource = ben2ProductSources.get(
+  'src/client/lazy-app/Compress/main-job.ts',
+);
+assert.doesNotMatch(
+  mainJobSource,
+  /\bben2\b|pngDecode|Ben2TerminalError/,
+  'main preprocessing must remain Rotate-only',
+);
+const coordinatorSource = ben2ProductSources.get(
+  'src/client/lazy-app/Compress/ben2-processing.ts',
+);
+assert.match(coordinatorSource, /createBen2Coordinator/);
+assert.match(coordinatorSource, /pngDecode/);
+assert.match(coordinatorSource, /rotate/);
+assert.match(coordinatorSource, /ben2/);
+const optionsSource = ben2ProductSources.get(
+  'src/client/lazy-app/Compress/Options/index.tsx',
+);
+assert.match(optionsSource, /Remove background \(BEN2\)/);
+assert.match(optionsSource, /name="ben2\.enable"/);
+assert.match(optionsSource, /onChange={this\.onProcessorEnabledChange}/);
+for (const outputPath of [
+  'src/client/lazy-app/Compress/Output/index.tsx',
+  'src/client/lazy-app/Compress/Output/style.css',
+]) {
+  const outputSource = await readFile(path.join(root, outputPath), 'utf8');
+  assert.doesNotMatch(
+    outputSource,
+    /BEN2|ben2[A-Z]|\.ben2-/,
+    `Output must not retain shared BEN2 UI (${outputPath})`,
+  );
+}
+assert.doesNotMatch(
+  ben2ProductSources.get('src/features/processors/ben2/worker/ben2.ts'),
   /console\.(?:log|debug|info)\s*\(/,
   'BEN2 runtime must not emit verbose logs',
 );

@@ -153,423 +153,400 @@ async function bridgeAssertions() {
 }
 
 async function clientAssertions() {
+  const mainJobPath = new URL(
+    'src/client/lazy-app/Compress/main-job.ts',
+    root,
+  );
+  const mainJobSource = await readFile(mainJobPath, 'utf8');
+  const mainHelperSource = mainJobSource
+    .slice(
+      mainJobSource.indexOf('export function errorName'),
+      mainJobSource.indexOf('export interface PreprocessingJobOptions'),
+    )
+    .replaceAll('export function', 'function')
+    .replaceAll('export async function', 'async function')
+    .replaceAll(': string | undefined', '')
+    .replaceAll('error as { name: unknown }', 'error')
+    .replaceAll(': unknown', '')
+    .replaceAll(': string', '')
+    .replaceAll(': Error', '')
+    .replaceAll(': AbortSignal', '')
+    .replaceAll(': ImageData', '')
+    .replaceAll(': File', '')
+    .replaceAll(': PreprocessorState', '')
+    .replaceAll(": Pick<WorkerBridge, 'pngDecode' | 'rotate' | 'ben2'>", '')
+    .replaceAll(': Promise<ImageData>', '');
+  assert.ok(mainHelperSource.includes('async function preprocessImage'));
+  const mainJobModule = { exports: {} };
+  vm.runInNewContext(
+    `${mainHelperSource}\nmodule.exports.preprocessImage = preprocessImage;`,
+    {
+      module: mainJobModule,
+      AbortController,
+      AbortSignal,
+      DOMException,
+      Error,
+      Promise,
+      assertSignal(signal) {
+        if (signal.aborted) throw new DOMException('AbortError', 'AbortError');
+      },
+      abortable: async (_signal, promise) => promise,
+      sniffMimeType: async (file) => file.type,
+    },
+  );
+
+  const { preprocessImage } = mainJobModule.exports;
+  const calls = [];
+  const decoded = { id: 'decoded', width: 4, height: 3 };
+  const rotated = { id: 'rotated', width: 3, height: 4 };
+  const file = { name: 'input.png', type: 'image/png' };
+
+  // Rotate is the whole global preprocessing contract. Passing the generated
+  // Rotate-only state through the real main helper must neither require BEN2
+  // state nor request PNG/BEN2 work.
+  assert.equal(
+    await preprocessImage(
+      new AbortController().signal,
+      decoded,
+      file,
+      { rotate: { rotate: 90 } },
+      {
+        async pngDecode() {
+          calls.push('pngDecode');
+          assert.fail('main preprocessing must not decode PNG for BEN2');
+        },
+        async rotate(_signal, image, options) {
+          calls.push(['rotate', image, options]);
+          return rotated;
+        },
+        async ben2() {
+          calls.push('ben2');
+          assert.fail('main preprocessing must not invoke BEN2');
+        },
+      },
+    ),
+    rotated,
+  );
+  assert.deepEqual(calls, [['rotate', decoded, { rotate: 90 }]]);
+
+  const processorMetaPath = new URL(
+    'src/features/processors/ben2/shared/meta.ts',
+    root,
+  );
+  const processorMeta = await readFile(processorMetaPath, 'utf8');
+  assert.match(processorMeta, /Options\s*=\s*Record<string, never>/);
+  assert.match(processorMeta, /defaultOptions\s*=\s*\{\}/);
+  await assert.rejects(
+    readFile(
+      new URL('src/features/preprocessors/ben2/shared/meta.ts', root),
+      'utf8',
+    ),
+    { code: 'ENOENT' },
+    'BEN2 must be discovered only as a processor, never as a preprocessor',
+  );
+
+  // The remaining assertions deliberately load the production per-side helper
+  // rather than reproducing its scheduler in this test. Its small public
+  // contract is the seam used by Compress for persistence, shared work, and
+  // per-consumer cancellation/Retry behavior.
   const require = createRequire(import.meta.url);
   let ts;
   try {
     ts = require('typescript');
   } catch {
     throw new Error(
-      'lifecycle --client requires the repository TypeScript dependency',
+      'lifecycle --client requires the repository TypeScript dependency to execute ben2-processing.ts',
     );
   }
-
-  const compress = await readFile(
-    new URL('src/client/lazy-app/Compress/index.tsx', root),
-    'utf8',
+  const helperPath = new URL(
+    'src/client/lazy-app/Compress/ben2-processing.ts',
+    root,
   );
-  const output = await readFile(
-    new URL('src/client/lazy-app/Compress/Output/index.tsx', root),
-    'utf8',
-  );
-  const helperSource = await readFile(
-    new URL('src/client/lazy-app/Compress/main-job.ts', root),
-    'utf8',
-  );
-  const compiled = ts.transpileModule(helperSource, {
+  const helperSource = await readFile(helperPath, 'utf8');
+  const helperCompiled = ts.transpileModule(helperSource, {
     compilerOptions: {
       module: ts.ModuleKind.CommonJS,
       target: ts.ScriptTarget.ES2020,
     },
   }).outputText;
 
-  const abortable = (signal, promise) =>
-    new Promise((resolve, reject) => {
-      const onAbort = () =>
-        reject(new DOMException('AbortError', 'AbortError'));
-      signal.addEventListener('abort', onAbort, { once: true });
-      Promise.resolve(promise)
-        .then(resolve, reject)
-        .finally(() => signal.removeEventListener('abort', onAbort));
-    });
-  const module = { exports: {} };
-  vm.runInNewContext(compiled, {
-    exports: module.exports,
-    module,
+  const helperModule = { exports: {} };
+  vm.runInNewContext(helperCompiled, {
+    exports: helperModule.exports,
+    module: helperModule,
     require(specifier) {
       if (specifier === '../util') {
         return {
-          abortable,
-          assertSignal(signal) {
-            if (signal.aborted)
-              throw new DOMException('AbortError', 'AbortError');
+          abortable(signal, promise) {
+            return new Promise((resolve, reject) => {
+              const abort = () =>
+                reject(new DOMException('AbortError', 'AbortError'));
+              signal.addEventListener('abort', abort, { once: true });
+              Promise.resolve(promise).then(resolve, reject).finally(() =>
+                signal.removeEventListener('abort', abort),
+              );
+            });
           },
-          sniffMimeType: async (file) => file.type,
+          sniffMimeType: async (input) => input.type,
         };
       }
-      throw new Error(`Unexpected main-job import: ${specifier}`);
+      throw new Error(`Unexpected BEN2 helper import: ${specifier}`);
     },
     AbortController,
     AbortSignal,
     DOMException,
     Error,
     Promise,
+    Set,
   });
   const {
-    ben2RetryPreprocessorState,
-    ben2TerminalStatePatch,
-    errorName,
-    mainJobSchedulingDecision,
-    mainJobWorkNeeded,
-    preprocessImage,
-    runPreprocessingJob,
-  } = module.exports;
+    createBen2Coordinator,
+    normaliseBen2SideSettings,
+    ben2RetryProcessorState,
+    ben2WorkNeeded,
+    ben2ResizeSource,
+    ben2ResizeOptions,
+  } = helperModule.exports;
+  for (const [name, value] of Object.entries({
+    createBen2Coordinator,
+    normaliseBen2SideSettings,
+    ben2RetryProcessorState,
+    ben2WorkNeeded,
+    ben2ResizeSource,
+    ben2ResizeOptions,
+  })) {
+    assert.equal(typeof value, 'function', `BEN2 helper exports ${name}`);
+  }
 
-  assert.equal(errorName(null), undefined);
-  assert.equal(errorName('AbortError'), undefined);
-  assert.equal(errorName({}), undefined);
-  assert.equal(errorName({ name: 'AbortError' }), 'AbortError');
-
-  const decoded = { id: 'browser-decoded', width: 4, height: 3 };
-  const straightPng = { id: 'straight-png', width: 4, height: 3 };
-  const matte = { id: 'matte', width: 4, height: 3 };
-  const file = { name: 'alpha.png', type: 'image/png' };
-  const disabled = { rotate: { rotate: 0 }, ben2: { enabled: false } };
-  const enabled = { rotate: { rotate: 0 }, ben2: { enabled: true } };
-  const signal = new AbortController().signal;
-
-  // A PNG initially loaded through the ordinary disabled path must be routed
-  // through straight-RGB PNG decode before BEN2 when the same File is enabled.
-  const enableWork = mainJobWorkNeeded(
-    { file, preprocessorState: disabled },
-    { file, preprocessorState: enabled },
+  const defaults = {
+    resize: { enabled: false, method: 'lanczos3' },
+    quantize: { enabled: false },
+    ben2: { enabled: false },
+  };
+  const oldSettings = normaliseBen2SideSettings(
+    {
+      latestSettings: { processorState: { resize: { enabled: true } } },
+      encodedSettings: { processorState: { quantize: { enabled: true } } },
+    },
+    defaults,
   );
-  assert.deepEqual(JSON.parse(JSON.stringify(enableWork)), {
-    decoding: false,
-    preprocessing: true,
-  });
-  const enableCalls = [];
-  const enableResult = await preprocessImage(signal, decoded, file, enabled, {
-    async pngDecode(_signal, input) {
-      enableCalls.push(['pngDecode', input]);
-      return straightPng;
+  assert.equal(oldSettings.latestSettings.processorState.ben2.enabled, false);
+  assert.equal(oldSettings.encodedSettings.processorState.ben2.enabled, false);
+  const rawIntent = normaliseBen2SideSettings(
+    {
+      latestSettings: { processorState: { ben2: { enabled: true } } },
+      encodedSettings: { processorState: { ben2: { enabled: true } } },
     },
-    async rotate() {
-      assert.fail('zero rotation must not run');
-    },
-    async ben2(_signal, input) {
-      enableCalls.push(['ben2', input]);
-      return matte;
-    },
-  });
-  assert.equal(enableResult, matte);
-  assert.deepEqual(enableCalls, [
-    ['pngDecode', file],
-    ['ben2', straightPng],
-  ]);
-
-  // Disabling is a new preprocessing job and restores the decoded identity.
-  assert.equal(
-    mainJobWorkNeeded(
-      { file, preprocessorState: enabled },
-      { file, preprocessorState: disabled },
-    ).preprocessing,
-    true,
+    defaults,
   );
-  const disableCalls = [];
+  assert.equal(rawIntent.latestSettings.processorState.ben2.enabled, true);
+  assert.equal(rawIntent.encodedSettings.processorState.ben2.enabled, true);
+
+  const leftProcessorState = {
+    ...defaults,
+    ben2: { enabled: true },
+  };
+  const rightProcessorState = { ...defaults, ben2: { enabled: false } };
+  const retryState = ben2RetryProcessorState(leftProcessorState);
+  assert.notEqual(retryState, leftProcessorState);
+  assert.notEqual(retryState.ben2, leftProcessorState.ben2);
+  assert.equal(rightProcessorState.ben2.enabled, false);
   assert.equal(
-    await preprocessImage(signal, decoded, file, disabled, {
-      async pngDecode() {
-        disableCalls.push('pngDecode');
-      },
-      async rotate() {
-        disableCalls.push('rotate');
-      },
-      async ben2() {
-        disableCalls.push('ben2');
-      },
+    ben2WorkNeeded({
+      processorState: leftProcessorState,
+      encoderState: undefined,
+      capability: { state: 'supported' },
     }),
-    decoded,
+    false,
+    'Original Image retains raw intent but never starts BEN2 work',
   );
-  assert.deepEqual(disableCalls, []);
+  assert.equal(
+    ben2WorkNeeded({
+      processorState: leftProcessorState,
+      encoderState: { type: 'mozJPEG' },
+      capability: { state: 'unsupported' },
+    }),
+    false,
+    'unsupported capability never starts BEN2 work',
+  );
 
-  const pngAssetWorker = {
+  let release;
+  let pngCalls = 0;
+  let rotateCalls = 0;
+  let ben2Calls = 0;
+  let resets = 0;
+  const matte = { id: 'shared-matte', width: 3, height: 4 };
+  const bridge = {
     async pngDecode() {
-      const error = new Error('chunk missing');
-      error.name = 'PngModuleLoadError';
-      throw error;
+      pngCalls++;
+      return decoded;
+    },
+    async rotate(_signal, input) {
+      rotateCalls++;
+      assert.equal(input, decoded);
+      return rotated;
+    },
+    ben2() {
+      ben2Calls++;
+      return new Promise((resolve) => (release = () => resolve(matte)));
+    },
+    async reset() {
+      resets++;
+    },
+  };
+  const coordinator = createBen2Coordinator(bridge);
+  const leftAbort = new AbortController();
+  const rightAbort = new AbortController();
+  const commonSource = { file, decoded, preprocessed: rotated };
+  const left = coordinator.acquire(commonSource, { rotate: 90 }, leftAbort.signal);
+  const right = coordinator.acquire(
+    commonSource,
+    { rotate: 90 },
+    rightAbort.signal,
+  );
+  for (let tick = 0; tick < 4; tick++) await Promise.resolve();
+  assert.deepEqual(
+    [pngCalls, rotateCalls, ben2Calls],
+    [1, 1, 1],
+    'two encoded sides share PNG decode, Rotate, and BEN2 for one source',
+  );
+  leftAbort.abort();
+  await assert.rejects(left, (error) => error?.name === 'AbortError');
+  assert.equal(resets, 0, 'one consumer cancellation keeps shared work alive');
+  release();
+  assert.equal(await right, matte, 'the surviving side receives shared raster');
+
+  let abandonedResets = 0;
+  const abandonedCoordinator = createBen2Coordinator({
+    async pngDecode() {
+      return decoded;
     },
     async rotate() {
-      assert.fail('PNG asset failure stops preprocessing');
+      return rotated;
+    },
+    ben2() {
+      return new Promise(() => {});
+    },
+    async reset() {
+      abandonedResets++;
+    },
+  });
+  const abandonedLeft = new AbortController();
+  const abandonedRight = new AbortController();
+  const abandonedLeftWork = abandonedCoordinator.acquire(
+    commonSource,
+    { rotate: 90 },
+    abandonedLeft.signal,
+  );
+  const abandonedRightWork = abandonedCoordinator.acquire(
+    commonSource,
+    { rotate: 90 },
+    abandonedRight.signal,
+  );
+  abandonedLeft.abort();
+  await assert.rejects(
+    abandonedLeftWork,
+    (error) => error?.name === 'AbortError',
+  );
+  assert.equal(abandonedResets, 0, 'one active consumer keeps work alive');
+  abandonedRight.abort();
+  await assert.rejects(
+    abandonedRightWork,
+    (error) => error?.name === 'AbortError',
+  );
+  assert.equal(abandonedResets, 1, 'last consumer cancellation resets shared work');
+
+  const rasterSource = ben2ResizeSource(
+    { ...commonSource, vectorImage: { id: 'svg' } },
+    matte,
+  );
+  assert.equal(rasterSource.preprocessed, matte);
+  assert.equal(rasterSource.vectorImage?.id, 'svg');
+  assert.equal(
+    ben2ResizeOptions({ enabled: true, method: 'vector' }, true).method,
+    'lanczos3',
+    'effective BEN2 disables SVG vector bypass only for that side',
+  );
+  assert.equal(
+    ben2ResizeOptions({ enabled: true, method: 'vector' }, false).method,
+    'vector',
+  );
+
+  // A terminal coordinator record is latched until explicit Retry. It cannot
+  // create a request during ordinary rerenders, and one Retry creates one new
+  // shared request without changing the other side's raw intent.
+  let attempts = 0;
+  const terminalBridge = {
+    async pngDecode() {
+      return decoded;
+    },
+    async rotate() {
+      return rotated;
     },
     async ben2() {
-      assert.fail('PNG asset failure stops preprocessing');
+      attempts++;
+      if (attempts === 1) {
+        const error = new Error('asset missing');
+        error.name = 'Ben2TerminalError';
+        throw error;
+      }
+      return matte;
     },
+    async reset() {},
   };
+  const terminalCoordinator = createBen2Coordinator(terminalBridge);
+  const terminalSignal = new AbortController().signal;
   await assert.rejects(
-    preprocessImage(signal, decoded, file, enabled, pngAssetWorker),
+    terminalCoordinator.acquire(commonSource, { rotate: 90 }, terminalSignal),
     (error) => error?.name === 'Ben2TerminalError',
-    'BEN2-path PNG asset failures enter explicit terminal Retry policy',
   );
-  const corruptPngWorker = {
-    ...pngAssetWorker,
-    async pngDecode() {
-      throw new Error('corrupt PNG');
-    },
-  };
   await assert.rejects(
-    preprocessImage(signal, decoded, file, enabled, corruptPngWorker),
-    (error) => error?.name === 'Error' && error?.message === 'corrupt PNG',
-    'ordinary PNG decode errors do not become BEN2 terminal failures',
+    terminalCoordinator.acquire(commonSource, { rotate: 90 }, terminalSignal),
+    (error) => error?.name === 'Ben2TerminalError',
   );
-
-  // A terminal call is allowed to settle before reset. Its state patch only
-  // changes lifecycle fields, preserving the last completed source and output.
-  let rejectRun;
-  const events = [];
-  const oldSource = { id: 'completed-source' };
-  const oldSides = [
-    {
-      loading: true,
-      data: { id: 'left' },
-      file: { id: 'left-file' },
-      downloadUrl: 'blob:left',
-    },
-    {
-      loading: true,
-      data: { id: 'right' },
-      file: { id: 'right-file' },
-      downloadUrl: 'blob:right',
-    },
-  ];
-  let state = { source: oldSource, sides: oldSides, loading: true };
-  const completedJob = { file, preprocessorState: disabled };
-  const failedJob = { file, preprocessorState: enabled };
-  const scheduler = {
-    active: failedJob,
-    terminal: undefined,
-    completed: completedJob,
-  };
-  const terminalRun = runPreprocessingJob({
-    signal,
-    ben2Enabled: true,
-    run: () =>
-      new Promise((_, reject) => {
-        events.push('call-started');
-        rejectRun = reject;
-      }),
-    isCurrent: () => true,
-    async reset() {
-      events.push('reset');
-    },
-    publish() {
-      assert.fail('terminal work must not publish');
-    },
-    publishTerminal() {
-      events.push('terminal');
-      scheduler.terminal = scheduler.active;
-      scheduler.active = undefined;
-      state = { ...state, ...ben2TerminalStatePatch(state.sides) };
-    },
-  });
-  await Promise.resolve();
-  assert.deepEqual(events, ['call-started']);
-  const terminalError = new Error('asset missing');
-  terminalError.name = 'Ben2TerminalError';
-  rejectRun(terminalError);
-  assert.equal(await terminalRun, 'terminal');
-  assert.deepEqual(events, ['call-started', 'reset', 'terminal']);
-  assert.equal(state.source, oldSource);
-  assert.equal(state.sides[0].data, oldSides[0].data);
-  assert.equal(state.sides[0].file, oldSides[0].file);
-  assert.equal(state.sides[1].data, oldSides[1].data);
-  assert.equal(state.sides[0].downloadUrl, 'blob:left');
-  assert.equal(state.sides[1].downloadUrl, 'blob:right');
-  assert.equal(state.loading, false);
-  assert.equal(state.sides[0].loading, false);
-
-  // Execute the production main-job scheduling decision around the terminal
-  // publication transition. Ordinary component updates must stay quiescent;
-  // Retry changes request identity once and therefore creates one fresh job.
-  let requestedJob = failedJob;
-  let requests = 1;
-  let workers = 1;
-  const scheduleProductionPass = () => {
-    const decision = mainJobSchedulingDecision(scheduler, requestedJob);
-    if (decision.quiescent) return decision;
-    if (decision.decoding || decision.preprocessing) {
-      requests++;
-      workers++;
-      scheduler.active = requestedJob;
-      scheduler.terminal = undefined;
-    }
-    return decision;
-  };
-
-  assert.equal(scheduleProductionPass().quiescent, true);
-  assert.equal(scheduleProductionPass().quiescent, true);
+  assert.equal(attempts, 1, 'terminal state never implicitly retries');
+  terminalCoordinator.retry(commonSource);
   assert.equal(
-    requests,
-    1,
-    'terminal publication schedules no implicit request',
+    await terminalCoordinator.acquire(commonSource, { rotate: 90 }, terminalSignal),
+    matte,
   );
-  assert.equal(workers, 1, 'terminal publication creates no implicit worker');
+  assert.equal(attempts, 2, 'one explicit Retry starts exactly one fresh call');
 
-  requestedJob = {
-    file,
-    preprocessorState: ben2RetryPreprocessorState(enabled),
-  };
-  assert.equal(scheduleProductionPass().preprocessing, true);
-  assert.equal(scheduleProductionPass().preprocessing, false);
-  assert.equal(requests, 2, 'one Retry schedules exactly one fresh request');
-  assert.equal(workers, 2, 'one Retry creates exactly one fresh worker');
-
-  scheduler.terminal = scheduler.active;
-  scheduler.active = undefined;
-  assert.equal(scheduleProductionPass().quiescent, true);
-
-  const beforeChange = requests;
-  requestedJob = {
-    file,
-    preprocessorState: {
-      rotate: { rotate: 90 },
-      ben2: { enabled: true },
-    },
-  };
-  assert.equal(scheduleProductionPass().preprocessing, true);
-  assert.equal(
-    requests,
-    beforeChange + 1,
-    'changing preprocessor state after failure schedules new-state work',
+  const compress = await readFile(
+    new URL('src/client/lazy-app/Compress/index.tsx', root),
+    'utf8',
   );
-
-  scheduler.terminal = scheduler.active;
-  scheduler.active = undefined;
-  const beforeDisable = requests;
-  requestedJob = { file, preprocessorState: disabled };
-  assert.equal(scheduleProductionPass().preprocessing, true);
-  assert.equal(
-    requests,
-    beforeDisable + 1,
-    'disabling after a terminal failure schedules normal identity work',
+  const options = await readFile(
+    new URL('src/client/lazy-app/Compress/Options/index.tsx', root),
+    'utf8',
   );
-
-  // Once superseded, stale success and failure jobs cannot publish or clear
-  // the newer active job.
-  let currentJob = 'old';
-  let resolveOld;
-  const stalePublications = [];
-  const oldRun = runPreprocessingJob({
-    signal,
-    ben2Enabled: true,
-    run: () => new Promise((resolve) => (resolveOld = resolve)),
-    isCurrent: () => currentJob === 'old',
-    async reset() {},
-    publish() {
-      stalePublications.push('old');
-      currentJob = undefined;
-    },
-    publishTerminal() {
-      stalePublications.push('old-terminal');
-      currentJob = undefined;
-    },
-  });
-  currentJob = 'new';
-  const newRun = runPreprocessingJob({
-    signal,
-    ben2Enabled: true,
-    run: async () => matte,
-    isCurrent: () => currentJob === 'new',
-    async reset() {},
-    publish() {
-      stalePublications.push('new');
-    },
-    publishTerminal() {
-      assert.fail('new job must succeed');
-    },
-  });
-  assert.equal(await newRun, 'published');
-  resolveOld(straightPng);
-  assert.equal(await oldRun, 'stale');
-  assert.deepEqual(stalePublications, ['new']);
-  assert.equal(currentJob, 'new', 'stale work cannot clear newer active work');
-
-  const staleTerminalError = new Error('old failed');
-  staleTerminalError.name = 'Ben2TerminalError';
-  assert.equal(
-    await runPreprocessingJob({
-      signal,
-      ben2Enabled: true,
-      run: async () => {
-        throw staleTerminalError;
-      },
-      isCurrent: () => false,
-      async reset() {},
-      publish() {
-        assert.fail('stale failure must not publish');
-      },
-      publishTerminal() {
-        currentJob = undefined;
-      },
-    }),
-    'stale',
+  const output = await readFile(
+    new URL('src/client/lazy-app/Compress/Output/index.tsx', root),
+    'utf8',
   );
-  assert.equal(currentJob, 'new', 'stale failure cannot clear newer work');
-
-  // Cache status is advisory: publication and job settlement happen before a
-  // nonresponsive refresh, and a rejected refresh is consumed.
-  let published = false;
-  assert.equal(
-    await runPreprocessingJob({
-      signal,
-      ben2Enabled: true,
-      run: async () => matte,
-      isCurrent: () => true,
-      async reset() {},
-      publish() {
-        published = true;
-      },
-      publishTerminal() {},
-      refreshCacheStatus: () => new Promise(() => {}),
-    }),
-    'published',
+  const outputCss = await readFile(
+    new URL('src/client/lazy-app/Compress/Output/style.css', root),
+    'utf8',
   );
-  assert.equal(published, true);
-  await runPreprocessingJob({
-    signal,
-    ben2Enabled: true,
-    run: async () => matte,
-    isCurrent: () => true,
-    async reset() {},
-    publish() {},
-    publishTerminal() {},
-    refreshCacheStatus: async () => {
-      throw new Error('cache status rejected');
-    },
-  });
-  await Promise.resolve();
-
-  // Keep source-stripping and product-copy checks separate from behavioral
-  // lifecycle assertions.
-  const all = `${compress}\n${output}`;
-  assert.doesNotMatch(
-    all,
-    /searchParams|ben2SpikeEnabled|__squooshBen2|cancellation-audit|ben2CancellationAudit|auditJobId/i,
-  );
+  assert.match(compress, /processorState\.ben2\.enabled/);
+  assert.doesNotMatch(compress, /preprocessorState\.ben2/);
+  assert.match(compress, /terminalSideJobs/);
+  assert.match(compress, /ben2TerminalErrors/);
+  assert.match(compress, /normaliseBen2SideSettings/);
+  assert.match(compress, /ben2Capability={ben2Capability}/);
+  assert.match(compress, /ben2CacheState={ben2CacheState}/);
+  assert.match(compress, /ben2FirstUse={!ben2HasCompleted}/);
+  assert.match(compress, /ben2Processing={side\.loading}/);
   assert.match(compress, /onBen2Retry/);
-  assert.match(output, /Remove background \(BEN2\)/);
-  assert.equal(
-    (output.match(/Remove background \(BEN2\)/g) || []).length,
-    1,
-    'the shared BEN2 control must be rendered once',
-  );
-  assert.match(output, /208\.971 MiB/);
-  assert.match(output, /Original Image/);
-  assert.match(output, /JPEG/);
-  assert.match(output, /OxiPNG/);
-  assert.match(output, /Browser PNG/);
-  assert.match(output, /Retry/);
+  assert.match(options, /Remove background \(BEN2\)/);
+  assert.match(options, /name="ben2\.enable"/);
+  assert.match(options, /onChange={this\.onProcessorEnabledChange}/);
+  assert.doesNotMatch(output, /BEN2|ben2[A-Z]|ben2-/);
+  assert.doesNotMatch(outputCss, /\.ben2-/);
+  assert.match(outputCss, /overflow:\s*hidden/);
+  assert.match(outputCss, /contain:\s*content/);
 
-  console.log('BEN2 client lifecycle assertion passed');
+  console.log('BEN2 per-side client lifecycle assertion passed');
 }
 
 async function cacheAssertions() {
@@ -835,7 +812,7 @@ async function workerAssertions() {
   }
 
   const filename = new URL(
-    'src/features/preprocessors/ben2/worker/ben2.ts',
+    'src/features/processors/ben2/worker/ben2.ts',
     root,
   );
   const source = await readFile(filename, 'utf8');

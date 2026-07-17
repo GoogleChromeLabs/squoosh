@@ -14,7 +14,7 @@ globalThis.ImageData = TestImageData;
 async function loadPreprocessing() {
   let source = await readFile(
     new URL(
-      '../../src/features/preprocessors/ben2/shared/preprocessing.ts',
+      '../../src/features/processors/ben2/shared/preprocessing.ts',
       import.meta.url,
     ),
     'utf8',
