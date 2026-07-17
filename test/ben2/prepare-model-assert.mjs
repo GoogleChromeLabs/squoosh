@@ -75,6 +75,93 @@ try {
   }
 
   {
+    let abortChecks = 0;
+    const abortError = new DOMException('reuse hash aborted', 'AbortError');
+    const signal = {
+      get aborted() {
+        abortChecks++;
+        return abortChecks >= 3;
+      },
+      get reason() {
+        return abortError;
+      },
+    };
+    const target = path.join(root, `case-${sequence++}`, 'model.onnx');
+    const { mkdir } = await import('node:fs/promises');
+    await mkdir(path.dirname(target), { recursive: true });
+    await writeFile(target, payload);
+    await assert.rejects(
+      prepareVerifiedFile({
+        url: 'https://models.example.test/model.onnx',
+        target,
+        expectedBytes: payload.byteLength,
+        expectedSha256,
+        fetchImpl: async () => {
+          throw new Error('aborted verified reuse must not fetch');
+        },
+        signal,
+      }),
+      (error) => error === abortError,
+    );
+    assert.ok(abortChecks >= 3, 'abort must be observed while hashing reuse');
+    assert.deepEqual(new Uint8Array(await readFile(target)), payload);
+  }
+
+  {
+    let releaseFailure;
+    let markFailureStarted;
+    const failureGate = new Promise((resolve) => {
+      releaseFailure = resolve;
+    });
+    const failureStarted = new Promise((resolve) => {
+      markFailureStarted = resolve;
+    });
+    const wrongPayload = payload.slice();
+    wrongPayload[0] ^= 0xff;
+    const target = path.join(root, `case-${sequence++}`, 'model.onnx');
+    const spec = {
+      url: 'https://models.example.test/model.onnx',
+      target,
+      expectedBytes: payload.byteLength,
+      expectedSha256,
+    };
+    const failing = prepareVerifiedFile({
+      ...spec,
+      fetchImpl: async () =>
+        response(
+          new ReadableStream({
+            async pull(controller) {
+              markFailureStarted();
+              await failureGate;
+              controller.enqueue(wrongPayload);
+              controller.close();
+            },
+          }),
+          { status: 200 },
+        ),
+    });
+    await failureStarted;
+
+    assert.equal(
+      await prepareVerifiedFile({
+        ...spec,
+        fetchImpl: async () => response(payload, { status: 200 }),
+      }),
+      target,
+    );
+    assert.deepEqual(new Uint8Array(await readFile(target)), payload);
+
+    releaseFailure();
+    await assert.rejects(failing, /SHA-256/);
+    assert.deepEqual(
+      new Uint8Array(await readFile(target)),
+      payload,
+      'a failing peer must not remove the installed canonical file',
+    );
+    assert.deepEqual(await readdir(path.dirname(target)), ['model.onnx']);
+  }
+
+  {
     const requests = [];
     const { target, result } = await run(async (url, init) => {
       requests.push({ url: String(url), init });
@@ -168,7 +255,11 @@ try {
       }),
       /network failed/,
     );
-    await assert.rejects(readFile(target), { code: 'ENOENT' });
+    assert.equal(
+      await readFile(target, 'utf8'),
+      'bad canonical bytes',
+      'a failed replacement must not race with peer canonical placement',
+    );
   }
 } finally {
   await rm(root, { recursive: true, force: true });
