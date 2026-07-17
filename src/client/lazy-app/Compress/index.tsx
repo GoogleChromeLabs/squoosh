@@ -40,12 +40,14 @@ import {
 import {
   BEN2_TERMINAL_MESSAGE,
   Ben2SideJobScheduler,
+  Ben2TerminalToggleRetry,
   ben2ResizeOptions,
   ben2TerminalSideState,
   createBen2Coordinator,
   normaliseBen2SideSettings,
   processSideImage,
 } from './ben2-processing';
+import { Ben2CacheLifecycle } from './ben2-cache-lifecycle';
 
 export type OutputType = EncoderType | 'identity';
 
@@ -322,6 +324,30 @@ export default class Compress extends Component<Props, State> {
   private readonly sideJobScheduler = new Ben2SideJobScheduler(
     defaultProcessorState,
   );
+  private readonly ben2TerminalToggleRetry = new Ben2TerminalToggleRetry(
+    this.ben2Coordinator,
+    this.sideJobScheduler,
+  );
+  private readonly ben2CacheLifecycle = new Ben2CacheLifecycle({
+    isEnabled: () =>
+      this.state.sides.some((side) =>
+        ben2IsEnabled(side.latestSettings.processorState),
+      ),
+    readCached: async () => {
+      const { ben2CacheStatus, ben2ModelIsCached } = await import(
+        '../sw-bridge'
+      );
+      return ben2ModelIsCached(await ben2CacheStatus());
+    },
+    download: async () => {
+      const { downloadBen2Model } = await import('../sw-bridge');
+      await downloadBen2Model();
+    },
+    setCached: (cached) => this.setBen2ModelCached(cached),
+    setDownloading: (ben2Downloading) => {
+      if (!this.unmounted) this.setState({ ben2Downloading });
+    },
+  });
   // One for each side
   private readonly workerBridges = [new WorkerBridge(), new WorkerBridge()];
   /** Abort controller for actions that impact both sites, like source image decoding and preprocessing */
@@ -331,9 +357,6 @@ export default class Compress extends Component<Props, State> {
   /** For debouncing calls to updateImage for each side. */
   private updateImageTimeout?: number;
   private unmounted = false;
-  private ben2CacheRefresh?: Promise<boolean>;
-  private ben2Download?: Promise<void>;
-  private ben2Poll?: number;
 
   constructor(props: Props) {
     super(props);
@@ -371,34 +394,14 @@ export default class Compress extends Component<Props, State> {
               })) as [Side, Side]),
       }));
     });
-    navigator.serviceWorker.addEventListener(
-      'controllerchange',
-      this.onServiceWorkerControllerChange,
-    );
-    window.addEventListener('focus', this.onBen2StatusFocus);
-    document.addEventListener('visibilitychange', this.onBen2VisibilityChange);
-    this.updateBen2Polling();
-    void this.refreshBen2CacheStatus();
+    this.ben2CacheLifecycle.mount();
   }
-
-  private onServiceWorkerControllerChange = (): void => {
-    void this.refreshBen2CacheStatus();
-  };
-
-  private onBen2StatusFocus = (): void => {
-    void this.refreshBen2CacheStatus();
-  };
-
-  private onBen2VisibilityChange = (): void => {
-    if (document.visibilityState === 'visible') {
-      void this.refreshBen2CacheStatus();
-    }
-  };
 
   private setBen2ModelCached(cached: boolean): void {
     if (this.unmounted) return;
     if (this.state.ben2ModelCached && !cached) {
       this.ben2Coordinator.invalidate();
+      this.ben2TerminalToggleRetry.invalidate();
     }
     this.setState((state) => ({
       ben2ModelCached: cached,
@@ -418,70 +421,9 @@ export default class Compress extends Component<Props, State> {
     }));
   }
 
-  private refreshBen2CacheStatus = (): Promise<boolean> => {
-    if (!this.ben2CacheRefresh) {
-      const tracked = (async () => {
-        let cached = false;
-        try {
-          const { ben2CacheStatus, ben2ModelIsCached } = await import(
-            '../sw-bridge'
-          );
-          cached = ben2ModelIsCached(await ben2CacheStatus());
-        } catch {
-          // Missing or malformed status is conservatively not cached.
-        }
-        this.setBen2ModelCached(cached);
-        return cached;
-      })().finally(() => {
-        if (this.ben2CacheRefresh === tracked) {
-          this.ben2CacheRefresh = undefined;
-        }
-      });
-      this.ben2CacheRefresh = tracked;
-    }
-    return this.ben2CacheRefresh;
-  };
-
-  private onBen2Download = (): void => {
-    if (this.ben2Download) return;
-    this.setState({ ben2Downloading: true });
-    const tracked = (async () => {
-      try {
-        const { downloadBen2Model } = await import('../sw-bridge');
-        await downloadBen2Model();
-      } finally {
-        try {
-          await this.ben2CacheRefresh;
-          await this.refreshBen2CacheStatus();
-        } finally {
-          if (!this.unmounted) this.setState({ ben2Downloading: false });
-        }
-      }
-    })().finally(() => {
-      if (this.ben2Download === tracked) this.ben2Download = undefined;
-    });
-    this.ben2Download = tracked;
-    void tracked.catch(() => undefined);
-  };
-
   private onMobileWidthChange = () => {
     this.setState({ mobileView: this.widthQuery.matches });
   };
-
-  private updateBen2Polling(): void {
-    const enabled = this.state.sides.some((side) =>
-      ben2IsEnabled(side.latestSettings.processorState),
-    );
-    if (enabled && this.ben2Poll === undefined) {
-      this.ben2Poll = window.setInterval(
-        () => void this.refreshBen2CacheStatus(),
-        2_000,
-      );
-    } else if (!enabled && this.ben2Poll !== undefined) {
-      clearInterval(this.ben2Poll);
-      this.ben2Poll = undefined;
-    }
-  }
 
   private normalizeBen2Resize(
     options: ProcessorState,
@@ -498,6 +440,7 @@ export default class Compress extends Component<Props, State> {
   }
 
   private clearSideTerminal(index: 0 | 1): [string?, string?] {
+    this.ben2TerminalToggleRetry.clear(index);
     this.sideJobScheduler.clearTerminal(index);
     return cleanSet(this.state.ben2TerminalErrors, index, undefined);
   }
@@ -522,12 +465,26 @@ export default class Compress extends Component<Props, State> {
     index: 0 | 1,
     options: ProcessorState,
   ): void => {
+    const previous = this.state.sides[index].latestSettings.processorState;
+    const changed = this.ben2TerminalToggleRetry.processorChange(
+      index,
+      previous,
+      options,
+      this.state.source,
+    );
+    // The retry controller has already remembered an eligible terminal
+    // on→off transition before this side's scheduler identity is cleared.
+    this.sideJobScheduler.clearTerminal(index);
     this.setState({
-      ben2TerminalErrors: this.clearSideTerminal(index),
+      ben2TerminalErrors: cleanSet(
+        this.state.ben2TerminalErrors,
+        index,
+        undefined,
+      ),
       sides: cleanSet(
         this.state.sides,
         `${index}.latestSettings.processorState`,
-        this.normalizeBen2Resize(options),
+        this.normalizeBen2Resize(changed),
       ),
     });
   };
@@ -550,6 +507,7 @@ export default class Compress extends Component<Props, State> {
     if (nextProps.file !== this.props.file) {
       this.ben2Coordinator.invalidate();
       this.sideJobScheduler.invalidate();
+      this.ben2TerminalToggleRetry.invalidate();
       this.sourceFile = nextProps.file;
       this.queueUpdateImage({ immediate: true });
     }
@@ -559,19 +517,11 @@ export default class Compress extends Component<Props, State> {
     this.unmounted = true;
     updateDocumentTitle({ loading: false });
     this.widthQuery.removeListener(this.onMobileWidthChange);
-    navigator.serviceWorker.removeEventListener(
-      'controllerchange',
-      this.onServiceWorkerControllerChange,
-    );
-    window.removeEventListener('focus', this.onBen2StatusFocus);
-    document.removeEventListener(
-      'visibilitychange',
-      this.onBen2VisibilityChange,
-    );
-    if (this.ben2Poll !== undefined) clearInterval(this.ben2Poll);
+    this.ben2CacheLifecycle.dispose();
     this.mainAbortController.abort();
     this.ben2Coordinator.invalidate();
     this.sideJobScheduler.invalidate();
+    this.ben2TerminalToggleRetry.invalidate();
     for (const controller of this.sideAbortControllers) {
       controller.abort();
     }
@@ -593,7 +543,7 @@ export default class Compress extends Component<Props, State> {
         filename: this.state.source?.file.name,
       });
     }
-    this.updateBen2Polling();
+    this.ben2CacheLifecycle.updatePolling();
     this.queueUpdateImage();
   }
 
@@ -760,6 +710,7 @@ export default class Compress extends Component<Props, State> {
 
     this.ben2Coordinator.invalidate();
     this.sideJobScheduler.invalidate();
+    this.ben2TerminalToggleRetry.invalidate();
     this.setState((state) => ({
       loading: true,
       preprocessorState,
@@ -804,7 +755,7 @@ export default class Compress extends Component<Props, State> {
   /** The in-progress job for decoding and preprocessing */
   private activeMainJob?: MainJob;
   private onBen2Completed = (): void => {
-    void this.refreshBen2CacheStatus();
+    void this.ben2CacheLifecycle.refresh();
   };
 
   /**
@@ -860,6 +811,7 @@ export default class Compress extends Component<Props, State> {
       this.activeMainJob = mainJobState;
       this.ben2Coordinator.invalidate();
       this.sideJobScheduler.invalidate();
+      this.ben2TerminalToggleRetry.invalidate();
     }
     for (const [i, sideWorkNeeded] of sideWorksNeeded.entries()) {
       if (sideWorkNeeded.processing || sideWorkNeeded.encoding) {
@@ -1028,7 +980,7 @@ export default class Compress extends Component<Props, State> {
                 jobState.processorState,
                 workerBridge,
                 this.ben2Coordinator,
-                this.refreshBen2CacheStatus,
+                this.ben2CacheLifecycle.refresh,
                 this.onBen2Completed,
               );
 
@@ -1127,6 +1079,7 @@ export default class Compress extends Component<Props, State> {
 
         if (settlement === 'model-not-cached') {
           this.ben2Coordinator.invalidate();
+          this.ben2TerminalToggleRetry.invalidate();
           this.setState((currentState) => ({
             sides: cleanMerge(currentState.sides, sideIndex, {
               loading: false,
@@ -1193,7 +1146,7 @@ export default class Compress extends Component<Props, State> {
         onCopyToOtherSideClick={this.onCopyToOtherClick}
         onSaveSideSettingsClick={this.onSaveSideSettingsClick}
         onImportSideSettingsClick={this.onImportSideSettingsClick}
-        onBen2Download={this.onBen2Download}
+        onBen2Download={() => void this.ben2CacheLifecycle.download()}
       />
     ));
 

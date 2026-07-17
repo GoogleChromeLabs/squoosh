@@ -224,6 +224,7 @@ export function ben2RetryProcessorState(state: ProcessorState): ProcessorState {
 export interface Ben2SideJob {
   processorState: ProcessorState;
   encoderState?: EncoderState;
+  retryIdentity?: object;
 }
 
 export interface Ben2SideWork {
@@ -237,8 +238,23 @@ function processorStateEquivalent(
 ): boolean {
   if (left === right) return true;
   for (const key of Object.keys(left) as Array<keyof ProcessorState>) {
-    if (!left[key].enabled && !right[key].enabled) continue;
-    return false;
+    const leftOptions = left[key];
+    const rightOptions = right[key];
+    if (leftOptions.enabled !== rightOptions.enabled) return false;
+    if (!leftOptions.enabled) continue;
+
+    const leftKeys = Object.keys(leftOptions) as Array<
+      keyof typeof leftOptions
+    >;
+    const rightKeys = Object.keys(rightOptions);
+    if (
+      leftKeys.length !== rightKeys.length ||
+      leftKeys.some(
+        (option) => !Object.is(leftOptions[option], rightOptions[option]),
+      )
+    ) {
+      return false;
+    }
   }
   return true;
 }
@@ -260,16 +276,21 @@ export class Ben2SideJobScheduler {
     ProcessorState,
     ProcessorState
   >();
+  private readonly retryIdentities: [object?, object?] = [undefined, undefined];
 
   constructor(private readonly defaultProcessorState: ProcessorState) {}
 
   private effectiveJob(
+    index: 0 | 1,
     settings: SideSettings,
     capability: { state: string },
     modelCached: boolean,
   ): Ben2SideJob {
     if (!settings.encoderState) {
-      return { processorState: this.defaultProcessorState };
+      return {
+        processorState: this.defaultProcessorState,
+        retryIdentity: this.retryIdentities[index],
+      };
     }
 
     const raw = settings.processorState;
@@ -277,7 +298,11 @@ export class Ben2SideJobScheduler {
       !raw.ben2.enabled ||
       (capability.state === 'supported' && modelCached)
     ) {
-      return { processorState: raw, encoderState: settings.encoderState };
+      return {
+        processorState: raw,
+        encoderState: settings.encoderState,
+        retryIdentity: this.retryIdentities[index],
+      };
     }
 
     let ineffective = this.ineffectiveStates.get(raw);
@@ -288,7 +313,11 @@ export class Ben2SideJobScheduler {
       };
       this.ineffectiveStates.set(raw, ineffective);
     }
-    return { processorState: ineffective, encoderState: settings.encoderState };
+    return {
+      processorState: ineffective,
+      encoderState: settings.encoderState,
+      retryIdentity: this.retryIdentities[index],
+    };
   }
 
   plan(
@@ -298,8 +327,8 @@ export class Ben2SideJobScheduler {
     modelCached: boolean,
     mainPreprocessing: boolean,
   ): { jobs: [Ben2SideJob, Ben2SideJob]; work: [Ben2SideWork, Ben2SideWork] } {
-    const jobs = settings.map((side) =>
-      this.effectiveJob(side, capability, modelCached),
+    const jobs = settings.map((side, index) =>
+      this.effectiveJob(index as 0 | 1, side, capability, modelCached),
     ) as [Ben2SideJob, Ben2SideJob];
     const work = jobs.map((job, index) => {
       const latest: Partial<Ben2SideJob> =
@@ -308,6 +337,7 @@ export class Ben2SideJobScheduler {
         mainPreprocessing ||
         !latest.processorState ||
         !!latest.encoderState !== !!job.encoderState ||
+        latest.retryIdentity !== job.retryIdentity ||
         !processorStateEquivalent(latest.processorState, job.processorState);
       return {
         processing,
@@ -329,6 +359,9 @@ export class Ben2SideJobScheduler {
   complete(index: 0 | 1, job: Ben2SideJob): boolean {
     if (this.active[index] !== job) return false;
     this.active[index] = undefined;
+    if (this.retryIdentities[index] === job.retryIdentity) {
+      this.retryIdentities[index] = undefined;
+    }
     return true;
   }
 
@@ -346,12 +379,14 @@ export class Ben2SideJobScheduler {
     }
     this.active[index] = undefined;
     if (errorName(error) === 'Ben2ModelNotCachedError') {
+      this.retryIdentities[index] = undefined;
       return 'model-not-cached';
     }
     if (errorName(error) === 'Ben2TerminalError') {
       this.terminal[index] = job;
       return 'terminal';
     }
+    this.retryIdentities[index] = undefined;
     return 'error';
   }
 
@@ -359,13 +394,72 @@ export class Ben2SideJobScheduler {
     this.terminal[index] = undefined;
   }
 
+  retryTerminal(index: 0 | 1): void {
+    this.terminal[index] = undefined;
+    this.retryIdentities[index] = {};
+  }
+
   invalidate(): void {
     this.active[0] = this.active[1] = undefined;
     this.terminal[0] = this.terminal[1] = undefined;
+    this.retryIdentities[0] = this.retryIdentities[1] = undefined;
   }
 
   terminalJob(index: 0 | 1): Ben2SideJob | undefined {
     return this.terminal[index];
+  }
+}
+
+/**
+ * Remembers the only interaction that may release a terminal shared record:
+ * an explicit BEN2 on→off→on sequence on the terminal side.
+ */
+export class Ben2TerminalToggleRetry {
+  private readonly armed: [boolean, boolean] = [false, false];
+
+  constructor(
+    private readonly coordinator: Pick<Ben2ProcessingCoordinator, 'retry'>,
+    private readonly scheduler: Pick<
+      Ben2SideJobScheduler,
+      'terminalJob' | 'retryTerminal'
+    >,
+  ) {}
+
+  processorChange(
+    index: 0 | 1,
+    previous: ProcessorState,
+    next: ProcessorState,
+    source: SourceImage | undefined,
+  ): ProcessorState {
+    const wasEnabled = previous.ben2.enabled;
+    const enabled = next.ben2.enabled;
+
+    if (wasEnabled && !enabled) {
+      this.armed[index] = !!this.scheduler.terminalJob(index);
+      return next;
+    }
+    if (!wasEnabled && enabled) {
+      const retry = this.armed[index];
+      this.armed[index] = false;
+      if (retry && source) {
+        this.coordinator.retry(source);
+        this.scheduler.retryTerminal(index);
+        return ben2RetryProcessorState(next);
+      }
+      return next;
+    }
+
+    // Any non-toggle processor edit breaks the explicit retry sequence.
+    this.armed[index] = false;
+    return next;
+  }
+
+  clear(index: 0 | 1): void {
+    this.armed[index] = false;
+  }
+
+  invalidate(): void {
+    this.armed[0] = this.armed[1] = false;
   }
 }
 

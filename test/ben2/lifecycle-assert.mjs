@@ -11,6 +11,16 @@ assert.ok(
 
 const root = new URL('../../', import.meta.url);
 
+function deferred() {
+  let resolve;
+  let reject;
+  const promise = new Promise((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+  return { promise, resolve, reject };
+}
+
 async function bridgeAssertions() {
   const require = createRequire(import.meta.url);
   let ts;
@@ -367,6 +377,7 @@ async function clientAssertions() {
   });
   const {
     Ben2SideJobScheduler,
+    Ben2TerminalToggleRetry,
     ben2OptionsDecision,
     ben2TerminalSideState,
     createBen2Coordinator,
@@ -376,6 +387,7 @@ async function clientAssertions() {
   } = helperModule.exports;
   for (const [name, value] of Object.entries({
     Ben2SideJobScheduler,
+    Ben2TerminalToggleRetry,
     ben2OptionsDecision,
     ben2TerminalSideState,
     createBen2Coordinator,
@@ -515,24 +527,118 @@ async function clientAssertions() {
     absentPlan.jobs.every((job) => !job.processorState.ben2.enabled),
     'an absent model masks BEN2 in both effective jobs only',
   );
-  const previouslyCompleted = encodedSettings.map((side) => ({
-    ...side,
-    processorState: {
-      ...side.processorState,
-      ben2: { enabled: false },
-    },
-  }));
-  const absentEnablePlan = new Ben2SideJobScheduler(defaults).plan(
-    encodedSettings,
-    previouslyCompleted,
-    { state: 'supported' },
-    false,
-    false,
-  );
-  assert.ok(
-    absentEnablePlan.work.every((work) => !work.processing && !work.encoding),
-    'enabling BEN2 while the model is absent schedules zero worker work',
-  );
+  for (const [label, resizeEnabled, quantizeEnabled] of [
+    ['Resize', true, false],
+    ['Quantize', false, true],
+    ['Resize and Quantize', true, true],
+  ]) {
+    const rawEnabled = encodedSettings.map((side) => ({
+      ...side,
+      processorState: {
+        ...side.processorState,
+        resize: { ...side.processorState.resize, enabled: resizeEnabled },
+        quantize: {
+          ...side.processorState.quantize,
+          enabled: quantizeEnabled,
+        },
+      },
+    }));
+    const previouslyCompleted = rawEnabled.map((side) => ({
+      ...side,
+      processorState: {
+        ...side.processorState,
+        ben2: { enabled: false },
+      },
+    }));
+    const scheduler = new Ben2SideJobScheduler(defaults);
+    const absentEnablePlan = scheduler.plan(
+      rawEnabled,
+      previouslyCompleted,
+      { state: 'supported' },
+      false,
+      false,
+    );
+    assert.ok(
+      absentEnablePlan.work.every((work) => !work.processing && !work.encoding),
+      `absent BEN2 toggle with ${label} schedules zero processing/encoding`,
+    );
+
+    let downstreamCalls = 0;
+    for (const [index, work] of absentEnablePlan.work.entries()) {
+      if (!work.encoding) continue;
+      downstreamCalls++;
+      await processSideImage(
+        new AbortController().signal,
+        { file, decoded, preprocessed: rotated },
+        { rotate: { rotate: 90 } },
+        absentEnablePlan.jobs[index].processorState,
+        {
+          async quantize() {
+            downstreamCalls++;
+          },
+        },
+        {
+          async acquire() {
+            downstreamCalls++;
+          },
+        },
+        async () => {
+          downstreamCalls++;
+          return false;
+        },
+        () => downstreamCalls++,
+      );
+    }
+    assert.equal(
+      downstreamCalls,
+      0,
+      `absent BEN2 toggle with ${label} reaches no downstream fake`,
+    );
+
+    const changedDownstream = rawEnabled.map((side) => ({
+      ...side,
+      processorState: {
+        ...side.processorState,
+        ...(resizeEnabled
+          ? {
+              resize: {
+                ...side.processorState.resize,
+                width: (side.processorState.resize.width || 1) + 1,
+              },
+            }
+          : {
+              quantize: {
+                ...side.processorState.quantize,
+                numColors: (side.processorState.quantize.numColors || 1) + 1,
+              },
+            }),
+      },
+    }));
+    assert.ok(
+      scheduler
+        .plan(
+          changedDownstream,
+          previouslyCompleted,
+          { state: 'supported' },
+          false,
+          false,
+        )
+        .work.every((work) => work.processing && work.encoding),
+      `a genuine ${label} state change still schedules`,
+    );
+    assert.ok(
+      scheduler
+        .plan(
+          rawEnabled,
+          previouslyCompleted,
+          { state: 'supported' },
+          true,
+          false,
+        )
+        .work.every((work) => work.processing && work.encoding),
+      `cached BEN2 enable with ${label} still schedules`,
+    );
+  }
 
   let release;
   let pngCalls = 0;
@@ -916,7 +1022,64 @@ async function clientAssertions() {
     (error) => error?.name === 'Ben2TerminalError',
   );
   assert.equal(attempts, 1, 'terminal state never implicitly retries');
-  terminalCoordinator.retry(commonSource);
+  const retryScheduler = new Ben2SideJobScheduler(defaults);
+  const retrySchedulerPlan = retryScheduler.plan(
+    encodedSettings,
+    [undefined, undefined],
+    { state: 'supported' },
+    true,
+    false,
+  );
+  const sharedTerminalError = new Error('shared worker failure');
+  sharedTerminalError.name = 'Ben2TerminalError';
+  for (const index of [0, 1]) {
+    retryScheduler.start(index, retrySchedulerPlan.jobs[index]);
+    assert.equal(
+      retryScheduler.settleFailure(
+        index,
+        retrySchedulerPlan.jobs[index],
+        new AbortController().signal,
+        sharedTerminalError,
+      ),
+      'terminal',
+    );
+  }
+  const terminalToggleRetry = new Ben2TerminalToggleRetry(
+    terminalCoordinator,
+    retryScheduler,
+  );
+  const leftDisabledState = {
+    ...leftProcessorState,
+    ben2: { enabled: false },
+  };
+  assert.equal(
+    terminalToggleRetry.processorChange(
+      0,
+      leftProcessorState,
+      leftDisabledState,
+      commonSource,
+    ),
+    leftDisabledState,
+    'terminal BEN2 on→off arms the production toggle retry path',
+  );
+  retryScheduler.clearTerminal(0);
+  const leftRetriedState = terminalToggleRetry.processorChange(
+    0,
+    leftDisabledState,
+    leftProcessorState,
+    commonSource,
+  );
+  assert.notEqual(
+    leftRetriedState,
+    leftProcessorState,
+    'terminal off→on churns the intended side processor identity',
+  );
+  assert.equal(retryScheduler.terminalJob(0), undefined);
+  assert.equal(
+    retryScheduler.terminalJob(1),
+    retrySchedulerPlan.jobs[1],
+    'terminal off→on leaves the other scheduler identity latched',
+  );
   assert.equal(
     await terminalCoordinator.acquire(
       commonSource,
@@ -925,7 +1088,61 @@ async function clientAssertions() {
     ),
     matte,
   );
-  assert.equal(attempts, 2, 'one explicit Retry starts exactly one fresh call');
+  assert.equal(
+    attempts,
+    2,
+    'production terminal toggle path clears the shared coordinator record',
+  );
+  const productionRetryPlan = retryScheduler.plan(
+    [
+      { ...encodedSettings[0], processorState: leftRetriedState },
+      encodedSettings[1],
+    ],
+    [
+      { ...encodedSettings[0], processorState: leftDisabledState },
+      encodedSettings[1],
+    ],
+    { state: 'supported' },
+    true,
+    false,
+  );
+  assert.deepEqual(
+    productionRetryPlan.work.map(({ encoding }) => encoding),
+    [true, false],
+    'production terminal toggle path schedules only the intended side',
+  );
+
+  let healthyRetryCalls = 0;
+  const ordinaryToggleRetry = new Ben2TerminalToggleRetry(
+    { retry: () => healthyRetryCalls++ },
+    {
+      terminalJob: () => undefined,
+      retryTerminal() {},
+    },
+  );
+  ordinaryToggleRetry.processorChange(
+    0,
+    leftDisabledState,
+    leftProcessorState,
+    commonSource,
+  );
+  ordinaryToggleRetry.processorChange(
+    0,
+    leftProcessorState,
+    leftDisabledState,
+    commonSource,
+  );
+  ordinaryToggleRetry.processorChange(
+    0,
+    leftDisabledState,
+    leftProcessorState,
+    commonSource,
+  );
+  assert.equal(
+    healthyRetryCalls,
+    0,
+    'ordinary first enable and nonterminal toggles do not reset shared work',
+  );
 
   const sideScheduler = new Ben2SideJobScheduler(defaults);
   const initialSidePlan = sideScheduler.plan(
@@ -987,7 +1204,7 @@ async function clientAssertions() {
     );
   }
 
-  sideScheduler.clearTerminal(0);
+  sideScheduler.retryTerminal(0);
   const retriedSettings = [
     {
       ...encodedSettings[0],
@@ -1133,6 +1350,168 @@ async function clientAssertions() {
   );
   assert.equal(staleScheduler.isCurrent(0, newerJob, liveSignal), true);
   assert.equal(staleScheduler.complete(0, newerJob), true);
+
+  // Execute the production cache lifecycle controller used by Compress. This
+  // covers the state/event path without mounting the legacy component tree.
+  const cacheLifecyclePath = new URL(
+    'src/client/lazy-app/Compress/ben2-cache-lifecycle.ts',
+    root,
+  );
+  const cacheLifecycleModule = { exports: {} };
+  vm.runInNewContext(
+    ts.transpileModule(await readFile(cacheLifecyclePath, 'utf8'), {
+      compilerOptions: {
+        module: ts.ModuleKind.CommonJS,
+        target: ts.ScriptTarget.ES2020,
+      },
+    }).outputText,
+    {
+      exports: cacheLifecycleModule.exports,
+      module: cacheLifecycleModule,
+      Promise,
+    },
+  );
+  const { Ben2CacheLifecycle } = cacheLifecycleModule.exports;
+  assert.equal(typeof Ben2CacheLifecycle, 'function');
+
+  class FakeEventTarget {
+    listeners = new Map();
+    addEventListener(type, listener) {
+      const listeners = this.listeners.get(type) || new Set();
+      listeners.add(listener);
+      this.listeners.set(type, listeners);
+    }
+    removeEventListener(type, listener) {
+      this.listeners.get(type)?.delete(listener);
+    }
+    dispatch(type) {
+      for (const listener of this.listeners.get(type) || []) listener();
+    }
+    listenerCount() {
+      return [...this.listeners.values()].reduce(
+        (total, listeners) => total + listeners.size,
+        0,
+      );
+    }
+  }
+
+  const lifecycleWindow = new FakeEventTarget();
+  const lifecycleDocument = new FakeEventTarget();
+  lifecycleDocument.visibilityState = 'visible';
+  const lifecycleServiceWorker = new FakeEventTarget();
+  const lifecycleTimers = new Map();
+  let nextLifecycleTimer = 0;
+  const lifecycleEnvironment = {
+    window: lifecycleWindow,
+    document: lifecycleDocument,
+    serviceWorker: lifecycleServiceWorker,
+    setInterval(callback, delay) {
+      assert.equal(delay, 2_000);
+      const id = ++nextLifecycleTimer;
+      lifecycleTimers.set(id, callback);
+      return id;
+    },
+    clearInterval(id) {
+      lifecycleTimers.delete(id);
+    },
+  };
+  let lifecycleEnabled = true;
+  let lifecycleStatusCalls = 0;
+  const lifecycleStatuses = [];
+  let statusGate = deferred();
+  const lifecycle = new Ben2CacheLifecycle(
+    {
+      isEnabled: () => lifecycleEnabled,
+      readCached: () => {
+        lifecycleStatusCalls++;
+        return statusGate.promise;
+      },
+      download: async () => assert.fail('download is tested separately'),
+      setCached: (cached) => lifecycleStatuses.push(cached),
+      setDownloading: () => {},
+    },
+    lifecycleEnvironment,
+  );
+  lifecycle.mount();
+  assert.equal(lifecycleStatusCalls, 1);
+  assert.equal(lifecycleTimers.size, 1, 'one shared polling interval');
+  lifecycleWindow.dispatch('focus');
+  lifecycleDocument.dispatch('visibilitychange');
+  lifecycleServiceWorker.dispatch('controllerchange');
+  for (const callback of lifecycleTimers.values()) callback();
+  assert.equal(
+    lifecycleStatusCalls,
+    1,
+    'focus/visibility/controller/poll share one non-overlapping status request',
+  );
+  statusGate.resolve(true);
+  await lifecycle.refresh();
+  assert.deepEqual(lifecycleStatuses, [true]);
+
+  statusGate = deferred();
+  lifecycleWindow.dispatch('focus');
+  assert.equal(lifecycleStatusCalls, 2);
+  statusGate.resolve(false);
+  await lifecycle.refresh();
+  assert.deepEqual(
+    lifecycleStatuses,
+    [true, false],
+    'one shared cached state observes cached→absent',
+  );
+  lifecycleDocument.visibilityState = 'hidden';
+  lifecycleDocument.dispatch('visibilitychange');
+  assert.equal(lifecycleStatusCalls, 2, 'hidden visibility does not refresh');
+  lifecycleEnabled = false;
+  lifecycle.updatePolling();
+  assert.equal(lifecycleTimers.size, 0, 'disabled sides stop polling');
+  lifecycle.dispose();
+  assert.equal(lifecycleWindow.listenerCount(), 0);
+  assert.equal(lifecycleDocument.listenerCount(), 0);
+  assert.equal(lifecycleServiceWorker.listenerCount(), 0);
+  lifecycleWindow.dispatch('focus');
+  assert.equal(lifecycleStatusCalls, 2, 'disposed lifecycle cannot refresh');
+
+  const downloadWindow = new FakeEventTarget();
+  const downloadDocument = new FakeEventTarget();
+  downloadDocument.visibilityState = 'visible';
+  const downloadServiceWorker = new FakeEventTarget();
+  let downloadAttempts = 0;
+  let downloadStatusCalls = 0;
+  const downloadingStates = [];
+  const downloadLifecycle = new Ben2CacheLifecycle(
+    {
+      isEnabled: () => false,
+      readCached: async () => {
+        downloadStatusCalls++;
+        return downloadAttempts > 1;
+      },
+      download: async () => {
+        downloadAttempts++;
+        if (downloadAttempts === 1) throw new Error('network failed');
+      },
+      setCached: () => {},
+      setDownloading: (downloading) => downloadingStates.push(downloading),
+    },
+    {
+      window: downloadWindow,
+      document: downloadDocument,
+      serviceWorker: downloadServiceWorker,
+      setInterval: () => assert.fail('disabled lifecycle cannot poll'),
+      clearInterval: () => {},
+    },
+  );
+  await Promise.all([
+    downloadLifecycle.download(),
+    downloadLifecycle.download(),
+  ]);
+  assert.deepEqual(downloadingStates, [true, false]);
+  assert.equal(downloadAttempts, 1, 'shared failing download is deduplicated');
+  assert.equal(downloadStatusCalls, 1, 'failure performs one status refresh');
+  await downloadLifecycle.download();
+  assert.equal(downloadAttempts, 2, 'failed download remains retryable');
+  assert.equal(downloadStatusCalls, 2);
+  assert.deepEqual(downloadingStates, [true, false, true, false]);
+  downloadLifecycle.dispose();
 
   const compress = await readFile(
     new URL('src/client/lazy-app/Compress/index.tsx', root),
@@ -1518,7 +1897,11 @@ async function cacheAssertions() {
     },
   }).outputText;
   const swListeners = new Map();
-  const inventory = entries.map(({ role, path }) => ({ role, path }));
+  const inventory = entries.map(({ role, path }) => ({
+    role,
+    path,
+    ...(role === 'model' ? { bytes: 219_121_675 } : {}),
+  }));
   let opens = 0;
   const matchedUrls = [];
   const swContext = {
@@ -1534,6 +1917,11 @@ async function cacheAssertions() {
           cacheBasics: async () => {},
           cacheAdditionalProcessors: async () => {},
           serveShareTarget() {},
+          matchValidatedBen2Model: (path, cacheName) =>
+            swContext.caches.match(
+              new URL(path, swContext.location.origin).href,
+              { cacheName },
+            ),
         };
       }
       if (specifier === 'idb-keyval') return { get: async () => false };
