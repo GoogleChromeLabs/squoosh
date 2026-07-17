@@ -34,7 +34,13 @@ function byteStream(length, { fail = false } = {}) {
 
 function networkResponse(
   length,
-  { status = 200, type = 'basic', body = true, fail = false, headers = {} } = {},
+  {
+    status = 200,
+    type = 'basic',
+    body = true,
+    fail = false,
+    headers = {},
+  } = {},
 ) {
   return {
     status,
@@ -186,7 +192,8 @@ function loadModule({ storage = createStorage(), fetchImpl, locks } = {}) {
     exports: module.exports,
     module,
     require(specifier) {
-      if (specifier.startsWith('url:../../../../../')) return { default: modelPath };
+      if (specifier.startsWith('url:../../../../../'))
+        return { default: modelPath };
       if (specifier === './meta') return { modelBytes: expectedBytes };
       throw new Error(`Unexpected model-cache import: ${specifier}`);
     },
@@ -305,8 +312,17 @@ for (const test of [
     name: 'missing body',
     response: () => networkResponse(0, { body: false }),
   },
-  { name: 'fetch rejection', response: () => Promise.reject(new Error('fetch failed')) },
-  { name: 'lying content length', response: () => networkResponse(3, { headers: { 'Content-Length': String(expectedBytes) } }) },
+  {
+    name: 'fetch rejection',
+    response: () => Promise.reject(new Error('fetch failed')),
+  },
+  {
+    name: 'lying content length',
+    response: () =>
+      networkResponse(3, {
+        headers: { 'Content-Length': String(expectedBytes) },
+      }),
+  },
 ]) {
   const loaded = loadModule({ fetchImpl: test.response });
   await assert.rejects(loaded.api.downloadBen2Model(), undefined, test.name);
@@ -316,7 +332,8 @@ for (const test of [
 
 for (const failure of ['open', 'stage-put', 'final-put']) {
   const storage = createStorage();
-  if (failure === 'open') storage.setOpenFailure(new Error('cache open failed'));
+  if (failure === 'open')
+    storage.setOpenFailure(new Error('cache open failed'));
   if (failure === 'stage-put') storage.setPutFailureAt(1);
   if (failure === 'final-put') storage.setPutFailureAt(2);
   const loaded = loadModule({ storage });
@@ -361,7 +378,9 @@ for (const failure of ['open', 'stage-put', 'final-put']) {
 
 // The worker-facing read materializes exactly one typed view and never fetches.
 {
-  const marker = `v1;url=${encodeURIComponent(modelUrl)};bytes=${expectedBytes}`;
+  const marker = `v1;url=${encodeURIComponent(
+    modelUrl,
+  )};bytes=${expectedBytes}`;
   let deleted = 0;
   const response = {
     type: 'basic',

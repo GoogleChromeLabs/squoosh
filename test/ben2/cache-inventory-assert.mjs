@@ -20,9 +20,7 @@ const toCache = read('src/sw/to-cache.ts');
 const sw = read('src/sw/index.ts');
 const bridge = read('src/client/lazy-app/sw-bridge/index.ts');
 const util = read('src/sw/util.ts');
-const modelCache = read(
-  'src/features/processors/ben2/shared/model-cache.ts',
-);
+const modelCache = read('src/features/processors/ben2/shared/model-cache.ts');
 
 include(
   toCache,

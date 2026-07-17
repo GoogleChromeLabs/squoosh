@@ -1652,7 +1652,10 @@ async function clientAssertions() {
   );
   assert.match(options, /prettyBytes\(modelBytes\)/);
   assert.match(options, /shared\/custom-els\/loading-spinner/);
-  assert.match(options, /download \(\$\{ben2ModelSize\.value\}\$\{ben2ModelSize\.unit\}\)/);
+  assert.match(
+    options,
+    /download \(\$\{ben2ModelSize\.value\}\$\{ben2ModelSize\.unit\}\)/,
+  );
   assert.match(
     options,
     /<section class={style\.ben2Panel} aria-live="polite">/,

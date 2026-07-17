@@ -181,10 +181,7 @@ listeners.get('activate')({
   },
 });
 await Promise.all(lifetimes);
-assert.deepEqual(deletedCaches.sort(), [
-  'squoosh-ben2-model-v0',
-  'static-old',
-]);
+assert.deepEqual(deletedCaches.sort(), ['squoosh-ben2-model-v0', 'static-old']);
 
 assert.doesNotMatch(
   source,

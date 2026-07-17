@@ -30,18 +30,24 @@ vm.runInNewContext(compiled, {
   module,
   require(specifier) {
     if (specifier === 'preact') return preact;
-    if (specifier === './style.css') return new Proxy({}, { get: (_, key) => String(key) });
+    if (specifier === './style.css')
+      return new Proxy({}, { get: (_, key) => String(key) });
     if (specifier === 'add-css:./style.css') return {};
-    if (specifier === '../../util/clean-modify') return { cleanSet() {}, cleanMerge() {} };
+    if (specifier === '../../util/clean-modify')
+      return { cleanSet() {}, cleanMerge() {} };
     if (specifier === '../../feature-meta') return { encoderMap: {} };
     if (specifier === './Expander') return { default: passthrough };
     if (specifier === './Toggle') return { default: empty };
     if (specifier === './Select') return { default: passthrough };
     if (specifier.startsWith('features/processors/')) return { Options: empty };
-    if (specifier === 'client/lazy-app/icons') return { ImportIcon: empty, SaveIcon: empty, SwapIcon: empty };
-    if (specifier === '../ben2-processing') return { ben2OptionsDecision: () => ({ resizeIsVector: false }) };
-    if (specifier === '../Results/pretty-bytes') return { default: () => ({ value: '219', unit: 'MB' }) };
-    if (specifier === 'features/processors/ben2/shared/meta') return { modelBytes: 219_121_675 };
+    if (specifier === 'client/lazy-app/icons')
+      return { ImportIcon: empty, SaveIcon: empty, SwapIcon: empty };
+    if (specifier === '../ben2-processing')
+      return { ben2OptionsDecision: () => ({ resizeIsVector: false }) };
+    if (specifier === '../Results/pretty-bytes')
+      return { default: () => ({ value: '219', unit: 'MB' }) };
+    if (specifier === 'features/processors/ben2/shared/meta')
+      return { modelBytes: 219_121_675 };
     if (specifier === 'shared/custom-els/loading-spinner') return {};
     throw new Error(`Unexpected Options import: ${specifier}`);
   },
@@ -59,7 +65,11 @@ const baseProps = {
   mobileView: false,
   source: { vectorImage: {} },
   encoderState: undefined,
-  processorState: { ben2: { enabled: true }, resize: { enabled: false }, quantize: { enabled: false } },
+  processorState: {
+    ben2: { enabled: true },
+    resize: { enabled: false },
+    quantize: { enabled: false },
+  },
   ben2Capability: { state: 'supported' },
   ben2ModelCached: false,
   ben2Downloading: false,
@@ -72,8 +82,10 @@ const baseProps = {
   onBen2Download() {},
 };
 
-const button = (html) => html.match(/<button class="ben2Download"[\s\S]*?<\/button>/)?.[0];
-const contents = (html) => button(html)?.replace(/^<button[^>]*>|<\/button>$/g, '');
+const button = (html) =>
+  html.match(/<button class="ben2Download"[\s\S]*?<\/button>/)?.[0];
+const contents = (html) =>
+  button(html)?.replace(/^<button[^>]*>|<\/button>$/g, '');
 
 const idle = render(preact.h(Options, baseProps));
 assert.equal(contents(idle), 'download (219MB)');
