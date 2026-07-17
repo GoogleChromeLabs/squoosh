@@ -32,7 +32,7 @@ import WorkerBridge from '../worker-bridge';
 import { resize } from 'features/processors/resize/client';
 import type SnackBarElement from 'shared/custom-els/snack-bar';
 import { drawableToImageData } from '../util/canvas';
-import { ben2CancellationAudit } from '../ben2-cancellation-audit';
+import { Ben2Capability, probeBen2Capability } from './ben2-capability';
 
 export type OutputType = EncoderType | 'identity';
 
@@ -72,10 +72,15 @@ interface State {
   mobileView: boolean;
   preprocessorState: PreprocessorState;
   encodedPreprocessorState?: PreprocessorState;
+  ben2Capability: Ben2Capability;
+  ben2CacheState: Ben2CacheState;
+  ben2HasCompleted: boolean;
+  ben2TerminalError?: string;
 }
 
+type Ben2CacheState = 'uncontrolled' | 'not-cached' | 'partial' | 'cached';
+
 interface MainJob {
-  auditJobId?: number;
   file: File;
   preprocessorState: PreprocessorState;
 }
@@ -91,41 +96,23 @@ interface LoadingFileInfo {
 }
 
 function ben2IsEnabled(preprocessorState: PreprocessorState): boolean {
-  return (
-    preprocessorState.ben2.enabled ||
-    new URL(location.href).searchParams.has('ben2')
-  );
+  return preprocessorState.ben2.enabled;
+}
+
+function errorName(error: unknown): string | undefined {
+  if (!error || typeof error !== 'object' || !('name' in error)) return;
+  return String((error as { name: unknown }).name);
 }
 
 async function decodeImage(
   signal: AbortSignal,
   blob: Blob,
   workerBridge: WorkerBridge,
-  ben2SourceDecode = false,
 ): Promise<ImageData> {
   assertSignal(signal);
   const mimeType = await abortable(signal, sniffMimeType(blob));
 
   try {
-    if (ben2SourceDecode && mimeType === 'image/png') {
-      console.info('[BEN2 preprocessing parity spike] source decode contract', {
-        mimeType,
-        route:
-          'source Blob -> existing WorkerBridge -> generated feature worker -> codecs/png/pkg',
-        hiddenRgbParity: true,
-      });
-      return await workerBridge.pngDecode(signal, blob);
-    }
-    if (ben2SourceDecode) {
-      console.warn('[BEN2 preprocessing parity spike] source decode contract', {
-        mimeType,
-        route: 'existing browser/codec fallback',
-        hiddenRgbParity: false,
-        limitation:
-          'authoritative hidden-RGB and color-management parity is not established for this format',
-      });
-    }
-
     const canDecode = await abortable(signal, canDecodeImageType(mimeType));
     if (!canDecode) {
       if (mimeType === 'image/avif') {
@@ -156,13 +143,19 @@ async function decodeImage(
 async function preprocessImage(
   signal: AbortSignal,
   data: ImageData,
+  sourceFile: File,
   preprocessorState: PreprocessorState,
   workerBridge: WorkerBridge,
-  auditJobId?: number,
-  sourceFilename?: string,
 ): Promise<ImageData> {
   assertSignal(signal);
   let processedData = data;
+
+  if (ben2IsEnabled(preprocessorState)) {
+    const mimeType = await abortable(signal, sniffMimeType(sourceFile));
+    if (mimeType === 'image/png') {
+      processedData = await workerBridge.pngDecode(signal, sourceFile);
+    }
+  }
 
   if (preprocessorState.rotate.rotate !== 0) {
     processedData = await workerBridge.rotate(
@@ -172,42 +165,8 @@ async function preprocessImage(
     );
   }
 
-  const ben2Enabled = ben2IsEnabled(preprocessorState);
-  (window as any).__squooshBen2Requested = ben2Enabled;
-  if (ben2Enabled) {
-    ben2CancellationAudit('ben2-call-start', {
-      jobId: auditJobId,
-      sourceFilename,
-      signalAborted: signal.aborted,
-    });
-    let result;
-    try {
-      result = await workerBridge.ben2(signal, processedData);
-    } catch (error) {
-      ben2CancellationAudit('ben2-call-settled', {
-        jobId: auditJobId,
-        sourceFilename,
-        category:
-          error instanceof Error && error.name === 'AbortError'
-            ? 'AbortError'
-            : 'other-rejection',
-        name: error instanceof Error ? error.name : typeof error,
-        message: error instanceof Error ? error.message : String(error),
-        signalAborted: signal.aborted,
-      });
-      throw error;
-    }
-    processedData = result.imageData;
-    const { ben2CacheStatus } = await import('../sw-bridge');
-    const cacheStatus = await ben2CacheStatus(result.diagnostics);
-    (window as any).__squooshBen2Spike = {
-      diagnostics: result.diagnostics,
-      cacheStatus,
-    };
-    console.log('[BEN2 spike] shared preprocessing complete', {
-      diagnostics: result.diagnostics,
-      cacheStatus,
-    });
+  if (ben2IsEnabled(preprocessorState)) {
+    processedData = await workerBridge.ben2(signal, processedData);
   }
 
   return processedData;
@@ -336,7 +295,6 @@ function processorStateEquivalent(a: ProcessorState, b: ProcessorState) {
 const loadingIndicator = '⏳ ';
 
 const originalDocumentTitle = document.title;
-const ben2SpikeEnabled = new URL(location.href).searchParams.has('ben2');
 
 function updateDocumentTitle(loadingFileInfo: LoadingFileInfo): void {
   const { loading, filename } = loadingFileInfo;
@@ -353,12 +311,11 @@ export default class Compress extends Component<Props, State> {
   state: State = {
     source: undefined,
     loading: false,
-    preprocessorState: ben2SpikeEnabled
-      ? {
-          ...defaultPreprocessorState,
-          ben2: { enabled: true },
-        }
-      : defaultPreprocessorState,
+    preprocessorState: defaultPreprocessorState,
+    ben2Capability: { state: 'checking' },
+    ben2CacheState: 'uncontrolled',
+    ben2HasCompleted: false,
+    ben2TerminalError: undefined,
     // Tasking catched side settings if available otherwise taking default settings
     sides: [
       localStorage.getItem('leftSideSettings')
@@ -401,6 +358,7 @@ export default class Compress extends Component<Props, State> {
   private sideAbortControllers = [new AbortController(), new AbortController()];
   /** For debouncing calls to updateImage for each side. */
   private updateImageTimeout?: number;
+  private unmounted = false;
 
   constructor(props: Props) {
     super(props);
@@ -410,6 +368,48 @@ export default class Compress extends Component<Props, State> {
 
     import('../sw-bridge').then(({ mainAppLoaded }) => mainAppLoaded());
   }
+
+  componentDidMount(): void {
+    probeBen2Capability().then((ben2Capability) => {
+      if (!this.unmounted) this.setState({ ben2Capability });
+    });
+    navigator.serviceWorker.addEventListener(
+      'controllerchange',
+      this.onServiceWorkerControllerChange,
+    );
+    this.refreshBen2CacheStatus();
+  }
+
+  private onServiceWorkerControllerChange = (): void => {
+    this.refreshBen2CacheStatus();
+  };
+
+  private refreshBen2CacheStatus = async (): Promise<void> => {
+    try {
+      const { ben2CacheStatus } = await import('../sw-bridge');
+      const getStatus = ben2CacheStatus as unknown as () => Promise<{
+        controlled: boolean;
+        entries: Array<{ cached: boolean }>;
+      }>;
+      const status = await getStatus();
+      if (this.unmounted) return;
+      let ben2CacheState: Ben2CacheState = 'uncontrolled';
+      if (status.controlled) {
+        const cachedCount = status.entries.filter(
+          (entry) => entry.cached,
+        ).length;
+        ben2CacheState =
+          cachedCount === 0
+            ? 'not-cached'
+            : cachedCount === status.entries.length
+            ? 'cached'
+            : 'partial';
+      }
+      this.setState({ ben2CacheState });
+    } catch {
+      // Cache status is advisory and must not fail image processing.
+    }
+  };
 
   private onMobileWidthChange = () => {
     this.setState({ mobileView: this.widthQuery.matches });
@@ -464,14 +464,13 @@ export default class Compress extends Component<Props, State> {
   }
 
   componentWillUnmount(): void {
+    this.unmounted = true;
     updateDocumentTitle({ loading: false });
     this.widthQuery.removeListener(this.onMobileWidthChange);
-    ben2CancellationAudit('main-component-unmount-abort', {
-      activeJobId: this.activeMainJob?.auditJobId,
-      sourceFilename: this.sourceFile.name,
-      loading: this.state.loading,
-      reason: 'normal-back-to-file-picker',
-    });
+    navigator.serviceWorker.removeEventListener(
+      'controllerchange',
+      this.onServiceWorkerControllerChange,
+    );
     this.mainAbortController.abort();
     for (const controller of this.sideAbortControllers) {
       controller.abort();
@@ -630,6 +629,7 @@ export default class Compress extends Component<Props, State> {
     this.setState((state) => ({
       loading: true,
       preprocessorState,
+      ben2TerminalError: undefined,
       // Flip resize values if orientation has changed
       sides: !orientationChanged
         ? state.sides
@@ -666,8 +666,18 @@ export default class Compress extends Component<Props, State> {
     }
   }
 
+  private onBen2Retry = (): void => {
+    this.setState((state) => ({
+      loading: true,
+      ben2TerminalError: undefined,
+      preprocessorState: {
+        ...state.preprocessorState,
+        ben2: { ...state.preprocessorState.ben2 },
+      },
+    }));
+  };
+
   private sourceFile: File;
-  private nextAuditMainJobId = 0;
   /** The in-progress job for decoding and preprocessing */
   private activeMainJob?: MainJob;
   /** The in-progress job for each side (processing and encoding) */
@@ -739,34 +749,10 @@ export default class Compress extends Component<Props, State> {
 
     // Abort running tasks & cycle the controllers
     if (needsDecoding || needsPreprocessing) {
-      mainJobState.auditJobId = ++this.nextAuditMainJobId;
-      const cancellationReason = needsDecoding
-        ? 'source-change'
-        : 'preprocessor-change';
-      ben2CancellationAudit('main-job-replace', {
-        reason: cancellationReason,
-        previousJobId: this.activeMainJob?.auditJobId,
-        nextJobId: mainJobState.auditJobId,
-        nextSourceFilename: mainJobState.file.name,
-        previousSourceFilename: latestMainJobState.file?.name,
-        loading: this.state.loading,
-      });
       this.mainAbortController.abort();
-      ben2CancellationAudit('main-abort-invoked', {
-        reason: cancellationReason,
-        previousJobId: this.activeMainJob?.auditJobId,
-        nextJobId: mainJobState.auditJobId,
-        nextSourceFilename: mainJobState.file.name,
-        signalAborted: this.mainAbortController.signal.aborted,
-      });
       this.mainAbortController = new AbortController();
       jobNeeded = true;
       this.activeMainJob = mainJobState;
-      ben2CancellationAudit('main-job-active', {
-        jobId: mainJobState.auditJobId,
-        sourceFilename: mainJobState.file.name,
-        loading: this.state.loading,
-      });
     }
     for (const [i, sideWorkNeeded] of sideWorksNeeded.entries()) {
       if (sideWorkNeeded.processing || sideWorkNeeded.encoding) {
@@ -789,10 +775,7 @@ export default class Compress extends Component<Props, State> {
     if (needsDecoding) {
       try {
         assertSignal(mainSignal);
-        this.setState({
-          source: undefined,
-          loading: true,
-        });
+        this.setState({ loading: true });
 
         // Special-case SVG. We need to avoid createImageBitmap because of
         // https://bugs.chromium.org/p/chromium/issues/detail?id=606319.
@@ -804,10 +787,7 @@ export default class Compress extends Component<Props, State> {
           decoded = await decodeImage(
             mainSignal,
             mainJobState.file,
-            // Either worker is good enough here. The source Blob is cloned
-            // directly to this existing bridge; no UI-thread ArrayBuffer copy.
             this.workerBridges[0],
-            ben2IsEnabled(mainJobState.preprocessorState),
           );
         }
 
@@ -852,12 +832,14 @@ export default class Compress extends Component<Props, State> {
         const preprocessed = await preprocessImage(
           mainSignal,
           decoded,
+          mainJobState.file,
           mainJobState.preprocessorState,
           // Either worker is good enough here.
           this.workerBridges[0],
-          mainJobState.auditJobId,
-          mainJobState.file.name,
         );
+        if (ben2IsEnabled(mainJobState.preprocessorState)) {
+          await this.refreshBen2CacheStatus();
+        }
 
         source = {
           decoded,
@@ -867,32 +849,17 @@ export default class Compress extends Component<Props, State> {
         };
 
         // Update state for process completion, including intermediate render
-        ben2CancellationAudit('source-preprocessed-publication-attempt', {
-          jobId: mainJobState.auditJobId,
-          sourceFilename: mainJobState.file.name,
-          signalAborted: mainSignal.aborted,
-          currentSourceFilename: this.sourceFile.name,
-        });
         this.setState((currentState) => {
-          if (mainSignal.aborted) {
-            ben2CancellationAudit('source-preprocessed-publication-skipped', {
-              jobId: mainJobState.auditJobId,
-              sourceFilename: mainJobState.file.name,
-              currentSourceFilename: this.sourceFile.name,
-              reason: 'signal-aborted',
-            });
-            return {};
-          }
-          ben2CancellationAudit('source-preprocessed-publication-success', {
-            jobId: mainJobState.auditJobId,
-            sourceFilename: mainJobState.file.name,
-            currentSourceFilename: this.sourceFile.name,
-          });
+          if (mainSignal.aborted) return {};
           let newState: State = {
             ...currentState,
             loading: false,
             source,
             encodedPreprocessorState: mainJobState.preprocessorState,
+            ben2HasCompleted:
+              currentState.ben2HasCompleted ||
+              ben2IsEnabled(mainJobState.preprocessorState),
+            ben2TerminalError: undefined,
             sides: currentState.sides.map((side) => {
               if (side.downloadUrl) URL.revokeObjectURL(side.downloadUrl);
 
@@ -910,14 +877,28 @@ export default class Compress extends Component<Props, State> {
           return newState;
         });
       } catch (err) {
-        if (err instanceof Error && err.name === 'AbortError') {
-          ben2CancellationAudit('main-preprocess-abort-settled', {
-            jobId: mainJobState.auditJobId,
-            sourceFilename: mainJobState.file.name,
-            currentSourceFilename: this.sourceFile.name,
-            loading: this.state.loading,
-          });
+        if (mainSignal.aborted || errorName(err) === 'AbortError') return;
+        if (errorName(err) === 'Ben2TerminalError') {
+          // The failed bridge call has settled before reset is queued.
+          await this.workerBridges[0].reset();
+          if (mainSignal.aborted) return;
+          if (this.activeMainJob === mainJobState) {
+            this.activeMainJob = undefined;
+            this.activeSideJobs = [undefined, undefined];
+            this.setState((currentState) => ({
+              loading: false,
+              ben2TerminalError:
+                'Background removal failed. Reconnect if needed, then retry.',
+              sides: currentState.sides.map((side) => ({
+                ...side,
+                loading: false,
+              })) as [Side, Side],
+            }));
+          }
           return;
+        }
+        if (this.activeMainJob === mainJobState) {
+          this.activeMainJob = undefined;
         }
         this.setState({ loading: false });
         this.props.showSnack(`Preprocessing error: ${err}`);
@@ -1057,7 +1038,17 @@ export default class Compress extends Component<Props, State> {
 
   render(
     { onBack }: Props,
-    { loading, sides, source, mobileView, preprocessorState }: State,
+    {
+      loading,
+      sides,
+      source,
+      mobileView,
+      preprocessorState,
+      ben2Capability,
+      ben2CacheState,
+      ben2HasCompleted,
+      ben2TerminalError,
+    }: State,
   ) {
     const [leftSide, rightSide] = sides;
     const [leftImageData, rightImageData] = sides.map((i) => i.data);
@@ -1116,7 +1107,13 @@ export default class Compress extends Component<Props, State> {
           leftImgContain={leftImgContain}
           rightImgContain={rightImgContain}
           preprocessorState={preprocessorState}
+          ben2Capability={ben2Capability}
+          ben2CacheState={ben2CacheState}
+          ben2FirstUse={!ben2HasCompleted}
+          ben2Processing={loading && preprocessorState.ben2.enabled}
+          ben2TerminalError={ben2TerminalError}
           onPreprocessorChange={this.onPreprocessorChange}
+          onBen2Retry={this.onBen2Retry}
         />
         <button class={style.back} onClick={onBack}>
           <svg viewBox="0 0 61 53.3">

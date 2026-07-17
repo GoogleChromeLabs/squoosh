@@ -42,9 +42,8 @@
 .controls {
   display: flex;
   justify-content: center;
-  overflow: hidden;
+  overflow: visible;
   flex-wrap: wrap;
-  contain: content;
   grid-area: header;
   align-self: center;
   padding: 9px 66px;
@@ -62,6 +61,75 @@
     flex-wrap: wrap-reverse;
     grid-area: viewportOpts;
     align-self: end;
+  }
+}
+
+.ben2-control {
+  box-sizing: border-box;
+  width: min(100%, 460px);
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 6px;
+  background: rgba(29, 29, 29, 0.96);
+  color: #fff;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  position: relative;
+  z-index: 100;
+}
+
+.ben2-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 0.9rem;
+  font-weight: 700;
+
+  & > input {
+    margin: 0;
+    accent-color: var(--hot-pink);
+  }
+
+  & > input:disabled + span {
+    color: #aaa;
+  }
+}
+
+.ben2-status,
+.ben2-note,
+.ben2-processing,
+.ben2-error {
+  margin-top: 4px;
+  text-align: center;
+}
+
+.ben2-status,
+.ben2-note {
+  color: #ccc;
+}
+
+.ben2-processing {
+  color: #fff;
+  font-weight: 700;
+}
+
+.ben2-error {
+  color: #ffb5b5;
+
+  & > button {
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+  }
+
+  & > button:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
   }
 }
 

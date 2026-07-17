@@ -3,21 +3,13 @@ import { BridgeMethods, methodNames } from './meta';
 import workerURL from 'omt:../../../features-worker';
 import type { ProcessorWorkerApi } from '../../../features-worker';
 import { abortable } from '../util';
-import {
-  ben2CancellationAudit,
-  ben2CancellationReason,
-} from '../ben2-cancellation-audit';
 
 /** How long the worker should be idle before terminating. */
 const workerTimeout = 10_000;
-let nextBridgeId = 0;
-let nextWorkerId = 0;
 
 interface WorkerBridge extends BridgeMethods {}
 
 class WorkerBridge {
-  protected readonly _auditBridgeId = ++nextBridgeId;
-  protected _auditWorkerId?: number;
   protected _queue = Promise.resolve() as Promise<unknown>;
   /** Worker instance associated with this processor. */
   protected _worker?: Worker;
@@ -26,29 +18,30 @@ class WorkerBridge {
   /** ID from setTimeout */
   protected _workerTimeout?: number;
 
-  protected _terminateWorker(cause = 'ordinary-idle') {
-    if (!this._worker) return;
-    ben2CancellationAudit('worker-bridge-terminate', {
-      bridgeId: this._auditBridgeId,
-      workerId: this._auditWorkerId,
-      cause,
-      directHarnessTermination: false,
-    });
-    this._worker.terminate();
+  protected _terminateWorker(): void {
+    clearTimeout(this._workerTimeout);
+    this._workerTimeout = undefined;
+    if (this._worker) this._worker.terminate();
     this._worker = undefined;
     this._workerApi = undefined;
-    this._auditWorkerId = undefined;
   }
 
-  protected _startWorker() {
+  protected _startWorker(): void {
     this._worker = new Worker(workerURL);
-    this._auditWorkerId = ++nextWorkerId;
-    ben2CancellationAudit('worker-bridge-create', {
-      bridgeId: this._auditBridgeId,
-      workerId: this._auditWorkerId,
-      workerURL,
-    });
     this._workerApi = wrap<ProcessorWorkerApi>(this._worker);
+  }
+
+  /** Terminate the worker after calls already in the queue have settled. */
+  reset(): Promise<void> {
+    clearTimeout(this._workerTimeout);
+    this._workerTimeout = undefined;
+    const reset = this._queue
+      .catch(() => {})
+      .then(() => {
+        this._terminateWorker();
+      });
+    this._queue = reset;
+    return reset;
   }
 }
 
@@ -65,25 +58,10 @@ for (const methodName of methodNames) {
         if (signal.aborted) throw new DOMException('AbortError', 'AbortError');
 
         clearTimeout(this._workerTimeout);
+        this._workerTimeout = undefined;
         if (!this._worker) this._startWorker();
 
-        const workerId = this._auditWorkerId;
-        ben2CancellationAudit('worker-bridge-call-start', {
-          bridgeId: this._auditBridgeId,
-          workerId,
-          methodName,
-          signalAborted: signal.aborted,
-        });
-        const onAbort = () => {
-          ben2CancellationAudit('worker-bridge-abort-listener', {
-            bridgeId: this._auditBridgeId,
-            workerId,
-            methodName,
-            signalAborted: signal.aborted,
-            signalReason: ben2CancellationReason((signal as any).reason),
-          });
-          this._terminateWorker('abort-listener');
-        };
+        const onAbort = () => this._terminateWorker();
         signal.addEventListener('abort', onAbort);
 
         return abortable(
@@ -96,7 +74,7 @@ for (const methodName of methodNames) {
 
           // Start a timer to clear up the worker.
           this._workerTimeout = setTimeout(() => {
-            this._terminateWorker('ordinary-idle');
+            this._terminateWorker();
           }, workerTimeout);
         });
       });
