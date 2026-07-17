@@ -8,7 +8,11 @@ import {
   serveShareTarget,
 } from './util';
 import { get } from 'idb-keyval';
-import { ben2Assets, shouldCacheDynamically } from './to-cache';
+import {
+  ben2AssetInventory,
+  ben2Assets,
+  shouldCacheDynamically,
+} from './to-cache';
 
 // Give TypeScript the correct global.
 declare var self: ServiceWorkerGlobalScope;
@@ -91,23 +95,23 @@ self.addEventListener('fetch', (event) => {
 
 self.addEventListener('message', (event) => {
   if (event.data?.action === 'ben2-cache-status') {
-    const urls: string[] = event.data.urls;
     const port = event.ports[0];
     event.waitUntil(
       (async () => {
-        // Do not open a cache just to inspect it: cache status must not make
-        // an uncached app appear offline-ready.
+        // Status is read-only: do not create an empty cache merely to inspect
+        // the current build's owned inventory.
         const cacheExists = (await caches.keys()).includes(versionedCache);
         const cache = cacheExists
           ? await caches.open(versionedCache)
           : undefined;
         const entries = await Promise.all(
-          urls.map(
-            async (url) =>
-              !!(
-                cache && (await cache.match(new URL(url, location.origin).href))
-              ),
-          ),
+          ben2AssetInventory.map(async ({ role, path }) => ({
+            role,
+            path,
+            cached: !!(
+              cache && (await cache.match(new URL(path, location.origin).href))
+            ),
+          })),
         );
         port?.postMessage({ cacheName: versionedCache, entries });
       })(),

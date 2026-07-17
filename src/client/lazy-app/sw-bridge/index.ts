@@ -110,65 +110,55 @@ export async function mainAppLoaded() {
   serviceWorker.postMessage('cache-all');
 }
 
+export type Ben2CacheAssetRole =
+  | 'features_worker'
+  | 'model'
+  | 'ort_asyncify_mjs'
+  | 'ort_asyncify_wasm'
+  | 'png_decoder_js'
+  | 'png_decoder_wasm';
+
+export interface Ben2CacheEntry {
+  role: Ben2CacheAssetRole;
+  path: string;
+  cached: boolean;
+}
+
 export interface Ben2CacheStatus {
   controlled: boolean;
   cacheName?: string;
-  modelCached: boolean;
-  wasmLoaderCached: boolean;
-  wasmCached: boolean;
-  workerCached: boolean;
+  entries: Ben2CacheEntry[];
   offlineReady: boolean;
 }
 
 /**
- * Inspect exact BEN2 URLs in the service worker's current versioned static
- * cache. This is deliberately a read-only request: it never creates a cache.
+ * Inspect the service worker-owned current-build inventory. This read-only
+ * request makes no durability guarantee and never creates a cache.
  */
-export async function ben2CacheStatus(urls: {
-  modelUrl: string;
-  wasmLoaderUrl: string;
-  wasmUrl: string;
-  workerUrl: string;
-}): Promise<Ben2CacheStatus> {
+export async function ben2CacheStatus(): Promise<Ben2CacheStatus> {
   const controller = navigator.serviceWorker.controller;
   if (!controller) {
     return {
       controlled: false,
-      modelCached: false,
-      wasmLoaderCached: false,
-      wasmCached: false,
-      workerCached: false,
+      entries: [],
       offlineReady: false,
     };
   }
 
   const channel = new MessageChannel();
-  const status = await new Promise<{ cacheName: string; entries: boolean[] }>(
-    (resolve) => {
-      channel.port1.onmessage = (event) => resolve(event.data);
-      controller.postMessage(
-        {
-          action: 'ben2-cache-status',
-          urls: [
-            urls.modelUrl,
-            urls.wasmLoaderUrl,
-            urls.wasmUrl,
-            urls.workerUrl,
-          ],
-        },
-        [channel.port2],
-      );
-    },
-  );
-  const [modelCached, wasmLoaderCached, wasmCached, workerCached] =
-    status.entries;
+  const status = await new Promise<{
+    cacheName: string;
+    entries: Ben2CacheEntry[];
+  }>((resolve) => {
+    channel.port1.onmessage = (event) => resolve(event.data);
+    controller.postMessage({ action: 'ben2-cache-status' }, [channel.port2]);
+  });
   return {
     controlled: true,
     cacheName: status.cacheName,
-    modelCached,
-    wasmLoaderCached,
-    wasmCached,
-    workerCached,
-    offlineReady: modelCached && wasmLoaderCached && wasmCached && workerCached,
+    entries: status.entries,
+    offlineReady:
+      status.entries.length === 6 &&
+      status.entries.every((entry) => entry.cached),
   };
 }

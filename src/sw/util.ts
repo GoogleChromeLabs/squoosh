@@ -45,11 +45,20 @@ export function cacheBen2Asset(event: FetchEvent, cacheName: string): void {
       // Cache Storage accepts partial and opaque responses, but neither is a
       // valid offline copy of these exact immutable assets.
       if (response.type !== 'opaque' && response.status === 200) {
-        // Await the write in the response pipeline. This keeps the SW alive
-        // until Cache Storage has consumed its clone, rather than relying on
-        // a late lifetime extension after fetch() has resolved.
-        const cache = await caches.open(cacheName);
-        await cache.put(request, response.clone());
+        // Clone before handing the original to the response consumer. A clone
+        // failure is cache-side-only, so it must not disrupt inference.
+        let responseToCache: Response;
+        try {
+          responseToCache = response.clone();
+        } catch {
+          return response;
+        }
+        // Cache Storage consumes the clone atomically; rejected/truncated body
+        // reads and quota errors leave no accepted write and remain non-fatal.
+        const cacheWrite = caches
+          .open(cacheName)
+          .then((cache) => cache.put(request, responseToCache));
+        event.waitUntil(cacheWrite.catch(() => undefined));
       }
       return response;
     })(),
