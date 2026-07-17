@@ -242,10 +242,7 @@ export default class Options extends Component<Props, State> {
             </label>
             <Expander>
               {processorState.ben2.enabled ? (
-                <section
-                  class={`${style.optionOneCell} ${style.optionsSection}`}
-                  aria-live="polite"
-                >
+                <section class={style.ben2Panel} aria-live="polite">
                   <div>
                     {ben2ModelCached
                       ? 'BEN2 Neural Network is cached.'
@@ -253,6 +250,7 @@ export default class Options extends Component<Props, State> {
                   </div>
                   {!ben2ModelCached && (
                     <button
+                      class={style.ben2Download}
                       type="button"
                       disabled={ben2Downloading}
                       onClick={onBen2Download}

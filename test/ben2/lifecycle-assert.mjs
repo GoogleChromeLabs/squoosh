@@ -1562,6 +1562,10 @@ async function clientAssertions() {
     new URL('src/client/lazy-app/Compress/Options/index.tsx', root),
     'utf8',
   );
+  const optionsCss = await readFile(
+    new URL('src/client/lazy-app/Compress/Options/style.css', root),
+    'utf8',
+  );
   const output = await readFile(
     new URL('src/client/lazy-app/Compress/Output/index.tsx', root),
     'utf8',
@@ -1595,6 +1599,37 @@ async function clientAssertions() {
   );
   assert.match(options, /prettyBytes\(modelBytes\)/);
   assert.match(options, /Download BEN2 Neural Network/);
+  assert.match(
+    options,
+    /<section class={style\.ben2Panel} aria-live="polite">/,
+  );
+  assert.match(
+    options,
+    /<button\s+class={style\.ben2Download}\s+type="button"\s+disabled={ben2Downloading}\s+onClick={onBen2Download}\s*>/,
+    'BEN2 download retains its native button behavior under the local class',
+  );
+  assert.match(
+    optionsCss,
+    /\.ben2-panel\s*{\s*composes:\s*option-one-cell;\s*composes:\s*options-section;\s*row-gap:\s*8px;/,
+    'BEN2 panel composes the native one-cell and section recipes',
+  );
+  assert.match(
+    optionsCss,
+    /\.ben2-download\s*{\s*composes:\s*text-field;/,
+    'BEN2 download composes the native text-field recipe',
+  );
+  for (const contract of [
+    /&:hover:not\(:disabled\)\s*{\s*background-color:\s*var\(--dark-gray\);/,
+    /&:active:not\(:disabled\)\s*{\s*background-color:\s*var\(--main-theme-color\);\s*color:\s*var\(--header-text-color\);/,
+    /&:focus-visible\s*{\s*outline:\s*var\(--white\) solid 2px;/,
+    /&:disabled\s*{\s*color:\s*var\(--less-light-gray\);/,
+  ]) {
+    assert.match(
+      optionsCss,
+      contract,
+      `BEN2 download style contract: ${contract}`,
+    );
+  }
   const ben2Panel = options.slice(
     options.indexOf('Remove background'),
     options.indexOf('{encoderState ?'),
