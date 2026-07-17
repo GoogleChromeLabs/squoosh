@@ -140,16 +140,20 @@ assert.ok(
   'manifest must be in the app shell',
 );
 assert.ok(
-  serviceWorker.includes('ben2-download-model'),
-  'production SW must expose the explicit model command',
+  !serviceWorker.includes('ben2-download-model'),
+  'production SW must not retain the old model command',
+);
+assert.ok(
+  serviceWorker.includes('squoosh-ben2-model-v1'),
+  'production SW must preserve the dedicated model cache',
+);
+assert.ok(
+  serviceWorker.includes('X-Squoosh-BEN2-Download'),
+  'production SW must recognize the fixed explicit request',
 );
 assert.ok(
   serviceWorker.includes('BEN2 model is not cached'),
   'production model fetch route must retain its cache-only miss',
-);
-assert.ok(
-  serviceWorker.includes('?sw-model-validation-staging'),
-  'production SW must retain the neutral internal validation staging key',
 );
 assert.ok(
   buildFiles.some((file) => relative(file) === 'manifest.json'),
@@ -211,7 +215,7 @@ for (const copy of [
   'Remove background',
   'BEN2 Neural Network is cached.',
   'BEN2 Neural Network is not cached.',
-  'Download BEN2 Neural Network (',
+  'download (',
 ]) {
   assert.ok(compressChunk.includes(copy), `Compress UI must contain ${copy}`);
 }
@@ -261,6 +265,7 @@ const ben2ProductSourcePaths = [
   'missing-types.d.ts',
   'rollup.config.js',
   'src/client/lazy-app/Compress/Options/index.tsx',
+  'src/client/lazy-app/Compress/ben2-cache-lifecycle.ts',
   'src/client/lazy-app/Compress/ben2-capability.ts',
   'src/client/lazy-app/Compress/ben2-processing.ts',
   'src/client/lazy-app/Compress/index.tsx',
@@ -270,6 +275,7 @@ const ben2ProductSourcePaths = [
   'src/client/lazy-app/worker-bridge/index.ts',
   'src/features/decoders/png/worker/pngDecode.ts',
   'src/features/processors/ben2/shared/meta.ts',
+  'src/features/processors/ben2/shared/model-cache.ts',
   'src/features/processors/ben2/shared/preprocessing.ts',
   'src/features/processors/ben2/worker/ben2.ts',
   'src/features/processors/ben2/worker/missing-types.d.ts',
@@ -311,9 +317,9 @@ assert.match(
   'legacy remote query transport remains rejected',
 );
 assert.doesNotMatch(
-  '?sw-model-validation-staging',
+  '?model-validation-staging',
   legacyBen2QueryTransport,
-  'neutral SW-owned staging is not legacy query transport',
+  'neutral internal staging is not legacy query transport',
 );
 
 const sourceWiringResiduePatterns = [
@@ -449,6 +455,11 @@ assert.doesNotMatch(optionsSource, /Remove background \(BEN2\)/);
 assert.match(optionsSource, /name="ben2\.enable"/);
 assert.match(optionsSource, /onChange={this\.onProcessorEnabledChange}/);
 assert.match(optionsSource, /prettyBytes\(modelBytes\)/);
+assert.match(
+  optionsSource,
+  /download \(\$\{ben2ModelSize\.value\}\$\{ben2ModelSize\.unit\}\)/,
+);
+assert.match(optionsSource, /<loading-spinner aria-hidden="true"/);
 for (const forbidden of [
   /Checking WebGPU support/i,
   /service worker/i,
@@ -505,10 +516,22 @@ for (const outputPath of [
     `Output must not retain shared BEN2 UI (${outputPath})`,
   );
 }
+const workerSource = ben2ProductSources.get(
+  'src/features/processors/ben2/worker/ben2.ts',
+);
 assert.doesNotMatch(
-  ben2ProductSources.get('src/features/processors/ben2/worker/ben2.ts'),
+  workerSource,
   /console\.(?:log|debug|info)\s*\(/,
   'BEN2 runtime must not emit verbose logs',
+);
+assert.match(workerSource, /readCachedBen2ModelBytes\(\)/);
+assert.doesNotMatch(workerSource, /InferenceSession\.create\(modelUrl/);
+const swBridgeSource = ben2ProductSources.get(
+  'src/client/lazy-app/sw-bridge/index.ts',
+);
+assert.doesNotMatch(
+  swBridgeSource,
+  /ben2-cache-status|ben2-download-model|MessageChannel/,
 );
 const ben2RuntimeSources = new Map(
   [...ben2ProductSources].filter(([sourcePath]) =>
