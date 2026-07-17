@@ -30,6 +30,43 @@ const relative = (file) =>
   path.relative(buildRoot, file).split(path.sep).join('/');
 const publicPath = (file) => `/${relative(file)}`;
 const buildFiles = await walk(buildRoot);
+const buildFileByRelativePath = new Map(
+  buildFiles.map((file) => [relative(file), file]),
+);
+
+async function staticAmdDependencies(file) {
+  const source = await readFile(file, 'utf8');
+  const dependencyList = source.match(/\bdefine\(\s*\[([^\]]*)\]/)?.[1];
+  if (!dependencyList) return [];
+
+  return [...dependencyList.matchAll(/["']([^"']+)["']/g)]
+    .map((match) => match[1])
+    .filter((specifier) => specifier.startsWith('.'))
+    .map((specifier) => {
+      const resolved = new URL(
+        specifier,
+        `https://build.test${publicPath(file)}`,
+      ).pathname.slice(1);
+      return buildFileByRelativePath.get(
+        path.extname(resolved) ? resolved : `${resolved}.js`,
+      );
+    })
+    .filter((dependency) => dependency !== undefined);
+}
+
+async function staticAmdClosure(entry) {
+  const closure = new Set([entry]);
+  const pending = [entry];
+  while (pending.length) {
+    for (const dependency of await staticAmdDependencies(pending.pop())) {
+      if (!closure.has(dependency)) {
+        closure.add(dependency);
+        pending.push(dependency);
+      }
+    }
+  }
+  return closure;
+}
 
 function oneAsset(pattern, role) {
   const matches = buildFiles.filter((file) => pattern.test(relative(file)));
@@ -121,10 +158,8 @@ await assertIdentity(
   'PNG decoder WASM',
 );
 
-const serviceWorker = await readFile(
-  oneAsset(/^serviceworker\.js$/, 'service worker'),
-  'utf8',
-);
+const serviceWorkerFile = oneAsset(/^serviceworker\.js$/, 'service worker');
+const serviceWorker = await readFile(serviceWorkerFile, 'utf8');
 for (const [role, file] of Object.entries(assets)) {
   assert.ok(
     serviceWorker.includes(role),
@@ -143,9 +178,49 @@ assert.ok(
   !serviceWorker.includes('ben2-download-model'),
   'production SW must not retain the old model command',
 );
+const serviceWorkerDependencies = await staticAmdDependencies(
+  serviceWorkerFile,
+);
+const serviceWorkerClosure = await staticAmdClosure(serviceWorkerFile);
+const linkedModelCache = (
+  await Promise.all(
+    serviceWorkerDependencies.map(async (file) =>
+      (await readFile(file, 'utf8')).includes('squoosh-ben2-model-v1')
+        ? file
+        : undefined,
+    ),
+  )
+).find((file) => file !== undefined);
 assert.ok(
-  serviceWorker.includes('squoosh-ben2-model-v1'),
-  'production SW must preserve the dedicated model cache',
+  linkedModelCache && serviceWorkerClosure.has(linkedModelCache),
+  'production SW must statically link the dedicated model cache',
+);
+const expectedCaches = serviceWorker.match(
+  /\b([\w$]+)\s*=\s*\[[^\]]+([\w$]+)\.ben2ModelCacheName\s*\]/,
+);
+assert.ok(
+  expectedCaches,
+  'production SW must receive the imported dedicated model cache name',
+);
+const factoryParameters = serviceWorker
+  .match(/\bdefine\(\s*\[[^\]]*\]\s*,\s*\(function\(([^)]*)\)/)?.[1]
+  .split(',');
+assert.ok(
+  factoryParameters,
+  'production SW must retain its AMD import bindings',
+);
+assert.equal(
+  factoryParameters[serviceWorkerDependencies.indexOf(linkedModelCache)],
+  expectedCaches[2],
+  'production expected caches must use the statically imported model cache name',
+);
+assert.match(
+  serviceWorker,
+  new RegExp(
+    `!${expectedCaches[1]}\\.includes\\([^)]*\\).*?caches\\.delete`,
+    's',
+  ),
+  'production SW must retain the imported dedicated model cache during cleanup',
 );
 assert.ok(
   serviceWorker.includes('X-Squoosh-BEN2-Download'),
@@ -161,9 +236,15 @@ assert.ok(
 );
 
 const featureWorker = await readFile(assets.features_worker, 'utf8');
+const featureWorkerClosure = await staticAmdClosure(assets.features_worker);
+const featureWorkerLinkedText = (
+  await Promise.all(
+    [...featureWorkerClosure].map((file) => readFile(file, 'utf8')),
+  )
+).join('\n');
 for (const role of ['model', 'ort_asyncify_mjs', 'ort_asyncify_wasm']) {
   assert.ok(
-    featureWorker.includes(path.basename(assets[role])),
+    featureWorkerLinkedText.includes(path.basename(assets[role])),
     `generated feature worker must link ${role}`,
   );
 }
@@ -296,6 +377,17 @@ const ben2ProductSources = new Map(
       await readFile(path.join(root, sourcePath), 'utf8'),
     ]),
   ),
+);
+const serviceWorkerSource = ben2ProductSources.get('src/sw/index.ts');
+assert.match(
+  serviceWorkerSource,
+  /import\s*{[^}]*\bben2ModelCacheName\b[^}]*}\s*from\s*['"][^'"]*model-cache['"];/s,
+  'service worker source must import the dedicated model cache name',
+);
+assert.match(
+  serviceWorkerSource,
+  /expectedCaches\s*=\s*\[[^\]]*\bben2ModelCacheName\b[^\]]*\]/,
+  'service worker source must preserve the dedicated model cache during cleanup',
 );
 
 function assertNoSourceResidue(sources, patterns, scope) {
