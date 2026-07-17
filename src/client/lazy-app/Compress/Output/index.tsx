@@ -21,7 +21,6 @@ import { cleanSet } from '../../util/clean-modify';
 import type { SourceImage } from '../../Compress';
 import { linkRef } from 'shared/prerendered-app/util';
 import { drawDataToCanvas } from 'client/lazy-app/util/canvas';
-import type { Ben2Capability } from '../ben2-capability';
 
 interface Props {
   source?: SourceImage;
@@ -31,13 +30,7 @@ interface Props {
   rightCompressed?: ImageData;
   leftImgContain: boolean;
   rightImgContain: boolean;
-  ben2Capability: Ben2Capability;
-  ben2CacheState: 'uncontrolled' | 'not-cached' | 'partial' | 'cached';
-  ben2FirstUse: boolean;
-  ben2Processing: boolean;
-  ben2TerminalError?: string;
   onPreprocessorChange: (newState: PreprocessorState) => void;
-  onBen2Retry: () => void;
 }
 
 interface State {
@@ -191,15 +184,6 @@ export default class Output extends Component<Props, State> {
     this.props.onPreprocessorChange(newState);
   };
 
-  private onBen2Toggle = (event: Event) => {
-    const { preprocessorState } = this.props;
-    if (!preprocessorState) return;
-    const enabled = (event.currentTarget as HTMLInputElement).checked;
-    this.props.onPreprocessorChange(
-      cleanSet(preprocessorState, 'ben2.enabled', enabled),
-    );
-  };
-
   private onScaleValueFocus = () => {
     this.setState({ editingScale: true }, () => {
       if (this.scaleInput) {
@@ -280,19 +264,7 @@ export default class Output extends Component<Props, State> {
   };
 
   render(
-    {
-      mobileView,
-      leftImgContain,
-      rightImgContain,
-      source,
-      preprocessorState,
-      ben2Capability,
-      ben2CacheState,
-      ben2FirstUse,
-      ben2Processing,
-      ben2TerminalError,
-      onBen2Retry,
-    }: Props,
+    { mobileView, leftImgContain, rightImgContain, source }: Props,
     { scale, editingScale, altBackground, aliasing }: State,
   ) {
     const leftDraw = this.leftDrawable();
@@ -361,57 +333,6 @@ export default class Output extends Component<Props, State> {
           </two-up>
         </div>
         <div class={style.controls}>
-          <section class={style.ben2Control} aria-label="Background removal">
-            <label class={style.ben2Toggle}>
-              <input
-                type="checkbox"
-                checked={!!preprocessorState?.ben2.enabled}
-                disabled={ben2Capability.state !== 'supported' || !source}
-                onChange={this.onBen2Toggle}
-              />
-              <span>Remove background (BEN2)</span>
-            </label>
-            <div class={style.ben2Status} aria-live="polite">
-              {ben2Capability.state === 'checking' &&
-                'Checking WebGPU support…'}
-              {ben2Capability.state === 'unsupported' && ben2Capability.reason}
-              {ben2Capability.state === 'supported' && 'WebGPU supported. '}
-              {ben2Capability.state === 'supported' &&
-                ben2CacheState === 'uncontrolled' &&
-                'Offline cache: waiting for service worker control.'}
-              {ben2Capability.state === 'supported' &&
-                ben2CacheState === 'not-cached' &&
-                'Runtime cache: Not cached.'}
-              {ben2Capability.state === 'supported' &&
-                ben2CacheState === 'partial' &&
-                'Runtime cache: Partially cached — reconnect to finish.'}
-              {ben2Capability.state === 'supported' &&
-                ben2CacheState === 'cached' &&
-                'Cached for this app version.'}
-            </div>
-            {ben2FirstUse && ben2Capability.state === 'supported' && (
-              <div class={style.ben2Note}>
-                First use downloads a 208.971 MiB model plus runtime files.
-              </div>
-            )}
-            {ben2Processing && (
-              <div class={style.ben2Processing} aria-live="polite">
-                Removing background…
-              </div>
-            )}
-            {ben2TerminalError && (
-              <div class={style.ben2Error} role="alert">
-                {ben2TerminalError}{' '}
-                <button type="button" onClick={onBen2Retry}>
-                  Retry
-                </button>
-              </div>
-            )}
-            <div class={style.ben2Note}>
-              Original Image is the original input. JPEG cannot preserve
-              transparency; choose OxiPNG or Browser PNG to keep it.
-            </div>
-          </section>
           <div class={style.buttonGroup}>
             <button class={style.firstButton} onClick={this.zoomOut}>
               <RemoveIcon />
