@@ -1,147 +1,159 @@
-/**
- * BEN2 worker/cache architecture spike only. Not production-ready.
- */
 import * as ort from 'onnxruntime-web/webgpu';
 import wasmLoaderUrl from 'url:onnxruntime-web/ort-wasm-simd-threaded.asyncify.mjs';
 import wasmUrl from 'url:onnxruntime-web/ort-wasm-simd-threaded.asyncify.wasm';
 import modelUrl from 'url:../../../../../.tmp/ben2/model_fp16.onnx';
-import { Diagnostics, Result } from '../shared/meta';
-import { makeNormalizedInput, makeResizedMatte } from '../shared/preprocessing';
+import { applyMatte, makeNormalizedInput } from '../shared/preprocessing';
 
 const INPUT_SIZE = 1024;
-const workerStartedAt = Date.now();
+const CAPABILITY_ERROR = 'Ben2CapabilityError';
+const TERMINAL_ERROR = 'Ben2TerminalError';
 
 let sessionPromise: Promise<ort.InferenceSession> | undefined;
-let sessionCreateCount = 0;
-let sessionCreationMs = 0;
-let runCount = 0;
+let session: ort.InferenceSession | undefined;
+let terminalReason: string | undefined;
 
-function gpuAdapterDetails(adapter: any) {
-  const info = (adapter as any).info || {};
-  return {
-    info: { ...info },
-    isFallbackAdapter: info.isFallbackAdapter ?? null,
-    features: [...adapter.features].sort(),
-    limits: Object.fromEntries(
-      Object.getOwnPropertyNames(Object.getPrototypeOf(adapter.limits))
-        .filter((name) => name !== 'constructor')
-        .map((name) => [name, (adapter.limits as any)[name]]),
-    ),
-  };
+function messageFrom(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
-async function getSession(): Promise<ort.InferenceSession> {
-  if (!sessionPromise) {
-    sessionCreateCount++;
-    const started = performance.now();
-    // The dedicated WebGPU entry uses the asyncify artifact. Keep ORT's host
-    // single-threaded; WebGPU owns graph execution and needs no pthread child.
-    ort.env.wasm.numThreads = 1;
-    ort.env.wasm.proxy = false;
-    ort.env.wasm.wasmPaths = {
-      mjs: new URL(wasmLoaderUrl, location.href).href,
-      wasm: new URL(wasmUrl, location.href).href,
-    };
-    ort.env.logLevel = 'verbose';
+function namedError(name: string, message: string): Error {
+  const error = new Error(message);
+  error.name = name;
+  return error;
+}
 
-    console.log('[BEN2 WebGPU spike] adapter request start', {
-      workerStartedAt,
-      powerPreference: 'high-performance',
-      forceFallbackAdapter: false,
-    });
-    const adapter = await (navigator as any).gpu.requestAdapter({
-      powerPreference: 'high-performance',
-      forceFallbackAdapter: false,
-    });
-    if (!adapter)
-      throw new Error('navigator.gpu.requestAdapter() returned null');
-    const adapterDetails = gpuAdapterDetails(adapter);
-    console.log('[BEN2 WebGPU spike] adapter acquired', adapterDetails);
-    ort.env.webgpu.adapter = adapter;
+function capabilityError(message: string): Error {
+  return namedError(CAPABILITY_ERROR, message);
+}
 
-    const options: ort.InferenceSession.SessionOptions = {
-      executionProviders: ['webgpu', 'wasm'],
+function terminalError(message: string): Error {
+  return namedError(TERMINAL_ERROR, message);
+}
+
+async function requireWebGpuAdapter(): Promise<any> {
+  if (!(globalThis as any).isSecureContext) {
+    throw capabilityError('BEN2 requires a secure context');
+  }
+  const gpu = (navigator as any).gpu;
+  if (!gpu) throw capabilityError('BEN2 requires WebGPU');
+
+  let adapter: any;
+  try {
+    adapter = await gpu.requestAdapter({ forceFallbackAdapter: false });
+  } catch (error) {
+    throw capabilityError(
+      `BEN2 could not request a WebGPU adapter: ${messageFrom(error)}`,
+    );
+  }
+  if (!adapter) {
+    throw capabilityError('BEN2 could not acquire a WebGPU adapter');
+  }
+  if (!adapter.features?.has('shader-f16')) {
+    throw capabilityError('BEN2 requires the WebGPU shader-f16 feature');
+  }
+
+  let probeDevice: any;
+  try {
+    probeDevice = await adapter.requestDevice({
+      requiredFeatures: ['shader-f16'],
+    });
+    probeDevice.destroy();
+  } catch (error) {
+    if (probeDevice) {
+      try {
+        probeDevice.destroy();
+      } catch {}
+    }
+    throw capabilityError(
+      `BEN2 could not create the required WebGPU device: ${messageFrom(error)}`,
+    );
+  }
+  return adapter;
+}
+
+async function invalidate(reason: string): Promise<void> {
+  terminalReason ||= reason;
+  sessionPromise = undefined;
+  const oldSession = session;
+  session = undefined;
+  if (oldSession) {
+    try {
+      await oldSession.release();
+    } catch {}
+  }
+}
+
+async function createSession(): Promise<ort.InferenceSession> {
+  const adapter = await requireWebGpuAdapter();
+
+  ort.env.wasm.numThreads = 1;
+  ort.env.wasm.proxy = false;
+  ort.env.wasm.wasmPaths = {
+    mjs: new URL(wasmLoaderUrl, location.href).href,
+    wasm: new URL(wasmUrl, location.href).href,
+  };
+  ort.env.webgpu.adapter = adapter;
+
+  let created: ort.InferenceSession;
+  try {
+    created = await ort.InferenceSession.create(modelUrl, {
+      executionProviders: ['webgpu'],
       graphOptimizationLevel: 'disabled',
-      logSeverityLevel: 0,
-      logVerbosityLevel: 4,
-    };
-    console.log('[BEN2 WebGPU spike] session creation start', {
-      modelUrl,
-      wasmLoaderUrl,
-      wasmUrl,
-      options,
     });
-    sessionPromise = ort.InferenceSession.create(modelUrl, options)
-      .then(async (session) => {
-        sessionCreationMs = performance.now() - started;
-        const device: any = await ort.env.webgpu.device;
-        if (device) {
-          device.lost.then((info: any) =>
-            console.error('[BEN2 WebGPU spike] device lost', {
-              reason: info.reason,
-              message: info.message,
-            }),
-          );
-          device.addEventListener('uncapturederror', (event: any) =>
-            console.error('[BEN2 WebGPU spike] uncaptured device error', {
-              message: event.error?.message,
-            }),
-          );
-        }
-        console.log('[BEN2 WebGPU spike] session created', {
-          workerStartedAt,
-          sessionCreateCount,
-          sessionCreationMs,
-          adapterDetails,
-          deviceFeatures: device ? [...device.features].sort() : [],
-          deviceLimits: device
-            ? Object.fromEntries(
-                Object.getOwnPropertyNames(Object.getPrototypeOf(device.limits))
-                  .filter((name) => name !== 'constructor')
-                  .map((name) => [name, (device.limits as any)[name]]),
-              )
-            : {},
-        });
-        return session;
-      })
-      .catch((error) => {
-        console.error('[BEN2 WebGPU spike] session creation failed', {
-          elapsedMs: performance.now() - started,
-          name: error?.name,
-          message: error?.message || String(error),
-          stack: error?.stack,
-          adapterDetails,
-        });
-        throw error;
-      });
+  } catch (error) {
+    const reason = `BEN2 session creation failed: ${messageFrom(error)}`;
+    await invalidate(reason);
+    throw terminalError(reason);
+  }
+
+  session = created;
+  try {
+    const device: any = await ort.env.webgpu.device;
+    device.lost.then(
+      (info: any) => {
+        const detail = info?.message || info?.reason || 'unknown reason';
+        void invalidate(`BEN2 WebGPU device was lost: ${detail}`);
+      },
+      (error: unknown) => {
+        void invalidate(
+          `BEN2 WebGPU device loss could not be observed: ${messageFrom(
+            error,
+          )}`,
+        );
+      },
+    );
+  } catch (error) {
+    const reason = `BEN2 WebGPU device setup failed: ${messageFrom(error)}`;
+    await invalidate(reason);
+    throw terminalError(reason);
+  }
+
+  return created;
+}
+
+function getSession(): Promise<ort.InferenceSession> {
+  if (terminalReason) return Promise.reject(terminalError(terminalReason));
+  if (!sessionPromise) {
+    const pending = createSession();
+    sessionPromise = pending;
+    void pending.catch(() => {
+      if (sessionPromise === pending) sessionPromise = undefined;
+    });
   }
   return sessionPromise!;
 }
 
-function makeInput(data: ImageData): Float32Array {
-  return makeNormalizedInput(data.data, data.width, data.height, INPUT_SIZE);
-}
+export default async function ben2(data: ImageData): Promise<ImageData> {
+  const input = makeNormalizedInput(
+    data.data,
+    data.width,
+    data.height,
+    INPUT_SIZE,
+  );
+  const activeSession = await getSession();
 
-function applyMatte(source: ImageData, raw: Float32Array): ImageData {
-  const matte = makeResizedMatte(raw, source.width, source.height, INPUT_SIZE);
-  const output = new Uint8ClampedArray(source.data);
-  for (let pixel = 0; pixel < source.width * source.height; pixel++) {
-    output[pixel * 4 + 3] = matte[pixel];
-  }
-  return new ImageData(output, source.width, source.height);
-}
-
-export default async function ben2(data: ImageData): Promise<Result> {
-  const input = makeInput(data);
-  const session = await getSession();
-  const started = performance.now();
-  console.log('[BEN2 WebGPU spike] first inference start', {
-    workerStartedAt,
-    runNumber: runCount + 1,
-  });
-  let output: ort.InferenceSession.OnnxValueMapType;
   try {
-    output = await session.run({
+    const output = await activeSession.run({
       pixel_values: new ort.Tensor('float32', input, [
         1,
         3,
@@ -149,31 +161,12 @@ export default async function ben2(data: ImageData): Promise<Result> {
         INPUT_SIZE,
       ]),
     });
+    if (terminalReason) throw terminalError(terminalReason);
+    return applyMatte(data, output.alphas.data as Float32Array, INPUT_SIZE);
   } catch (error) {
-    console.error('[BEN2 WebGPU spike] inference failed', {
-      elapsedMs: performance.now() - started,
-      name: (error as any)?.name,
-      message: (error as any)?.message || String(error),
-      stack: (error as any)?.stack,
-    });
-    throw error;
+    if ((error as Error)?.name === TERMINAL_ERROR) throw error;
+    const reason = `BEN2 inference failed: ${messageFrom(error)}`;
+    await invalidate(reason);
+    throw terminalError(reason);
   }
-  const inferenceMs = performance.now() - started;
-  runCount++;
-  const diagnostics: Diagnostics = {
-    modelUrl,
-    wasmLoaderUrl,
-    wasmUrl,
-    workerUrl: location.href,
-    workerStartedAt,
-    sessionCreateCount,
-    runCount,
-    sessionCreationMs,
-    inferenceMs,
-  };
-  console.log('[BEN2 spike] inference complete', diagnostics);
-  return {
-    imageData: applyMatte(data, output.alphas.data as Float32Array),
-    diagnostics,
-  };
 }

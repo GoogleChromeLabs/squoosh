@@ -1,7 +1,4 @@
-/**
- * BEN2 source-RGB preservation spike only. Keep PNG decode in the generated
- * feature worker so transparent source RGB avoids browser rasterization.
- */
+/** Decode PNG bytes directly so transparent pixels retain straight RGB. */
 import { blobToArrayBuffer } from 'features/worker-utils';
 
 let pngModule: Promise<typeof import('codecs/png/pkg')> | undefined;

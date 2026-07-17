@@ -1,8 +1,6 @@
 /**
- * BEN2 reference pre/post helpers. Disposable parity spike only.
- *
- * Matches the measured Transformers.js/Sharp affine contract: asymmetric
- * coordinates, zero-valued out-of-range neighbours, then rounded u8 output.
+ * Deterministic BEN2 pre/postprocessing matching the reference affine path:
+ * asymmetric coordinates and zero-valued out-of-range neighbours.
  */
 
 const IMAGENET_MEAN = [0.485, 0.456, 0.406];
@@ -136,4 +134,17 @@ export function makeResizedMatte(
     sourceHeight,
     1,
   );
+}
+
+export function applyMatte(
+  source: ImageData,
+  raw: Float32Array,
+  inputSize: number,
+): ImageData {
+  const matte = makeResizedMatte(raw, source.width, source.height, inputSize);
+  const output = new Uint8ClampedArray(source.data);
+  for (let pixel = 0; pixel < matte.length; pixel++) {
+    output[pixel * 4 + 3] = matte[pixel];
+  }
+  return new ImageData(output, source.width, source.height);
 }
