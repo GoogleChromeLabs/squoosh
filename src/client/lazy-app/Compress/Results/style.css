@@ -28,7 +28,7 @@
   background: rgba(0, 0, 0, 0.67);
   border-radius: 5px;
   display: grid;
-  grid-template-columns: max-content [bubble] 1fr [download] max-content;
+  grid-template-columns: max-content [bubble] minmax(0, 1fr) [download] max-content;
 
   @media (min-width: 600px) {
     --download-overflow-size: 30px;
@@ -71,10 +71,20 @@
 
 .bubble {
   align-self: center;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 
   @media (min-width: 600px) {
     position: relative;
     width: max-content;
+    overflow-x: visible;
     grid-row: 1;
     grid-column: bubble;
 
