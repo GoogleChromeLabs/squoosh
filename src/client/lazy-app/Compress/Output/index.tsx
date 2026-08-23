@@ -345,7 +345,7 @@ export default class Output extends Component<Props, State> {
                 ref={linkRef(this, 'scaleInput')}
                 class={style.zoom}
                 value={Math.round(scale * 100)}
-                onInput={this.onScaleInputChanged}
+                onChange={this.onScaleInputChanged}
                 onBlur={this.onScaleInputBlur}
               />
             ) : (
