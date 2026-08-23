@@ -37,6 +37,7 @@ export type OutputType = EncoderType | 'identity';
 
 export interface SourceImage {
   file: File;
+  mimeType: string;
   decoded: ImageData;
   preprocessed: ImageData;
   vectorImage?: HTMLImageElement;
@@ -92,7 +93,7 @@ async function decodeImage(
   signal: AbortSignal,
   blob: Blob,
   workerBridge: WorkerBridge,
-): Promise<ImageData> {
+): Promise<{ data: ImageData; mimeType: ImageMimeTypes | '' }> {
   assertSignal(signal);
   const mimeType = await abortable(signal, sniffMimeType(blob));
   const canDecode = await abortable(signal, canDecodeImageType(mimeType));
@@ -100,23 +101,23 @@ async function decodeImage(
   try {
     if (!canDecode) {
       if (mimeType === 'image/avif') {
-        return await workerBridge.avifDecode(signal, blob);
+        return { data: await workerBridge.avifDecode(signal, blob), mimeType };
       }
       if (mimeType === 'image/webp') {
-        return await workerBridge.webpDecode(signal, blob);
+        return { data: await workerBridge.webpDecode(signal, blob), mimeType };
       }
       if (mimeType === 'image/jxl') {
-        return await workerBridge.jxlDecode(signal, blob);
+        return { data: await workerBridge.jxlDecode(signal, blob), mimeType };
       }
       if (mimeType === 'image/webp2') {
-        return await workerBridge.wp2Decode(signal, blob);
+        return { data: await workerBridge.wp2Decode(signal, blob), mimeType };
       }
       if (mimeType === 'image/qoi') {
-        return await workerBridge.qoiDecode(signal, blob);
+        return { data: await workerBridge.qoiDecode(signal, blob), mimeType };
       }
     }
     // Otherwise fall through and try built-in decoding for a laugh.
-    return await builtinDecode(signal, blob);
+    return { data: await builtinDecode(signal, blob), mimeType };
   } catch (err) {
     if (err instanceof Error && err.name === 'AbortError') throw err;
     console.log(err);
@@ -677,6 +678,7 @@ export default class Compress extends Component<Props, State> {
     const sideSignals = this.sideAbortControllers.map((ac) => ac.signal);
 
     let decoded: ImageData;
+    let mimeType: string;
     let vectorImage: HTMLImageElement | undefined;
 
     // Handle decoding
@@ -694,13 +696,14 @@ export default class Compress extends Component<Props, State> {
         if (mainJobState.file.type.startsWith('image/svg+xml')) {
           vectorImage = await processSvg(mainSignal, mainJobState.file);
           decoded = drawableToImageData(vectorImage);
+          mimeType = mainJobState.file.type;
         } else {
-          decoded = await decodeImage(
+          ({ data: decoded, mimeType } = await decodeImage(
             mainSignal,
             mainJobState.file,
             // Either worker is good enough here.
             this.workerBridges[0],
-          );
+          ));
         }
 
         // Set default resize values
@@ -728,7 +731,7 @@ export default class Compress extends Component<Props, State> {
         throw err;
       }
     } else {
-      ({ decoded, vectorImage } = currentState.source!);
+      ({ decoded, mimeType, vectorImage } = currentState.source!);
     }
 
     let source: SourceImage;
@@ -751,6 +754,7 @@ export default class Compress extends Component<Props, State> {
 
         source = {
           decoded,
+          mimeType,
           vectorImage,
           preprocessed,
           file: mainJobState.file,
@@ -866,7 +870,7 @@ export default class Compress extends Component<Props, State> {
               source.file.name,
               workerBridge,
             );
-            data = await decodeImage(signal, file, workerBridge);
+            data = (await decodeImage(signal, file, workerBridge)).data;
 
             this.encodeCache.add({
               data,
@@ -951,7 +955,9 @@ export default class Compress extends Component<Props, State> {
         typeLabel={
           side.latestSettings.encoderState
             ? encoderMap[side.latestSettings.encoderState.type].meta.label
-            : `${side.file ? `${side.file.name}` : 'Original Image'}`
+            : source
+            ? `Original Image (${source.mimeType || 'unknown type'})`
+            : 'Original Image'
         }
       />
     ));
