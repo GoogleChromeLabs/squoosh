@@ -46,6 +46,12 @@ const scaleToOpts: ScaleToOpts = {
   allowChangeEvent: true,
 };
 
+const splitterHandleSize = 62;
+
+function needsSplitterOffset(image?: ImageData): boolean {
+  return !!image && Math.max(image.width, image.height) < splitterHandleSize;
+}
+
 export default class Output extends Component<Props, State> {
   state: State = {
     scale: 1,
@@ -268,6 +274,8 @@ export default class Output extends Component<Props, State> {
   ) {
     const leftDraw = this.leftDrawable();
     const rightDraw = this.rightDrawable();
+    const leftNeedsSplitterOffset = needsSplitterOffset(leftDraw);
+    const rightNeedsSplitterOffset = needsSplitterOffset(rightDraw);
     // To keep position stable, the output is put in a square using the longest dimension.
     const originalImage = source && source.preprocessed;
 
@@ -299,8 +307,8 @@ export default class Output extends Component<Props, State> {
             >
               <canvas
                 class={`${style.pinchTarget} ${
-                  aliasing ? style.pixelated : ''
-                }`}
+                  leftNeedsSplitterOffset ? style.smallImage : ''
+                } ${aliasing ? style.pixelated : ''}`}
                 ref={linkRef(this, 'canvasLeft')}
                 width={leftDraw && leftDraw.width}
                 height={leftDraw && leftDraw.height}
@@ -317,8 +325,8 @@ export default class Output extends Component<Props, State> {
             >
               <canvas
                 class={`${style.pinchTarget} ${
-                  aliasing ? style.pixelated : ''
-                }`}
+                  rightNeedsSplitterOffset ? style.smallImage : ''
+                } ${aliasing ? style.pixelated : ''}`}
                 ref={linkRef(this, 'canvasRight')}
                 width={rightDraw && rightDraw.width}
                 height={rightDraw && rightDraw.height}
