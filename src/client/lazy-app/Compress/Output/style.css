@@ -39,6 +39,12 @@
   flex-shrink: 0;
 }
 
+@media (min-width: 860px) {
+  .small-image {
+    margin-bottom: calc(var(--thumb-size) * 2);
+  }
+}
+
 .controls {
   display: flex;
   justify-content: center;
