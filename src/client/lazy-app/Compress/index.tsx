@@ -227,14 +227,16 @@ async function processSvg(
   const document = parser.parseFromString(text, 'image/svg+xml');
   const svg = document.documentElement!;
 
-  if (svg.hasAttribute('width') && svg.hasAttribute('height')) {
+  const width = svg.getAttribute('width');
+  const height = svg.getAttribute('height');
+  if (width && height && !width.endsWith('%') && !height.endsWith('%')) {
     return blobToImg(blob);
   }
 
   const viewBox = svg.getAttribute('viewBox');
   if (viewBox === null) throw Error('SVG must have width/height or viewBox');
 
-  const viewboxParts = viewBox.split(/\s+/);
+  const viewboxParts = viewBox.trim().split(/[\s,]+/);
   svg.setAttribute('width', viewboxParts[2]);
   svg.setAttribute('height', viewboxParts[3]);
 
