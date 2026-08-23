@@ -211,7 +211,14 @@ export default class Intro extends Component<Props, State> {
       return;
     }
 
-    const blob = await getImageClipboardItem(clipboardItems);
+    let blob: Blob | undefined;
+
+    try {
+      blob = await getImageClipboardItem(clipboardItems);
+    } catch (err) {
+      this.props.showSnack!("Couldn't paste image from clipboard");
+      return;
+    }
 
     if (!blob) {
       this.props.showSnack!(`No image found in the clipboard`);
