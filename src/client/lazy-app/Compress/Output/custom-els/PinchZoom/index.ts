@@ -91,6 +91,7 @@ export default class PinchZoom extends HTMLElement {
   private _positioningEl?: Element;
   // Current transform.
   private _transform: SVGMatrix = createMatrix();
+  private _middleMousePosition?: Point;
 
   constructor() {
     super();
@@ -126,10 +127,15 @@ export default class PinchZoom extends HTMLElement {
     });
 
     this.addEventListener('wheel', (event) => this._onWheel(event));
+    this.addEventListener('mousedown', this._onMiddleMouseDown);
   }
 
   connectedCallback() {
     this._stageElChange();
+  }
+
+  disconnectedCallback() {
+    this._stopMiddleMousePan();
   }
 
   get x() {
@@ -324,6 +330,41 @@ export default class PinchZoom extends HTMLElement {
       originY: event.clientY - currentRect.top,
       allowChangeEvent: true,
     });
+  }
+
+  private _onMiddleMouseDown = (event: MouseEvent) => {
+    if (event.button !== 1 || !this._positioningEl) return;
+
+    event.preventDefault();
+    this._middleMousePosition = event;
+    window.addEventListener('mousemove', this._onMiddleMouseMove);
+    window.addEventListener('mouseup', this._onMiddleMouseUp);
+  };
+
+  private _onMiddleMouseMove = (event: MouseEvent) => {
+    const previousPosition = this._middleMousePosition;
+    if (!previousPosition || !(event.buttons & 4)) {
+      this._stopMiddleMousePan();
+      return;
+    }
+
+    event.preventDefault();
+    this.setTransform({
+      allowChangeEvent: true,
+      x: this.x + event.clientX - previousPosition.clientX,
+      y: this.y + event.clientY - previousPosition.clientY,
+    });
+    this._middleMousePosition = event;
+  };
+
+  private _onMiddleMouseUp = (event: MouseEvent) => {
+    if (event.button === 1) this._stopMiddleMousePan();
+  };
+
+  private _stopMiddleMousePan() {
+    this._middleMousePosition = undefined;
+    window.removeEventListener('mousemove', this._onMiddleMouseMove);
+    window.removeEventListener('mouseup', this._onMiddleMouseUp);
   }
 
   private _onPointerMove(
