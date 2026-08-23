@@ -49,10 +49,19 @@ for (const methodName of methodNames) {
         const onAbort = () => this._terminateWorker();
         signal.addEventListener('abort', onAbort);
 
+        const worker = this._worker!;
+        const workerError = new Promise<never>((_resolve, reject) => {
+          worker.addEventListener(
+            'error',
+            (event) => reject(event.error || Error(event.message)),
+            { once: true },
+          );
+        });
+
         return abortable(
           signal,
           // @ts-ignore - TypeScript can't figure this out
-          this._workerApi![methodName](...args),
+          Promise.race([this._workerApi![methodName](...args), workerError]),
         ).finally(() => {
           // No longer care about aborting - this task is complete.
           signal.removeEventListener('abort', onAbort);
