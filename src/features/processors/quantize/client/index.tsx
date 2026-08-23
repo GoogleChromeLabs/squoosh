@@ -1,4 +1,4 @@
-import { h, Component } from 'preact';
+import { h, Component, Fragment } from 'preact';
 import { Options as QuantizeOptions } from '../shared/meta';
 import * as style from 'client/lazy-app/Compress/Options/style.css';
 import {
@@ -9,6 +9,7 @@ import {
 import Expander from 'client/lazy-app/Compress/Options/Expander';
 import Select from 'client/lazy-app/Compress/Options/Select';
 import Range from 'client/lazy-app/Compress/Options/Range';
+import Checkbox from 'client/lazy-app/Compress/Options/Checkbox';
 
 const konamiPromise = konami();
 
@@ -38,6 +39,7 @@ export class Options extends Component<Props, State> {
 
     const newOptions: QuantizeOptions = {
       zx: inputFieldValueAsNumber(form.zx, options.zx),
+      alphaOnly: !!form.alphaOnly && form.alphaOnly.checked,
       maxNumColors: inputFieldValueAsNumber(
         form.maxNumColors,
         options.maxNumColors,
@@ -67,17 +69,27 @@ export class Options extends Component<Props, State> {
         </Expander>
         <Expander>
           {options.zx ? null : (
-            <div class={style.optionOneCell}>
-              <Range
-                name="maxNumColors"
-                min="2"
-                max="256"
-                value={options.maxNumColors}
-                onInput={this.onChange}
-              >
-                Colors:
-              </Range>
-            </div>
+            <Fragment>
+              <div class={style.optionOneCell}>
+                <Range
+                  name="maxNumColors"
+                  min="2"
+                  max="256"
+                  value={options.maxNumColors}
+                  onInput={this.onChange}
+                >
+                  Colors:
+                </Range>
+              </div>
+              <label class={style.optionToggle}>
+                Alpha only
+                <Checkbox
+                  name="alphaOnly"
+                  checked={options.alphaOnly}
+                  onChange={this.onChange}
+                />
+              </label>
+            </Fragment>
           )}
         </Expander>
         <div class={style.optionOneCell}>
