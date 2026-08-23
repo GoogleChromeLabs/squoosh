@@ -16,6 +16,37 @@ import { Options } from '../shared/meta';
 
 let emscriptenModule: Promise<QuantizerModule>;
 
+function alphaQuantize(
+  module: QuantizerModule,
+  data: ImageData,
+  opts: Options,
+): Uint8ClampedArray {
+  const alphaData = new Uint8ClampedArray(data.data.length);
+
+  for (let i = 0; i < data.data.length; i += 4) {
+    alphaData[i] = alphaData[i + 1] = alphaData[i + 2] = data.data[i + 3];
+    alphaData[i + 3] = 255;
+  }
+
+  const result = module.quantize(
+    alphaData,
+    data.width,
+    data.height,
+    opts.maxNumColors,
+    opts.dither,
+  );
+
+  for (let i = 0; i < result.length; i += 4) {
+    const alpha = result[i];
+    result[i] = data.data[i];
+    result[i + 1] = data.data[i + 1];
+    result[i + 2] = data.data[i + 2];
+    result[i + 3] = alpha;
+  }
+
+  return result;
+}
+
 export default async function process(
   data: ImageData,
   opts: Options,
@@ -28,6 +59,8 @@ export default async function process(
 
   const result = opts.zx
     ? module.zx_quantize(data.data, data.width, data.height, opts.dither)
+    : opts.alphaOnly
+    ? alphaQuantize(module, data, opts)
     : module.quantize(
         data.data,
         data.width,

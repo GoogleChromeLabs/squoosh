@@ -12,12 +12,14 @@
  */
 export interface Options {
   zx: number;
+  alphaOnly: boolean;
   maxNumColors: number;
   dither: number;
 }
 
 export const defaultOptions: Options = {
   zx: 0,
+  alphaOnly: false,
   maxNumColors: 256,
   dither: 1.0,
 };
