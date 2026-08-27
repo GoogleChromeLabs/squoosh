@@ -1,6 +1,0 @@
-{
-  "name": "wp2",
-  "scripts": {
-    "build": "../build-cpp.sh"
-  }
-}

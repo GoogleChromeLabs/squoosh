@@ -360,17 +360,6 @@ export class Options extends Component<Props, State> {
                   Segments:
                 </Range>
               </div>
-              <div class={style.optionOneCell}>
-                <Range
-                  name="partitions"
-                  min="0"
-                  max="3"
-                  value={options.partitions}
-                  onInput={this.onChange}
-                >
-                  Partitions:
-                </Range>
-              </div>
             </div>
           ) : null}
         </Expander>

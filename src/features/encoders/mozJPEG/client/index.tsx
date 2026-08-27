@@ -44,7 +44,7 @@ export class Options extends Component<Props, State> {
     const { options } = this.props;
 
     const newOptions: EncodeOptions = {
-      // Copy over options the form doesn't currently care about, eg arithmetic
+      // Copy over options the form doesn't currently care about
       ...this.props.options,
       // And now stuff from the form:
       // .checked
@@ -53,6 +53,18 @@ export class Options extends Component<Props, State> {
       optimize_coding: inputFieldChecked(
         form.optimize_coding,
         options.optimize_coding,
+      ),
+      trellis_quant: inputFieldChecked(
+        form.trellis_quant,
+        options.trellis_quant,
+      ),
+      trellis_quant_dc: inputFieldChecked(
+        form.trellis_quant_dc,
+        options.trellis_quant_dc,
+      ),
+      overshoot_deringing: inputFieldChecked(
+        form.overshoot_deringing,
+        options.overshoot_deringing,
       ),
       trellis_multipass: inputFieldChecked(
         form.trellis_multipass,
@@ -253,44 +265,76 @@ export class Options extends Component<Props, State> {
                 </Select>
               </label>
               <label class={style.optionToggle}>
-                Trellis multipass
+                Overshoot deringing
                 <Checkbox
-                  name="trellis_multipass"
-                  checked={options.trellis_multipass}
+                  name="overshoot_deringing"
+                  checked={options.overshoot_deringing}
                   onChange={this.onChange}
                 />
               </label>
+              <label class={style.optionToggle}>
+                Trellis quantization
+                <Checkbox
+                  name="trellis_quant"
+                  checked={options.trellis_quant}
+                  onChange={this.onChange}
+                />
+              </label>
+              {/* Every option below is a no-op unless trellis quantization is
+                  on, so they're nested under it. */}
               <Expander>
-                {options.trellis_multipass ? (
-                  <label class={style.optionToggle}>
-                    Optimize zero block runs
-                    <Checkbox
-                      name="trellis_opt_zero"
-                      checked={options.trellis_opt_zero}
-                      onChange={this.onChange}
-                    />
-                  </label>
+                {options.trellis_quant ? (
+                  <div>
+                    <label class={style.optionToggle}>
+                      Trellis quantize DC
+                      <Checkbox
+                        name="trellis_quant_dc"
+                        checked={options.trellis_quant_dc}
+                        onChange={this.onChange}
+                      />
+                    </label>
+                    <label class={style.optionToggle}>
+                      Trellis multipass
+                      <Checkbox
+                        name="trellis_multipass"
+                        checked={options.trellis_multipass}
+                        onChange={this.onChange}
+                      />
+                    </label>
+                    <Expander>
+                      {options.trellis_multipass ? (
+                        <label class={style.optionToggle}>
+                          Optimize zero block runs
+                          <Checkbox
+                            name="trellis_opt_zero"
+                            checked={options.trellis_opt_zero}
+                            onChange={this.onChange}
+                          />
+                        </label>
+                      ) : null}
+                    </Expander>
+                    <label class={style.optionToggle}>
+                      Optimize after trellis quantization
+                      <Checkbox
+                        name="trellis_opt_table"
+                        checked={options.trellis_opt_table}
+                        onChange={this.onChange}
+                      />
+                    </label>
+                    <div class={style.optionOneCell}>
+                      <Range
+                        name="trellis_loops"
+                        min="1"
+                        max="50"
+                        value={options.trellis_loops}
+                        onInput={this.onChange}
+                      >
+                        Trellis quantization passes:
+                      </Range>
+                    </div>
+                  </div>
                 ) : null}
               </Expander>
-              <label class={style.optionToggle}>
-                Optimize after trellis quantization
-                <Checkbox
-                  name="trellis_opt_table"
-                  checked={options.trellis_opt_table}
-                  onChange={this.onChange}
-                />
-              </label>
-              <div class={style.optionOneCell}>
-                <Range
-                  name="trellis_loops"
-                  min="1"
-                  max="50"
-                  value={options.trellis_loops}
-                  onInput={this.onChange}
-                >
-                  Trellis quantization passes:
-                </Range>
-              </div>
             </div>
           ) : null}
         </Expander>

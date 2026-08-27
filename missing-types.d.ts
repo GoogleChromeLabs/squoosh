@@ -60,3 +60,13 @@ declare var ga: {
 };
 
 declare const __PRODUCTION__: boolean;
+
+// wasm-bindgen (as of the version codecs/oxipng builds with) emits
+// `[Symbol.dispose](): void;` on its generated classes, for the explicit
+// resource management proposal. TypeScript only ships that in its lib from 5.2,
+// and this project is on 4.x - without the `unique symbol` declaration the
+// generated squoosh_oxipng.d.ts fails to compile with TS1165/TS2339.
+interface SymbolConstructor {
+  readonly dispose: unique symbol;
+  readonly asyncDispose: unique symbol;
+}

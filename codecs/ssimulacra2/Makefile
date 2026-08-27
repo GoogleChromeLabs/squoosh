@@ -174,7 +174,14 @@ $(LIBHWY_A): $(HWY_DIR)/CMakeLists.txt $(MAKEFILE_DEPS)
 	$(MAKE) -C $(HWY_BUILD) hwy
 
 # ---- brotli -----------------------------------------------------------------
-$(LIBBROTLI_COMMON) $(LIBBROTLI_DEC) $(LIBBROTLI_ENC): $(BROTLI_DIR)/CMakeLists.txt $(MAKEFILE_DEPS)
+# One recipe produces all three archives, so it must hang off a single stamp
+# target. Listing the three archives as the targets of one recipe makes GNU make
+# run that recipe once *per target* under -j, and the concurrent copies race in
+# the same CMake build dir - which shows up as
+# "CMakeDetermineCCompiler.cmake:226 (configure_file): No such file or
+# directory". Same pattern as codecs/jxl's libs.stamp.
+$(LIBBROTLI_COMMON) $(LIBBROTLI_DEC) $(LIBBROTLI_ENC): $(BROTLI_BUILD)/libs.stamp
+$(BROTLI_BUILD)/libs.stamp: $(BROTLI_DIR)/CMakeLists.txt $(MAKEFILE_DEPS)
 	emcmake cmake \
 		-DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) \
 		-DCMAKE_C_FLAGS="$(SIMD_FLAGS)" \
@@ -184,6 +191,7 @@ $(LIBBROTLI_COMMON) $(LIBBROTLI_DEC) $(LIBBROTLI_ENC): $(BROTLI_DIR)/CMakeLists.
 		-B $(BROTLI_BUILD) \
 		$(BROTLI_DIR)
 	$(MAKE) -C $(BROTLI_BUILD) brotlienc-static brotlidec-static brotlicommon-static
+	touch $@
 
 # ---- lcms2 ------------------------------------------------------------------
 # --host tells autotools we're cross-compiling, so configure skips its "can we

@@ -1,6 +1,6 @@
 {
   "name": "oxipng",
   "scripts": {
-    "build": "RUST_IMG=rustlang/rust@sha256:5fd16a5576c22c8fdd5d659247755999e426c04de8dcf18a41ea446c5f253309 ../build-rust.sh ./build.sh"
+    "build": "RUST_IMG=rustlang/rust@sha256:73e6ce0d8fa32942ceb51ed4837f3f46090ade41686bd1c6db27d31e60f23867 ../build-rust.sh ./build.sh"
   }
 }

@@ -30,6 +30,8 @@ export class Options extends Component<Props, {}> {
     const options: EncodeOptions = {
       level: inputFieldValueAsNumber(form.level),
       interlace: inputFieldChecked(form.interlace),
+      zopfli: inputFieldChecked(form.zopfli),
+      preserveAlpha: inputFieldChecked(form.preserveAlpha),
     };
     this.props.onChange(options);
   };
@@ -42,6 +44,22 @@ export class Options extends Component<Props, {}> {
           <Checkbox
             name="interlace"
             checked={options.interlace}
+            onChange={this.onChange}
+          />
+        </label>
+        <label class={style.optionToggle}>
+          Preserve alpha
+          <Checkbox
+            name="preserveAlpha"
+            checked={options.preserveAlpha}
+            onChange={this.onChange}
+          />
+        </label>
+        <label class={style.optionToggle}>
+          Zopfli
+          <Checkbox
+            name="zopfli"
+            checked={options.zopfli}
             onChange={this.onChange}
           />
         </label>

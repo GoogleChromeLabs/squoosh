@@ -13,6 +13,14 @@
 export interface EncodeOptions {
   level: number;
   interlace: boolean;
+  /** Use Zopfli instead of libdeflater: smaller files, much slower. */
+  zopfli: boolean;
+  /**
+   * Keep the colour channels of fully-transparent pixels. Off (the default)
+   * lets oxipng rewrite them to whatever compresses best - invisible when
+   * composited normally, but destructive.
+   */
+  preserveAlpha: boolean;
 }
 
 export const label = 'OxiPNG';
@@ -22,4 +30,6 @@ export const extension = 'png';
 export const defaultOptions: EncodeOptions = {
   level: 2,
   interlace: false,
+  zopfli: false,
+  preserveAlpha: false,
 };
