@@ -1,6 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
-export const optimise: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => [number, number];
+export const optimise: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => [number, number];
 export const __wbg_wbg_rayon_poolbuilder_free: (a: number, b: number) => void;
 export const initThreadPool: (a: number) => any;
 export const wbg_rayon_poolbuilder_build: (a: number) => void;

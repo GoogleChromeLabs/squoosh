@@ -3,7 +3,7 @@
 
 export function initThreadPool(num_threads: number): Promise<any>;
 
-export function optimise(data: Uint8ClampedArray, width: number, height: number, level: number, interlace: boolean, zopfli: boolean, preserve_alpha: boolean): Uint8Array;
+export function optimise(data: Uint8ClampedArray, width: number, height: number, level: number, interlace: boolean, preserve_alpha: boolean): Uint8Array;
 
 export class wbg_rayon_PoolBuilder {
     private constructor();
@@ -19,7 +19,7 @@ export function wbg_rayon_start_worker(receiver: number): void;
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
-    readonly optimise: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => [number, number];
+    readonly optimise: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => [number, number];
     readonly __wbg_wbg_rayon_poolbuilder_free: (a: number, b: number) => void;
     readonly initThreadPool: (a: number) => any;
     readonly wbg_rayon_poolbuilder_build: (a: number) => void;

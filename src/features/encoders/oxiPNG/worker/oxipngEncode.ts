@@ -41,7 +41,6 @@ export default async function encode(
     data.height,
     options.level,
     options.interlace,
-    options.zopfli,
     options.preserveAlpha,
   ).buffer;
 }

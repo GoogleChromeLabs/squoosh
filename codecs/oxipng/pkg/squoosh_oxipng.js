@@ -17,14 +17,13 @@ export function initThreadPool(num_threads) {
  * @param {number} height
  * @param {number} level
  * @param {boolean} interlace
- * @param {boolean} zopfli
  * @param {boolean} preserve_alpha
  * @returns {Uint8Array}
  */
-export function optimise(data, width, height, level, interlace, zopfli, preserve_alpha) {
+export function optimise(data, width, height, level, interlace, preserve_alpha) {
     const ptr0 = passArray8ToWasm0(data, wasm.__wbindgen_malloc);
     const len0 = WASM_VECTOR_LEN;
-    const ret = wasm.optimise(ptr0, len0, width, height, level, interlace, zopfli, preserve_alpha);
+    const ret = wasm.optimise(ptr0, len0, width, height, level, interlace, preserve_alpha);
     var v2 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
     wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
     return v2;
