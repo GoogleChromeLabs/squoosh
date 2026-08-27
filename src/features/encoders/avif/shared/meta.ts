@@ -34,4 +34,5 @@ export const defaultOptions: EncodeOptions = {
   blur: 0,
   previewProgressiveFrame: false,
   independentMainLayer: false,
+  tiling: true,
 };

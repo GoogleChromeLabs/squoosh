@@ -16,6 +16,8 @@ export interface EncodeOptions {
   groupOrder: number;
   /** Synthesized noise as an ISO film speed: 0 = off, higher = grainier. Lossy only. */
   photonNoiseIso: number;
+  /** Decoding speed tier: 0 = default/best density, 4 = fastest to decode. */
+  decodingSpeed: number;
 }
 
 export interface JXLModule extends EmscriptenWasm.Module {

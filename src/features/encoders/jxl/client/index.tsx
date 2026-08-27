@@ -36,6 +36,7 @@ interface State {
   progressiveDC: number;
   groupOrder: number;
   photonNoiseIso: number;
+  decodingSpeed: number;
 }
 
 export class Options extends Component<Props, State> {
@@ -67,6 +68,7 @@ export class Options extends Component<Props, State> {
       progressiveDC: options.progressiveDC,
       groupOrder: options.groupOrder,
       photonNoiseIso: options.photonNoiseIso,
+      decodingSpeed: options.decodingSpeed,
     };
   }
 
@@ -117,6 +119,7 @@ export class Options extends Component<Props, State> {
             : 0,
           groupOrder: optionState.groupOrder,
           photonNoiseIso: optionState.photonNoiseIso,
+          decodingSpeed: optionState.decodingSpeed,
         };
 
         // Updating options, so we don't recalculate in getDerivedStateFromProps.
@@ -146,6 +149,7 @@ export class Options extends Component<Props, State> {
       progressiveDC,
       groupOrder,
       photonNoiseIso,
+      decodingSpeed,
     }: State,
   ) {
     return (
@@ -296,6 +300,16 @@ export class Options extends Component<Props, State> {
                   </div>
                 )}
               </Expander>
+              <div class={style.optionOneCell}>
+                <Range
+                  min="0"
+                  max="4"
+                  value={decodingSpeed}
+                  onInput={this._inputChange('decodingSpeed', 'number')}
+                >
+                  Faster decoding:
+                </Range>
+              </div>
             </div>
           )}
         </Expander>

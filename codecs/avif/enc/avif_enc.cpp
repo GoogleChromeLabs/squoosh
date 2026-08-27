@@ -83,6 +83,11 @@ struct AvifOptions {
   // Force the progressive output's final (main) layer to be a keyframe, so it
   // decodes independently of the base layer rather than as a refinement of it.
   bool independentMainLayer;
+  // Split the image into tiles that libaom can encode (and a decoder can decode)
+  // in parallel. On = libavif's autoTiling, which picks a tile count from the
+  // image dimensions; off = a single tile. Tiling costs a little compression
+  // efficiency (tile boundaries break prediction) in exchange for parallelism.
+  bool tiling;
 };
 
 // The scaling ratios AOM supports for layered (progressive) encoding. Indexed by
@@ -483,7 +488,7 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
     encoder->qualityAlpha = options.progressiveQuality;
     encoder->speed = options.speed;
     encoder->maxThreads = emscripten_num_logical_cores();
-    encoder->autoTiling = AVIF_TRUE;
+    encoder->autoTiling = options.tiling ? AVIF_TRUE : AVIF_FALSE;
     if (!applyCodecSpecificOptions(encoder.get(), options)) {
       return val::null();
     }
@@ -527,8 +532,9 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
 
   encoder->speed = options.speed;
   encoder->maxThreads = emscripten_num_logical_cores();
-  // Let libavif choose a sensible number of tiles based on image dimensions.
-  encoder->autoTiling = AVIF_TRUE;
+  // When on, let libavif choose a sensible number of tiles based on image
+  // dimensions; when off, leave tileRowsLog2/tileColsLog2 at 0 (a single tile).
+  encoder->autoTiling = options.tiling ? AVIF_TRUE : AVIF_FALSE;
   // Progressive output has one extra layer (the base); a plain encode is a
   // single image.
   encoder->extraLayerCount = needBaseLayer ? 1 : 0;
@@ -600,7 +606,8 @@ EMSCRIPTEN_BINDINGS(my_module) {
       .field("scalingMode", &AvifOptions::scalingMode)
       .field("blur", &AvifOptions::blur)
       .field("previewProgressiveFrame", &AvifOptions::previewProgressiveFrame)
-      .field("independentMainLayer", &AvifOptions::independentMainLayer);
+      .field("independentMainLayer", &AvifOptions::independentMainLayer)
+      .field("tiling", &AvifOptions::tiling);
 
   function("encode", &encode);
 }

@@ -88,16 +88,23 @@ struct JXLOptions {
   // ~ --photon_noise_iso): 0 = off, higher = grainier (e.g. 100 low, 3200 high).
   // Lossy only; set via the float option API. Works in VarDCT and modular.
   float photonNoiseIso;
+  // Decoding speed tier (DECODING_SPEED, ~ --faster_decoding): 0 (default,
+  // slowest to decode but best density) to 4 (fastest to decode, at some cost
+  // in quality/density). Trades encoded density for decode-side work, so unlike
+  // `effort` it changes the bitstream. Applies to both VarDCT and modular, and
+  // to lossless as well as lossy.
+  int decodingSpeed;
 };
 
 val encode(std::string image, int width, int height, JXLOptions options) {
   JXL_ENC_LOG(
       "jxl_enc: encoding %dx%d (%zu bytes in), quality=%g qualityAlpha=%g lossless=%d effort=%d "
       "modular=%d progressiveAC=%d qProgressiveAC=%d progressiveDC=%d groupOrder=%d "
-      "photonNoiseIso=%g\n",
+      "photonNoiseIso=%g decodingSpeed=%d\n",
       width, height, image.size(), options.quality, options.qualityAlpha, options.lossless,
       options.effort, options.modular, options.progressiveAC, options.qProgressiveAC,
-      options.progressiveDC, options.groupOrder, options.photonNoiseIso);
+      options.progressiveDC, options.groupOrder, options.photonNoiseIso,
+      options.decodingSpeed);
 
   JxlEncoderPtr enc = JxlEncoderMake(/*memory_manager=*/nullptr);
 
@@ -160,6 +167,14 @@ val encode(std::string image, int width, int height, JXLOptions options) {
 
   EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
       frame_settings, JXL_ENC_FRAME_SETTING_EFFORT, options.effort));
+
+  // Optimise the bitstream for faster decoding. 0 is libjxl's default, so only
+  // set it when a higher tier was asked for. Unlike the lossy-only knobs below
+  // this is set unconditionally - it affects lossless encodes too.
+  if (options.decodingSpeed > 0) {
+    EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
+        frame_settings, JXL_ENC_FRAME_SETTING_DECODING_SPEED, options.decodingSpeed));
+  }
 
   // Mode only applies to lossy: lossless always uses modular internally, so we
   // leave MODULAR at its default there and let libjxl force it.
@@ -294,7 +309,8 @@ EMSCRIPTEN_BINDINGS(my_module) {
       .field("qProgressiveAC", &JXLOptions::qProgressiveAC)
       .field("progressiveDC", &JXLOptions::progressiveDC)
       .field("groupOrder", &JXLOptions::groupOrder)
-      .field("photonNoiseIso", &JXLOptions::photonNoiseIso);
+      .field("photonNoiseIso", &JXLOptions::photonNoiseIso)
+      .field("decodingSpeed", &JXLOptions::decodingSpeed);
 
   function("encode", &encode);
 }

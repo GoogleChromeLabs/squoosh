@@ -1,9 +1,9 @@
 # Emscripten build for JPEG XL (libjxl), encoder + decoder.
 #
-# Pinned to a post-0.11.2 libjxl commit (see CODEC_VERSION) that fixes encoder
-# bugs in the 0.11.2 tag. The encoder wrapper (enc/jxl_enc.cpp) and decoder
-# wrapper (dec/jxl_dec.cpp) use libjxl's *stable public C API* (jxl/encode.h,
-# jxl/decode.h) rather than internal headers, so they survive version bumps.
+# Pinned to the libjxl v0.12.0 release (see CODEC_VERSION). The encoder wrapper
+# (enc/jxl_enc.cpp) and decoder wrapper (dec/jxl_dec.cpp) use libjxl's *stable
+# public C API* (jxl/encode.h, jxl/decode.h) rather than internal headers, so
+# they survive version bumps.
 #
 # We produce a SINGLE build of each, with WebAssembly SIMD enabled (-msimd128).
 # The encoder additionally uses pthreads: libjxl's resizable parallel runner
@@ -17,19 +17,28 @@
 #
 # libjxl's third_party deps (highway, brotli, skcms, ...) are git submodules and
 # are NOT in the GitHub release tarball, and skcms lives on a googlesource git.
-# So we fetch the pinned commit via git and init the submodules, which pins every
-# dep to the exact revisions libjxl tested (deps.sh) - more reliable than
-# stitching together separate tarballs. (Pinned to a post-0.11.2 commit that
-# fixes encoder bugs present in the 0.11.2 tag.)
+# So we fetch the pinned revision via git and init the submodules, which pins
+# every dep to the exact revisions libjxl tested (deps.sh) - more reliable than
+# stitching together separate tarballs. CODEC_VERSION accepts a tag or a raw SHA;
+# either is fetched by `git fetch <url> <rev> --depth 1`.
 #
 # Run inside the shared codecs Docker via ../build-cpp.sh (emscripten/emsdk),
 # whose CMD is `emmake make -j<nproc>`. CXXFLAGS / CFLAGS / LDFLAGS are exported
 # by codecs/cpp.Dockerfile.
 
 CODEC_URL = https://github.com/libjxl/libjxl.git
-CODEC_VERSION = 1dfa3c26b5ac199135bddcb9d4d096ff12a7b837
+CODEC_VERSION = v0.12.0
 CODEC_DIR = node_modules/jxl
 CODEC_BUILD_DIR := $(CODEC_DIR)/build
+
+# Fetch stamp. An already-checked-out source tree has no prerequisite that
+# changes when CODEC_VERSION does, so make would happily keep building the old
+# revision after a bump. Naming the stamp after the pinned version means a bump
+# names a file that does not exist yet, which re-runs the fetch below. It lives
+# outside CODEC_DIR because that whole tree (build dir included) is wiped and
+# re-cloned on a bump.
+STAMP_DIR := node_modules/.fetched
+CODEC_STAMP := $(STAMP_DIR)/jxl-$(CODEC_VERSION)
 
 ENVIRONMENT = worker
 
@@ -157,7 +166,7 @@ $(CODEC_BUILD_DIR)/libs.stamp: $(CODEC_BUILD_DIR)/Makefile
 	$(MAKE) -C $(CODEC_BUILD_DIR) jxl jxl_cms jxl_threads brotlienc brotlidec brotlicommon hwy
 	touch $@
 
-$(CODEC_BUILD_DIR)/Makefile: $(CODEC_DIR)/CMakeLists.txt $(MAKEFILE_DEPS)
+$(CODEC_BUILD_DIR)/Makefile: $(CODEC_STAMP) $(MAKEFILE_DEPS)
 	emcmake cmake \
 		-DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) \
 		-DCMAKE_C_FLAGS="$(SIMD_FLAGS) $(PTHREAD_FLAGS)" \
@@ -186,12 +195,15 @@ $(CODEC_BUILD_DIR)/Makefile: $(CODEC_DIR)/CMakeLists.txt $(MAKEFILE_DEPS)
 		$(CODEC_DIR)
 
 # ---- source fetch (git commit + submodules) ---------------------------------
-$(CODEC_DIR)/CMakeLists.txt:
-	$(RM) -r $(@D)
-	git init $(@D)
-	git -C $(@D) fetch $(CODEC_URL) $(CODEC_VERSION) --depth 1
-	git -C $(@D) checkout FETCH_HEAD
-	git -C $(@D) submodule update --init --depth 1 --recursive --jobs `nproc`
+# Stamped by CODEC_VERSION - see STAMP_DIR above.
+$(CODEC_STAMP):
+	$(RM) -r $(CODEC_DIR) $(STAMP_DIR)/jxl-*
+	mkdir -p $(STAMP_DIR)
+	git init $(CODEC_DIR)
+	git -C $(CODEC_DIR) fetch $(CODEC_URL) $(CODEC_VERSION) --depth 1
+	git -C $(CODEC_DIR) checkout FETCH_HEAD
+	git -C $(CODEC_DIR) submodule update --init --depth 1 --recursive --jobs `nproc`
+	touch $@
 
 clean:
 	$(RM) $(OUT_JS) $(OUT_WASM) $(OUT_WASM:.wasm=.wasm.map)

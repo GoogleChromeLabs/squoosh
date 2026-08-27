@@ -5,22 +5,34 @@
 # are gone, so it's all inlined here.
 
 # using libavif from https://github.com/AOMediaCodec/libavif
-LIBAVIF_URL = https://github.com/AOMediaCodec/libavif/archive/refs/tags/v1.4.2.tar.gz
-LIBAVIF_PACKAGE = node_modules/libavif.tar.gz
+LIBAVIF_VERSION = v1.4.2
+LIBAVIF_URL = https://github.com/AOMediaCodec/libavif/archive/refs/tags/$(LIBAVIF_VERSION).tar.gz
 
 # using libaom from https://aomedia.googlesource.com/aom
-LIBAOM_URL = https://aomedia.googlesource.com/aom/+archive/v3.14.1.tar.gz
-LIBAOM_PACKAGE = node_modules/libaom.tar.gz
+LIBAOM_VERSION = v3.15.0
+LIBAOM_URL = https://aomedia.googlesource.com/aom/+archive/$(LIBAOM_VERSION).tar.gz
 
 CODEC_DIR = node_modules/libavif
 BUILD_DIR = node_modules/build
 LIBAOM_DIR = node_modules/libaom
 
-# We must build libsharpyuv from a specific libwebp commit
-# See libavif/ext/libsharpyuv.cmd for more detail
-LIBWEBP_URL_WITH_SHARPYUV = https://chromium.googlesource.com/webm/libwebp/+archive/e2c85878f6a33f29948b43d3492d9cdaf801aa54.tar.gz
+# We must build libsharpyuv from the libwebp revision libavif expects.
+# libavif v1.4.2's ext/libsharpyuv.cmd clones libwebp v1.6.0, so track that tag.
+LIBWEBP_VERSION = v1.6.0
+LIBWEBP_URL_WITH_SHARPYUV = https://chromium.googlesource.com/webm/libwebp/+archive/refs/tags/$(LIBWEBP_VERSION).tar.gz
 LIBWEBP_DIR := $(CODEC_DIR)/ext/libwebp
 LIBSHARPYUV := $(LIBWEBP_DIR)/build/libsharpyuv.a
+
+# Fetch stamps. A downloaded tarball or an already-extracted source tree has no
+# prerequisite that changes when a pin above does, so make would happily keep
+# building last version's sources after a bump. Naming each stamp after its
+# pinned version means a bump names a file that does not exist yet, which
+# re-runs the fetch; the recipes clear the old tree first so files deleted
+# upstream don't survive the upgrade.
+STAMP_DIR := node_modules/.fetched
+LIBAVIF_STAMP := $(STAMP_DIR)/libavif-$(LIBAVIF_VERSION)
+LIBAOM_STAMP  := $(STAMP_DIR)/libaom-$(LIBAOM_VERSION)
+LIBWEBP_STAMP := $(STAMP_DIR)/libwebp-$(LIBWEBP_VERSION)
 
 OUT_JS = enc/avif_enc_mt.js
 OUT_WASM = $(OUT_JS:.js=.wasm)
@@ -124,7 +136,7 @@ $(OUT_JS): $(OUT_CPP) $(LIBAOM_OUT) $(CODEC_OUT) $(LIBSHARPYUV) $(MAKEFILE_DEPS)
 	# to detect pthread workers, so a static string is equivalent.
 	sed -i.bak 's/"em-pthread-" + PThread.nextWorkerID/"em-pthread"/g' $@ && rm $@.bak
 
-$(CODEC_OUT): $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_OUT) $(LIBSHARPYUV) $(MAKEFILE_DEPS)
+$(CODEC_OUT): $(LIBAVIF_STAMP) $(LIBAOM_OUT) $(LIBSHARPYUV) $(MAKEFILE_DEPS)
 	emcmake cmake \
 		-DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) \
 		-DCMAKE_C_FLAGS="$(CFLAGS) $(DEP_COMPILE_FLAGS)" \
@@ -138,7 +150,12 @@ $(CODEC_OUT): $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_OUT) $(LIBSHARPYUV) $(MAKEFIL
 		$(CODEC_DIR) && \
 	$(MAKE) -C $(CODEC_BUILD_DIR)
 
-$(LIBAOM_OUT): $(LIBAOM_DIR)/CMakeLists.txt $(MAKEFILE_DEPS)
+# We build libaom's default `all` target, so everything the CMake config enables
+# gets compiled - hence the ENABLE_* switches below. Note ENABLE_APPS: libaom
+# 3.15.0 split the aomenc/aomdec applications out of ENABLE_EXAMPLES into a new
+# ENABLE_APPS option that defaults to ON, so ENABLE_EXAMPLES=0 (which covered
+# them up to 3.14.x) is no longer enough to keep aomenc out of the build.
+$(LIBAOM_OUT): $(LIBAOM_STAMP) $(MAKEFILE_DEPS)
 	emcmake cmake \
 		-DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) \
 		-DCMAKE_C_FLAGS="$(CFLAGS) $(DEP_COMPILE_FLAGS)" \
@@ -147,6 +164,7 @@ $(LIBAOM_OUT): $(LIBAOM_DIR)/CMakeLists.txt $(MAKEFILE_DEPS)
 		-DAOM_TARGET_CPU=generic \
 		-DENABLE_DOCS=0 \
 		-DENABLE_TESTS=0 \
+		-DENABLE_APPS=0 \
 		-DENABLE_EXAMPLES=0 \
 		-DENABLE_TOOLS=0 \
 		-DCONFIG_ACCOUNTING=1 \
@@ -158,41 +176,35 @@ $(LIBAOM_OUT): $(LIBAOM_DIR)/CMakeLists.txt $(MAKEFILE_DEPS)
 		$(LIBAOM_DIR) && \
 	$(MAKE) -C $(LIBAOM_BUILD_DIR)
 
-# LIBAOM EXTRACTION SECTION
+# ---- source fetch (stamped by pinned version - see STAMP_DIR above) ---------
 
-# Download the libaom tarball
-$(LIBAOM_PACKAGE):
-	mkdir -p $(@D)
-	curl -sL $(LIBAOM_URL) -o $@
+$(LIBAOM_STAMP):
+	$(RM) -r $(LIBAOM_DIR) $(STAMP_DIR)/libaom-*
+	mkdir -p $(LIBAOM_DIR) $(STAMP_DIR)
+	curl -sL $(LIBAOM_URL) | tar xzm -C $(LIBAOM_DIR)
+	touch $@
 
-# Extract libaom from the tarball
-$(LIBAOM_DIR)/CMakeLists.txt: $(LIBAOM_PACKAGE)
-	mkdir -p $(@D)
-	tar xzm -C $(@D) -f $(LIBAOM_PACKAGE)
+# Refreshing libavif wipes ext/libwebp with it, so drop the libwebp stamp too -
+# that forces the libwebp fetch below to re-run rather than leaving a stamp
+# claiming a tree that no longer exists.
+$(LIBAVIF_STAMP):
+	$(RM) -r $(CODEC_DIR) $(STAMP_DIR)/libavif-* $(STAMP_DIR)/libwebp-*
+	mkdir -p $(CODEC_DIR) $(STAMP_DIR)
+	curl -sL $(LIBAVIF_URL) | tar xzm --strip 1 -C $(CODEC_DIR)
+	touch $@
 
-# LIBAVIF EXTRACTION SECTION
-
-# Download the libavif tarball
-$(LIBAVIF_PACKAGE):
-	mkdir -p $(@D)
-	curl -sL $(LIBAVIF_URL) -o $@
-
-# Extract libavif from the tarball
-$(CODEC_DIR)/CMakeLists.txt: $(LIBAVIF_PACKAGE)
-	mkdir -p $(@D)
-	tar xzm --strip 1 -C $(@D) -f $(LIBAVIF_PACKAGE)
-
-# Create libavif/ext/libwebp
-$(LIBWEBP_DIR)/CMakeLists.txt: $(CODEC_DIR)/CMakeLists.txt
-	mkdir -p $(LIBWEBP_DIR)
-	curl -sL $(LIBWEBP_URL_WITH_SHARPYUV) \
-		| tar xzm -C $(LIBWEBP_DIR)
+# libwebp is extracted INTO the libavif tree, so it must be fetched after it.
+$(LIBWEBP_STAMP): $(LIBAVIF_STAMP)
+	$(RM) -r $(LIBWEBP_DIR) $(STAMP_DIR)/libwebp-*
+	mkdir -p $(LIBWEBP_DIR) $(STAMP_DIR)
+	curl -sL $(LIBWEBP_URL_WITH_SHARPYUV) | tar xzm -C $(LIBWEBP_DIR)
+	touch $@
 
 # Build libsharpyuv.a. It's thread-free (no -pthread) - it links cleanly into
 # the shared-memory encoder because it uses no atomics/TLS. -msimd128 turns on
 # its hand-written SIMD chroma-conversion paths. This build doesn't inherit
 # CFLAGS, so SIMD is passed explicitly via CMAKE_C_FLAGS.
-$(LIBSHARPYUV): $(LIBWEBP_DIR)/CMakeLists.txt
+$(LIBSHARPYUV): $(LIBWEBP_STAMP)
 	mkdir -p $(@D)
 	emcmake cmake \
 		-DCMAKE_C_FLAGS="$(CFLAGS) $(SIMD_COMPILE_FLAGS)" \

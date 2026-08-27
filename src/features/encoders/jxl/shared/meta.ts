@@ -28,4 +28,5 @@ export const defaultOptions: EncodeOptions = {
   progressiveDC: 1,
   groupOrder: 0,
   photonNoiseIso: 0,
+  decodingSpeed: 0,
 };

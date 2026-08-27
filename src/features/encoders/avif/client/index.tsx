@@ -43,6 +43,7 @@ interface State {
   blur: number;
   previewProgressiveFrame: boolean;
   independentMainLayer: boolean;
+  tiling: boolean;
 }
 
 /**
@@ -95,6 +96,7 @@ export class Options extends Component<Props, State> {
       blur: options.blur,
       previewProgressiveFrame: options.previewProgressiveFrame,
       independentMainLayer: options.independentMainLayer,
+      tiling: options.tiling,
     };
   }
 
@@ -155,6 +157,7 @@ export class Options extends Component<Props, State> {
           previewProgressiveFrame:
             optionState.progressive && optionState.previewProgressiveFrame,
           independentMainLayer: optionState.independentMainLayer,
+          tiling: optionState.tiling,
         };
 
         // Updating options, so we don't recalculate in getDerivedStateFromProps.
@@ -194,6 +197,7 @@ export class Options extends Component<Props, State> {
       blur,
       previewProgressiveFrame,
       independentMainLayer,
+      tiling,
     }: State,
   ) {
     return (
@@ -416,6 +420,13 @@ export class Options extends Component<Props, State> {
                   </div>
                 )}
               </Expander>
+              <label class={style.optionToggle}>
+                Tiling
+                <Checkbox
+                  checked={tiling}
+                  onChange={this._inputChange('tiling', 'boolean')}
+                />
+              </label>
             </div>
           )}
         </Expander>

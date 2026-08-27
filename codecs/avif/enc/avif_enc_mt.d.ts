@@ -22,6 +22,7 @@ export interface EncodeOptions {
   blur: number;
   previewProgressiveFrame: boolean;
   independentMainLayer: boolean;
+  tiling: boolean;
 }
 
 export interface AVIFModule extends EmscriptenWasm.Module {
