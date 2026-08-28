@@ -68,21 +68,26 @@ struct JXLOptions {
   // Encoding mode (MODULAR): false = VarDCT (photographic), true = modular.
   // Only meaningful for lossy - lossless always uses modular internally.
   bool modular;
-  // "Progressive" toggle. Routes to PROGRESSIVE_AC in VarDCT mode, or to
-  // RESPONSIVE in modular mode (responsive is modular's progressive knob).
+  // "Progressive" toggle (PROGRESSIVE_AC, ~ --progressive_ac). Works in every
+  // mode - VarDCT, lossy modular and lossless. In modular it also implies
+  // Squeeze; see the RESPONSIVE block in encode().
   bool progressiveAC;
   // Progressive AC using LSB quantization (QPROGRESSIVE_AC, ~ --qprogressive_ac).
-  // In libjxl this takes precedence over progressiveAC when both are set.
+  // Splits the image over two passes rather than the default three. In libjxl
+  // this takes precedence over progressiveAC when both are set. Lossless
+  // ignores it: libjxl forces it on there regardless.
   bool qProgressiveAC;
   // Extra lower-resolution DC passes (PROGRESSIVE_DC, ~ --progressive_dc):
   // 0 = off, 1 = one extra pass, 2 = two extra passes. Only meaningful as part
-  // of a progressive encode, so it is ignored unless progressiveAC is set.
+  // of a progressive VarDCT encode - libjxl drops the frame flag in modular
+  // mode (FrameFlagsFromParams), which includes every lossless encode.
   int progressiveDC;
   // Group order (GROUP_ORDER, ~ --group_order): 0 = scanline, 1 = center-first
-  // ("Expand"). Only has an effect during progressive (multi-pass) decode. We
-  // leave the center at libjxl's default (image middle); an explicit center
-  // can't be supported alongside progressive DC, since libjxl reuses one
-  // unscaled pixel value across the full-res and reduced-resolution DC frames.
+  // ("Expand"). Decides which tiles land earliest in the codestream, so it
+  // applies to modular and lossless as well as VarDCT. We leave the center at
+  // libjxl's default (image middle); an explicit center can't be supported
+  // alongside progressive DC, since libjxl reuses one unscaled pixel value
+  // across the full-res and reduced-resolution DC frames.
   int groupOrder;
   // Synthesized photographic noise as an ISO film speed (PHOTON_NOISE,
   // ~ --photon_noise_iso): 0 = off, higher = grainier (e.g. 100 low, 3200 high).
@@ -176,56 +181,70 @@ val encode(std::string image, int width, int height, JXLOptions options) {
         frame_settings, JXL_ENC_FRAME_SETTING_DECODING_SPEED, options.decodingSpeed));
   }
 
-  // Mode only applies to lossy: lossless always uses modular internally, so we
-  // leave MODULAR at its default there and let libjxl force it.
-  bool modular = !options.lossless && options.modular;
-  if (modular) {
+  // Whether the bitstream ends up modular. The MODULAR option itself only
+  // applies to lossy: lossless always uses modular internally, so we leave it
+  // at its default there and let libjxl force it.
+  const bool modular = options.lossless || options.modular;
+  if (!options.lossless && options.modular) {
     EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
         frame_settings, JXL_ENC_FRAME_SETTING_MODULAR, 1));
   }
 
-  // Modular is always responsive (progressive). Non-responsive modular produces
-  // much larger files for little benefit, so we don't expose the choice - the
-  // VarDCT-only "Progressive" toggle and its extras don't apply in modular mode.
   if (modular) {
+    // Squeeze, modular's multi-resolution transform. Progressive rendering in
+    // modular is only possible on top of it: libjxl hands each progressive pass
+    // a range of Squeeze subbands to carry (the downsampling brackets in
+    // enc_modular.cc), so without Squeeze there are no reduced-resolution
+    // passes and a decoder has nothing to show but finished tiles.
+    //
+    // Lossy modular is squeezed unconditionally - that's libjxl's own default,
+    // and non-responsive lossy modular is much larger for little benefit.
+    // Lossless defaults to *no* Squeeze because it costs density, so we only
+    // turn it on when progressive was actually asked for.
     EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
-        frame_settings, JXL_ENC_FRAME_SETTING_RESPONSIVE, 1));
-  } else if (options.progressiveAC) {
-    // VarDCT progressive. The extras (qProgressiveAC, progressiveDC) and group
-    // order are VarDCT-only and only meaningful within a progressive encode.
+        frame_settings, JXL_ENC_FRAME_SETTING_RESPONSIVE,
+        (!options.lossless || options.progressiveAC) ? 1 : 0));
+  }
+
+  if (options.progressiveAC) {
     EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
         frame_settings, JXL_ENC_FRAME_SETTING_PROGRESSIVE_AC, 1));
+
+    // Two-pass split instead of the default three. libjxl forces this on for
+    // lossless, so the client hides the choice there rather than pretending it
+    // does something.
     if (options.qProgressiveAC) {
       EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
           frame_settings, JXL_ENC_FRAME_SETTING_QPROGRESSIVE_AC, 1));
     }
 
-    if (options.progressiveDC > 0) {
+    // Progressive DC is VarDCT-only - see the struct comment. The client
+    // already zeroes it in modular and lossless, but don't send it either way.
+    if (!modular && options.progressiveDC > 0) {
       EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
           frame_settings, JXL_ENC_FRAME_SETTING_PROGRESSIVE_DC, options.progressiveDC));
     }
   }
 
-  if (!modular) {
-    // Group order: 0 = scanline (raster), 1 = center-first. We don't set
-    // CENTER_X/CENTER_Y (left at libjxl's default image middle) - see the
-    // struct comment.
-    EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
-        frame_settings, JXL_ENC_FRAME_SETTING_GROUP_ORDER, options.groupOrder));
+  // Group order: 0 = scanline (raster), 1 = center-first. Applies in every mode
+  // - libjxl's PermuteGroups reorders frame groups and doesn't care whether
+  // VarDCT or modular produced them. We don't set CENTER_X/CENTER_Y (left at
+  // libjxl's default image middle) - see the struct comment.
+  EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
+      frame_settings, JXL_ENC_FRAME_SETTING_GROUP_ORDER, options.groupOrder));
 
-    // Center-first ordering is only applied on libjxl's *non-streaming* encode
-    // path (PermuteGroups in enc_frame.cc). The streaming path
-    // (ComputePermutationForStreaming) hardcodes raster order and ignores the
-    // centerfirst flag, and streaming is the default for large images (>8
-    // groups). Progressive incidentally disables streaming, which is why
-    // center-first otherwise only worked with progressive on. Force buffering
-    // off so the non-streaming path runs and center-first actually takes
-    // effect regardless of progressive. (Costs some memory/speed on large
-    // images, hence only when center-first is requested.)
-    if (options.groupOrder == 1) {
-      EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
-          frame_settings, JXL_ENC_FRAME_SETTING_BUFFERING, 0));
-    }
+  // Center-first ordering is only applied on libjxl's *non-streaming* encode
+  // path (PermuteGroups in enc_frame.cc). The streaming path
+  // (ComputePermutationForStreaming) hardcodes raster order and ignores the
+  // centerfirst flag, and streaming is the default for large images (>8
+  // groups). Force buffering off so the non-streaming path runs and center-first
+  // actually takes effect. CanDoStreamingEncoding already rules streaming out
+  // for progressive encodes and for squeezed modular, so in practice this only
+  // bites plain lossless, but it's harmless in the other modes. (Costs some
+  // memory/speed on large images, hence only when center-first is requested.)
+  if (options.groupOrder == 1) {
+    EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
+        frame_settings, JXL_ENC_FRAME_SETTING_BUFFERING, 0));
   }
 
   if (options.lossless) {

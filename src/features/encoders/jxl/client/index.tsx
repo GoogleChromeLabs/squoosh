@@ -102,6 +102,9 @@ export class Options extends Component<Props, State> {
           ...newState,
         };
 
+        // Lossless always encodes as modular, whatever the Mode select says.
+        const isModular = optionState.lossless || optionState.modular;
+
         const newOptions: EncodeOptions = {
           quality: optionState.quality,
           qualityAlpha:
@@ -112,11 +115,17 @@ export class Options extends Component<Props, State> {
           effort: optionState.effort,
           modular: optionState.modular,
           progressiveAC: optionState.progressiveAC,
-          qProgressiveAC: optionState.qProgressiveAC,
-          // DC only applies when progressive (AC) is on; treat as Off otherwise.
-          progressiveDC: optionState.progressiveAC
-            ? optionState.progressiveDC
-            : 0,
+          // Shift quantization is forced on for lossless, so the choice is
+          // meaningless there.
+          qProgressiveAC: optionState.lossless
+            ? false
+            : optionState.qProgressiveAC,
+          // DC passes are VarDCT-only, and only apply when progressive (AC) is
+          // on; treat as Off otherwise.
+          progressiveDC:
+            optionState.progressiveAC && !isModular
+              ? optionState.progressiveDC
+              : 0,
           groupOrder: optionState.groupOrder,
           photonNoiseIso: optionState.photonNoiseIso,
           decodingSpeed: optionState.decodingSpeed,
@@ -152,6 +161,9 @@ export class Options extends Component<Props, State> {
       decodingSpeed,
     }: State,
   ) {
+    // Lossless always encodes as modular, whatever the Mode select says.
+    const isModular = lossless || modular;
+
     return (
       <form class={style.optionsSection} onSubmit={preventDefault}>
         <label class={style.optionToggle}>
@@ -236,64 +248,67 @@ export class Options extends Component<Props, State> {
                         Noise equivalent to ISO:
                       </Range>
                     </div>
+                  </div>
+                )}
+              </Expander>
+              {/* Tile order and progressive apply in every mode: VarDCT, lossy
+                  modular, and lossless. */}
+              <label class={style.optionTextFirst}>
+                Tile order:
+                <Select
+                  value={groupOrder}
+                  onChange={this._inputChange('groupOrder', 'number')}
+                >
+                  <option value="0">Scanline</option>
+                  <option value="1">From center</option>
+                </Select>
+              </label>
+              <label class={style.optionToggle}>
+                Progressive
+                <Checkbox
+                  checked={progressiveAC}
+                  onChange={this._inputChange('progressiveAC', 'boolean')}
+                />
+              </label>
+              <Expander>
+                {progressiveAC && (
+                  <div>
+                    {/* Shift quantization is forced on for lossless, and the
+                        extra DC passes are VarDCT-only, so each is offered
+                        only where it does something. */}
                     <Expander>
-                      {/* Progressive is VarDCT-only; modular is always
-                          responsive (progressive), so hide this in modular. */}
-                      {!modular && (
+                      {!lossless && (
                         <div>
-                          <label class={style.optionTextFirst}>
-                            Tile order:
-                            <Select
-                              value={groupOrder}
-                              onChange={this._inputChange(
-                                'groupOrder',
-                                'number',
-                              )}
-                            >
-                              <option value="0">Scanline</option>
-                              <option value="1">From center</option>
-                            </Select>
-                          </label>
                           <label class={style.optionToggle}>
-                            Progressive
+                            Progressive shift quantization
                             <Checkbox
-                              checked={progressiveAC}
+                              checked={qProgressiveAC}
                               onChange={this._inputChange(
-                                'progressiveAC',
+                                'qProgressiveAC',
                                 'boolean',
                               )}
                             />
                           </label>
-                          <Expander>
-                            {progressiveAC && (
-                              <div>
-                                <label class={style.optionToggle}>
-                                  Progressive shift quantization
-                                  <Checkbox
-                                    checked={qProgressiveAC}
-                                    onChange={this._inputChange(
-                                      'qProgressiveAC',
-                                      'boolean',
-                                    )}
-                                  />
-                                </label>
-                                <label class={style.optionTextFirst}>
-                                  Progressive DC:
-                                  <Select
-                                    value={progressiveDC}
-                                    onChange={this._inputChange(
-                                      'progressiveDC',
-                                      'number',
-                                    )}
-                                  >
-                                    <option value="0">Off</option>
-                                    <option value="1">One pass</option>
-                                    <option value="2">Two pass</option>
-                                  </Select>
-                                </label>
-                              </div>
-                            )}
-                          </Expander>
+                        </div>
+                      )}
+                    </Expander>
+                    <Expander>
+                      {!isModular && (
+                        <div>
+                          <label class={style.optionTextFirst}>
+                            Progressive DC:
+                            <Select
+                              value={progressiveDC}
+                              onChange={this._inputChange(
+                                'progressiveDC',
+                                'number',
+                              )}
+                            >
+                              <option value="0">Off</option>
+                              <option value="1">One pass</option>
+                              <option value="2">Two pass</option>
+                            </Select>
+                          </label>
                         </div>
                       )}
                     </Expander>
