@@ -1,4 +1,9 @@
-import { EncodeOptions, AVIFTune, defaultOptions } from '../shared/meta';
+import {
+  EncodeOptions,
+  AVIFTune,
+  AVIFTiling,
+  defaultOptions,
+} from '../shared/meta';
 import type WorkerBridge from 'client/lazy-app/worker-bridge';
 import { h, Component } from 'preact';
 import { preventDefault, shallowEqual } from 'client/lazy-app/util';
@@ -43,7 +48,7 @@ interface State {
   blur: number;
   previewProgressiveFrame: boolean;
   independentMainLayer: boolean;
-  tiling: boolean;
+  tiling: AVIFTiling;
 }
 
 /**
@@ -420,12 +425,15 @@ export class Options extends Component<Props, State> {
                   </div>
                 )}
               </Expander>
-              <label class={style.optionToggle}>
-                Tiling
-                <Checkbox
-                  checked={tiling}
-                  onChange={this._inputChange('tiling', 'boolean')}
-                />
+              <label class={style.optionTextFirst}>
+                Tiling:
+                <Select
+                  value={tiling}
+                  onChange={this._inputChange('tiling', 'number')}
+                >
+                  <option value={AVIFTiling.auto}>Auto</option>
+                  <option value={AVIFTiling.minimum}>Minimum</option>
+                </Select>
               </label>
             </div>
           )}

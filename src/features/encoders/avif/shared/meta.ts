@@ -10,9 +10,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { EncodeOptions, AVIFTune } from 'codecs/avif/enc/avif_enc_mt';
+import {
+  EncodeOptions,
+  AVIFTune,
+  AVIFTiling,
+} from 'codecs/avif/enc/avif_enc_mt';
 
-export { EncodeOptions, AVIFTune };
+export { EncodeOptions, AVIFTune, AVIFTiling };
 
 export const label = 'AVIF';
 export const mimeType = 'image/avif';
@@ -34,5 +38,5 @@ export const defaultOptions: EncodeOptions = {
   blur: 0,
   previewProgressiveFrame: false,
   independentMainLayer: false,
-  tiling: true,
+  tiling: AVIFTiling.auto,
 };

@@ -83,11 +83,22 @@ struct AvifOptions {
   // Force the progressive output's final (main) layer to be a keyframe, so it
   // decodes independently of the base layer rather than as a refinement of it.
   bool independentMainLayer;
-  // Split the image into tiles that libaom can encode (and a decoder can decode)
-  // in parallel. On = libavif's autoTiling, which picks a tile count from the
-  // image dimensions; off = a single tile. Tiling costs a little compression
-  // efficiency (tile boundaries break prediction) in exchange for parallelism.
-  bool tiling;
+  // How the image is split into tiles. Tiles can be encoded and decoded in
+  // parallel and are independently decodable, at the cost of some compression
+  // efficiency (tile boundaries break prediction).
+  // 0 = auto: libavif's autoTiling, which picks a tile count from the image
+  //     dimensions. Note libavif hardcodes 8 threads for this calculation
+  //     (see avifSetTileConfiguration in write.c) rather than using
+  //     encoder->maxThreads, so the result depends only on the image size and
+  //     not on the machine.
+  // 1 = minimum: ask for no tiling at all. This is a floor, not a command -
+  //     AV1 caps a tile at MAX_TILE_AREA (4096x2304 luma samples), so libaom
+  //     raises our request to the smallest legal tile count for the image
+  //     (min_log2_rows/min_log2_cols in av1_get_tile_limits, applied via
+  //     AOMMAX in set_tile_info). Large images therefore still get tiled -
+  //     just as little as the format permits. Also derived purely from the
+  //     image dimensions, so it's machine-independent too.
+  int tiling;
 };
 
 // The scaling ratios AOM supports for layered (progressive) encoding. Indexed by
@@ -488,7 +499,7 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
     encoder->qualityAlpha = options.progressiveQuality;
     encoder->speed = options.speed;
     encoder->maxThreads = emscripten_num_logical_cores();
-    encoder->autoTiling = options.tiling ? AVIF_TRUE : AVIF_FALSE;
+    encoder->autoTiling = options.tiling == 0 ? AVIF_TRUE : AVIF_FALSE;
     if (!applyCodecSpecificOptions(encoder.get(), options)) {
       return val::null();
     }
@@ -532,9 +543,9 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
 
   encoder->speed = options.speed;
   encoder->maxThreads = emscripten_num_logical_cores();
-  // When on, let libavif choose a sensible number of tiles based on image
-  // dimensions; when off, leave tileRowsLog2/tileColsLog2 at 0 (a single tile).
-  encoder->autoTiling = options.tiling ? AVIF_TRUE : AVIF_FALSE;
+  // "Minimum" leaves tileRowsLog2/tileColsLog2 at 0, which libaom treats as a
+  // lower bound and raises to the smallest tile count AV1 allows.
+  encoder->autoTiling = options.tiling == 0 ? AVIF_TRUE : AVIF_FALSE;
   // Progressive output has one extra layer (the base); a plain encode is a
   // single image.
   encoder->extraLayerCount = needBaseLayer ? 1 : 0;

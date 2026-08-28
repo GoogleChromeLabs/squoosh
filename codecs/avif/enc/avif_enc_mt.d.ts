@@ -1,3 +1,13 @@
+export const enum AVIFTiling {
+  /** libavif picks a tile count from the image dimensions. */
+  auto,
+  /**
+   * Request no tiling. AV1 caps tile area, so libaom raises this to the
+   * smallest legal tile count - large images are still tiled, just minimally.
+   */
+  minimum,
+}
+
 export const enum AVIFTune {
   auto,
   psnr,
@@ -22,7 +32,7 @@ export interface EncodeOptions {
   blur: number;
   previewProgressiveFrame: boolean;
   independentMainLayer: boolean;
-  tiling: boolean;
+  tiling: AVIFTiling;
 }
 
 export interface AVIFModule extends EmscriptenWasm.Module {
