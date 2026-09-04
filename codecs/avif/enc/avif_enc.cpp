@@ -50,7 +50,16 @@ struct AvifOptions {
   // 2 = SSIM
   // 3 = IQ
   int tune;
-  // 0-50
+  // Strength of libaom's denoise-and-resynthesise pass, which strips noise from
+  // the source, fits a model to what it removed, and stores that model so the
+  // decoder can synthesise equivalent grain. 0 disables it; libaom divides any
+  // other value by 10 to get its internal noise level (so 0-50 means 0.0-5.0).
+  //
+  // Note that on the still-image path libavif encodes all-intra, and libaom
+  // then overwrites this value with its own estimate of the source's noise
+  // (av1_receive_raw_frame in av1/encoder/encoder.c), so only zero vs non-zero
+  // matters. The value is used literally on the progressive path, which is not
+  // all-intra.
   int denoiseLevel;
   // toggles AVIF_CHROMA_DOWNSAMPLING_SHARP_YUV
   bool enableSharpYUV;
@@ -409,9 +418,9 @@ static bool applyCodecSpecificOptions(avifEncoder* encoder, const AvifOptions& o
     }
   }
 
-  // Denoise the image as part of encoding. 0 is libaom's default (off), so only
-  // set it when requested. Applies to the colour plane only; denoising the
-  // monochrome alpha mask is meaningless.
+  // Denoise-and-resynthesise noise as part of encoding. 0 is libaom's default
+  // (off), so only set it when requested. Applies to the colour plane only;
+  // denoising the monochrome alpha mask is meaningless.
   if (options.denoiseLevel != 0) {
     if (avifEncoderSetCodecSpecificOption(encoder, "color:denoise-noise-level",
                                           std::to_string(options.denoiseLevel).c_str()) !=

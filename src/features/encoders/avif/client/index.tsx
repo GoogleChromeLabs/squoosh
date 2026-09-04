@@ -3,6 +3,7 @@ import {
   AVIFTune,
   AVIFTiling,
   defaultOptions,
+  NOISE_SYNTHESIS_DENOISE_LEVEL,
 } from '../shared/meta';
 import type WorkerBridge from 'client/lazy-app/worker-bridge';
 import { h, Component } from 'preact';
@@ -37,7 +38,7 @@ interface State {
   aqMode: number;
   subsample: number;
   effort: number;
-  denoiseLevel: number;
+  noiseSynthesis: boolean;
   tune: AVIFTune;
   enableSharpYUV: boolean;
   channelDepth: number;
@@ -90,7 +91,7 @@ export class Options extends Component<Props, State> {
       subsample: options.subsample,
       effort: MAX_EFFORT - options.speed,
       aqMode: options.aqMode,
-      denoiseLevel: options.denoiseLevel,
+      noiseSynthesis: options.denoiseLevel !== 0,
       tune: options.tune,
       enableSharpYUV: options.enableSharpYUV,
       channelDepth: options.channelDepth,
@@ -148,7 +149,9 @@ export class Options extends Component<Props, State> {
           subsample: optionState.lossless ? 3 : optionState.subsample,
           speed: MAX_EFFORT - optionState.effort,
           aqMode: optionState.aqMode,
-          denoiseLevel: optionState.denoiseLevel,
+          denoiseLevel: optionState.noiseSynthesis
+            ? NOISE_SYNTHESIS_DENOISE_LEVEL
+            : 0,
           tune: optionState.tune,
           enableSharpYUV: optionState.enableSharpYUV,
           channelDepth: optionState.channelDepth,
@@ -191,7 +194,7 @@ export class Options extends Component<Props, State> {
       showAdvanced,
       subsample,
       aqMode,
-      denoiseLevel,
+      noiseSynthesis,
       tune,
       enableSharpYUV,
       channelDepth,
@@ -314,16 +317,16 @@ export class Options extends Component<Props, State> {
                         <option value="4">Variance boost</option>
                       </Select>
                     </label>
-                    <div class={style.optionOneCell}>
-                      <Range
-                        min="0"
-                        max="50"
-                        value={denoiseLevel}
-                        onInput={this._inputChange('denoiseLevel', 'number')}
-                      >
-                        Noise synthesis:
-                      </Range>
-                    </div>
+                    <label class={style.optionToggle}>
+                      Noise synthesis
+                      <Checkbox
+                        checked={noiseSynthesis}
+                        onChange={this._inputChange(
+                          'noiseSynthesis',
+                          'boolean',
+                        )}
+                      />
+                    </label>
                     <label class={style.optionTextFirst}>
                       Tuning:
                       <Select
