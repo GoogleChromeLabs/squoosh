@@ -30,6 +30,7 @@ export class Options extends Component<Props, {}> {
     const options: EncodeOptions = {
       level: inputFieldValueAsNumber(form.level),
       interlace: inputFieldChecked(form.interlace),
+      preserveAlpha: inputFieldChecked(form.preserveAlpha),
     };
     this.props.onChange(options);
   };
@@ -45,11 +46,19 @@ export class Options extends Component<Props, {}> {
             onChange={this.onChange}
           />
         </label>
+        <label class={style.optionToggle}>
+          Preserve alpha
+          <Checkbox
+            name="preserveAlpha"
+            checked={options.preserveAlpha}
+            onChange={this.onChange}
+          />
+        </label>
         <div class={style.optionOneCell}>
           <Range
             name="level"
             min="0"
-            max="6"
+            max="7"
             step="1"
             value={options.level}
             onInput={this.onChange}

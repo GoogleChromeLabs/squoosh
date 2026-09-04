@@ -1,16 +1,16 @@
 #include <emscripten/bind.h>
 #include <emscripten/threading.h>
 #include <emscripten/val.h>
+#include <wasm_simd128.h>
 #include "avif/avif.h"
 
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
 #include <memory>
 #include <string>
-
-#define RETURN_NULL_IF(expression) \
-  do {                             \
-    if (expression)                \
-      return val::null();          \
-  } while (false)
+#include <thread>
+#include <vector>
 
 using namespace emscripten;
 
@@ -24,10 +24,6 @@ struct AvifOptions {
   int quality;
   // As above, but -1 means 'use quality'
   int qualityAlpha;
-  // [0 - 6]
-  // Creates 2^n tiles in that dimension
-  int tileRowsLog2;
-  int tileColsLog2;
   // [0 - 10]
   // 0 = slowest
   // 10 = fastest
@@ -37,26 +33,406 @@ struct AvifOptions {
   // 2 = 4:2:2
   // 3 = 4:4:4
   int subsample;
-  // Extra chroma compression
-  bool chromaDeltaQ;
-  // 0-7
-  int sharpness;
-  // 0 = auto
+  // Adaptive quantization, driving libaom's delta-Q mode. (The older aq-mode is
+  // superseded by delta-Q for the all-intra path AVIF uses, so it has no effect.)
+  // 0 = default: don't set anything, so the mode follows libaom's own default
+  //     for the chosen tune (e.g. variance-boost when tune resolves to IQ,
+  //     objective otherwise). Matches output with the option not exposed.
+  // 1 = off
+  // 2 = perceptual
+  // 3 = perceptual AI (tuned for all-intra / still images)
+  // 4 = variance boost
+  int aqMode;
+  // Distortion metric the encoder is tuned for. Only applied to the color
+  // channels; alpha keeps libaom's default (PSNR).
+  // 0 = auto (let libaom pick its default, which is IQ for still images)
   // 1 = PSNR
   // 2 = SSIM
+  // 3 = IQ
   int tune;
-  // 0-50
+  // Strength of libaom's denoise-and-resynthesise pass, which strips noise from
+  // the source, fits a model to what it removed, and stores that model so the
+  // decoder can synthesise equivalent grain. 0 disables it; libaom divides any
+  // other value by 10 to get its internal noise level (so 0-50 means 0.0-5.0).
+  //
+  // Note that on the still-image path libavif encodes all-intra, and libaom
+  // then overwrites this value with its own estimate of the source's noise
+  // (av1_receive_raw_frame in av1/encoder/encoder.c), so only zero vs non-zero
+  // matters. The value is used literally on the progressive path, which is not
+  // all-intra.
   int denoiseLevel;
   // toggles AVIF_CHROMA_DOWNSAMPLING_SHARP_YUV
   bool enableSharpYUV;
+  // Bit depth of the encoded image. One of 8, 10 or 12.
+  int channelDepth;
+  // Premultiply the colour channels by the alpha channel and signal this in the
+  // AVIF. The source buffer is always non-premultiplied; libavif premultiplies
+  // during the RGB->YUV conversion.
+  bool premultiplyAlpha;
+  // Encode a 2-layer "progressive" AVIF: a low-quality, optionally downscaled
+  // and blurred base layer that renders first, followed by the full image.
+  bool progressive;
+  // Quality used for the progressive base layer's colour and alpha. [0 - 100]
+  int progressiveQuality;
+  // Index into the AOM scaling-mode table (see kScalingModes). In progressive
+  // output the base layer's AV1 frame is encoded at this fraction of the full
+  // resolution (via AOM's scaling mode) while the layer keeps the full render
+  // size. In the preview it's the fraction the base content is downscaled to.
+  int scalingMode;
+  // Gaussian blur applied to the base layer, as a percentage of the image's
+  // larger dimension (so it's visually consistent across image sizes). Converted
+  // to a pixel sigma at encode time. 0 = no blur.
+  float blur;
+  // When set (and progressive is set), encode just the base layer's content so
+  // the user can preview what the progressive frame looks like. It's written as
+  // a plain single-image AVIF of the blurred, downscaled base content, returned
+  // at the reduced size. (AOM's scaling mode can't be used for a standalone
+  // image - only layered images decode reliably - so we downscale the pixels.)
+  bool previewProgressiveFrame;
+  // Force the progressive output's final (main) layer to be a keyframe, so it
+  // decodes independently of the base layer rather than as a refinement of it.
+  bool independentMainLayer;
+  // How the image is split into tiles. Tiles can be encoded and decoded in
+  // parallel and are independently decodable, at the cost of some compression
+  // efficiency (tile boundaries break prediction).
+  // 0 = auto: libavif's autoTiling, which picks a tile count from the image
+  //     dimensions. Note libavif hardcodes 8 threads for this calculation
+  //     (see avifSetTileConfiguration in write.c) rather than using
+  //     encoder->maxThreads, so the result depends only on the image size and
+  //     not on the machine.
+  // 1 = minimum: ask for no tiling at all. This is a floor, not a command -
+  //     AV1 caps a tile at MAX_TILE_AREA (4096x2304 luma samples), so libaom
+  //     raises our request to the smallest legal tile count for the image
+  //     (min_log2_rows/min_log2_cols in av1_get_tile_limits, applied via
+  //     AOMMAX in set_tile_info). Large images therefore still get tiled -
+  //     just as little as the format permits. Also derived purely from the
+  //     image dimensions, so it's machine-independent too.
+  int tiling;
 };
+
+// The scaling ratios AOM supports for layered (progressive) encoding. Indexed by
+// AvifOptions::scalingMode. Mirrors scalingModeMap in libavif's src/codec_aom.c;
+// any other fraction is rejected by libavif at encode time.
+struct ScalingRatio {
+  int32_t n;
+  int32_t d;
+};
+static const ScalingRatio kScalingModes[] = {
+    {1, 1}, {1, 2}, {1, 4}, {1, 8}, {3, 4}, {3, 5}, {4, 5},
+};
+static const int kScalingModeCount = sizeof(kScalingModes) / sizeof(kScalingModes[0]);
 
 thread_local const val Uint8Array = val::global("Uint8Array");
 
-val encode(std::string buffer, int width, int height, AvifOptions options) {
-  avifResult status;  // To check the return status for avif API's
+// Runs `body(y)` for every row y in [0, rows), splitting the range across
+// threads. The blur runs before any libaom encoder (and thus its worker
+// pthreads) is created, and these threads are joined before returning, so the
+// transient peak stays well inside the preloaded pthread pool (see the AVIF
+// Makefile's PTHREAD_POOL_SIZE note). Small buffers stay single-threaded -
+// thread spawn/join cost dwarfs the work otherwise.
+template <typename Body>
+static void parallelRows(int rows, size_t pixelsPerRow, const Body& body) {
+  // ~64k pixels is roughly where threading starts to pay off over spawn cost.
+  const size_t totalPixels = static_cast<size_t>(rows) * pixelsPerRow;
+  int threadCount = 1;
+  if (totalPixels >= 64 * 1024) {
+    threadCount = emscripten_num_logical_cores();
+    if (threadCount < 1) threadCount = 1;
+    if (threadCount > rows) threadCount = rows;
+  }
 
-  int depth = 8;
+  if (threadCount <= 1) {
+    for (int y = 0; y < rows; ++y) body(y);
+    return;
+  }
+
+  std::vector<std::thread> workers;
+  workers.reserve(threadCount - 1);
+  const int rowsPerThread = (rows + threadCount - 1) / threadCount;
+  // Spawn workers for all but the first chunk; run the first chunk inline so the
+  // calling thread does its share rather than just blocking in join.
+  for (int t = 1; t < threadCount; ++t) {
+    const int begin = t * rowsPerThread;
+    if (begin >= rows) break;
+    const int end = std::min(begin + rowsPerThread, rows);
+    workers.emplace_back([&body, begin, end]() {
+      for (int y = begin; y < end; ++y) body(y);
+    });
+  }
+  const int firstEnd = std::min(rowsPerThread, rows);
+  for (int y = 0; y < firstEnd; ++y) body(y);
+  for (std::thread& w : workers) w.join();
+}
+
+// Applies a separable Gaussian blur to an 8-bit RGBA buffer in place. The blur
+// runs in premultiplied-alpha space: colour is weighted by alpha before
+// blurring and divided back out afterwards. This stops the (invisible) colour
+// of fully-transparent pixels - typically black - from bleeding into and
+// darkening visible edges (the classic unpremultiplied-blur halo).
+// Sigma is the standard deviation in pixels; values <= 0 are a no-op.
+static void gaussianBlurRGBA(uint8_t* pixels, int width, int height, float sigma) {
+  if (sigma <= 0.0f || width <= 0 || height <= 0) {
+    return;
+  }
+
+  // A radius of 3 sigma captures >99.7% of the kernel's weight.
+  int radius = static_cast<int>(std::ceil(sigma * 3.0f));
+  if (radius < 1) {
+    return;
+  }
+
+  std::vector<float> kernel(radius + 1);
+  float sum = 0.0f;
+  const float twoSigmaSq = 2.0f * sigma * sigma;
+  for (int i = 0; i <= radius; ++i) {
+    kernel[i] = std::exp(-static_cast<float>(i * i) / twoSigmaSq);
+    // Each non-centre tap is used on both sides, so count it twice in the sum.
+    sum += (i == 0) ? kernel[i] : 2.0f * kernel[i];
+  }
+  for (int i = 0; i <= radius; ++i) {
+    kernel[i] /= sum;
+  }
+
+  const int channels = 4;
+  const size_t pixelCount = static_cast<size_t>(width) * height;
+
+  // Premultiplied working buffer (RGB scaled by alpha, alpha kept as-is). Both
+  // separable passes run on this; we round-trip through 8-bit only at the ends.
+  std::vector<float> premul(pixelCount * channels);
+  parallelRows(height, static_cast<size_t>(width), [&](int y) {
+    for (int x = 0; x < width; ++x) {
+      const size_t i = static_cast<size_t>(y) * width + x;
+      const float a = pixels[i * channels + 3] / 255.0f;
+      premul[i * channels + 0] = pixels[i * channels + 0] * a;
+      premul[i * channels + 1] = pixels[i * channels + 1] * a;
+      premul[i * channels + 2] = pixels[i * channels + 2] * a;
+      premul[i * channels + 3] = pixels[i * channels + 3];
+    }
+  });
+
+  std::vector<float> scratch(pixelCount * channels);
+
+  // Each RGBA pixel is four contiguous floats, so it maps onto a single f32x4
+  // vector: one load per tap, one fused multiply-add per tap, and the per-channel
+  // loop vanishes. The scalar kernel weight is broadcast across all four lanes.
+
+  // Both passes are row-parallel: each output row reads only the (read-only)
+  // source buffer and writes its own disjoint destination row, so rows can be
+  // distributed across threads with no synchronisation.
+
+  // Horizontal pass: premul -> scratch. Edges use clamp-to-edge sampling.
+  parallelRows(height, static_cast<size_t>(width), [&](int y) {
+    const float* srcRow = premul.data() + static_cast<size_t>(y) * width * channels;
+    float* dstRow = scratch.data() + static_cast<size_t>(y) * width * channels;
+    for (int x = 0; x < width; ++x) {
+      v128_t acc = wasm_f32x4_const_splat(0.0f);
+      for (int k = -radius; k <= radius; ++k) {
+        int sx = x + k;
+        if (sx < 0) sx = 0;
+        if (sx >= width) sx = width - 1;
+        const v128_t w = wasm_f32x4_splat(kernel[std::abs(k)]);
+        const v128_t s = wasm_v128_load(srcRow + static_cast<size_t>(sx) * channels);
+        acc = wasm_f32x4_add(acc, wasm_f32x4_mul(s, w));
+      }
+      wasm_v128_store(dstRow + static_cast<size_t>(x) * channels, acc);
+    }
+  });
+
+  // Vertical pass: scratch -> premul.
+  parallelRows(height, static_cast<size_t>(width), [&](int y) {
+    float* dstRow = premul.data() + static_cast<size_t>(y) * width * channels;
+    for (int x = 0; x < width; ++x) {
+      v128_t acc = wasm_f32x4_const_splat(0.0f);
+      for (int k = -radius; k <= radius; ++k) {
+        int sy = y + k;
+        if (sy < 0) sy = 0;
+        if (sy >= height) sy = height - 1;
+        const v128_t w = wasm_f32x4_splat(kernel[std::abs(k)]);
+        const v128_t s =
+            wasm_v128_load(scratch.data() + (static_cast<size_t>(sy) * width + x) * channels);
+        acc = wasm_f32x4_add(acc, wasm_f32x4_mul(s, w));
+      }
+      wasm_v128_store(dstRow + static_cast<size_t>(x) * channels, acc);
+    }
+  });
+
+  // Un-premultiply and write back to 8-bit. Where alpha is ~0 the colour is
+  // undefined; leave it black, since it's fully transparent anyway.
+  parallelRows(height, static_cast<size_t>(width), [&](int y) {
+    for (int x = 0; x < width; ++x) {
+      const size_t i = static_cast<size_t>(y) * width + x;
+      const float a = premul[i * channels + 3];
+      const float inv = a > 0.0f ? 255.0f / a : 0.0f;
+      for (int c = 0; c < 3; ++c) {
+        float v = premul[i * channels + c] * inv + 0.5f;
+        if (v < 0.0f) v = 0.0f;
+        if (v > 255.0f) v = 255.0f;
+        pixels[i * channels + c] = static_cast<uint8_t>(v);
+      }
+      float av = premul[i * channels + 3] + 0.5f;
+      if (av < 0.0f) av = 0.0f;
+      if (av > 255.0f) av = 255.0f;
+      pixels[i * channels + 3] = static_cast<uint8_t>(av);
+    }
+  });
+}
+
+// Bilinearly downscales an 8-bit RGBA buffer to a new size. Used to build the
+// progressive preview: a small, blurred, normal single-image AVIF showing what
+// the base layer encodes to. (We don't use AOM's scaling mode for this because a
+// standalone scaled image is not reliably decodable - only layered images are.)
+static std::vector<uint8_t> resampleRGBA(const uint8_t* src, int srcW, int srcH, int dstW,
+                                         int dstH) {
+  const int channels = 4;
+  std::vector<uint8_t> dst(static_cast<size_t>(dstW) * dstH * channels);
+  if (dstW <= 0 || dstH <= 0) {
+    return dst;
+  }
+  // Map dst pixel centres back into src space.
+  const float scaleX = static_cast<float>(srcW) / dstW;
+  const float scaleY = static_cast<float>(srcH) / dstH;
+  for (int y = 0; y < dstH; ++y) {
+    float sy = (y + 0.5f) * scaleY - 0.5f;
+    int y0 = static_cast<int>(std::floor(sy));
+    float fy = sy - y0;
+    int y1 = y0 + 1;
+    if (y0 < 0) y0 = 0;
+    if (y0 >= srcH) y0 = srcH - 1;
+    if (y1 < 0) y1 = 0;
+    if (y1 >= srcH) y1 = srcH - 1;
+    for (int x = 0; x < dstW; ++x) {
+      float sx = (x + 0.5f) * scaleX - 0.5f;
+      int x0 = static_cast<int>(std::floor(sx));
+      float fx = sx - x0;
+      int x1 = x0 + 1;
+      if (x0 < 0) x0 = 0;
+      if (x0 >= srcW) x0 = srcW - 1;
+      if (x1 < 0) x1 = 0;
+      if (x1 >= srcW) x1 = srcW - 1;
+
+      const uint8_t* p00 = src + (static_cast<size_t>(y0) * srcW + x0) * channels;
+      const uint8_t* p01 = src + (static_cast<size_t>(y0) * srcW + x1) * channels;
+      const uint8_t* p10 = src + (static_cast<size_t>(y1) * srcW + x0) * channels;
+      const uint8_t* p11 = src + (static_cast<size_t>(y1) * srcW + x1) * channels;
+      uint8_t* d = dst.data() + (static_cast<size_t>(y) * dstW + x) * channels;
+      for (int c = 0; c < channels; ++c) {
+        float top = p00[c] * (1 - fx) + p01[c] * fx;
+        float bottom = p10[c] * (1 - fx) + p11[c] * fx;
+        d[c] = static_cast<uint8_t>(top * (1 - fy) + bottom * fy + 0.5f);
+      }
+    }
+  }
+  return dst;
+}
+
+// Builds an avifImage (YUV) from an 8-bit RGBA buffer, sharing the colour
+// configuration decisions used for both the main and base layers. Returns null
+// on failure.
+static AvifImagePtr rgbaToAvifImage(const uint8_t* rgba, int width, int height, int depth,
+                                    avifPixelFormat format, bool lossless,
+                                    bool premultiplyAlpha, bool enableSharpYUV) {
+  AvifImagePtr image(avifImageCreate(width, height, depth, format), avifImageDestroy);
+  if (image == nullptr) {
+    return image;
+  }
+
+  if (lossless) {
+    // Identity matrix coefficients make the RGB->YUV conversion lossless (no
+    // colour space conversion). Range must be full, which avifImageCreate
+    // already defaults to.
+    image->matrixCoefficients = AVIF_MATRIX_COEFFICIENTS_IDENTITY;
+    image->yuvRange = AVIF_RANGE_FULL;
+  } else {
+    image->matrixCoefficients = AVIF_MATRIX_COEFFICIENTS_BT601;
+  }
+  image->alphaPremultiplied = premultiplyAlpha;
+
+  avifRGBImage srcRGB;
+  avifRGBImageSetDefaults(&srcRGB, image.get());
+  // The source buffer is always 8-bit RGBA, regardless of the encoded image's
+  // channel depth. avifImageRGBToYUV upconverts to image->depth as needed.
+  srcRGB.format = AVIF_RGB_FORMAT_RGBA;
+  srcRGB.depth = 8;
+  srcRGB.pixels = const_cast<uint8_t*>(rgba);
+  srcRGB.rowBytes = width * 4;
+  if (enableSharpYUV) {
+    // Higher-quality chroma downsampling. Only has an effect when chroma is
+    // actually subsampled (e.g. 4:2:0).
+    srcRGB.chromaDownsampling = AVIF_CHROMA_DOWNSAMPLING_SHARP_YUV;
+  }
+
+  if (avifImageRGBToYUV(image.get(), &srcRGB) != AVIF_RESULT_OK) {
+    return AvifImagePtr(nullptr, avifImageDestroy);
+  }
+  return image;
+}
+
+// Applies the codec-specific options that are common to every encode (tune,
+// delta-Q mode, denoise). Returns false on failure.
+static bool applyCodecSpecificOptions(avifEncoder* encoder, const AvifOptions& options) {
+  // Tune the encoder for a distortion metric. The "color:" prefix scopes this
+  // to the color channels only, so alpha keeps libaom's default (PSNR). When
+  // tune is "auto" we set nothing and let libaom pick its own default.
+  const char* tune = nullptr;
+  switch (options.tune) {
+    case 1:
+      tune = "psnr";
+      break;
+    case 2:
+      tune = "ssim";
+      break;
+    case 3:
+      tune = "iq";
+      break;
+  }
+  if (tune != nullptr) {
+    if (avifEncoderSetCodecSpecificOption(encoder, "color:tune", tune) != AVIF_RESULT_OK) {
+      return false;
+    }
+  }
+
+  // Adaptive quantization via libaom's delta-Q mode. Our option value 0 means
+  // "leave libaom's default", so only set it for other values. Map our UI
+  // values to libaom DELTAQ_MODE values (see encoder.h):
+  //   1 -> 0 (NO_DELTA_Q)        2 -> 2 (perceptual)
+  //   3 -> 3 (perceptual AI)     4 -> 6 (variance boost)
+  int deltaqMode = -1;
+  switch (options.aqMode) {
+    case 1:
+      deltaqMode = 0;
+      break;
+    case 2:
+      deltaqMode = 2;
+      break;
+    case 3:
+      deltaqMode = 3;
+      break;
+    case 4:
+      deltaqMode = 6;
+      break;
+  }
+  if (deltaqMode != -1) {
+    if (avifEncoderSetCodecSpecificOption(encoder, "color:deltaq-mode",
+                                          std::to_string(deltaqMode).c_str()) != AVIF_RESULT_OK) {
+      return false;
+    }
+  }
+
+  // Denoise-and-resynthesise noise as part of encoding. 0 is libaom's default
+  // (off), so only set it when requested. Applies to the colour plane only;
+  // denoising the monochrome alpha mask is meaningless.
+  if (options.denoiseLevel != 0) {
+    if (avifEncoderSetCodecSpecificOption(encoder, "color:denoise-noise-level",
+                                          std::to_string(options.denoiseLevel).c_str()) !=
+        AVIF_RESULT_OK) {
+      return false;
+    }
+  }
+  return true;
+}
+
+val encode(std::string buffer, int width, int height, AvifOptions options) {
+  int depth = options.channelDepth;
   avifPixelFormat format;
   switch (options.subsample) {
     case 0:
@@ -71,78 +447,160 @@ val encode(std::string buffer, int width, int height, AvifOptions options) {
     case 3:
       format = AVIF_PIXEL_FORMAT_YUV444;
       break;
+    default:
+      format = AVIF_PIXEL_FORMAT_YUV420;
+      break;
   }
 
+  // Lossless requires YUV444 (so the RGB->YUV step is a reversible repacking)
+  // and full-quality color + alpha. qualityAlpha of -1 means "same as quality".
   bool lossless = options.quality == AVIF_QUALITY_LOSSLESS &&
                   (options.qualityAlpha == -1 || options.qualityAlpha == AVIF_QUALITY_LOSSLESS) &&
                   format == AVIF_PIXEL_FORMAT_YUV444;
 
-  // Smart pointer for the input image in YUV format
-  AvifImagePtr image(avifImageCreate(width, height, depth, format), avifImageDestroy);
-  RETURN_NULL_IF(image == nullptr);
-
-  if (lossless) {
-    image->matrixCoefficients = AVIF_MATRIX_COEFFICIENTS_IDENTITY;
-  } else {
-    image->matrixCoefficients = AVIF_MATRIX_COEFFICIENTS_BT601;
-  }
-
   uint8_t* rgba = reinterpret_cast<uint8_t*>(const_cast<char*>(buffer.data()));
 
-  avifRGBImage srcRGB;
-  avifRGBImageSetDefaults(&srcRGB, image.get());
-  srcRGB.pixels = rgba;
-  srcRGB.rowBytes = width * 4;
-  if (options.enableSharpYUV) {
-    srcRGB.chromaDownsampling = AVIF_CHROMA_DOWNSAMPLING_SHARP_YUV;
-  }
-  status = avifImageRGBToYUV(image.get(), &srcRGB);
-  RETURN_NULL_IF(status != AVIF_RESULT_OK);
+  const bool needBaseLayer = options.progressive;
+  const bool preview = options.progressive && options.previewProgressiveFrame;
 
-  // Create a smart pointer for the encoder
+  // options.blur is a percentage of the image's larger dimension, so the same
+  // value gives a visually consistent blur regardless of image size. Convert it
+  // to a pixel sigma for the blur itself.
+  const float blurSigma = options.blur / 100.0f * std::max(width, height);
+
+  // Resolve the scaling fraction for the progressive base layer.
+  int scalingIndex = options.scalingMode;
+  if (scalingIndex < 0 || scalingIndex >= kScalingModeCount) {
+    scalingIndex = 0;
+  }
+  const ScalingRatio ratio = kScalingModes[scalingIndex];
+  const avifScalingMode baseScaling = {{ratio.n, ratio.d}, {ratio.n, ratio.d}};
+  const avifScalingMode noScaling = {{1, 1}, {1, 1}};
+
+  // Preview mode: show what the progressive base layer encodes to. We can't use
+  // AOM's scaling mode for this - a standalone scaled image is not reliably
+  // decodable (dav1d fails it outright; some decoders render it blank); only
+  // layered images whose final layer is full resolution decode everywhere. So
+  // the preview is a plain single-image AVIF of the blurred, downscaled base
+  // content, returned at the reduced size.
+  if (preview) {
+    std::vector<uint8_t> blurred(rgba, rgba + static_cast<size_t>(width) * height * 4);
+    gaussianBlurRGBA(blurred.data(), width, height, blurSigma);
+
+    int baseW = static_cast<int>(static_cast<int64_t>(width) * ratio.n / ratio.d);
+    int baseH = static_cast<int>(static_cast<int64_t>(height) * ratio.n / ratio.d);
+    if (baseW < 1) baseW = 1;
+    if (baseH < 1) baseH = 1;
+    std::vector<uint8_t> baseRGBA = resampleRGBA(blurred.data(), width, height, baseW, baseH);
+
+    AvifImagePtr previewImage =
+        rgbaToAvifImage(baseRGBA.data(), baseW, baseH, depth, format, lossless,
+                        options.premultiplyAlpha, options.enableSharpYUV);
+    if (previewImage == nullptr) {
+      return val::null();
+    }
+
+    AvifEncoderPtr encoder(avifEncoderCreate(), avifEncoderDestroy);
+    if (encoder == nullptr) {
+      return val::null();
+    }
+    encoder->quality = options.progressiveQuality;
+    encoder->qualityAlpha = options.progressiveQuality;
+    encoder->speed = options.speed;
+    encoder->maxThreads = emscripten_num_logical_cores();
+    encoder->autoTiling = options.tiling == 0 ? AVIF_TRUE : AVIF_FALSE;
+    if (!applyCodecSpecificOptions(encoder.get(), options)) {
+      return val::null();
+    }
+
+    avifRWData output = AVIF_DATA_EMPTY;
+    avifResult result = avifEncoderWrite(encoder.get(), previewImage.get(), &output);
+    val js_result = val::null();
+    if (result == AVIF_RESULT_OK) {
+      js_result = Uint8Array.new_(typed_memory_view(output.size, output.data));
+    }
+    avifRWDataFree(&output);
+    return js_result;
+  }
+
+  // The base layer for progressive output: the full-size image with a Gaussian
+  // blur applied. The resolution reduction is signalled to AOM via scalingMode
+  // (AOM encodes the AV1 frame at a lower internal resolution and records the
+  // full render size); the image handed to the encoder is full size.
+  AvifImagePtr baseImage(nullptr, avifImageDestroy);
+  if (needBaseLayer) {
+    std::vector<uint8_t> baseRGBA(rgba, rgba + static_cast<size_t>(width) * height * 4);
+    gaussianBlurRGBA(baseRGBA.data(), width, height, blurSigma);
+    baseImage = rgbaToAvifImage(baseRGBA.data(), width, height, depth, format, lossless,
+                                options.premultiplyAlpha, options.enableSharpYUV);
+    if (baseImage == nullptr) {
+      return val::null();
+    }
+  }
+
+  // The final, full-resolution, highest-quality image.
+  AvifImagePtr image = rgbaToAvifImage(rgba, width, height, depth, format, lossless,
+                                       options.premultiplyAlpha, options.enableSharpYUV);
+  if (image == nullptr) {
+    return val::null();
+  }
+
   AvifEncoderPtr encoder(avifEncoderCreate(), avifEncoderDestroy);
-  RETURN_NULL_IF(encoder == nullptr);
-
-  if (lossless) {
-    encoder->quality = AVIF_QUALITY_LOSSLESS;
-    encoder->qualityAlpha = AVIF_QUALITY_LOSSLESS;
-  } else {
-    status = avifEncoderSetCodecSpecificOption(encoder.get(), "sharpness",
-                                               std::to_string(options.sharpness).c_str());
-    RETURN_NULL_IF(status != AVIF_RESULT_OK);
-
-    // Set base quality
-    encoder->quality = options.quality;
-    // Conditionally set alpha quality
-    if (options.qualityAlpha == -1) {
-      encoder->qualityAlpha = options.quality;
-    } else {
-      encoder->qualityAlpha = options.qualityAlpha;
-    }
-
-    if (options.tune == 2 || (options.tune == 0 && options.quality >= 50)) {
-      status = avifEncoderSetCodecSpecificOption(encoder.get(), "tune", "ssim");
-      RETURN_NULL_IF(status != AVIF_RESULT_OK);
-    }
-
-    if (options.chromaDeltaQ) {
-      status = avifEncoderSetCodecSpecificOption(encoder.get(), "color:enable-chroma-deltaq", "1");
-      RETURN_NULL_IF(status != AVIF_RESULT_OK);
-    }
-
-    status = avifEncoderSetCodecSpecificOption(encoder.get(), "color:denoise-noise-level",
-                                               std::to_string(options.denoiseLevel).c_str());
-    RETURN_NULL_IF(status != AVIF_RESULT_OK);
+  if (encoder == nullptr) {
+    return val::null();
   }
 
-  encoder->maxThreads = emscripten_num_logical_cores();
-  encoder->tileRowsLog2 = options.tileRowsLog2;
-  encoder->tileColsLog2 = options.tileColsLog2;
   encoder->speed = options.speed;
+  encoder->maxThreads = emscripten_num_logical_cores();
+  // "Minimum" leaves tileRowsLog2/tileColsLog2 at 0, which libaom treats as a
+  // lower bound and raises to the smallest tile count AV1 allows.
+  encoder->autoTiling = options.tiling == 0 ? AVIF_TRUE : AVIF_FALSE;
+  // Progressive output has one extra layer (the base); a plain encode is a
+  // single image.
+  encoder->extraLayerCount = needBaseLayer ? 1 : 0;
+  if (!applyCodecSpecificOptions(encoder.get(), options)) {
+    return val::null();
+  }
+
+  const int finalQualityAlpha =
+      options.qualityAlpha == -1 ? options.quality : options.qualityAlpha;
 
   avifRWData output = AVIF_DATA_EMPTY;
-  avifResult encodeResult = avifEncoderWrite(encoder.get(), image.get(), &output);
-  auto js_result = val::null();
+  avifResult encodeResult;
+
+  if (needBaseLayer) {
+    // Two-layer progressive AVIF. Both layers share the full image dimensions;
+    // only the base layer's internal AV1 resolution is reduced via scalingMode.
+    // The final layer must be full resolution (scaling 1/1) for the file to be
+    // decodable across decoders.
+    encoder->quality = options.progressiveQuality;
+    encoder->qualityAlpha = options.progressiveQuality;
+    encoder->scalingMode = baseScaling;
+    if (avifEncoderAddImage(encoder.get(), baseImage.get(), 1, AVIF_ADD_IMAGE_FLAG_NONE) !=
+        AVIF_RESULT_OK) {
+      return val::null();
+    }
+
+    encoder->quality = options.quality;
+    encoder->qualityAlpha = finalQualityAlpha;
+    encoder->scalingMode = noScaling;
+    // Optionally force the final layer to be a keyframe so it decodes
+    // independently of the base layer rather than as a refinement of it.
+    const avifAddImageFlags finalFlags = options.independentMainLayer
+                                             ? AVIF_ADD_IMAGE_FLAG_FORCE_KEYFRAME
+                                             : AVIF_ADD_IMAGE_FLAG_NONE;
+    if (avifEncoderAddImage(encoder.get(), image.get(), 1, finalFlags) != AVIF_RESULT_OK) {
+      return val::null();
+    }
+
+    encodeResult = avifEncoderFinish(encoder.get(), &output);
+  } else {
+    encoder->quality = options.quality;
+    encoder->qualityAlpha = finalQualityAlpha;
+    encodeResult = avifEncoderWrite(encoder.get(), image.get(), &output);
+  }
+
+  val js_result = val::null();
   if (encodeResult == AVIF_RESULT_OK) {
     js_result = Uint8Array.new_(typed_memory_view(output.size, output.data));
   }
@@ -155,15 +613,21 @@ EMSCRIPTEN_BINDINGS(my_module) {
   value_object<AvifOptions>("AvifOptions")
       .field("quality", &AvifOptions::quality)
       .field("qualityAlpha", &AvifOptions::qualityAlpha)
-      .field("tileRowsLog2", &AvifOptions::tileRowsLog2)
-      .field("tileColsLog2", &AvifOptions::tileColsLog2)
       .field("speed", &AvifOptions::speed)
-      .field("chromaDeltaQ", &AvifOptions::chromaDeltaQ)
-      .field("sharpness", &AvifOptions::sharpness)
+      .field("aqMode", &AvifOptions::aqMode)
       .field("tune", &AvifOptions::tune)
       .field("denoiseLevel", &AvifOptions::denoiseLevel)
       .field("subsample", &AvifOptions::subsample)
-      .field("enableSharpYUV", &AvifOptions::enableSharpYUV);
+      .field("enableSharpYUV", &AvifOptions::enableSharpYUV)
+      .field("channelDepth", &AvifOptions::channelDepth)
+      .field("premultiplyAlpha", &AvifOptions::premultiplyAlpha)
+      .field("progressive", &AvifOptions::progressive)
+      .field("progressiveQuality", &AvifOptions::progressiveQuality)
+      .field("scalingMode", &AvifOptions::scalingMode)
+      .field("blur", &AvifOptions::blur)
+      .field("previewProgressiveFrame", &AvifOptions::previewProgressiveFrame)
+      .field("independentMainLayer", &AvifOptions::independentMainLayer)
+      .field("tiling", &AvifOptions::tiling);
 
   function("encode", &encode);
 }

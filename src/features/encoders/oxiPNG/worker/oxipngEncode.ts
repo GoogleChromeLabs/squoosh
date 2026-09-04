@@ -11,38 +11,28 @@
  * limitations under the License.
  */
 import { EncodeOptions } from '../shared/meta';
-import checkThreadsSupport from 'worker-shared/supports-wasm-threads';
 
-async function initMT() {
+// Single build with threads + SIMD. There is no baseline fallback: the app's
+// other wasm codecs are all -pthread builds, so a browser without
+// SharedArrayBuffer can't run them either.
+async function init() {
   const {
     default: init,
     initThreadPool,
     optimise,
-  } = await import('codecs/oxipng/pkg-parallel/squoosh_oxipng');
+  } = await import('codecs/oxipng/pkg/squoosh_oxipng');
   await init();
   await initThreadPool(navigator.hardwareConcurrency);
   return optimise;
 }
 
-async function initST() {
-  const { default: init, optimise } = await import(
-    'codecs/oxipng/pkg/squoosh_oxipng'
-  );
-  await init();
-  return optimise;
-}
-
-let wasmReady: ReturnType<typeof initMT | typeof initST>;
+let wasmReady: ReturnType<typeof init>;
 
 export default async function encode(
   data: ImageData,
   options: EncodeOptions,
 ): Promise<ArrayBuffer> {
-  if (!wasmReady) {
-    wasmReady = checkThreadsSupport().then((hasThreads: boolean) =>
-      hasThreads ? initMT() : initST(),
-    );
-  }
+  if (!wasmReady) wasmReady = init();
 
   const optimise = await wasmReady;
   return optimise(
@@ -51,5 +41,6 @@ export default async function encode(
     data.height,
     options.level,
     options.interlace,
+    options.preserveAlpha,
   ).buffer;
 }

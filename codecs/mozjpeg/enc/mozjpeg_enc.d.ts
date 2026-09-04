@@ -7,12 +7,15 @@ export const enum MozJpegColorSpace {
 export interface EncodeOptions {
   quality: number;
   baseline: boolean;
-  arithmetic: boolean;
   progressive: boolean;
   optimize_coding: boolean;
   smoothing: number;
   color_space: MozJpegColorSpace;
   quant_table: number;
+  /** Master switch for trellis quantization; the trellis_* options below need it on. */
+  trellis_quant: boolean;
+  /** Trellis-quantize DC coefficients too. */
+  trellis_quant_dc: boolean;
   trellis_multipass: boolean;
   trellis_opt_zero: boolean;
   trellis_opt_table: boolean;
@@ -21,6 +24,8 @@ export interface EncodeOptions {
   chroma_subsample: number;
   separate_chroma_quality: boolean;
   chroma_quality: number;
+  /** Reduce ringing around hard edges (text, logos, line art). */
+  overshoot_deringing: boolean;
 }
 
 export interface MozJPEGModule extends EmscriptenWasm.Module {

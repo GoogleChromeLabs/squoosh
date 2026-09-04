@@ -11,8 +11,19 @@
  * limitations under the License.
  */
 export interface EncodeOptions {
+  /**
+   * 0-6 are oxipng's own presets. 7 is ours: preset 6 deflated with Zopfli -
+   * smaller, and much slower. See codecs/oxipng/src/lib.rs for why Zopfli is
+   * the top of this scale rather than an independent toggle.
+   */
   level: number;
   interlace: boolean;
+  /**
+   * Keep the colour channels of fully-transparent pixels. Off (the default)
+   * lets oxipng rewrite them to whatever compresses best - invisible when
+   * composited normally, but destructive.
+   */
+  preserveAlpha: boolean;
 }
 
 export const label = 'OxiPNG';
@@ -22,4 +33,5 @@ export const extension = 'png';
 export const defaultOptions: EncodeOptions = {
   level: 2,
   interlace: false,
+  preserveAlpha: false,
 };

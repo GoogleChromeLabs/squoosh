@@ -1,4 +1,4 @@
-import { h, Component } from 'preact';
+import { h, Component, ComponentType } from 'preact';
 
 import * as style from './style.css';
 import 'add-css:./style.css';
@@ -152,8 +152,15 @@ export default class Options extends Component<Props, State> {
     { supportedEncoderMap }: State,
   ) {
     const encoder = encoderState && encoderMap[encoderState.type];
-    const EncoderOptionComponent =
-      encoder && 'Options' in encoder ? encoder.Options : undefined;
+    // `encoder.Options` is a union of every codec's Options component. Rendering
+    // a union component makes TypeScript intersect all their prop types, and
+    // that intersection collapses to `never` when two codecs declare the same
+    // option name with different types (e.g. jxl `lossless: boolean` vs webP
+    // `lossless: number`). The options value is already cast to `any` below, so
+    // erase the prop type here to avoid the bogus `never`.
+    const EncoderOptionComponent = (
+      encoder && 'Options' in encoder ? encoder.Options : undefined
+    ) as ComponentType<any> | undefined;
 
     return (
       <div

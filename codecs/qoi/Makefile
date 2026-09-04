@@ -15,8 +15,13 @@ $(filter enc/%,$(OUT_JS)): enc/qoi_enc.o
 $(filter dec/%,$(OUT_JS)): dec/qoi_dec.o
 
 # ALL .js FILES
+# Link with $(CXX)/em++, not $(LD). emmake sets LD=emcc, which is the C driver
+# and doesn't link libc++ - fine until emsdk 6.0.0 split embind's RTTI into
+# libembind-rtti.a, after which it fails with "undefined symbol: operator new",
+# "typeinfo for std::length_error", etc. Every other codec already links via
+# $(CXX).
 $(OUT_JS):
-	$(LD) \
+	$(CXX) \
 		$(LDFLAGS) \
 		--bind \
 		-s ENVIRONMENT=$(ENVIRONMENT) \

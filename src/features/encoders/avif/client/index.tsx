@@ -1,4 +1,10 @@
-import { EncodeOptions, AVIFTune, defaultOptions } from '../shared/meta';
+import {
+  EncodeOptions,
+  AVIFTune,
+  AVIFTiling,
+  defaultOptions,
+  NOISE_SYNTHESIS_DENOISE_LEVEL,
+} from '../shared/meta';
 import type WorkerBridge from 'client/lazy-app/worker-bridge';
 import { h, Component } from 'preact';
 import { preventDefault, shallowEqual } from 'client/lazy-app/util';
@@ -29,15 +35,21 @@ interface State {
   showAdvanced: boolean;
   separateAlpha: boolean;
   alphaQuality: number;
-  chromaDeltaQ: boolean;
+  aqMode: number;
   subsample: number;
-  tileRows: number;
-  tileCols: number;
   effort: number;
-  sharpness: number;
-  denoiseLevel: number;
+  noiseSynthesis: boolean;
   tune: AVIFTune;
   enableSharpYUV: boolean;
+  channelDepth: number;
+  premultiplyAlpha: boolean;
+  progressive: boolean;
+  progressiveQuality: number;
+  scalingMode: number;
+  blur: number;
+  previewProgressiveFrame: boolean;
+  independentMainLayer: boolean;
+  tiling: AVIFTiling;
 }
 
 /**
@@ -77,14 +89,20 @@ export class Options extends Component<Props, State> {
       separateAlpha,
       alphaQuality: separateAlpha ? options.qualityAlpha : options.quality,
       subsample: options.subsample,
-      tileRows: options.tileRowsLog2,
-      tileCols: options.tileColsLog2,
       effort: MAX_EFFORT - options.speed,
-      chromaDeltaQ: options.chromaDeltaQ,
-      sharpness: options.sharpness,
-      denoiseLevel: options.denoiseLevel,
+      aqMode: options.aqMode,
+      noiseSynthesis: options.denoiseLevel !== 0,
       tune: options.tune,
       enableSharpYUV: options.enableSharpYUV,
+      channelDepth: options.channelDepth,
+      premultiplyAlpha: options.premultiplyAlpha,
+      progressive: options.progressive,
+      progressiveQuality: options.progressiveQuality,
+      scalingMode: options.scalingMode,
+      blur: options.blur,
+      previewProgressiveFrame: options.previewProgressiveFrame,
+      independentMainLayer: options.independentMainLayer,
+      tiling: options.tiling,
     };
   }
 
@@ -129,14 +147,25 @@ export class Options extends Component<Props, State> {
               : optionState.alphaQuality,
           // Always set to 4:4:4 if lossless
           subsample: optionState.lossless ? 3 : optionState.subsample,
-          tileColsLog2: optionState.tileCols,
-          tileRowsLog2: optionState.tileRows,
           speed: MAX_EFFORT - optionState.effort,
-          chromaDeltaQ: optionState.chromaDeltaQ,
-          sharpness: optionState.sharpness,
-          denoiseLevel: optionState.denoiseLevel,
+          aqMode: optionState.aqMode,
+          denoiseLevel: optionState.noiseSynthesis
+            ? NOISE_SYNTHESIS_DENOISE_LEVEL
+            : 0,
           tune: optionState.tune,
           enableSharpYUV: optionState.enableSharpYUV,
+          channelDepth: optionState.channelDepth,
+          premultiplyAlpha: optionState.premultiplyAlpha,
+          progressive: optionState.progressive,
+          progressiveQuality: optionState.progressiveQuality,
+          scalingMode: optionState.scalingMode,
+          blur: optionState.blur,
+          // Previewing the progressive frame only makes sense while progressive
+          // is on; clear it otherwise so a stale preview can't be encoded.
+          previewProgressiveFrame:
+            optionState.progressive && optionState.previewProgressiveFrame,
+          independentMainLayer: optionState.independentMainLayer,
+          tiling: optionState.tiling,
         };
 
         // Updating options, so we don't recalculate in getDerivedStateFromProps.
@@ -164,13 +193,19 @@ export class Options extends Component<Props, State> {
       quality,
       showAdvanced,
       subsample,
-      tileCols,
-      tileRows,
-      chromaDeltaQ,
-      sharpness,
-      denoiseLevel,
+      aqMode,
+      noiseSynthesis,
       tune,
       enableSharpYUV,
+      channelDepth,
+      premultiplyAlpha,
+      progressive,
+      progressiveQuality,
+      scalingMode,
+      blur,
+      previewProgressiveFrame,
+      independentMainLayer,
+      tiling,
     }: State,
   ) {
     return (
@@ -260,32 +295,38 @@ export class Options extends Component<Props, State> {
                       )}
                     </Expander>
                     <label class={style.optionToggle}>
-                      Extra chroma compression
+                      Premultiply alpha
                       <Checkbox
-                        checked={chromaDeltaQ}
-                        onChange={this._inputChange('chromaDeltaQ', 'boolean')}
+                        checked={premultiplyAlpha}
+                        onChange={this._inputChange(
+                          'premultiplyAlpha',
+                          'boolean',
+                        )}
                       />
                     </label>
-                    <div class={style.optionOneCell}>
-                      <Range
-                        min="0"
-                        max="7"
-                        value={sharpness}
-                        onInput={this._inputChange('sharpness', 'number')}
+                    <label class={style.optionTextFirst}>
+                      Adaptive Quantization:
+                      <Select
+                        value={aqMode}
+                        onChange={this._inputChange('aqMode', 'number')}
                       >
-                        Sharpness:
-                      </Range>
-                    </div>
-                    <div class={style.optionOneCell}>
-                      <Range
-                        min="0"
-                        max="50"
-                        value={denoiseLevel}
-                        onInput={this._inputChange('denoiseLevel', 'number')}
-                      >
-                        Noise synthesis:
-                      </Range>
-                    </div>
+                        <option value="0">Auto</option>
+                        <option value="1">Off</option>
+                        <option value="2">Perceptual</option>
+                        <option value="3">Perceptual AI</option>
+                        <option value="4">Variance boost</option>
+                      </Select>
+                    </label>
+                    <label class={style.optionToggle}>
+                      Noise synthesis
+                      <Checkbox
+                        checked={noiseSynthesis}
+                        onChange={this._inputChange(
+                          'noiseSynthesis',
+                          'boolean',
+                        )}
+                      />
+                    </label>
                     <label class={style.optionTextFirst}>
                       Tuning:
                       <Select
@@ -293,33 +334,110 @@ export class Options extends Component<Props, State> {
                         onChange={this._inputChange('tune', 'number')}
                       >
                         <option value={AVIFTune.auto}>Auto</option>
-                        <option value={AVIFTune.psnr}>PSNR</option>
+                        <option value={AVIFTune.iq}>IQ</option>
                         <option value={AVIFTune.ssim}>SSIM</option>
+                        <option value={AVIFTune.psnr}>PSNR</option>
                       </Select>
                     </label>
+                    <label class={style.optionTextFirst}>
+                      Channel depth:
+                      <Select
+                        value={channelDepth}
+                        onChange={this._inputChange('channelDepth', 'number')}
+                      >
+                        <option value="8">8-bit</option>
+                        <option value="10">10-bit</option>
+                        <option value="12">12-bit</option>
+                      </Select>
+                    </label>
+                    <label class={style.optionToggle}>
+                      Progressive
+                      <Checkbox
+                        checked={progressive}
+                        onChange={this._inputChange('progressive', 'boolean')}
+                      />
+                    </label>
+                    <Expander>
+                      {progressive && (
+                        <div>
+                          <label class={style.optionToggle}>
+                            Preview progressive frame
+                            <Checkbox
+                              checked={previewProgressiveFrame}
+                              onChange={this._inputChange(
+                                'previewProgressiveFrame',
+                                'boolean',
+                              )}
+                            />
+                          </label>
+                          <div class={style.optionOneCell}>
+                            <Range
+                              min="0"
+                              max={MAX_QUALITY - 1}
+                              value={progressiveQuality}
+                              onInput={this._inputChange(
+                                'progressiveQuality',
+                                'number',
+                              )}
+                            >
+                              Progressive layer quality:
+                            </Range>
+                          </div>
+                          <label class={style.optionTextFirst}>
+                            Progressive scaling:
+                            <Select
+                              value={scalingMode}
+                              onChange={this._inputChange(
+                                'scalingMode',
+                                'number',
+                              )}
+                            >
+                              <option value="0">1/1</option>
+                              <option value="6">4/5</option>
+                              <option value="4">3/4</option>
+                              <option value="5">3/5</option>
+                              <option value="1">1/2</option>
+                              <option value="2">1/4</option>
+                              <option value="3">1/8</option>
+                            </Select>
+                          </label>
+                          <div class={style.optionOneCell}>
+                            <Range
+                              min="0"
+                              max="2"
+                              step="0.01"
+                              value={blur}
+                              onInput={this._inputChange('blur', 'number')}
+                            >
+                              Progressive layer blur:
+                            </Range>
+                          </div>
+                          <label class={style.optionToggle}>
+                            Independent main layer
+                            <Checkbox
+                              checked={independentMainLayer}
+                              onChange={this._inputChange(
+                                'independentMainLayer',
+                                'boolean',
+                              )}
+                            />
+                          </label>
+                        </div>
+                      )}
+                    </Expander>
                   </div>
                 )}
               </Expander>
-              <div class={style.optionOneCell}>
-                <Range
-                  min="0"
-                  max="6"
-                  value={tileRows}
-                  onInput={this._inputChange('tileRows', 'number')}
+              <label class={style.optionTextFirst}>
+                Tiling:
+                <Select
+                  value={tiling}
+                  onChange={this._inputChange('tiling', 'number')}
                 >
-                  Log2 of tile rows:
-                </Range>
-              </div>
-              <div class={style.optionOneCell}>
-                <Range
-                  min="0"
-                  max="6"
-                  value={tileCols}
-                  onInput={this._inputChange('tileCols', 'number')}
-                >
-                  Log2 of tile cols:
-                </Range>
-              </div>
+                  <option value={AVIFTiling.auto}>Auto</option>
+                  <option value={AVIFTiling.minimum}>Minimum</option>
+                </Select>
+              </label>
             </div>
           )}
         </Expander>
