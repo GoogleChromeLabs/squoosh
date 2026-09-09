@@ -11,5 +11,7 @@
   ],
   "module": "squoosh_resize.js",
   "types": "squoosh_resize.d.ts",
-  "sideEffects": false
+  "sideEffects": [
+    "./snippets/*"
+  ]
 }

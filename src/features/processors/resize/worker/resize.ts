@@ -1,6 +1,8 @@
-import type { WorkerResizeOptions } from '../shared/meta';
-import { getContainOffsets } from '../shared/util';
-import initResizeWasm, { resize as wasmResize } from 'codecs/resize/pkg';
+import { WorkerResizeOptions, defaultOptions } from '../shared/meta';
+import initResizeWasm, {
+  resize as wasmResize,
+  ResizeFilter,
+} from 'codecs/resize/pkg/squoosh_resize';
 import initHqxWasm, { resize as wasmHqx } from 'codecs/hqx/pkg';
 
 interface HqxResizeOptions extends WorkerResizeOptions {
@@ -9,28 +11,6 @@ interface HqxResizeOptions extends WorkerResizeOptions {
 
 function optsIsHqxOpts(opts: WorkerResizeOptions): opts is HqxResizeOptions {
   return opts.method === 'hqx';
-}
-
-function crop(
-  data: ImageData,
-  sx: number,
-  sy: number,
-  sw: number,
-  sh: number,
-): ImageData {
-  const inputPixels = new Uint32Array(data.data.buffer);
-
-  // Copy within the same buffer for speed and memory efficiency.
-  for (let y = 0; y < sh; y += 1) {
-    const start = (y + sy) * data.width + sx;
-    inputPixels.copyWithin(y * sw, start, start + sw);
-  }
-
-  return new ImageData(
-    new Uint8ClampedArray(inputPixels.buffer.slice(0, sw * sh * 4)),
-    sw,
-    sh,
-  );
 }
 
 interface ClampOpts {
@@ -45,13 +25,20 @@ function clamp(
   return Math.min(Math.max(num, min), max);
 }
 
-/** Resize methods by index */
-const resizeMethods: WorkerResizeOptions['method'][] = [
-  'triangle',
-  'catrom',
-  'mitchell',
-  'lanczos3',
-];
+/**
+ * The persisted method names, mapped onto the codec's filter enum. 'hqx' is a
+ * separate wasm module that runs as a pre-pass, scaling by a whole number;
+ * Catmull-Rom then covers whatever fractional scale is left over.
+ */
+const resizeFilters: Record<WorkerResizeOptions['method'], ResizeFilter> = {
+  triangle: ResizeFilter.Triangle,
+  catrom: ResizeFilter.Catrom,
+  mitchell: ResizeFilter.Mitchell,
+  lanczos3: ResizeFilter.Lanczos,
+  box: ResizeFilter.Box,
+  hamming: ResizeFilter.Hamming,
+  hqx: ResizeFilter.Catrom,
+};
 
 let resizeWasmReady: Promise<unknown>;
 let hqxWasmReady: Promise<unknown>;
@@ -99,27 +86,17 @@ export default async function resize(
 
   if (optsIsHqxOpts(opts)) {
     input = await hqx(input, opts);
-    // Regular resize to make up the difference
-    opts = { ...opts, method: 'catrom' };
   }
 
   await resizeWasmReady;
 
-  if (opts.fitMethod === 'contain') {
-    const { sx, sy, sw, sh } = getContainOffsets(
-      data.width,
-      data.height,
-      opts.width,
-      opts.height,
-    );
-    input = crop(
-      input,
-      Math.round(sx),
-      Math.round(sy),
-      Math.round(sw),
-      Math.round(sh),
-    );
-  }
+  // Settings persisted before these options existed won't have them, and
+  // passing undefined through to wasm would arrive as NaN.
+  const {
+    lanczosRadius = defaultOptions.lanczosRadius,
+    centeringX = defaultOptions.centeringX,
+    centeringY = defaultOptions.centeringY,
+  } = opts;
 
   const result = wasmResize(
     new Uint8Array(input.data.buffer),
@@ -127,9 +104,15 @@ export default async function resize(
     input.height,
     opts.width,
     opts.height,
-    resizeMethods.indexOf(opts.method),
+    resizeFilters[opts.method],
+    lanczosRadius,
     opts.premultiply,
     opts.linearRGB,
+    // The codec crops for us, which also keeps the crop in step with the hqx
+    // pre-pass having changed the input dimensions.
+    opts.fitMethod === 'contain',
+    centeringX,
+    centeringY,
   );
 
   return new ImageData(
