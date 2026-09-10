@@ -103,28 +103,17 @@ export class Options extends Component<Props, State> {
             Dithering:
           </Range>
         </div>
-        <label class={style.optionReveal}>
-          <Revealer
-            checked={showAdvanced}
-            onChange={linkState(this, 'showAdvanced')}
-          />
-          Advanced settings
-        </label>
-        <Expander>
-          {showAdvanced && (
-            <div class={style.optionOneCell}>
-              <Range
-                name="effort"
-                min="1"
-                max="10"
-                value={effort}
-                onInput={this.onChange}
-              >
-                Effort:
-              </Range>
-            </div>
-          )}
-        </Expander>
+        <div class={style.optionOneCell}>
+          <Range
+            name="effort"
+            min="1"
+            max="10"
+            value={effort}
+            onInput={this.onChange}
+          >
+            Effort:
+          </Range>
+        </div>
       </form>
     );
   }
