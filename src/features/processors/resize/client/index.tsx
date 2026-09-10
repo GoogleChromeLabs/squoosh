@@ -27,6 +27,7 @@ import { linkRef } from 'shared/prerendered-app/util';
 import Select from 'client/lazy-app/Compress/Options/Select';
 import Expander from 'client/lazy-app/Compress/Options/Expander';
 import Checkbox from 'client/lazy-app/Compress/Options/Checkbox';
+import Range from 'client/lazy-app/Compress/Options/Range';
 
 /**
  * Return whether a set of options are worker resize options.
@@ -289,20 +290,17 @@ export class Options extends Component<Props, State> {
         </label>
         <Expander>
           {options.method === 'lanczos3' ? (
-            <label class={style.optionTextFirst}>
-              Lanczos radius:
-              <input
-                required
-                class={style.textField}
+            <div class={style.optionOneCell}>
+              <Range
                 name="lanczosRadius"
-                type="number"
                 min="1"
                 max="10"
-                step="1"
-                value={'' + lanczosRadius}
+                value={lanczosRadius}
                 onInput={this.onChange}
-              />
-            </label>
+              >
+                Lanczos radius:
+              </Range>
+            </div>
           ) : null}
         </Expander>
         <label class={style.optionTextFirst}>
