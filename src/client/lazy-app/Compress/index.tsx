@@ -51,6 +51,11 @@ export interface SourceImage {
   decoded: ImageData;
   preprocessed: ImageData;
   vectorImage?: HTMLImageElement;
+  /**
+   * The size `file` would be as `Content-Encoding: br`, in bytes. Only set for
+   * vector sources, and unset if measuring it failed. See `presentedSize`.
+   */
+  brotliSize?: number;
 }
 
 interface SideSettings {
@@ -125,6 +130,30 @@ async function decodeImage(
     if (err instanceof Error && err.name === 'AbortError') throw err;
     console.log(err);
     throw Error("Couldn't decode image");
+  }
+}
+
+/**
+ * Measure the brotli size of a vector source, for `SourceImage.brotliSize`.
+ *
+ * Returns undefined rather than throwing if the measurement fails: this is a
+ * presentation detail, and breaking SVG support outright because a wasm module
+ * wouldn't load would be a poor trade. Aborts still propagate.
+ */
+async function measureBrotliSize(
+  signal: AbortSignal,
+  blob: Blob,
+  workerBridge: WorkerBridge,
+): Promise<number | undefined> {
+  try {
+    return await workerBridge.brotliSize(signal, blob);
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') throw err;
+    console.warn(
+      'Falling back to on-disk size; brotli measurement failed:',
+      err,
+    );
+    return undefined;
   }
 }
 
@@ -261,6 +290,26 @@ async function processSvg(
     signal,
     blobToImg(new Blob([newSource], { type: 'image/svg+xml' })),
   );
+}
+
+/**
+ * The size to present for `file`, in bytes.
+ *
+ * For a vector source this is its brotli size rather than its size on disk,
+ * because SVG is text: a browser downloading it gets the compressed form, so
+ * the size on disk isn't what it costs to serve. The raster formats Squoosh
+ * encodes to are already compressed and gain next to nothing from
+ * `Content-Encoding`, so comparing their output against an uncompressed SVG
+ * would overstate the saving by a factor of two or three.
+ *
+ * Only the source itself gets this treatment - it's the only file here that
+ * can be an SVG.
+ */
+function presentedSize(source: SourceImage, file: File): number {
+  if (file === source.file && source.brotliSize !== undefined) {
+    return source.brotliSize;
+  }
+  return file.size;
 }
 
 /**
@@ -695,6 +744,7 @@ export default class Compress extends Component<Props, State> {
 
     let decoded: ImageData;
     let vectorImage: HTMLImageElement | undefined;
+    let brotliSize: number | undefined;
 
     // Handle decoding
     if (needsDecoding) {
@@ -709,7 +759,18 @@ export default class Compress extends Component<Props, State> {
         // https://bugs.chromium.org/p/chromium/issues/detail?id=606319.
         // Also, we cache the HTMLImageElement so we can perform vector resizing later.
         if (mainJobState.file.type.startsWith('image/svg+xml')) {
-          vectorImage = await processSvg(mainSignal, mainJobState.file);
+          // Vector sources are presented at their brotli size, so measure it
+          // here, alongside the decode, rather than on the way to the render.
+          // processSvg doesn't touch the worker, so these don't contend.
+          [vectorImage, brotliSize] = await Promise.all([
+            processSvg(mainSignal, mainJobState.file),
+            measureBrotliSize(
+              mainSignal,
+              mainJobState.file,
+              // Either worker is good enough here.
+              this.workerBridges[0],
+            ),
+          ]);
           decoded = drawableToImageData(vectorImage);
         } else {
           decoded = await decodeImage(
@@ -745,7 +806,7 @@ export default class Compress extends Component<Props, State> {
         throw err;
       }
     } else {
-      ({ decoded, vectorImage } = currentState.source!);
+      ({ decoded, vectorImage, brotliSize } = currentState.source!);
     }
 
     let source: SourceImage;
@@ -769,6 +830,7 @@ export default class Compress extends Component<Props, State> {
         source = {
           decoded,
           vectorImage,
+          brotliSize,
           preprocessed,
           file: mainJobState.file,
         };
@@ -978,20 +1040,32 @@ export default class Compress extends Component<Props, State> {
       />
     ));
 
-    const results = sides.map((side, index) => (
-      <Results
-        downloadUrl={side.downloadUrl}
-        imageFile={side.file}
-        source={source}
-        loading={loading || side.loading}
-        flipSide={mobileView || index === 1}
-        typeLabel={
-          side.latestSettings.encoderState
-            ? encoderMap[side.latestSettings.encoderState.type].meta.label
-            : `${side.file ? `${side.file.name}` : 'Original Image'}`
-        }
-      />
-    ));
+    const results = sides.map((side, index) => {
+      // The side showing "Original Image" hands back the source file itself, so
+      // for a vector source that's the one side whose presented size is a
+      // brotli size rather than a size on disk.
+      const showingSource = !!source && side.file === source.file;
+
+      return (
+        <Results
+          downloadUrl={side.downloadUrl}
+          imageFile={side.file}
+          source={source}
+          sourceSize={source && presentedSize(source, source.file)}
+          outputSize={
+            source && side.file ? presentedSize(source, side.file) : undefined
+          }
+          brotli={showingSource && source!.brotliSize !== undefined}
+          loading={loading || side.loading}
+          flipSide={mobileView || index === 1}
+          typeLabel={
+            side.latestSettings.encoderState
+              ? encoderMap[side.latestSettings.encoderState.type].meta.label
+              : `${side.file ? `${side.file.name}` : 'Original Image'}`
+          }
+        />
+      );
+    });
 
     // For rendering, we ideally want the settings that were used to create the
     // data, not the latest settings.
