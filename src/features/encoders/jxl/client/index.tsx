@@ -395,7 +395,7 @@ export class Options extends Component<Props, State> {
               <Expander>
                 {transcode && (
                   <label class={style.optionToggle}>
-                    Allow JPEG reconstruction
+                    Allow full reverse transcoding
                     <Checkbox
                       checked={storeJpegMetadata}
                       onChange={this._inputChange(
