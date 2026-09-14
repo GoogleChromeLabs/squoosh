@@ -33,13 +33,35 @@ import { resize } from 'features/processors/resize/client';
 import type SnackBarElement from 'shared/custom-els/snack-bar';
 import { drawableToImageData } from '../util/canvas';
 
+declare global {
+  interface Window {
+    /**
+     * Debug flag: when truthy, the SSIMULACRA 2 score of each encoded side is
+     * computed against the processed (pre-encode) image and logged to the
+     * console. Set `window.logQuality = true` in the devtools console.
+     */
+    logQuality?: boolean;
+  }
+}
+
 export type OutputType = EncoderType | 'identity';
 
 export interface SourceImage {
   file: File;
+  /**
+   * `file`'s type as sniffed from its bytes, rather than whatever `file.type`
+   * claims. Encoders that can work from the original file rather than from
+   * pixels need to know what they'd be given - see `transcodeSourceFor`.
+   */
+  mimeType: ImageMimeTypes | 'image/svg+xml' | '';
   decoded: ImageData;
   preprocessed: ImageData;
   vectorImage?: HTMLImageElement;
+  /**
+   * The size `file` would be as `Content-Encoding: br`, in bytes. Only set for
+   * vector sources, and unset if measuring it failed. See `presentedSize`.
+   */
+  brotliSize?: number;
 }
 
 interface SideSettings {
@@ -49,6 +71,8 @@ interface SideSettings {
 
 interface Side {
   processed?: ImageData;
+  /** Post-resize, pre-quantize image used as the reference for quality metrics. */
+  metricReference?: ImageData;
   file?: File;
   downloadUrl?: string;
   data?: ImageData;
@@ -99,17 +123,8 @@ async function decodeImage(
 
   try {
     if (!canDecode) {
-      if (mimeType === 'image/avif') {
-        return await workerBridge.avifDecode(signal, blob);
-      }
-      if (mimeType === 'image/webp') {
-        return await workerBridge.webpDecode(signal, blob);
-      }
       if (mimeType === 'image/jxl') {
         return await workerBridge.jxlDecode(signal, blob);
-      }
-      if (mimeType === 'image/webp2') {
-        return await workerBridge.wp2Decode(signal, blob);
       }
       if (mimeType === 'image/qoi') {
         return await workerBridge.qoiDecode(signal, blob);
@@ -121,6 +136,30 @@ async function decodeImage(
     if (err instanceof Error && err.name === 'AbortError') throw err;
     console.log(err);
     throw Error("Couldn't decode image");
+  }
+}
+
+/**
+ * Measure the brotli size of a vector source, for `SourceImage.brotliSize`.
+ *
+ * Returns undefined rather than throwing if the measurement fails: this is a
+ * presentation detail, and breaking SVG support outright because a wasm module
+ * wouldn't load would be a poor trade. Aborts still propagate.
+ */
+async function measureBrotliSize(
+  signal: AbortSignal,
+  blob: Blob,
+  workerBridge: WorkerBridge,
+): Promise<number | undefined> {
+  try {
+    return await workerBridge.brotliSize(signal, blob);
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') throw err;
+    console.warn(
+      'Falling back to on-disk size; brotli measurement failed:',
+      err,
+    );
+    return undefined;
   }
 }
 
@@ -144,18 +183,31 @@ async function preprocessImage(
   return processedData;
 }
 
+interface ProcessResult {
+  /** The fully processed image, ready to be encoded. */
+  processed: ImageData;
+  /**
+   * The version of the image to be considered the 'lossless' reference.
+   * For example, resize is considered 'preparation', so it creating a new lossless reference.
+   * Whereas quantization is considered a lossy step.
+   */
+  metricReference: ImageData;
+}
+
 async function processImage(
   signal: AbortSignal,
   source: SourceImage,
   processorState: ProcessorState,
   workerBridge: WorkerBridge,
-): Promise<ImageData> {
+): Promise<ProcessResult> {
   assertSignal(signal);
   let result = source.preprocessed;
 
   if (processorState.resize.enabled) {
     result = await resize(signal, source, processorState.resize, workerBridge);
   }
+  // After resizing but before quantize: the reference for quality metrics.
+  const metricReference = result;
   if (processorState.quantize.enabled) {
     result = await workerBridge.quantize(
       signal,
@@ -163,7 +215,7 @@ async function processImage(
       processorState.quantize,
     );
   }
-  return result;
+  return { processed: result, metricReference };
 }
 
 async function compressImage(
@@ -171,6 +223,7 @@ async function compressImage(
   image: ImageData,
   encodeData: EncoderState,
   sourceFilename: string,
+  transcodeSource: File | undefined,
   workerBridge: WorkerBridge,
 ): Promise<File> {
   assertSignal(signal);
@@ -182,6 +235,7 @@ async function compressImage(
     image,
     // The type of encodeData.options is enforced via the previous line
     encodeData.options as any,
+    transcodeSource,
   );
 
   // This type ensures the image mimetype is consistent with our mimetype sniffer
@@ -247,6 +301,49 @@ async function processSvg(
 }
 
 /**
+ * The size to present for `file`, in bytes.
+ *
+ * For a vector source this is its brotli size rather than its size on disk,
+ * because SVG is text: a browser downloading it gets the compressed form, so
+ * the size on disk isn't what it costs to serve. The raster formats Squoosh
+ * encodes to are already compressed and gain next to nothing from
+ * `Content-Encoding`, so comparing their output against an uncompressed SVG
+ * would overstate the saving by a factor of two or three.
+ *
+ * Only the source itself gets this treatment - it's the only file here that
+ * can be an SVG.
+ */
+function presentedSize(source: SourceImage, file: File): number {
+  if (file === source.file && source.brotliSize !== undefined) {
+    return source.brotliSize;
+  }
+  return file.size;
+}
+
+/**
+ * The source file to hand an encoder that can transcode it directly, or
+ * undefined if that isn't on the table.
+ *
+ * JPEG XL can recompress a JPEG's existing DCT coefficients instead of encoding
+ * pixels, which is smaller *and* leaves the image untouched - but only if the
+ * bytes it gets are the bytes we were given. Once anything has preprocessed or
+ * processed the image, the pixels being encoded aren't the JPEG's any more, so
+ * there's nothing to transcode.
+ */
+function transcodeSourceFor(
+  source: SourceImage | undefined,
+  preprocessorState: PreprocessorState,
+  processorState: ProcessorState,
+): File | undefined {
+  if (!source || source.mimeType !== 'image/jpeg') return undefined;
+  if (preprocessorState.rotate.rotate !== 0) return undefined;
+  if (Object.values(processorState).some((processor) => processor.enabled)) {
+    return undefined;
+  }
+  return source.file;
+}
+
+/**
  * If two processors are disabled, they're considered equivalent, otherwise
  * equivalence is based on ===
  */
@@ -307,8 +404,8 @@ export default class Compress extends Component<Props, State> {
             latestSettings: {
               processorState: defaultProcessorState,
               encoderState: {
-                type: 'mozJPEG',
-                options: encoderMap.mozJPEG.meta.defaultOptions,
+                type: 'jpegli',
+                options: encoderMap.jpegli.meta.defaultOptions,
               },
             },
             loading: false,
@@ -678,6 +775,8 @@ export default class Compress extends Component<Props, State> {
 
     let decoded: ImageData;
     let vectorImage: HTMLImageElement | undefined;
+    let brotliSize: number | undefined;
+    let mimeType: SourceImage['mimeType'];
 
     // Handle decoding
     if (needsDecoding) {
@@ -692,9 +791,27 @@ export default class Compress extends Component<Props, State> {
         // https://bugs.chromium.org/p/chromium/issues/detail?id=606319.
         // Also, we cache the HTMLImageElement so we can perform vector resizing later.
         if (mainJobState.file.type.startsWith('image/svg+xml')) {
-          vectorImage = await processSvg(mainSignal, mainJobState.file);
+          mimeType = 'image/svg+xml';
+          // Vector sources are presented at their brotli size, so measure it
+          // here, alongside the decode, rather than on the way to the render.
+          // processSvg doesn't touch the worker, so these don't contend.
+          [vectorImage, brotliSize] = await Promise.all([
+            processSvg(mainSignal, mainJobState.file),
+            measureBrotliSize(
+              mainSignal,
+              mainJobState.file,
+              // Either worker is good enough here.
+              this.workerBridges[0],
+            ),
+          ]);
           decoded = drawableToImageData(vectorImage);
         } else {
+          // Sniffed rather than trusting `file.type`, which whatever handed us
+          // the file may have got wrong.
+          mimeType = await abortable(
+            mainSignal,
+            sniffMimeType(mainJobState.file),
+          );
           decoded = await decodeImage(
             mainSignal,
             mainJobState.file,
@@ -728,7 +845,7 @@ export default class Compress extends Component<Props, State> {
         throw err;
       }
     } else {
-      ({ decoded, vectorImage } = currentState.source!);
+      ({ decoded, vectorImage, brotliSize, mimeType } = currentState.source!);
     }
 
     let source: SourceImage;
@@ -752,6 +869,8 @@ export default class Compress extends Component<Props, State> {
         source = {
           decoded,
           vectorImage,
+          brotliSize,
+          mimeType,
           preprocessed,
           file: mainJobState.file,
         };
@@ -805,12 +924,14 @@ export default class Compress extends Component<Props, State> {
         let file: File;
         let data: ImageData;
         let processed: ImageData | undefined = undefined;
+        let metricReference: ImageData | undefined = undefined;
 
         // If there's no encoder state, this is "original image", which also
         // doesn't allow processing.
         if (!jobState.encoderState) {
           file = source.file;
           data = source.preprocessed;
+          metricReference = source.preprocessed;
         } else {
           const cacheResult = this.encodeCache.match(
             source.preprocessed,
@@ -819,7 +940,7 @@ export default class Compress extends Component<Props, State> {
           );
 
           if (cacheResult) {
-            ({ file, processed, data } = cacheResult);
+            ({ file, processed, data, metricReference } = cacheResult);
           } else {
             // Set loading state for this side
             this.setState((currentState) => {
@@ -831,12 +952,12 @@ export default class Compress extends Component<Props, State> {
             });
 
             if (sideWorkNeeded.processing) {
-              processed = await processImage(
+              ({ processed, metricReference } = await processImage(
                 signal,
                 source,
                 jobState.processorState,
                 workerBridge,
-              );
+              ));
 
               // Update state for process completion, including intermediate render
               this.setState((currentState) => {
@@ -845,6 +966,7 @@ export default class Compress extends Component<Props, State> {
                 const side: Side = {
                   ...currentSide,
                   processed,
+                  metricReference,
                   // Intermediate render
                   data: processed,
                   encodedSettings: {
@@ -857,6 +979,7 @@ export default class Compress extends Component<Props, State> {
               });
             } else {
               processed = currentState.sides[sideIndex].processed!;
+              metricReference = currentState.sides[sideIndex].metricReference!;
             }
 
             file = await compressImage(
@@ -864,6 +987,11 @@ export default class Compress extends Component<Props, State> {
               processed,
               jobState.encoderState,
               source.file.name,
+              transcodeSourceFor(
+                source,
+                mainJobState.preprocessorState,
+                jobState.processorState,
+              ),
               workerBridge,
             );
             data = await decodeImage(signal, file, workerBridge);
@@ -871,6 +999,7 @@ export default class Compress extends Component<Props, State> {
             this.encodeCache.add({
               data,
               processed,
+              metricReference,
               file,
               preprocessed: source.preprocessed,
               encoderState: jobState.encoderState,
@@ -903,6 +1032,21 @@ export default class Compress extends Component<Props, State> {
           return { sides };
         });
 
+        if (window.logQuality) {
+          try {
+            const score = await workerBridge.ssimulacra2(
+              signal,
+              metricReference,
+              data,
+            );
+            console.log(`SSIMULACRA 2 (side ${sideIndex}): ${score}`);
+          } catch (err) {
+            if (!signal.aborted) {
+              console.error(`SSIMULACRA 2 (side ${sideIndex}) failed:`, err);
+            }
+          }
+        }
+
         this.activeSideJobs[sideIndex] = undefined;
       } catch (err) {
         if (err instanceof Error && err.name === 'AbortError') return;
@@ -932,6 +1076,11 @@ export default class Compress extends Component<Props, State> {
         mobileView={mobileView}
         processorState={side.latestSettings.processorState}
         encoderState={side.latestSettings.encoderState}
+        transcodeSource={transcodeSourceFor(
+          source,
+          preprocessorState,
+          side.latestSettings.processorState,
+        )}
         onEncoderTypeChange={this.onEncoderTypeChange}
         onEncoderOptionsChange={this.onEncoderOptionsChange}
         onProcessorOptionsChange={this.onProcessorOptionsChange}
@@ -941,20 +1090,32 @@ export default class Compress extends Component<Props, State> {
       />
     ));
 
-    const results = sides.map((side, index) => (
-      <Results
-        downloadUrl={side.downloadUrl}
-        imageFile={side.file}
-        source={source}
-        loading={loading || side.loading}
-        flipSide={mobileView || index === 1}
-        typeLabel={
-          side.latestSettings.encoderState
-            ? encoderMap[side.latestSettings.encoderState.type].meta.label
-            : `${side.file ? `${side.file.name}` : 'Original Image'}`
-        }
-      />
-    ));
+    const results = sides.map((side, index) => {
+      // The side showing "Original Image" hands back the source file itself, so
+      // for a vector source that's the one side whose presented size is a
+      // brotli size rather than a size on disk.
+      const showingSource = !!source && side.file === source.file;
+
+      return (
+        <Results
+          downloadUrl={side.downloadUrl}
+          imageFile={side.file}
+          source={source}
+          sourceSize={source && presentedSize(source, source.file)}
+          outputSize={
+            source && side.file ? presentedSize(source, side.file) : undefined
+          }
+          brotli={showingSource && source!.brotliSize !== undefined}
+          loading={loading || side.loading}
+          flipSide={mobileView || index === 1}
+          typeLabel={
+            side.latestSettings.encoderState
+              ? encoderMap[side.latestSettings.encoderState.type].meta.label
+              : `${side.file ? `${side.file.name}` : 'Original Image'}`
+          }
+        />
+      );
+    });
 
     // For rendering, we ideally want the settings that were used to create the
     // data, not the latest settings.

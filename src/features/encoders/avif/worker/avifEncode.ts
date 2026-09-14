@@ -10,20 +10,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import type { AVIFModule } from 'codecs/avif/enc/avif_enc';
+import type { AVIFModule } from 'codecs/avif/enc/avif_enc_mt';
 import type { EncodeOptions } from '../shared/meta';
 import { initEmscriptenModule } from 'features/worker-utils';
-import checkThreadsSupport from 'worker-shared/supports-wasm-threads';
 
 let emscriptenModule: Promise<AVIFModule>;
 
 async function init() {
-  if (await checkThreadsSupport()) {
-    const avifEncoder = await import('codecs/avif/enc/avif_enc_mt');
-    return initEmscriptenModule<AVIFModule>(avifEncoder.default);
-  }
-  const avifEncoder = await import('codecs/avif/enc/avif_enc.js');
-  return initEmscriptenModule(avifEncoder.default);
+  const avifEncoder = await import('codecs/avif/enc/avif_enc_mt');
+  return initEmscriptenModule<AVIFModule>(avifEncoder.default);
 }
 
 export default async function encode(

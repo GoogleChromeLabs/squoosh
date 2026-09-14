@@ -52,13 +52,23 @@ EMSCRIPTEN_BINDINGS(my_module) {
       .value("WEBP_HINT_PHOTO", WebPImageHint::WEBP_HINT_PHOTO)
       .value("WEBP_HINT_GRAPH", WebPImageHint::WEBP_HINT_GRAPH);
 
+  // NB: this binds libwebp's WebPConfig directly, and deliberately does NOT
+  // expose every field. WebPConfigInit() is never called - embind
+  // value-initialises the struct and then fills in the bound fields from JS - so
+  // any field left unbound is zero, which is exactly what WebPConfigInit sets
+  // for all of them (see src/enc/config_enc.c). Unbound on purpose:
+  //   target_size / target_PSNR  - alternative rate control, conflicts with the
+  //                                quality slider
+  //   partition_limit            - VP8 partition sizing, no effect
+  //   show_compressed            - debug only
+  //   emulate_jpeg_size          - only meaningful with target_size
+  //   low_memory                 - trades speed for memory; not worth exposing
+  //   use_delta_palette          - upstream-documented as experimental/no-op
   value_object<WebPConfig>("WebPConfig")
       .field("lossless", &WebPConfig::lossless)
       .field("quality", &WebPConfig::quality)
       .field("method", &WebPConfig::method)
       .field("image_hint", &WebPConfig::image_hint)
-      .field("target_size", &WebPConfig::target_size)
-      .field("target_PSNR", &WebPConfig::target_PSNR)
       .field("segments", &WebPConfig::segments)
       .field("sns_strength", &WebPConfig::sns_strength)
       .field("filter_strength", &WebPConfig::filter_strength)
@@ -69,16 +79,16 @@ EMSCRIPTEN_BINDINGS(my_module) {
       .field("alpha_filtering", &WebPConfig::alpha_filtering)
       .field("alpha_quality", &WebPConfig::alpha_quality)
       .field("pass", &WebPConfig::pass)
-      .field("show_compressed", &WebPConfig::show_compressed)
       .field("preprocessing", &WebPConfig::preprocessing)
       .field("partitions", &WebPConfig::partitions)
-      .field("partition_limit", &WebPConfig::partition_limit)
-      .field("emulate_jpeg_size", &WebPConfig::emulate_jpeg_size)
-      .field("low_memory", &WebPConfig::low_memory)
       .field("near_lossless", &WebPConfig::near_lossless)
       .field("exact", &WebPConfig::exact)
-      .field("use_delta_palette", &WebPConfig::use_delta_palette)
-      .field("use_sharp_yuv", &WebPConfig::use_sharp_yuv);
+      .field("use_sharp_yuv", &WebPConfig::use_sharp_yuv)
+      // Enables libwebp's single side worker (alpha encoding, split analysis,
+      // parallel lossless crunch-config search). This was in EncodeOptions and
+      // defaultOptions but never actually bound here, so it had no effect at
+      // all before - and the build had threads disabled anyway.
+      .field("thread_level", &WebPConfig::thread_level);
 
   function("version", &version);
   function("encode", &encode);

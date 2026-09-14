@@ -10,31 +10,52 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import imagequant, { QuantizerModule } from 'codecs/imagequant/imagequant';
-import { initEmscriptenModule } from 'features/worker-utils';
-import { Options } from '../shared/meta';
+import initWasm, {
+  quantize as wasmQuantize,
+  QuantizeMode as WasmQuantizeMode,
+} from 'codecs/imagequant/pkg/squoosh_imagequant';
+import { Options, QuantizeMode, defaultOptions } from '../shared/meta';
 
-let emscriptenModule: Promise<QuantizerModule>;
+const modes: Record<QuantizeMode, WasmQuantizeMode> = {
+  rgba: WasmQuantizeMode.Rgba,
+  alphaOnly: WasmQuantizeMode.AlphaOnly,
+  zx: WasmQuantizeMode.Zx,
+};
+
+/** Both scales are 1-10, just pointing in opposite directions. */
+const MAX_EFFORT = 10;
+
+let wasmReady: Promise<unknown>;
 
 export default async function process(
   data: ImageData,
   opts: Options,
 ): Promise<ImageData> {
-  if (!emscriptenModule) {
-    emscriptenModule = initEmscriptenModule(imagequant);
+  if (!wasmReady) {
+    wasmReady = initWasm();
   }
 
-  const module = await emscriptenModule;
+  await wasmReady;
 
-  const result = opts.zx
-    ? module.zx_quantize(data.data, data.width, data.height, opts.dither)
-    : module.quantize(
-        data.data,
-        data.width,
-        data.height,
-        opts.maxNumColors,
-        opts.dither,
-      );
+  // Settings persisted before these options existed won't have them. `mode`
+  // replaced a `zx` flag, so old settings fall back to the standard mode.
+  const { mode = defaultOptions.mode, effort = defaultOptions.effort } = opts;
 
-  return new ImageData(result, data.width, data.height);
+  const result = wasmQuantize(
+    new Uint8Array(data.data.buffer),
+    data.width,
+    data.height,
+    modes[mode],
+    opts.maxNumColors,
+    opts.dither,
+    // libimagequant counts the other way round: its `speed` runs from 1
+    // (slowest, best) to 10 (fastest, worst).
+    MAX_EFFORT + 1 - effort,
+  );
+
+  return new ImageData(
+    new Uint8ClampedArray(result.buffer),
+    data.width,
+    data.height,
+  );
 }

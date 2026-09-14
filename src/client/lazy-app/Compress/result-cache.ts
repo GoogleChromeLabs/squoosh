@@ -3,6 +3,8 @@ import { shallowEqual } from '../util';
 
 interface CacheResult {
   processed: ImageData;
+  /** Post-resize, pre-quantize image used as the reference for quality metrics. */
+  metricReference: ImageData;
   data: ImageData;
   file: File;
 }

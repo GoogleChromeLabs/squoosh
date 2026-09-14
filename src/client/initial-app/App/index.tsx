@@ -12,6 +12,10 @@ import 'shared/custom-els/snack-bar';
 import Intro from 'shared/prerendered-app/Intro';
 import 'shared/custom-els/loading-spinner';
 
+console.log(
+  `Hello fellow developer! If you'd like to see ssimulacra2 results in the console, set window.logQuality = true;`,
+);
+
 const ROUTE_EDITOR = '/editor';
 
 const compressPromise = import('client/lazy-app/Compress');

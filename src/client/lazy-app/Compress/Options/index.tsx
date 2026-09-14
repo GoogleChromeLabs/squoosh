@@ -1,4 +1,4 @@
-import { h, Component } from 'preact';
+import { h, Component, ComponentType } from 'preact';
 
 import * as style from './style.css';
 import 'add-css:./style.css';
@@ -25,6 +25,13 @@ interface Props {
   source?: SourceImage;
   encoderState?: EncoderState;
   processorState: ProcessorState;
+  /**
+   * The source file, when the encoder could transcode it directly rather than
+   * encode the processed pixels. Only JPEG XL does anything with this; the
+   * other codecs' Options components ignore it. See `transcodeSourceFor` in
+   * Compress.
+   */
+  transcodeSource?: File;
   onEncoderTypeChange(index: 0 | 1, newType: OutputType): void;
   onEncoderOptionsChange(index: 0 | 1, newOptions: EncoderOptions): void;
   onProcessorOptionsChange(index: 0 | 1, newOptions: ProcessorState): void;
@@ -148,12 +155,18 @@ export default class Options extends Component<Props, State> {
   };
 
   render(
-    { source, encoderState, processorState }: Props,
+    { source, encoderState, processorState, transcodeSource }: Props,
     { supportedEncoderMap }: State,
   ) {
     const encoder = encoderState && encoderMap[encoderState.type];
-    const EncoderOptionComponent =
-      encoder && 'Options' in encoder ? encoder.Options : undefined;
+    // `encoder.Options` is a union of every codec's Options component. Rendering
+    // a union component makes TypeScript intersect all their prop types, and
+    // that intersection collapses to `never` as soon as two codecs declare the
+    // same option name with different types. The options value is already cast
+    // to `any` below, so erase the prop type here to avoid the bogus `never`.
+    const EncoderOptionComponent = (
+      encoder && 'Options' in encoder ? encoder.Options : undefined
+    ) as ComponentType<any> | undefined;
 
     return (
       <div
@@ -279,6 +292,7 @@ export default class Options extends Component<Props, State> {
                 // the correct type, but typescript isn't smart enough.
                 encoderState!.options as any
               }
+              transcodeSource={transcodeSource}
               onChange={this.onEncoderOptionsChange}
             />
           )}

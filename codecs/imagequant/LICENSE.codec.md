@@ -1,3 +1,6 @@
+libimagequant is dual-licensed: GPL-3.0-or-later, or a commercial licence.
+See https://pngquant.org for the commercial terms. The GPL-3.0 terms follow.
+
 
 libimagequant is derived from code by Jef Poskanzer and Greg Roelofs
 licensed under pngquant's original license (at the end of this file),
