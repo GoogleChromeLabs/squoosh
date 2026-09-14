@@ -67,6 +67,33 @@ ENVIRONMENT = worker
 # codecs/avif's SIMD_COMPILE_FLAGS / DEP_COMPILE_FLAGS plumbing).
 SIMD_FLAGS = -msimd128
 
+# Build for wasm64 (memory64).
+#
+# SSIMULACRA 2 holds both images as float planes and keeps ~10 full-resolution
+# Image3F buffers live at scale 0, which measures out at roughly 165 bytes/px.
+# A 35 MP pair (e.g. 4810x7211) therefore wants ~5.7 GB - unreachable in wasm32,
+# where a 32-bit pointer caps the heap at 4 GB no matter what MAXIMUM_MEMORY
+# says. libjxl reacts to the failed allocation by aborting the whole module
+# ("image.cc:94: JXL_CHECK: bytes_.get()"), so wasm32 could only ever refuse
+# these images, not score them.
+#
+# -m64 switches to 64-bit pointers and lifts that ceiling. Like SIMD, it has to
+# reach *every* object: wasm32 and wasm64 objects cannot be linked together, so
+# this is propagated into all the dependency builds below as well.
+MEM64_FLAGS = -m64
+
+# With 64-bit pointers the cap is a policy choice rather than an architectural
+# one, and 16 GB is as high as it goes: wasm-ld rejects anything above
+# 17179869184 bytes. Declaring the maximum costs nothing - measured instantiate
+# time and RSS are identical at 4, 8 and 16 GB, because ALLOW_MEMORY_GROWTH
+# (codecs/cpp.Dockerfile) means pages are only committed as they're touched. So
+# there's no reason to cap lower and refuse images a capable machine could
+# score; the practical limit is whatever the host will actually hand over.
+MEMORY_FLAGS = -s MAXIMUM_MEMORY=16GB
+
+# Everything that must be identical across the wrapper and every dependency.
+DEP_COMPILE_FLAGS = $(SIMD_FLAGS) $(MEM64_FLAGS)
+
 OUT_JS   = ssimulacra2.js
 OUT_WASM = $(OUT_JS:.js=.wasm)
 
@@ -101,8 +128,9 @@ all: $(OUT_JS)
 $(OUT_JS): ssimulacra2.cpp $(SS2_CC) $(LIBJXL_A) $(LIBHWY_A) $(LIBLCMS2_A) $(LIBBROTLI_ALL) $(MAKEFILE_DEPS)
 	$(CXX) \
 		$(CXXFLAGS) \
-		$(SIMD_FLAGS) \
+		$(DEP_COMPILE_FLAGS) \
 		$(LDFLAGS) \
+		$(MEMORY_FLAGS) \
 		$(DEBUG_FLAGS) \
 		-I $(JXL_SRC) \
 		-I $(JXL_SRC)/lib \
@@ -129,8 +157,9 @@ $(OUT_JS): ssimulacra2.cpp $(SS2_CC) $(LIBJXL_A) $(LIBHWY_A) $(LIBLCMS2_A) $(LIB
 $(LIBJXL_A): $(JXL_SRC)/CMakeLists.txt $(LIBHWY_A) $(LIBLCMS2_A) $(LIBBROTLI_ALL) $(MAKEFILE_DEPS)
 	emcmake cmake \
 		-DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) \
-		-DCMAKE_C_FLAGS="$(SIMD_FLAGS)" \
-		-DCMAKE_CXX_FLAGS="$(SIMD_FLAGS)" \
+		-DCMAKE_C_FLAGS="$(DEP_COMPILE_FLAGS)" \
+		-DCMAKE_CXX_FLAGS="$(DEP_COMPILE_FLAGS)" \
+		-DCMAKE_EXE_LINKER_FLAGS="$(MEM64_FLAGS)" \
 		-DBUILD_SHARED_LIBS=0 \
 		-DBUILD_TESTING=0 \
 		-DJPEGXL_ENABLE_TOOLS=0 \
@@ -162,8 +191,9 @@ $(LIBJXL_A): $(JXL_SRC)/CMakeLists.txt $(LIBHWY_A) $(LIBLCMS2_A) $(LIBBROTLI_ALL
 $(LIBHWY_A): $(HWY_DIR)/CMakeLists.txt $(MAKEFILE_DEPS)
 	emcmake cmake \
 		-DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) \
-		-DCMAKE_C_FLAGS="$(SIMD_FLAGS)" \
-		-DCMAKE_CXX_FLAGS="$(SIMD_FLAGS)" \
+		-DCMAKE_C_FLAGS="$(DEP_COMPILE_FLAGS)" \
+		-DCMAKE_CXX_FLAGS="$(DEP_COMPILE_FLAGS)" \
+		-DCMAKE_EXE_LINKER_FLAGS="$(MEM64_FLAGS)" \
 		-DBUILD_SHARED_LIBS=0 \
 		-DHWY_ENABLE_CONTRIB=0 \
 		-DHWY_ENABLE_EXAMPLES=0 \
@@ -184,8 +214,9 @@ $(LIBBROTLI_COMMON) $(LIBBROTLI_DEC) $(LIBBROTLI_ENC): $(BROTLI_BUILD)/libs.stam
 $(BROTLI_BUILD)/libs.stamp: $(BROTLI_DIR)/CMakeLists.txt $(MAKEFILE_DEPS)
 	emcmake cmake \
 		-DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) \
-		-DCMAKE_C_FLAGS="$(SIMD_FLAGS)" \
-		-DCMAKE_CXX_FLAGS="$(SIMD_FLAGS)" \
+		-DCMAKE_C_FLAGS="$(DEP_COMPILE_FLAGS)" \
+		-DCMAKE_CXX_FLAGS="$(DEP_COMPILE_FLAGS)" \
+		-DCMAKE_EXE_LINKER_FLAGS="$(MEM64_FLAGS)" \
 		-DBUILD_SHARED_LIBS=0 \
 		-DBROTLI_DISABLE_TESTS=1 \
 		-B $(BROTLI_BUILD) \
@@ -201,7 +232,8 @@ $(BROTLI_BUILD)/libs.stamp: $(BROTLI_DIR)/CMakeLists.txt $(MAKEFILE_DEPS)
 $(LIBLCMS2_A): $(LCMS2_DIR)/configure $(MAKEFILE_DEPS)
 	cd $(LCMS2_DIR) && emconfigure ./configure \
 		--host=wasm32 \
-		CFLAGS="$(CFLAGS) $(SIMD_FLAGS)" \
+		CFLAGS="$(CFLAGS) $(DEP_COMPILE_FLAGS)" \
+		LDFLAGS="$(MEM64_FLAGS)" \
 		--enable-static --disable-shared && emmake $(MAKE)
 
 # ---- downloads + extraction (curl + tar, like codecs/avif) ------------------

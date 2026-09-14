@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <limits>
 #include <string>
 
 #include "lib/jxl/base/span.h"
@@ -50,23 +51,39 @@ bool HasTransparency(const uint8_t* rgba, size_t width, size_t height) {
   return false;
 }
 
+// Releases a std::string's heap buffer immediately. Clearing alone keeps the
+// capacity allocated, so swap with an empty string to actually hand the memory
+// back to the allocator.
+void FreeString(std::string& s) { std::string().swap(s); }
+
 jxl::ImageBundle RgbaToImageBundle(const uint8_t* rgba, size_t width, size_t height,
                                    bool has_alpha, const jxl::ImageMetadata* metadata) {
   jxl::Image3F color(width, height);
-  jxl::ImageF alpha(width, height);
+  // Only allocate the alpha plane when it will actually be used: it's another
+  // 4 bytes/px on top of the 12 the colour planes already cost. The reference
+  // always needs one (see the constructor), but a fully-opaque distorted image
+  // doesn't, and that's the common case.
+  jxl::ImageF alpha;
+  if (has_alpha) {
+    alpha = jxl::ImageF(width, height);
+  }
 
   const float kInv255 = 1.0f / 255.0f;
   for (size_t y = 0; y < height; ++y) {
     float* JXL_RESTRICT row_r = color.PlaneRow(0, y);
     float* JXL_RESTRICT row_g = color.PlaneRow(1, y);
     float* JXL_RESTRICT row_b = color.PlaneRow(2, y);
-    float* JXL_RESTRICT row_a = alpha.Row(y);
+    float* JXL_RESTRICT row_a = has_alpha ? alpha.Row(y) : nullptr;
     const uint8_t* JXL_RESTRICT src = rgba + y * width * 4;
     for (size_t x = 0; x < width; ++x) {
       row_r[x] = src[x * 4 + 0] * kInv255;
       row_g[x] = src[x * 4 + 1] * kInv255;
       row_b[x] = src[x * 4 + 2] * kInv255;
-      row_a[x] = src[x * 4 + 3] * kInv255;
+    }
+    if (has_alpha) {
+      for (size_t x = 0; x < width; ++x) {
+        row_a[x] = src[x * 4 + 3] * kInv255;
+      }
     }
   }
 
@@ -90,19 +107,44 @@ class Ssimulacra2 {
     // anywhere. A fully-opaque original lets compare() skip the (doubled) blend
     // work, and keeps libjxl from doing needless alpha handling.
     original_has_transparency_ = HasTransparency(rgba, width_, height_);
-    if (original_has_transparency_) {
-      metadata_.SetAlphaBits(8);
-    }
+    // A bundle's metadata has to agree with the planes it actually holds:
+    // SetAlpha() aborts if the metadata declares no alpha channel, and libjxl
+    // asserts the other way round when metadata promises an alpha channel the
+    // bundle doesn't have. compare() decides per call whether alpha is needed
+    // (either image being transparent is enough), so keep one of each and hand
+    // every bundle the matching one.
     metadata_.color_encoding = jxl::ColorEncoding::SRGB(/*is_gray=*/false);
-    original_ = RgbaToImageBundle(rgba, width_, height_,
-                                  /*has_alpha=*/original_has_transparency_, &metadata_);
+    metadata_alpha_.color_encoding = jxl::ColorEncoding::SRGB(/*is_gray=*/false);
+    metadata_alpha_.SetAlphaBits(8);
+    // Give the reference an alpha plane whenever the distorted image might turn
+    // out to be transparent, i.e. always - compare() only learns that later,
+    // and both bundles passed to the metric must agree on having alpha. A
+    // fully-opaque alpha plane doesn't change the score (AlphaBlend over an
+    // opaque image is the identity), it just costs 4 bytes/px on the reference.
+    original_ = RgbaToImageBundle(rgba, width_, height_, /*has_alpha=*/true,
+                                  MetadataFor(/*has_alpha=*/true));
+    // Embind copied the whole RGBA buffer into wasm memory to make this
+    // std::string (4 bytes/px). It's redundant the moment the float bundle
+    // exists, so drop it now rather than at end of scope - on a large image
+    // that's over 100 MB kept out of the peak.
+    FreeString(original);
   }
 
   // Returns the SSIMULACRA 2 score comparing `distorted` against the original,
-  // or -1 if the images are too small (minimum 8x8).
+  // or NaN if the image is smaller than the metric's 8x8 minimum.
+  //
+  // NaN rather than a negative sentinel because the metric's real scores run to
+  // -inf: this wrapper routinely produces -1.x and -70.x on ordinary input, so
+  // any in-band number would be indistinguishable from a genuine score.
+  //
+  // There is deliberately no maximum-size check. How large an image fits
+  // depends on how far the host will grow the heap, which we can't know from
+  // here - so we let the allocation fail and leave it to the caller. libjxl
+  // aborts the whole module when that happens, so the JS wrapper catches the
+  // trap and rebuilds the instance.
   double compare(std::string distorted) {
     if (width_ < 8 || height_ < 8) {
-      return -1.0;
+      return std::numeric_limits<double>::quiet_NaN();
     }
     const uint8_t* rgba = reinterpret_cast<const uint8_t*>(distorted.data());
 
@@ -113,7 +155,11 @@ class Ssimulacra2 {
     // pixels even if the original is opaque.)
     bool has_alpha =
         original_has_transparency_ || HasTransparency(rgba, width_, height_);
-    jxl::ImageBundle dist = RgbaToImageBundle(rgba, width_, height_, has_alpha, &metadata_);
+    jxl::ImageBundle dist =
+        RgbaToImageBundle(rgba, width_, height_, has_alpha, MetadataFor(has_alpha));
+    // Likewise release Embind's copy of the distorted buffer before the metric
+    // allocates its scale pyramid, which is where peak heap is reached.
+    FreeString(distorted);
 
     if (!has_alpha) {
       return ComputeSSIMULACRA2(original_, dist).Score();
@@ -126,9 +172,14 @@ class Ssimulacra2 {
   }
 
  private:
+  const jxl::ImageMetadata* MetadataFor(bool has_alpha) const {
+    return has_alpha ? &metadata_alpha_ : &metadata_;
+  }
+
   jxl::ImageMetadata metadata_;
+  jxl::ImageMetadata metadata_alpha_;
   jxl::ImageBundle original_;
-  bool original_has_transparency_;
+  bool original_has_transparency_ = false;
   int width_;
   int height_;
 };
