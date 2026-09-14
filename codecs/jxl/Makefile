@@ -5,6 +5,11 @@
 # public C API* (jxl/encode.h, jxl/decode.h) rather than internal headers, so
 # they survive version bumps.
 #
+# JPEGXL_ENABLE_TRANSCODE_JPEG builds libjxl's JPEG parser, which backs
+# JxlEncoderAddJPEGFrame - the lossless JPEG -> JXL transcode in enc/jxl_enc.cpp.
+# It's libjxl's default, but set explicitly so a default change can't silently
+# drop the feature.
+#
 # We produce a SINGLE build of each, with WebAssembly SIMD enabled (-msimd128).
 # The encoder additionally uses pthreads: libjxl's resizable parallel runner
 # fans the encode across worker threads (see enc/jxl_enc.cpp). The decoder stays
@@ -187,6 +192,7 @@ $(CODEC_BUILD_DIR)/Makefile: $(CODEC_STAMP) $(MAKEFILE_DEPS)
 		-DJPEGXL_ENABLE_PLUGINS=0 \
 		-DJPEGXL_ENABLE_VIEWERS=0 \
 		-DJPEGXL_ENABLE_SKCMS=1 \
+		-DJPEGXL_ENABLE_TRANSCODE_JPEG=1 \
 		-DJPEGXL_BUNDLE_LIBPNG=0 \
 		-DJPEGXL_ENABLE_FUZZERS=0 \
 		-DJPEGXL_ENABLE_WASM_THREADS=1 \

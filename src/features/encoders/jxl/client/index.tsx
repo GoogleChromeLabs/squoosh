@@ -1,4 +1,4 @@
-import { EncodeOptions } from '../shared/meta';
+import { defaultOptions, EncodeOptions, Mode } from '../shared/meta';
 import type WorkerBridge from 'client/lazy-app/worker-bridge';
 import { h, Component } from 'preact';
 import linkState from 'linkstate';
@@ -10,15 +10,38 @@ import Expander from 'client/lazy-app/Compress/Options/Expander';
 import Revealer from 'client/lazy-app/Compress/Options/Revealer';
 import Select from 'client/lazy-app/Compress/Options/Select';
 
-export const encode = (
+export const encode = async (
   signal: AbortSignal,
   workerBridge: WorkerBridge,
   imageData: ImageData,
   options: EncodeOptions,
-) => workerBridge.jxlEncode(signal, imageData, options);
+  transcodeSource?: File,
+) => {
+  if (options.mode !== 'transcode') {
+    return workerBridge.jxlEncode(signal, imageData, options);
+  }
+
+  // Transcode mode recompresses the source JPEG itself rather than the pixels
+  // we were handed. Compress only provides a source when that's valid, so
+  // there being none here means the mode outlived its opportunity.
+  if (!transcodeSource) throw Error('No JPEG source available to transcode');
+
+  return workerBridge.jxlTranscode(
+    signal,
+    await transcodeSource.arrayBuffer(),
+    imageData.width,
+    imageData.height,
+    options,
+  );
+};
 
 interface Props {
   options: EncodeOptions;
+  /**
+   * The source JPEG, when it's still intact enough to transcode. Undefined
+   * means 'Transcode' isn't on offer - see `transcodeSource` in Compress.
+   */
+  transcodeSource?: File;
   onChange(newOptions: EncodeOptions): void;
 }
 
@@ -28,7 +51,7 @@ interface State {
   showAdvanced: boolean;
   separateAlpha: boolean;
   alphaQuality: number;
-  lossless: boolean;
+  mode: Mode;
   effort: number;
   modular: boolean;
   progressiveAC: boolean;
@@ -37,6 +60,8 @@ interface State {
   groupOrder: number;
   photonNoiseIso: number;
   decodingSpeed: number;
+  storeJpegMetadata: boolean;
+  keepMetadata: boolean;
 }
 
 export class Options extends Component<Props, State> {
@@ -50,6 +75,16 @@ export class Options extends Component<Props, State> {
 
     const { options } = props;
 
+    // Settings saved by an older release won't have the options added since, so
+    // fall back to the defaults rather than feeding undefined into the form.
+    // `mode` is the one that matters: an absent one encodes as lossy, which is
+    // also the default, so the form and the encode agree.
+    const {
+      mode = defaultOptions.mode,
+      storeJpegMetadata = defaultOptions.storeJpegMetadata,
+      keepMetadata = defaultOptions.keepMetadata,
+    } = options;
+
     // qualityAlpha of -1 means "same as quality"; otherwise it's a separate
     // alpha quality.
     const separateAlpha = options.qualityAlpha !== -1;
@@ -60,7 +95,7 @@ export class Options extends Component<Props, State> {
       quality: options.quality,
       separateAlpha,
       alphaQuality: separateAlpha ? options.qualityAlpha : options.quality,
-      lossless: options.lossless,
+      mode,
       effort: options.effort,
       modular: options.modular,
       progressiveAC: options.progressiveAC,
@@ -69,18 +104,87 @@ export class Options extends Component<Props, State> {
       groupOrder: options.groupOrder,
       photonNoiseIso: options.photonNoiseIso,
       decodingSpeed: options.decodingSpeed,
+      storeJpegMetadata,
+      keepMetadata,
     };
   }
 
   // The rest of the defaults are set in getDerivedStateFromProps
   state: State = {
-    lossless: false,
+    mode: 'lossy',
     showAdvanced: false,
   } as State;
 
+  componentDidUpdate(): void {
+    // Transcoding needs the source JPEG untouched, so loading a different
+    // image, rotating, or switching on a processor takes the option away. Fall
+    // back to Lossless - the nearest thing that can still be done - rather
+    // than leaving a mode selected that can no longer run.
+    if (this.state.mode === 'transcode' && !this.props.transcodeSource) {
+      this._updateOptions({ mode: 'lossless' });
+    }
+  }
+
+  /**
+   * Apply a change to the form state, and report the encode options it adds up
+   * to.
+   */
+  private _updateOptions(newState: Partial<State>) {
+    const optionState = {
+      ...this.state,
+      ...newState,
+    };
+
+    const { mode } = optionState;
+    const lossy = mode === 'lossy';
+    const transcode = mode === 'transcode';
+    // Lossless always encodes as modular, whatever the Encoding select says.
+    const isModular = mode === 'lossless' || optionState.modular;
+
+    const newOptions: EncodeOptions = {
+      quality: optionState.quality,
+      qualityAlpha:
+        !lossy || !optionState.separateAlpha
+          ? -1 // Use the same quality as the colour channels.
+          : optionState.alphaQuality,
+      mode,
+      effort: optionState.effort,
+      modular: optionState.modular,
+      progressiveAC: optionState.progressiveAC,
+      // Shift quantization is forced on for lossless, and for transcode (which
+      // flags its frame lossless), so the choice is meaningless there.
+      qProgressiveAC: lossy ? optionState.qProgressiveAC : false,
+      // DC passes are VarDCT-only, and only apply when progressive (AC) is on.
+      // libjxl also drops the DC frame for a JPEG frame, so a transcode never
+      // gets them. Treat as Off otherwise.
+      progressiveDC:
+        optionState.progressiveAC && !isModular && !transcode
+          ? optionState.progressiveDC
+          : 0,
+      groupOrder: optionState.groupOrder,
+      photonNoiseIso: optionState.photonNoiseIso,
+      decodingSpeed: optionState.decodingSpeed,
+      storeJpegMetadata: optionState.storeJpegMetadata,
+      // Storing reconstruction data needs the metadata that was in the JPEG,
+      // and libjxl rejects asking for both.
+      keepMetadata: optionState.storeJpegMetadata || optionState.keepMetadata,
+    };
+
+    this.setState({
+      ...newState,
+      // Updating options, so we don't recalculate in getDerivedStateFromProps.
+      options: newOptions,
+    });
+
+    this.props.onChange(newOptions);
+  }
+
   private _inputChangeCallbacks = new Map<string, (event: Event) => void>();
 
-  private _inputChange = (prop: keyof State, type: 'number' | 'boolean') => {
+  private _inputChange = (
+    prop: keyof State,
+    type: 'number' | 'boolean' | 'string',
+  ) => {
     // Cache the callback for performance
     if (!this._inputChangeCallbacks.has(prop)) {
       this._inputChangeCallbacks.set(prop, (event: Event) => {
@@ -91,52 +195,11 @@ export class Options extends Component<Props, State> {
               ? formEl.checked
               : // <select> used as a boolean: option values are "0" / "1".
                 formEl.value === '1'
+            : type === 'string'
+            ? formEl.value
             : Number(formEl.value);
 
-        const newState: Partial<State> = {
-          [prop]: newVal,
-        };
-
-        const optionState = {
-          ...this.state,
-          ...newState,
-        };
-
-        // Lossless always encodes as modular, whatever the Mode select says.
-        const isModular = optionState.lossless || optionState.modular;
-
-        const newOptions: EncodeOptions = {
-          quality: optionState.quality,
-          qualityAlpha:
-            optionState.lossless || !optionState.separateAlpha
-              ? -1 // Use the same quality as the colour channels.
-              : optionState.alphaQuality,
-          lossless: optionState.lossless,
-          effort: optionState.effort,
-          modular: optionState.modular,
-          progressiveAC: optionState.progressiveAC,
-          // Shift quantization is forced on for lossless, so the choice is
-          // meaningless there.
-          qProgressiveAC: optionState.lossless
-            ? false
-            : optionState.qProgressiveAC,
-          // DC passes are VarDCT-only, and only apply when progressive (AC) is
-          // on; treat as Off otherwise.
-          progressiveDC:
-            optionState.progressiveAC && !isModular
-              ? optionState.progressiveDC
-              : 0,
-          groupOrder: optionState.groupOrder,
-          photonNoiseIso: optionState.photonNoiseIso,
-          decodingSpeed: optionState.decodingSpeed,
-        };
-
-        // Updating options, so we don't recalculate in getDerivedStateFromProps.
-        newState.options = newOptions;
-
-        this.setState(newState);
-
-        this.props.onChange(newOptions);
+        this._updateOptions({ [prop]: newVal });
       });
     }
 
@@ -144,13 +207,13 @@ export class Options extends Component<Props, State> {
   };
 
   render(
-    {}: Props,
+    { transcodeSource }: Props,
     {
       quality,
       showAdvanced,
       separateAlpha,
       alphaQuality,
-      lossless,
+      mode,
       effort,
       modular,
       progressiveAC,
@@ -159,23 +222,33 @@ export class Options extends Component<Props, State> {
       groupOrder,
       photonNoiseIso,
       decodingSpeed,
+      storeJpegMetadata,
+      keepMetadata,
     }: State,
   ) {
-    // Lossless always encodes as modular, whatever the Mode select says.
-    const isModular = lossless || modular;
+    const lossy = mode === 'lossy';
+    const transcode = mode === 'transcode';
+    // Lossless always encodes as modular, whatever the Encoding select says.
+    const isModular = mode === 'lossless' || modular;
 
     return (
       <form class={style.optionsSection} onSubmit={preventDefault}>
-        <label class={style.optionToggle}>
-          Lossless
-          <Checkbox
-            name="lossless"
-            checked={lossless}
-            onChange={this._inputChange('lossless', 'boolean')}
-          />
+        <label class={style.optionTextFirst}>
+          Mode:
+          <Select value={mode} onChange={this._inputChange('mode', 'string')}>
+            <option value="lossy">Lossy</option>
+            <option value="lossless">Lossless</option>
+            {/* Transcoding needs an untouched JPEG source. Keep the option
+                present while it's the current value, so the select doesn't
+                render as something the user didn't pick - componentDidUpdate
+                switches away from it. */}
+            {(transcodeSource || transcode) && (
+              <option value="transcode">Transcode</option>
+            )}
+          </Select>
         </label>
         <Expander>
-          {!lossless && (
+          {lossy && (
             <div class={style.optionOneCell}>
               <Range
                 min="0"
@@ -200,10 +273,10 @@ export class Options extends Component<Props, State> {
           {showAdvanced && (
             <div>
               <Expander>
-                {!lossless && (
+                {lossy && (
                   <div>
                     <label class={style.optionTextFirst}>
-                      Mode:
+                      Encoding:
                       <Select
                         value={modular ? 1 : 0}
                         onChange={this._inputChange('modular', 'boolean')}
@@ -252,7 +325,7 @@ export class Options extends Component<Props, State> {
                 )}
               </Expander>
               {/* Tile order and progressive apply in every mode: VarDCT, lossy
-                  modular, and lossless. */}
+                  modular, lossless, and transcode. */}
               <label class={style.optionTextFirst}>
                 Tile order:
                 <Select
@@ -273,11 +346,12 @@ export class Options extends Component<Props, State> {
               <Expander>
                 {progressiveAC && (
                   <div>
-                    {/* Shift quantization is forced on for lossless, and the
-                        extra DC passes are VarDCT-only, so each is offered
-                        only where it does something. */}
+                    {/* Shift quantization is forced on for lossless and
+                        transcode, and the extra DC passes are VarDCT-only and
+                        unavailable to a transcode, so each is offered only
+                        where it does something. */}
                     <Expander>
-                      {!lossless && (
+                      {lossy && (
                         <div>
                           <label class={style.optionToggle}>
                             Progressive shift quantization
@@ -293,7 +367,7 @@ export class Options extends Component<Props, State> {
                       )}
                     </Expander>
                     <Expander>
-                      {!isModular && (
+                      {!isModular && !transcode && (
                         <div>
                           <label class={style.optionTextFirst}>
                             Progressive DC:
@@ -313,6 +387,36 @@ export class Options extends Component<Props, State> {
                       )}
                     </Expander>
                   </div>
+                )}
+              </Expander>
+              {/* A transcode is the only mode that can offer to rebuild the
+                  original file, and the only one that carries anything over
+                  from it - so it's the only one with metadata to keep. */}
+              <Expander>
+                {transcode && (
+                  <label class={style.optionToggle}>
+                    Allow JPEG reconstruction
+                    <Checkbox
+                      checked={storeJpegMetadata}
+                      onChange={this._inputChange(
+                        'storeJpegMetadata',
+                        'boolean',
+                      )}
+                    />
+                  </label>
+                )}
+              </Expander>
+              {/* Keeping the metadata isn't optional when we're also storing
+                  enough to rebuild the original file. */}
+              <Expander>
+                {transcode && !storeJpegMetadata && (
+                  <label class={style.optionToggle}>
+                    Keep metadata
+                    <Checkbox
+                      checked={keepMetadata}
+                      onChange={this._inputChange('keepMetadata', 'boolean')}
+                    />
+                  </label>
                 )}
               </Expander>
               <div class={style.optionOneCell}>

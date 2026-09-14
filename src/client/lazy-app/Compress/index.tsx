@@ -48,6 +48,12 @@ export type OutputType = EncoderType | 'identity';
 
 export interface SourceImage {
   file: File;
+  /**
+   * `file`'s type as sniffed from its bytes, rather than whatever `file.type`
+   * claims. Encoders that can work from the original file rather than from
+   * pixels need to know what they'd be given - see `transcodeSourceFor`.
+   */
+  mimeType: ImageMimeTypes | 'image/svg+xml' | '';
   decoded: ImageData;
   preprocessed: ImageData;
   vectorImage?: HTMLImageElement;
@@ -217,6 +223,7 @@ async function compressImage(
   image: ImageData,
   encodeData: EncoderState,
   sourceFilename: string,
+  transcodeSource: File | undefined,
   workerBridge: WorkerBridge,
 ): Promise<File> {
   assertSignal(signal);
@@ -228,6 +235,7 @@ async function compressImage(
     image,
     // The type of encodeData.options is enforced via the previous line
     encodeData.options as any,
+    transcodeSource,
   );
 
   // This type ensures the image mimetype is consistent with our mimetype sniffer
@@ -310,6 +318,29 @@ function presentedSize(source: SourceImage, file: File): number {
     return source.brotliSize;
   }
   return file.size;
+}
+
+/**
+ * The source file to hand an encoder that can transcode it directly, or
+ * undefined if that isn't on the table.
+ *
+ * JPEG XL can recompress a JPEG's existing DCT coefficients instead of encoding
+ * pixels, which is smaller *and* leaves the image untouched - but only if the
+ * bytes it gets are the bytes we were given. Once anything has preprocessed or
+ * processed the image, the pixels being encoded aren't the JPEG's any more, so
+ * there's nothing to transcode.
+ */
+function transcodeSourceFor(
+  source: SourceImage | undefined,
+  preprocessorState: PreprocessorState,
+  processorState: ProcessorState,
+): File | undefined {
+  if (!source || source.mimeType !== 'image/jpeg') return undefined;
+  if (preprocessorState.rotate.rotate !== 0) return undefined;
+  if (Object.values(processorState).some((processor) => processor.enabled)) {
+    return undefined;
+  }
+  return source.file;
 }
 
 /**
@@ -745,6 +776,7 @@ export default class Compress extends Component<Props, State> {
     let decoded: ImageData;
     let vectorImage: HTMLImageElement | undefined;
     let brotliSize: number | undefined;
+    let mimeType: SourceImage['mimeType'];
 
     // Handle decoding
     if (needsDecoding) {
@@ -759,6 +791,7 @@ export default class Compress extends Component<Props, State> {
         // https://bugs.chromium.org/p/chromium/issues/detail?id=606319.
         // Also, we cache the HTMLImageElement so we can perform vector resizing later.
         if (mainJobState.file.type.startsWith('image/svg+xml')) {
+          mimeType = 'image/svg+xml';
           // Vector sources are presented at their brotli size, so measure it
           // here, alongside the decode, rather than on the way to the render.
           // processSvg doesn't touch the worker, so these don't contend.
@@ -773,6 +806,12 @@ export default class Compress extends Component<Props, State> {
           ]);
           decoded = drawableToImageData(vectorImage);
         } else {
+          // Sniffed rather than trusting `file.type`, which whatever handed us
+          // the file may have got wrong.
+          mimeType = await abortable(
+            mainSignal,
+            sniffMimeType(mainJobState.file),
+          );
           decoded = await decodeImage(
             mainSignal,
             mainJobState.file,
@@ -806,7 +845,7 @@ export default class Compress extends Component<Props, State> {
         throw err;
       }
     } else {
-      ({ decoded, vectorImage, brotliSize } = currentState.source!);
+      ({ decoded, vectorImage, brotliSize, mimeType } = currentState.source!);
     }
 
     let source: SourceImage;
@@ -831,6 +870,7 @@ export default class Compress extends Component<Props, State> {
           decoded,
           vectorImage,
           brotliSize,
+          mimeType,
           preprocessed,
           file: mainJobState.file,
         };
@@ -947,6 +987,11 @@ export default class Compress extends Component<Props, State> {
               processed,
               jobState.encoderState,
               source.file.name,
+              transcodeSourceFor(
+                source,
+                mainJobState.preprocessorState,
+                jobState.processorState,
+              ),
               workerBridge,
             );
             data = await decodeImage(signal, file, workerBridge);
@@ -1031,6 +1076,11 @@ export default class Compress extends Component<Props, State> {
         mobileView={mobileView}
         processorState={side.latestSettings.processorState}
         encoderState={side.latestSettings.encoderState}
+        transcodeSource={transcodeSourceFor(
+          source,
+          preprocessorState,
+          side.latestSettings.processorState,
+        )}
         onEncoderTypeChange={this.onEncoderTypeChange}
         onEncoderOptionsChange={this.onEncoderOptionsChange}
         onProcessorOptionsChange={this.onProcessorOptionsChange}

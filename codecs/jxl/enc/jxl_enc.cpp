@@ -53,6 +53,58 @@ static const char* JxlEncoderErrorName(JxlEncoderError err) {
     return val::null();                                                       \
   }
 
+// Point `enc` at a parallel runner sized for a `width` x `height` image.
+//
+// Run libjxl's work across worker threads. The resizable runner picks a thread
+// count from the image size; we cap it to the number of logical cores
+// (navigator.hardwareConcurrency), which is also the size of the pthread pool
+// preloaded at module load. Never asking for more threads than the pool holds
+// is what avoids the mid-encode pthread deadlock that bites Chrome/Safari when
+// a worker has to be spawned while the main thread is blocked inside encode.
+//
+// `runner` stays owned by the caller: it has to outlive the encode.
+static JxlEncoderStatus SetUpParallelRunner(JxlEncoder* enc,
+                                            JxlResizableParallelRunnerPtr& runner,
+                                            int width, int height) {
+  size_t threads =
+      std::min<uint64_t>(JxlResizableParallelRunnerSuggestThreads(width, height),
+                         emscripten_num_logical_cores());
+  JxlResizableParallelRunnerSetThreads(runner.get(), threads);
+  JXL_ENC_LOG("jxl_enc: using %zu threads (%d cores)\n", threads,
+              emscripten_num_logical_cores());
+  return JxlEncoderSetParallelRunner(enc, JxlResizableParallelRunner, runner.get());
+}
+
+// Pull the compressed bytes out of `enc`, growing the buffer as libjxl asks for
+// room. Returns a Uint8Array of the codestream, or null if the encode failed.
+// Input must already be closed (JxlEncoderCloseInput).
+static val ProcessOutput(JxlEncoder* enc) {
+  std::vector<uint8_t> compressed(64);
+  uint8_t* next_out = compressed.data();
+  size_t avail_out = compressed.size();
+  JxlEncoderStatus process_result = JXL_ENC_NEED_MORE_OUTPUT;
+  while (process_result == JXL_ENC_NEED_MORE_OUTPUT) {
+    process_result = JxlEncoderProcessOutput(enc, &next_out, &avail_out);
+    if (process_result == JXL_ENC_NEED_MORE_OUTPUT) {
+      size_t offset = next_out - compressed.data();
+      compressed.resize(compressed.size() * 2);
+      next_out = compressed.data() + offset;
+      avail_out = compressed.size() - offset;
+    }
+  }
+  if (process_result != JXL_ENC_SUCCESS) {
+    JxlEncoderError err = JxlEncoderGetError(enc);
+    fprintf(stderr, "jxl_enc: JxlEncoderProcessOutput failed (encoder error %d: %s)\n",
+            err, JxlEncoderErrorName(err));
+    return val::null();
+  }
+  compressed.resize(next_out - compressed.data());
+
+  JXL_ENC_LOG("jxl_enc: done, %zu bytes out\n", compressed.size());
+
+  return Uint8Array.new_(typed_memory_view(compressed.size(), compressed.data()));
+}
+
 struct JXLOptions {
   // 0-100 quality slider, matching the rest of Squoosh. Mapped to a
   // butteraugli distance via JxlEncoderDistanceFromQuality. Ignored when
@@ -113,21 +165,8 @@ val encode(std::string image, int width, int height, JXLOptions options) {
 
   JxlEncoderPtr enc = JxlEncoderMake(/*memory_manager=*/nullptr);
 
-  // Run libjxl's work across worker threads. The resizable runner picks a thread
-  // count from the image size; we cap it to the number of logical cores
-  // (navigator.hardwareConcurrency), which is also the size of the pthread pool
-  // preloaded at module load. Never asking for more threads than the pool holds
-  // is what avoids the mid-encode pthread deadlock that bites Chrome/Safari when
-  // a worker has to be spawned while the main thread is blocked inside encode.
   JxlResizableParallelRunnerPtr runner = JxlResizableParallelRunnerMake(nullptr);
-  size_t threads =
-      std::min<uint64_t>(JxlResizableParallelRunnerSuggestThreads(width, height),
-                         emscripten_num_logical_cores());
-  JxlResizableParallelRunnerSetThreads(runner.get(), threads);
-  JXL_ENC_LOG("jxl_enc: using %zu threads (%d cores)\n", threads,
-              emscripten_num_logical_cores());
-  EXPECT_SUCCESS(JxlEncoderSetParallelRunner(enc.get(), JxlResizableParallelRunner,
-                                             runner.get()));
+  EXPECT_SUCCESS(SetUpParallelRunner(enc.get(), runner, width, height));
 
   // The browser always hands us RGBA. Detect whether the alpha channel is
   // actually used: if every pixel is fully opaque we drop the alpha channel
@@ -290,31 +329,113 @@ val encode(std::string image, int width, int height, JXLOptions options) {
   }
   JxlEncoderCloseInput(enc.get());
 
-  // Pull the compressed bytes out, growing the buffer as libjxl asks for room.
-  std::vector<uint8_t> compressed(64);
-  uint8_t* next_out = compressed.data();
-  size_t avail_out = compressed.size();
-  JxlEncoderStatus process_result = JXL_ENC_NEED_MORE_OUTPUT;
-  while (process_result == JXL_ENC_NEED_MORE_OUTPUT) {
-    process_result = JxlEncoderProcessOutput(enc.get(), &next_out, &avail_out);
-    if (process_result == JXL_ENC_NEED_MORE_OUTPUT) {
-      size_t offset = next_out - compressed.data();
-      compressed.resize(compressed.size() * 2);
-      next_out = compressed.data() + offset;
-      avail_out = compressed.size() - offset;
-    }
-  }
-  if (process_result != JXL_ENC_SUCCESS) {
-    JxlEncoderError err = JxlEncoderGetError(enc.get());
-    fprintf(stderr, "jxl_enc: JxlEncoderProcessOutput failed (encoder error %d: %s)\n",
-            err, JxlEncoderErrorName(err));
-    return val::null();
-  }
-  compressed.resize(next_out - compressed.data());
+  return ProcessOutput(enc.get());
+}
 
-  JXL_ENC_LOG("jxl_enc: done, %zu bytes out\n", compressed.size());
+struct JXLTranscodeOptions {
+  // libjxl effort / speed tier, 1 (fastest) - 9 (slowest, best compression).
+  int effort;
+  // Store JPEG bitstream reconstruction data, a.k.a. the jbrd box
+  // (~ --allow_jpeg_reconstruction). Without it the transcode still preserves
+  // every DCT coefficient, so the *image* is untouched, but the original JPEG
+  // *file* can't be rebuilt byte for byte. Costs a little size, and forces the
+  // container format.
+  bool storeJpegMetadata;
+  // Carry the JPEG's Exif / XMP / JUMBF metadata into the JXL
+  // (JPEG_KEEP_EXIF / _XMP / _JUMBF, ~ --strip). On by default in libjxl, which
+  // makes a transcode the one path in Squoosh that doesn't drop metadata -
+  // everything else decodes to pixels, where there's nothing left to keep.
+  // Ignored when storeJpegMetadata is set: rebuilding the original file needs
+  // the metadata that was in it, and libjxl rejects the combination outright.
+  bool keepMetadata;
+  // "Progressive" toggle (PROGRESSIVE_AC, ~ --progressive_ac), splitting the
+  // JPEG's AC coefficients over several passes. A transcode is always VarDCT.
+  // There's no separate qProgressiveAC knob: the frame is flagged lossless
+  // (see below), and libjxl forces LSB quantization on for lossless.
+  bool progressiveAC;
+  // Group order (GROUP_ORDER, ~ --group_order): 0 = scanline, 1 = center-first.
+  // Unlike encode() this needs no BUFFERING override - libjxl never takes the
+  // streaming path for a JPEG frame, so PermuteGroups always runs.
+  int groupOrder;
+  // Decoding speed tier (DECODING_SPEED, ~ --faster_decoding): 0 (default) to 4
+  // (fastest to decode). Still has some effect here - it caps the number of
+  // histograms used for the AC passes.
+  int decodingSpeed;
+};
 
-  return Uint8Array.new_(typed_memory_view(compressed.size(), compressed.data()));
+// Losslessly recompress a JPEG's existing DCT coefficients as JPEG XL, rather
+// than re-encoding pixels. `width` and `height` are only used to size the
+// thread pool; libjxl takes the real dimensions, the colour profile, the chroma
+// subsampling and the grayscale/colour decision from the JPEG itself.
+val transcode(std::string jpeg, int width, int height, JXLTranscodeOptions options) {
+  JXL_ENC_LOG(
+      "jxl_enc: transcoding %dx%d JPEG (%zu bytes in), effort=%d "
+      "storeJpegMetadata=%d keepMetadata=%d progressiveAC=%d groupOrder=%d "
+      "decodingSpeed=%d\n",
+      width, height, jpeg.size(), options.effort, options.storeJpegMetadata,
+      options.keepMetadata, options.progressiveAC, options.groupOrder,
+      options.decodingSpeed);
+
+  JxlEncoderPtr enc = JxlEncoderMake(/*memory_manager=*/nullptr);
+
+  JxlResizableParallelRunnerPtr runner = JxlResizableParallelRunnerMake(nullptr);
+  EXPECT_SUCCESS(SetUpParallelRunner(enc.get(), runner, width, height));
+
+  // Must be set before encoding starts. libjxl switches to the container format
+  // on its own when this is on, so there's no JxlEncoderUseContainer call here -
+  // a transcode with no metadata and no reconstruction data stays a bare
+  // codestream.
+  if (options.storeJpegMetadata) {
+    EXPECT_SUCCESS(JxlEncoderStoreJPEGMetadata(enc.get(), JXL_TRUE));
+  }
+
+  // Deliberately no JxlEncoderSetBasicInfo / JxlEncoderSetColorEncoding:
+  // JxlEncoderAddJPEGFrame fills both in from the JPEG (dimensions, whether
+  // it's grayscale, its embedded ICC profile, its Exif orientation), and taking
+  // them from the JPEG rather than assuming 8-bit sRGB RGBA is the whole point.
+  JxlEncoderFrameSettings* frame_settings =
+      JxlEncoderFrameSettingsCreate(enc.get(), nullptr);
+
+  // Dropping the metadata boxes is only allowed when we're not also storing
+  // reconstruction data, so storeJpegMetadata wins. The client hides the choice
+  // in that case rather than pretending it does something.
+  if (!options.storeJpegMetadata && !options.keepMetadata) {
+    EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
+        frame_settings, JXL_ENC_FRAME_SETTING_JPEG_KEEP_EXIF, 0));
+    EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
+        frame_settings, JXL_ENC_FRAME_SETTING_JPEG_KEEP_XMP, 0));
+    EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
+        frame_settings, JXL_ENC_FRAME_SETTING_JPEG_KEEP_JUMBF, 0));
+  }
+
+  EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
+      frame_settings, JXL_ENC_FRAME_SETTING_EFFORT, options.effort));
+
+  if (options.decodingSpeed > 0) {
+    EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
+        frame_settings, JXL_ENC_FRAME_SETTING_DECODING_SPEED, options.decodingSpeed));
+  }
+
+  if (options.progressiveAC) {
+    EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
+        frame_settings, JXL_ENC_FRAME_SETTING_PROGRESSIVE_AC, 1));
+  }
+
+  EXPECT_SUCCESS(JxlEncoderFrameSettingsSetOption(
+      frame_settings, JXL_ENC_FRAME_SETTING_GROUP_ORDER, options.groupOrder));
+
+  // Flag the frame lossless, which is what cjxl does for a JPEG input (it maps
+  // to distance 0). The DCT coefficients are copied verbatim either way, but
+  // this also pins the modular sub-stream that carries the DC and AC metadata
+  // to distance 0, rather than leaving that to depend on there being no extra
+  // channels.
+  EXPECT_SUCCESS(JxlEncoderSetFrameLossless(frame_settings, JXL_TRUE));
+
+  EXPECT_SUCCESS(JxlEncoderAddJPEGFrame(
+      frame_settings, reinterpret_cast<const uint8_t*>(jpeg.data()), jpeg.size()));
+  JxlEncoderCloseInput(enc.get());
+
+  return ProcessOutput(enc.get());
 }
 
 EMSCRIPTEN_BINDINGS(my_module) {
@@ -331,5 +452,14 @@ EMSCRIPTEN_BINDINGS(my_module) {
       .field("photonNoiseIso", &JXLOptions::photonNoiseIso)
       .field("decodingSpeed", &JXLOptions::decodingSpeed);
 
+  value_object<JXLTranscodeOptions>("JXLTranscodeOptions")
+      .field("effort", &JXLTranscodeOptions::effort)
+      .field("storeJpegMetadata", &JXLTranscodeOptions::storeJpegMetadata)
+      .field("keepMetadata", &JXLTranscodeOptions::keepMetadata)
+      .field("progressiveAC", &JXLTranscodeOptions::progressiveAC)
+      .field("groupOrder", &JXLTranscodeOptions::groupOrder)
+      .field("decodingSpeed", &JXLTranscodeOptions::decodingSpeed);
+
   function("encode", &encode);
+  function("transcode", &transcode);
 }

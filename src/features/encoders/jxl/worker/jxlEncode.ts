@@ -10,28 +10,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import type { JXLModule } from 'codecs/jxl/enc/jxl_enc';
 import type { EncodeOptions } from '../shared/meta';
 
-import { initEmscriptenModule } from 'features/worker-utils';
-
-let emscriptenModule: Promise<JXLModule>;
-
-async function init() {
-  // Single SIMD build, no threads. All modern browsers support WebAssembly
-  // SIMD, and libjxl benefits far more from SIMD than from worker threads.
-  const jxlEncoder = await import('codecs/jxl/enc/jxl_enc');
-  return initEmscriptenModule(jxlEncoder.default);
-}
+import { getEncoderModule } from '../shared/encoderModule';
 
 export default async function encode(
   data: ImageData,
   options: EncodeOptions,
 ): Promise<ArrayBuffer> {
-  if (!emscriptenModule) emscriptenModule = init();
+  const module = await getEncoderModule();
 
-  const module = await emscriptenModule;
-  const result = module.encode(data.data, data.width, data.height, options);
+  // `mode` covers what the codec calls `lossless`. The transcode-only options
+  // don't exist on this side of the binding - see jxlTranscode.
+  const { mode, storeJpegMetadata, keepMetadata, ...codecOptions } = options;
+
+  const result = module.encode(data.data, data.width, data.height, {
+    ...codecOptions,
+    lossless: mode === 'lossless',
+  });
 
   if (!result) throw new Error('Encoding error.');
 

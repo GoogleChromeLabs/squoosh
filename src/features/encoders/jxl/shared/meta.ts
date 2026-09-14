@@ -10,9 +10,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import type { EncodeOptions } from 'codecs/jxl/enc/jxl_enc';
+import type { EncodeOptions as CodecEncodeOptions } from 'codecs/jxl/enc/jxl_enc';
 
-export { EncodeOptions };
+/**
+ * What the encoder is fed.
+ *
+ * 'lossy' and 'lossless' both encode pixels. 'transcode' instead recompresses
+ * an existing JPEG's DCT coefficients, which keeps the image bit-for-bit
+ * identical to the JPEG while making the file smaller - so it's only offered
+ * when the source is a JPEG that nothing in the pipeline has touched. See
+ * `transcodeSource` in client/lazy-app/Compress.
+ */
+export type Mode = 'lossy' | 'lossless' | 'transcode';
+
+export interface EncodeOptions extends Omit<CodecEncodeOptions, 'lossless'> {
+  mode: Mode;
+  /**
+   * Whether to store enough data to rebuild the original JPEG file byte for
+   * byte. Transcode only; costs a little size.
+   */
+  storeJpegMetadata: boolean;
+  /**
+   * Whether to carry the JPEG's Exif/XMP/JUMBF metadata over. Transcode only -
+   * it's the one mode where there's any metadata left to keep - and forced on
+   * when `storeJpegMetadata` is set.
+   */
+  keepMetadata: boolean;
+}
 
 export const label = 'JPEG XL';
 export const mimeType = 'image/jxl';
@@ -20,7 +44,7 @@ export const extension = 'jxl';
 export const defaultOptions: EncodeOptions = {
   quality: 75,
   qualityAlpha: -1,
-  lossless: false,
+  mode: 'lossy',
   effort: 7,
   modular: false,
   progressiveAC: false,
@@ -29,4 +53,6 @@ export const defaultOptions: EncodeOptions = {
   groupOrder: 0,
   photonNoiseIso: 0,
   decodingSpeed: 0,
+  storeJpegMetadata: true,
+  keepMetadata: true,
 };
