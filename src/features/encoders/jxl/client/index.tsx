@@ -435,7 +435,7 @@ export class Options extends Component<Props, State> {
         <div class={style.optionOneCell}>
           <Range
             min="1"
-            max="9"
+            max="10"
             value={effort}
             onInput={this._inputChange('effort', 'number')}
           >

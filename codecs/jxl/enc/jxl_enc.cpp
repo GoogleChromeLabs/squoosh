@@ -115,7 +115,7 @@ struct JXLOptions {
   float qualityAlpha;
   // Mathematically lossless encoding.
   bool lossless;
-  // libjxl effort / speed tier, 1 (fastest) - 9 (slowest, best compression).
+  // libjxl effort / speed tier, 1 (fastest) - 10 (slowest, best compression).
   int effort;
   // Encoding mode (MODULAR): false = VarDCT (photographic), true = modular.
   // Only meaningful for lossy - lossless always uses modular internally.
@@ -333,7 +333,7 @@ val encode(std::string image, int width, int height, JXLOptions options) {
 }
 
 struct JXLTranscodeOptions {
-  // libjxl effort / speed tier, 1 (fastest) - 9 (slowest, best compression).
+  // libjxl effort / speed tier, 1 (fastest) - 10 (slowest, best compression).
   int effort;
   // Store JPEG bitstream reconstruction data, a.k.a. the jbrd box
   // (~ --allow_jpeg_reconstruction). Without it the transcode still preserves
