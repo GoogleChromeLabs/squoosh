@@ -23,6 +23,7 @@ import * as avifEncMt from 'entry-data:codecs/avif/enc/avif_enc_mt';
 
 // JXL
 import * as jxlEnc from 'entry-data:codecs/jxl/enc/jxl_enc';
+import * as jixelEnc from 'entry-data:codecs/jixel/enc/jixel_enc';
 
 // OXI
 import * as oxi from 'entry-data:codecs/oxipng/pkg/squoosh_oxipng';
@@ -77,6 +78,8 @@ export const theRest = (async () => {
 
   // JXL (single SIMD + threads build)
   addWithDeps(jxlEnc);
+  // Jixel (single SIMD + threads build)
+  addWithDeps(jixelEnc);
 
   // OXI (single threads + SIMD build)
   addWithDeps(oxi);

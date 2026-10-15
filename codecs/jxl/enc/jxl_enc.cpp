@@ -289,17 +289,18 @@ val encode(std::string image, int width, int height, JXLOptions options) {
   if (options.lossless) {
     EXPECT_SUCCESS(JxlEncoderSetFrameLossless(frame_settings, JXL_TRUE));
   } else {
-    EXPECT_SUCCESS(JxlEncoderSetFrameDistance(
-        frame_settings, JxlEncoderDistanceFromQuality(options.quality)));
-    // qualityAlpha of -1 means "same as the colour quality"; libjxl already
-    // applies the frame distance to the alpha channel by default, so we only
-    // override when a separate alpha quality was requested. The alpha channel is
-    // extra channel index 0 (num_extra_channels == 1). Only relevant if the
-    // image actually has alpha.
-    if (has_alpha && options.qualityAlpha >= 0) {
+    const float distance = JxlEncoderDistanceFromQuality(options.quality);
+    EXPECT_SUCCESS(JxlEncoderSetFrameDistance(frame_settings, distance));
+    // Alpha always gets an explicit distance, because libjxl's default is 0 -
+    // lossless - not the frame distance. qualityAlpha of -1 means "same as the
+    // colour quality". Quality 100 maps to distance 0, so a separate alpha
+    // quality of 100 is lossless. The alpha channel is extra channel index 0
+    // (num_extra_channels == 1), and only exists if the image has alpha.
+    if (has_alpha) {
       EXPECT_SUCCESS(JxlEncoderSetExtraChannelDistance(
           frame_settings, /*index=*/0,
-          JxlEncoderDistanceFromQuality(options.qualityAlpha)));
+          options.qualityAlpha >= 0 ? JxlEncoderDistanceFromQuality(options.qualityAlpha)
+                                    : distance));
     }
 
     // Synthesized photographic noise (ISO film speed). Float option; only set

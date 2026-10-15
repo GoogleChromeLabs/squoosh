@@ -27,9 +27,9 @@ interface Props {
   processorState: ProcessorState;
   /**
    * The source file, when the encoder could transcode it directly rather than
-   * encode the processed pixels. Only JPEG XL does anything with this; the
-   * other codecs' Options components ignore it. See `transcodeSourceFor` in
-   * Compress.
+   * encode the processed pixels. Only the JPEG XL encoders (libjxl and Jixel)
+   * do anything with this; the other codecs' Options components ignore it. See
+   * `transcodeSourceFor` in Compress.
    */
   transcodeSource?: File;
   onEncoderTypeChange(index: 0 | 1, newType: OutputType): void;
