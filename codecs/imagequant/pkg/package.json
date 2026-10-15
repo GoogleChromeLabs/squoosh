@@ -1,0 +1,14 @@
+{
+  "name": "squoosh-imagequant",
+  "version": "0.1.0",
+  "files": [
+    "squoosh_imagequant_bg.wasm",
+    "squoosh_imagequant.js",
+    "squoosh_imagequant.d.ts"
+  ],
+  "module": "squoosh_imagequant.js",
+  "types": "squoosh_imagequant.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

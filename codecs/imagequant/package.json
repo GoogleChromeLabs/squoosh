@@ -1,6 +1,6 @@
 {
   "name": "imagequant",
   "scripts": {
-    "build": "../build-cpp.sh"
+    "build": "RUST_IMG=rust:1.98.1 ../build-rust.sh ./build.sh"
   }
 }

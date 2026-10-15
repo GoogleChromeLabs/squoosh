@@ -10,36 +10,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import type { JXLModule } from 'codecs/jxl/enc/jxl_enc';
 import type { EncodeOptions } from '../shared/meta';
 
-import { initEmscriptenModule } from 'features/worker-utils';
-import { simd } from 'wasm-feature-detect';
-import checkThreadsSupport from 'worker-shared/supports-wasm-threads';
-
-let emscriptenModule: Promise<JXLModule>;
-
-async function init() {
-  if (await checkThreadsSupport()) {
-    if (await simd()) {
-      const jxlEncoder = await import('codecs/jxl/enc/jxl_enc_mt_simd');
-      return initEmscriptenModule(jxlEncoder.default);
-    }
-    const jxlEncoder = await import('codecs/jxl/enc/jxl_enc_mt');
-    return initEmscriptenModule(jxlEncoder.default);
-  }
-  const jxlEncoder = await import('codecs/jxl/enc/jxl_enc');
-  return initEmscriptenModule(jxlEncoder.default);
-}
+import { getEncoderModule } from '../shared/encoderModule';
 
 export default async function encode(
   data: ImageData,
   options: EncodeOptions,
 ): Promise<ArrayBuffer> {
-  if (!emscriptenModule) emscriptenModule = init();
+  const module = await getEncoderModule();
 
-  const module = await emscriptenModule;
-  const result = module.encode(data.data, data.width, data.height, options);
+  // `mode` covers what the codec calls `lossless`. The transcode-only options
+  // don't exist on this side of the binding - see jxlTranscode.
+  const { mode, storeJpegMetadata, keepMetadata, ...codecOptions } = options;
+
+  const result = module.encode(data.data, data.width, data.height, {
+    ...codecOptions,
+    lossless: mode === 'lossless',
+  });
 
   if (!result) throw new Error('Encoding error.');
 

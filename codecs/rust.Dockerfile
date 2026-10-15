@@ -1,6 +1,17 @@
 ARG RUST_IMG=rust:1.47
 
-FROM emscripten/emsdk:2.0.8 AS wasm-tools
+# Kept in step with codecs/cpp.Dockerfile. This was pinned to emsdk 2.0.8 (2020)
+# and supplied clang 12 plus 2020-era musl headers, which mattered because the
+# cc crate uses this clang to build C dependencies - oxipng's libdeflate-sys is
+# the only one across the Rust codecs (hqx / png / resize / rotate pull in only
+# js-sys / web-sys, which are pure Rust). Its wasm-opt was version 98, which
+# also died with "Only 1 table definition allowed in MVP" on the reference-types
+# wasm modern rustc emits.
+#
+# NB the libc headers moved: emsdk <= 5.x had them under
+# emscripten/system/include/libc/, 6.x has them directly in
+# emscripten/system/include/.
+FROM emscripten/emsdk:6.0.8 AS wasm-tools
 WORKDIR /opt/wasm-tools
 RUN wget -qO- https://github.com/rustwasm/wasm-pack/releases/download/v0.12.1/wasm-pack-v0.12.1-x86_64-unknown-linux-musl.tar.gz | tar -xzf - --strip 1
 
@@ -10,7 +21,7 @@ RUN rustup target add wasm32-unknown-unknown
 RUN case $RUST_IMG in rustlang/rust@*) rustup component add rust-src; esac
 COPY --from=wasm-tools /emsdk/upstream/bin/wasm-opt /emsdk/upstream/bin/clang /usr/local/bin/
 COPY --from=wasm-tools /emsdk/upstream/lib/ /usr/local/lib/
-COPY --from=wasm-tools /emsdk/upstream/emscripten/system/include/libc/ /wasm32/include/
+COPY --from=wasm-tools /emsdk/upstream/emscripten/system/include/ /wasm32/include/
 COPY --from=wasm-tools /emsdk/upstream/emscripten/system/lib/libc/musl/arch/emscripten/bits/ /wasm32/include/bits/
 COPY --from=wasm-tools /opt/wasm-tools/wasm-pack /usr/local/cargo/bin/
 

@@ -1,6 +1,9 @@
-The MIT License (MIT)
+`fast_image_resize` is dual-licensed under MIT OR Apache-2.0. The MIT terms follow;
+the Apache-2.0 text is the same as this repository's own LICENSE.
 
-Copyright (c) 2015 PistonDevelopers
+MIT License
+
+Copyright (c) 2021 Kirill Kuzminykh
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

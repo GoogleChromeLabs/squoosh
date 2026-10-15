@@ -1,5 +1,2 @@
-**/*.rs.bk
-target
-bin/
+/target
 pkg/README.md
-lut.inc

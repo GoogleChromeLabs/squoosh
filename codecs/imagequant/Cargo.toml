@@ -1,0 +1,21 @@
+[package]
+name = "squoosh-imagequant"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+# default-features would pull in rayon + thread_local. See build.sh for why this
+# is a single-threaded build.
+imagequant = { version = "4.4", default-features = false }
+rgb = "0.8"
+wasm-bindgen = "0.2"
+
+[profile.release]
+lto = true
+# The k-means and nearest-neighbour searches are the whole cost here, so speed
+# beats size (oxipng uses "s" for the opposite reason).
+opt-level = 3

@@ -1,0 +1,47 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep:*)",
+      "Bash(sed:*)",
+      "Bash(awk:*)",
+      "Bash(cat:*)",
+      "Bash(find:*)",
+      "Bash(tar:*)",
+      "Bash(xxd:*)",
+      "Bash(make:*)",
+      "Bash(npm run:*)",
+      "Bash(node -e:*)",
+      "Bash(npx tsc:*)",
+      "Bash(perl -i -pe:*)",
+      "Bash(tee:*)",
+      "Bash(curl -s:*)",
+      "Bash(curl -sL:*)",
+      "Bash(gh search:*)",
+      "Bash(gh pr:*)",
+      "Bash(gh api:*)",
+      "Bash(git -C node_modules/jxl:*)",
+      "Bash(git -C /Users/jarchibald/dev/squoosh/codecs/jxl/node_modules/jxl:*)",
+      "Bash(git -C codecs/jxl/node_modules/jxl:*)",
+      "Bash(git init:*)",
+      "Bash(docker run:*)",
+      "Bash(cjxl:*)",
+      "Bash(djxl:*)",
+      "Bash(jxlinfo:*)",
+      "Bash(cp /tmp/jxl_smoke.mjs /Users/jarchibald/dev/squoosh/codecs/jxl/jxl_smoke.mjs:*)",
+      "Bash(echo:*)",
+      "WebSearch",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:emscripten.org)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:webstatus.dev)",
+      "Read(//private/tmp/**)",
+      "Read(//tmp/**)",
+      "Read(//emsdk/upstream/emscripten/system/include/emscripten/**)",
+      "Read(//Users/jarchibald/dev/src/features/encoders/avif/shared/**)"
+    ],
+    "additionalDirectories": [
+      "/Users/jarchibald/dev/squoosh/enc",
+      "/private/tmp"
+    ]
+  }
+}

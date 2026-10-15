@@ -1,27 +1,20 @@
 # ImageQuant
 
 - Source: <https://github.com/ImageOptim/libimagequant>
-- Version: v2.12.1
-- License: GPL3
+- Version: v4.4.1
+- License: GPL-3.0-or-later (dual-licensed; see <https://pngquant.org> for the
+  commercial option)
 
-## Dependencies
+libimagequant was rewritten in Rust for v4, so this is no longer an
+emscripten/C++ codec — it builds through `codecs/rust.Dockerfile` like `resize`
+and `oxipng`. `imagequant.cpp` is gone; `src/lib.rs` is the equivalent,
+including a port of the ZX Spectrum block quantizer.
 
-- Docker
+## Modes
 
-## Example
-
-See `example.html`
-
-## API
-
-### `int version()`
-
-Returns the version of libimagequant as a number. va.b.c is encoded as 0x0a0b0c
-
-### `RawImage quantize(std::string buffer, int image_width, int image_height, int numColors, float dithering)`
-
-Quantizes the given images, using at most `numColors`, a value between 2 and 256. `dithering` is a value between 0 and 1 controlling the amount of dithering. `RawImage` is a class with 3 fields: `buffer`, `width`, and `height`.
-
-### `RawImage zx_quantize(std::string buffer, int image_width, int image_height, float dithering)`
-
-???
+- **Rgba** — ordinary palette quantization.
+- **AlphaOnly** — quantizes only the alpha channel, passing colour through
+  untouched. For lossy WebP, which DCTs the colour anyway but stores alpha
+  losslessly. Note that **dithering works against this mode**: the added noise
+  can make the alpha plane compress worse than the unquantized original.
+- **Zx** — ???

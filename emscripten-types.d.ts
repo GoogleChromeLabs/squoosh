@@ -14,6 +14,8 @@ declare namespace EmscriptenWasm {
     noInitialRun?: boolean;
     locateFile?: (url: string) => string;
     onRuntimeInitialized?: () => void;
+    /** Called when the module aborts, including from one of its pthreads. */
+    onAbort?: (what: unknown) => void;
   }
 
   interface Module {
