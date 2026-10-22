@@ -30,6 +30,7 @@ import './custom-els/MultiPanel';
 import Results from './Results';
 import WorkerBridge from '../worker-bridge';
 import { resize } from 'features/processors/resize/client';
+import { workerResizeMethods } from 'features/processors/resize/shared/meta';
 import type SnackBarElement from 'shared/custom-els/snack-bar';
 import { drawableToImageData } from '../util/canvas';
 
@@ -79,6 +80,36 @@ interface Side {
   latestSettings: SideSettings;
   encodedSettings?: SideSettings;
   loading: boolean;
+}
+
+/** Whether every encoder and resize method in `settings` still exists. */
+function isKnownSideSettings(settings: SideSettings | undefined): boolean {
+  if (!settings) return true;
+  const { encoderState, processorState } = settings;
+  if (encoderState && !(encoderState.type in encoderMap)) return false;
+  const { method } = processorState.resize;
+  return method === 'vector' || workerResizeMethods.includes(method);
+}
+
+/**
+ * Side settings saved by onSaveSideSettingsClick, or undefined if there are
+ * none. Settings that name an encoder or resize method that has since been
+ * removed are dropped.
+ */
+function readSavedSide(
+  key: 'leftSideSettings' | 'rightSideSettings',
+): Pick<Side, 'latestSettings' | 'encodedSettings'> | undefined {
+  const json = localStorage.getItem(key);
+  if (!json) return undefined;
+  const saved = JSON.parse(json);
+  if (
+    isKnownSideSettings(saved.latestSettings) &&
+    isKnownSideSettings(saved.encodedSettings)
+  ) {
+    return saved;
+  }
+  localStorage.removeItem(key);
+  return undefined;
 }
 
 interface Props {
@@ -383,9 +414,9 @@ export default class Compress extends Component<Props, State> {
     preprocessorState: defaultPreprocessorState,
     // Tasking catched side settings if available otherwise taking default settings
     sides: [
-      localStorage.getItem('leftSideSettings')
+      readSavedSide('leftSideSettings')
         ? {
-            ...JSON.parse(localStorage.getItem('leftSideSettings') as string),
+            ...readSavedSide('leftSideSettings')!,
             loading: false,
           }
         : {
@@ -395,9 +426,9 @@ export default class Compress extends Component<Props, State> {
             },
             loading: false,
           },
-      localStorage.getItem('rightSideSettings')
+      readSavedSide('rightSideSettings')
         ? {
-            ...JSON.parse(localStorage.getItem('rightSideSettings') as string),
+            ...readSavedSide('rightSideSettings')!,
             loading: false,
           }
         : {
@@ -584,14 +615,14 @@ export default class Compress extends Component<Props, State> {
    * @returns
    */
   private onImportSideSettingsClick = async (index: 0 | 1) => {
-    const leftSideSettingsString = localStorage.getItem('leftSideSettings');
-    const rightSideSettingsString = localStorage.getItem('rightSideSettings');
+    const leftSideSettings = readSavedSide('leftSideSettings');
+    const rightSideSettings = readSavedSide('rightSideSettings');
 
-    if (index === 0 && leftSideSettingsString) {
+    if (index === 0 && leftSideSettings) {
       const oldLeftSideSettings = this.state.sides[index];
       const newLeftSideSettings = {
         ...this.state.sides[index],
-        ...JSON.parse(leftSideSettingsString),
+        ...leftSideSettings,
       };
       this.setState({
         sides: cleanSet(this.state.sides, index, newLeftSideSettings),
@@ -608,11 +639,11 @@ export default class Compress extends Component<Props, State> {
       return;
     }
 
-    if (index === 1 && rightSideSettingsString) {
+    if (index === 1 && rightSideSettings) {
       const oldRightSideSettings = this.state.sides[index];
       const newRightSideSettings = {
         ...this.state.sides[index],
-        ...JSON.parse(rightSideSettingsString),
+        ...rightSideSettings,
       };
       this.setState({
         sides: cleanSet(this.state.sides, index, newRightSideSettings),

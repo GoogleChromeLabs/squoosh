@@ -26,7 +26,7 @@ export interface EncodeOptions {
   preserveAlpha: boolean;
 }
 
-export const label = 'OxiPNG';
+export const label = 'PNG (OxiPNG)';
 export const mimeType = 'image/png';
 export const extension = 'png';
 

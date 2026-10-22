@@ -12,6 +12,7 @@ export enum ResizeFilter {
     Lanczos = 3,
     Box = 4,
     Hamming = 5,
+    Nearest = 6,
 }
 
 export function resize(input_image: Uint8Array, input_width: number, input_height: number, output_width: number, output_height: number, filter: ResizeFilter, lanczos_radius: number, premultiply: boolean, color_space_conversion: boolean, fit_to_output: boolean, centering_x: number, centering_y: number): Uint8ClampedArray;

@@ -38,6 +38,7 @@ const resizeFilters: Record<WorkerResizeOptions['method'], ResizeFilter> = {
   box: ResizeFilter.Box,
   hamming: ResizeFilter.Hamming,
   hqx: ResizeFilter.Catrom,
+  nearest: ResizeFilter.Nearest,
 };
 
 let resizeWasmReady: Promise<unknown>;

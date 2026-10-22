@@ -80,14 +80,14 @@ export interface EncodeOptions {
   storeJpegMetadata: boolean;
 }
 
-export const label = 'JPEG XL (Jixel)';
+export const label = 'JPEG XL (jixel)';
 export const mimeType = 'image/jxl';
 export const extension = 'jxl';
 export const defaultOptions: EncodeOptions = {
   mode: 'lossy',
   quality: 75,
-  // Slow: every coding tool, with the standard search budget.
-  effort: 5,
+  // Fast, jixel's own default.
+  effort: 3,
   progressive: false,
   progressivePasses: 2,
   patches: true,

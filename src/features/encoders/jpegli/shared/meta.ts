@@ -4,7 +4,7 @@ import {
 } from 'codecs/jpegli/enc/jpegli_enc';
 export { EncodeOptions, JpegliChromaSubsample };
 
-export const label = 'JPEGLI';
+export const label = 'JPEG (jpegli)';
 export const mimeType = 'image/jpeg';
 export const extension = 'jpg';
 export const defaultOptions: EncodeOptions = {

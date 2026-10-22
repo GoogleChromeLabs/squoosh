@@ -26,7 +26,8 @@ export const defaultOptions: EncodeOptions = {
   qualityAlpha: -1,
   denoiseLevel: 0,
   speed: 6,
-  subsample: 1,
+  // 4:4:4
+  subsample: 3,
   aqMode: 0,
   tune: AVIFTune.auto,
   enableSharpYUV: false,

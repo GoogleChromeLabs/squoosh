@@ -11,11 +11,6 @@
  * limitations under the License.
  */
 
-type BrowserResizeMethods =
-  | 'browser-pixelated'
-  | 'browser-low'
-  | 'browser-medium'
-  | 'browser-high';
 // These strings are persisted in localStorage, so they can't be renamed without
 // stranding saved settings. 'lanczos3' predates the configurable radius, and
 // keeps its name so that existing saved settings still resolve.
@@ -26,7 +21,8 @@ type WorkerResizeMethods =
   | 'lanczos3'
   | 'box'
   | 'hamming'
-  | 'hqx';
+  | 'hqx'
+  | 'nearest';
 
 export const workerResizeMethods: WorkerResizeMethods[] = [
   'triangle',
@@ -36,12 +32,10 @@ export const workerResizeMethods: WorkerResizeMethods[] = [
   'box',
   'hamming',
   'hqx',
+  'nearest',
 ];
 
-export type Options =
-  | BrowserResizeOptions
-  | WorkerResizeOptions
-  | VectorResizeOptions;
+export type Options = WorkerResizeOptions | VectorResizeOptions;
 
 export interface ResizeOptionsCommon {
   width: number;
@@ -53,10 +47,6 @@ export interface ResizeOptionsCommon {
    */
   centeringX: number;
   centeringY: number;
-}
-
-export interface BrowserResizeOptions extends ResizeOptionsCommon {
-  method: BrowserResizeMethods;
 }
 
 export interface WorkerResizeOptions extends ResizeOptionsCommon {

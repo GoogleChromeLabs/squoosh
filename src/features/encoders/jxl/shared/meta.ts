@@ -38,7 +38,7 @@ export interface EncodeOptions extends Omit<CodecEncodeOptions, 'lossless'> {
   keepMetadata: boolean;
 }
 
-export const label = 'JPEG XL';
+export const label = 'JPEG XL (libjxl)';
 export const mimeType = 'image/jxl';
 export const extension = 'jxl';
 export const defaultOptions: EncodeOptions = {

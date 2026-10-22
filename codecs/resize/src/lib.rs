@@ -16,6 +16,7 @@ pub enum ResizeFilter {
     Lanczos = 3,
     Box = 4,
     Hamming = 5,
+    Nearest = 6,
 }
 
 fn sinc(x: f64) -> f64 {
@@ -180,15 +181,25 @@ pub fn resize(
     centering_x: f64,
     centering_y: f64,
 ) -> Result<Clamped<Vec<u8>>, JsError> {
+    let convolution = |filter_type| ResizeAlg::Convolution(filter_type);
+    let resize_alg = match filter {
+        ResizeFilter::Triangle => convolution(FilterType::Bilinear),
+        ResizeFilter::Catrom => convolution(FilterType::CatmullRom),
+        ResizeFilter::Mitchell => convolution(FilterType::Mitchell),
+        ResizeFilter::Lanczos => convolution(FilterType::Custom(lanczos_filter(lanczos_radius))),
+        ResizeFilter::Box => convolution(FilterType::Box),
+        ResizeFilter::Hamming => convolution(FilterType::Hamming),
+        ResizeFilter::Nearest => ResizeAlg::Nearest,
+    };
+    // Nearest neighbour copies source pixels rather than blending them, so
+    // premultiplying and working in linear light would change nothing but the
+    // rounding - and the point of it is output made only of source pixels.
+    let blends = !matches!(filter, ResizeFilter::Nearest);
+    let premultiply = premultiply && blends;
+    let color_space_conversion = color_space_conversion && blends;
+
     let mut options = ResizeOptions::new()
-        .resize_alg(ResizeAlg::Convolution(match filter {
-            ResizeFilter::Triangle => FilterType::Bilinear,
-            ResizeFilter::Catrom => FilterType::CatmullRom,
-            ResizeFilter::Mitchell => FilterType::Mitchell,
-            ResizeFilter::Lanczos => FilterType::Custom(lanczos_filter(lanczos_radius)),
-            ResizeFilter::Box => FilterType::Box,
-            ResizeFilter::Hamming => FilterType::Hamming,
-        }))
+        .resize_alg(resize_alg)
         // Premultiplies before convolving and undoes it after, which is what
         // stops the colour of transparent pixels bleeding into their visible
         // neighbours.

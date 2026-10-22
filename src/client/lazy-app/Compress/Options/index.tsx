@@ -41,46 +41,15 @@ interface Props {
 }
 
 interface State {
-  supportedEncoderMap?: PartialButNotUndefined<typeof encoderMap>;
   leftSideSettings?: string | null;
   rightSideSettings?: string | null;
 }
 
-type PartialButNotUndefined<T> = {
-  [P in keyof T]: T[P];
-};
-
-const supportedEncoderMapP: Promise<PartialButNotUndefined<typeof encoderMap>> =
-  (async () => {
-    const supportedEncoderMap: PartialButNotUndefined<typeof encoderMap> = {
-      ...encoderMap,
-    };
-
-    // Filter out entries where the feature test fails
-    await Promise.all(
-      Object.entries(encoderMap).map(async ([encoderName, details]) => {
-        if ('featureTest' in details && !(await details.featureTest())) {
-          delete supportedEncoderMap[encoderName as keyof typeof encoderMap];
-        }
-      }),
-    );
-
-    return supportedEncoderMap;
-  })();
-
 export default class Options extends Component<Props, State> {
   state: State = {
-    supportedEncoderMap: undefined,
     leftSideSettings: localStorage.getItem('leftSideSettings'),
     rightSideSettings: localStorage.getItem('rightSideSettings'),
   };
-
-  constructor() {
-    super();
-    supportedEncoderMapP.then((supportedEncoderMap) =>
-      this.setState({ supportedEncoderMap }),
-    );
-  }
 
   private setLeftSideSettings = () => {
     this.setState({
@@ -154,10 +123,7 @@ export default class Options extends Component<Props, State> {
     this.props.onImportSideSettingsClick(this.props.index);
   };
 
-  render(
-    { source, encoderState, processorState, transcodeSource }: Props,
-    { supportedEncoderMap }: State,
-  ) {
+  render({ source, encoderState, processorState, transcodeSource }: Props) {
     const encoder = encoderState && encoderMap[encoderState.type];
     // `encoder.Options` is a union of every codec's Options component. Rendering
     // a union component makes TypeScript intersect all their prop types, and
@@ -264,24 +230,22 @@ export default class Options extends Component<Props, State> {
         <h3 class={style.optionsTitle}>Compress</h3>
 
         <section class={`${style.optionOneCell} ${style.optionsSection}`}>
-          {supportedEncoderMap ? (
-            <Select
-              value={encoderState ? encoderState.type : 'identity'}
-              onChange={this.onEncoderTypeChange}
-              large
-            >
-              <option value="identity">{`Original Image ${
-                this.props.source ? `(${this.props.source.file.name})` : ''
-              }`}</option>
-              {Object.entries(supportedEncoderMap).map(([type, encoder]) => (
+          <Select
+            value={encoderState ? encoderState.type : 'identity'}
+            onChange={this.onEncoderTypeChange}
+            large
+          >
+            <option value="identity">{`Original Image ${
+              this.props.source ? `(${this.props.source.file.name})` : ''
+            }`}</option>
+            {Object.entries(encoderMap)
+              // By label, which puts the format first, so each format's
+              // encoders sit together.
+              .sort(([, a], [, b]) => a.meta.label.localeCompare(b.meta.label))
+              .map(([type, encoder]) => (
                 <option value={type}>{encoder.meta.label}</option>
               ))}
-            </Select>
-          ) : (
-            <Select large>
-              <option>Loading…</option>
-            </Select>
-          )}
+          </Select>
         </section>
 
         <Expander>

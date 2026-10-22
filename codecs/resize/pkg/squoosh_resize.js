@@ -3,7 +3,7 @@
 /**
  * Resampling filters, mapped from the JS-side method names in
  * `features/processors/resize/shared/meta.ts`.
- * @enum {0 | 1 | 2 | 3 | 4 | 5}
+ * @enum {0 | 1 | 2 | 3 | 4 | 5 | 6}
  */
 export const ResizeFilter = Object.freeze({
     Triangle: 0, "0": "Triangle",
@@ -12,6 +12,7 @@ export const ResizeFilter = Object.freeze({
     Lanczos: 3, "3": "Lanczos",
     Box: 4, "4": "Box",
     Hamming: 5, "5": "Hamming",
+    Nearest: 6, "6": "Nearest",
 });
 
 /**
