@@ -10,14 +10,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/**
+ * Kept as strings rather than the codec's `QuantizeMode` enum: these are
+ * persisted in localStorage, and importing the enum would pull the wasm glue
+ * into the client bundle. The worker maps them across.
+ */
+export type QuantizeMode = 'rgba' | 'alphaOnly' | 'zx';
+
 export interface Options {
-  zx: number;
+  mode: QuantizeMode;
   maxNumColors: number;
   dither: number;
+  /** 1-10. Higher spends longer for slightly better quality. */
+  effort: number;
 }
 
 export const defaultOptions: Options = {
-  zx: 0,
+  mode: 'rgba',
   maxNumColors: 256,
-  dither: 1.0,
+  // Dithering trades file size for smoother gradients: the noise it adds is
+  // expensive to compress. Off by default so the starting point is the smaller
+  // file, and turn it up if banding shows.
+  dither: 0,
+  // Equivalent to libimagequant's own default speed of 4. More effort than this
+  // is ~2x the time for ~1% less error, which isn't worth it when every slider
+  // drag re-runs the quantizer. The low end is where the real cost is: the
+  // three lowest efforts measured 5-9% worse.
+  effort: 7,
 };

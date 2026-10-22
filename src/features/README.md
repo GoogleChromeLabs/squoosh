@@ -51,8 +51,6 @@ Encoders must have the following:
 
 And returns (a promise for) an `ArrayBuffer`.
 
-Optionally it may export a method `featureTest`, which returns a boolean indicating support for this decoder.
-
 Optionally it may export a component, `Options`, with the following props:
 
 ```ts

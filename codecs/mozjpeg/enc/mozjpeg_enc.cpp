@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "config.h"
+#include "jconfigint.h"
 #include "jpeglib.h"
 
 extern "C" {
@@ -14,21 +14,21 @@ extern "C" {
 
 using namespace emscripten;
 
-// MozJPEG doesn’t expose a numeric version, so I have to do some fun C macro
-// hackery to turn it into a string. More details here:
-// https://gcc.gnu.org/onlinedocs/cpp/Stringizing.html
-#define xstr(s) str(s)
-#define str(s) #s
-
 struct MozJpegOptions {
   int quality;
   bool baseline;
-  bool arithmetic;
   bool progressive;
   bool optimize_coding;
   int smoothing;
   int color_space;
   int quant_table;
+  // Master switch for trellis quantisation. MozJPEG 4.x derives its default
+  // from JINT_COMPRESS_PROFILE (on for JCP_MAX_COMPRESSION, which is the
+  // default), so without setting it explicitly the sub-options below were being
+  // applied on top of whatever the profile chose.
+  bool trellis_quant;
+  // Trellis-quantise the DC coefficients too. MozJPEG defaults this to TRUE.
+  bool trellis_quant_dc;
   bool trellis_multipass;
   bool trellis_opt_zero;
   bool trellis_opt_table;
@@ -37,10 +37,17 @@ struct MozJpegOptions {
   int chroma_subsample;
   bool separate_chroma_quality;
   int chroma_quality;
+  // Reduce ringing artefacts around hard edges (text, logos, line art) by
+  // allowing overshoot in the DCT. MozJPEG only enables this by default for the
+  // JCP_MAX_COMPRESSION profile.
+  bool overshoot_deringing;
 };
 
+// Packs MozJPEG's dotted version string into an int, one byte per component
+// (e.g. "4.1.5" -> 0x040105). VERSION comes from the CMake-generated
+// jconfigint.h; MozJPEG 3.x's autotools config.h called it MOZJPEG_VERSION.
 int version() {
-  char buffer[] = xstr(MOZJPEG_VERSION);
+  char buffer[] = VERSION;
   int version = 0;
   int last_index = 0;
   for (int i = 0; i < strlen(buffer); i++) {
@@ -130,13 +137,13 @@ val encode(std::string image_in, int image_width, int image_height, MozJpegOptio
 
   cinfo.optimize_coding = opts.optimize_coding;
 
-  if (opts.arithmetic) {
-    cinfo.arith_code = TRUE;
-    cinfo.optimize_coding = FALSE;
-  }
-
   cinfo.smoothing_factor = opts.smoothing;
 
+  // Trellis quantisation. The master switch has to be set before the
+  // sub-options mean anything.
+  jpeg_c_set_bool_param(&cinfo, JBOOLEAN_TRELLIS_QUANT, opts.trellis_quant);
+  jpeg_c_set_bool_param(&cinfo, JBOOLEAN_TRELLIS_QUANT_DC, opts.trellis_quant_dc);
+  jpeg_c_set_bool_param(&cinfo, JBOOLEAN_OVERSHOOT_DERINGING, opts.overshoot_deringing);
   jpeg_c_set_bool_param(&cinfo, JBOOLEAN_USE_SCANS_IN_TRELLIS, opts.trellis_multipass);
   jpeg_c_set_bool_param(&cinfo, JBOOLEAN_TRELLIS_EOB_OPT, opts.trellis_opt_zero);
   jpeg_c_set_bool_param(&cinfo, JBOOLEAN_TRELLIS_Q_OPT, opts.trellis_opt_table);
@@ -219,12 +226,14 @@ EMSCRIPTEN_BINDINGS(my_module) {
   value_object<MozJpegOptions>("MozJpegOptions")
       .field("quality", &MozJpegOptions::quality)
       .field("baseline", &MozJpegOptions::baseline)
-      .field("arithmetic", &MozJpegOptions::arithmetic)
       .field("progressive", &MozJpegOptions::progressive)
       .field("optimize_coding", &MozJpegOptions::optimize_coding)
       .field("smoothing", &MozJpegOptions::smoothing)
       .field("color_space", &MozJpegOptions::color_space)
       .field("quant_table", &MozJpegOptions::quant_table)
+      .field("trellis_quant", &MozJpegOptions::trellis_quant)
+      .field("trellis_quant_dc", &MozJpegOptions::trellis_quant_dc)
+      .field("overshoot_deringing", &MozJpegOptions::overshoot_deringing)
       .field("trellis_multipass", &MozJpegOptions::trellis_multipass)
       .field("trellis_opt_zero", &MozJpegOptions::trellis_opt_zero)
       .field("trellis_opt_table", &MozJpegOptions::trellis_opt_table)

@@ -11,52 +11,57 @@
  * limitations under the License.
  */
 
-type BrowserResizeMethods =
-  | 'browser-pixelated'
-  | 'browser-low'
-  | 'browser-medium'
-  | 'browser-high';
+// These strings are persisted in localStorage, so they can't be renamed without
+// stranding saved settings. 'lanczos3' predates the configurable radius, and
+// keeps its name so that existing saved settings still resolve.
 type WorkerResizeMethods =
   | 'triangle'
   | 'catrom'
   | 'mitchell'
   | 'lanczos3'
-  | 'hqx';
+  | 'box'
+  | 'hamming'
+  | 'hqx'
+  | 'nearest';
 
 export const workerResizeMethods: WorkerResizeMethods[] = [
   'triangle',
   'catrom',
   'mitchell',
   'lanczos3',
+  'box',
+  'hamming',
   'hqx',
+  'nearest',
 ];
 
-export type Options =
-  | BrowserResizeOptions
-  | WorkerResizeOptions
-  | VectorResizeOptions;
+export type Options = WorkerResizeOptions | VectorResizeOptions;
 
 export interface ResizeOptionsCommon {
   width: number;
   height: number;
   fitMethod: 'stretch' | 'contain';
-}
-
-export interface BrowserResizeOptions extends ResizeOptionsCommon {
-  method: BrowserResizeMethods;
+  /**
+   * Which part of the source survives the crop when fitMethod is 'contain'.
+   * 0 keeps the left/top edge, 0.5 the middle, 1 the right/bottom edge.
+   */
+  centeringX: number;
+  centeringY: number;
 }
 
 export interface WorkerResizeOptions extends ResizeOptionsCommon {
   method: WorkerResizeMethods;
   premultiply: boolean;
   linearRGB: boolean;
+  /** Radius of the Lanczos window, in source pixels. Only used by 'lanczos3'. */
+  lanczosRadius: number;
 }
 
 export interface VectorResizeOptions extends ResizeOptionsCommon {
   method: 'vector';
 }
 
-export const defaultOptions: Options = {
+export const defaultOptions: WorkerResizeOptions = {
   // Width and height will always default to the image size.
   // This is set elsewhere.
   width: 1,
@@ -66,4 +71,7 @@ export const defaultOptions: Options = {
   fitMethod: 'stretch',
   premultiply: true,
   linearRGB: true,
+  lanczosRadius: 3,
+  centeringX: 0.5,
+  centeringY: 0.5,
 };

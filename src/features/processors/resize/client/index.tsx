@@ -1,14 +1,10 @@
+import { drawableToImageData } from 'client/lazy-app/util/canvas';
 import {
-  builtinResize,
-  BuiltinResizeMethod,
-  drawableToImageData,
-} from 'client/lazy-app/util/canvas';
-import {
-  BrowserResizeOptions,
   VectorResizeOptions,
   WorkerResizeOptions,
   Options as ResizeOptions,
   workerResizeMethods,
+  defaultOptions,
 } from '../shared/meta';
 import { getContainOffsets } from '../shared/util';
 import type { SourceImage } from 'client/lazy-app/Compress';
@@ -26,6 +22,7 @@ import { linkRef } from 'shared/prerendered-app/util';
 import Select from 'client/lazy-app/Compress/Options/Select';
 import Expander from 'client/lazy-app/Compress/Options/Expander';
 import Checkbox from 'client/lazy-app/Compress/Options/Checkbox';
+import Range from 'client/lazy-app/Compress/Options/Range';
 
 /**
  * Return whether a set of options are worker resize options.
@@ -34,28 +31,6 @@ import Checkbox from 'client/lazy-app/Compress/Options/Checkbox';
  */
 function isWorkerOptions(opts: ResizeOptions): opts is WorkerResizeOptions {
   return (workerResizeMethods as string[]).includes(opts.method);
-}
-
-function browserResize(data: ImageData, opts: BrowserResizeOptions): ImageData {
-  let sx = 0;
-  let sy = 0;
-  let sw = data.width;
-  let sh = data.height;
-
-  if (opts.fitMethod === 'contain') {
-    ({ sx, sy, sw, sh } = getContainOffsets(sw, sh, opts.width, opts.height));
-  }
-
-  return builtinResize(
-    data,
-    sx,
-    sy,
-    sw,
-    sh,
-    opts.width,
-    opts.height,
-    opts.method.slice('browser-'.length) as BuiltinResizeMethod,
-  );
 }
 
 function vectorResize(
@@ -68,7 +43,14 @@ function vectorResize(
   let sh = data.height;
 
   if (opts.fitMethod === 'contain') {
-    ({ sx, sy, sw, sh } = getContainOffsets(sw, sh, opts.width, opts.height));
+    ({ sx, sy, sw, sh } = getContainOffsets(
+      sw,
+      sh,
+      opts.width,
+      opts.height,
+      opts.centeringX,
+      opts.centeringY,
+    ));
   }
 
   return drawableToImageData(data, {
@@ -91,10 +73,7 @@ export async function resize(
     if (!source.vectorImage) throw Error('No vector image available');
     return vectorResize(source.vectorImage, options);
   }
-  if (isWorkerOptions(options)) {
-    return workerBridge.resize(signal, source.preprocessed, options);
-  }
-  return browserResize(source.preprocessed, options);
+  return workerBridge.resize(signal, source.preprocessed, options);
 }
 
 interface Props {
@@ -133,12 +112,27 @@ export class Options extends Component<Props, State> {
 
     if (!width.checkValidity() || !height.checkValidity()) return;
 
+    const {
+      lanczosRadius = defaultOptions.lanczosRadius,
+      centeringX = defaultOptions.centeringX,
+      centeringY = defaultOptions.centeringY,
+      premultiply = defaultOptions.premultiply,
+      linearRGB = defaultOptions.linearRGB,
+    } = options as WorkerResizeOptions;
+
     const newOptions: ResizeOptions = {
       width: inputFieldValueAsNumber(width),
       height: inputFieldValueAsNumber(height),
       method: form.resizeMethod.value,
-      premultiply: inputFieldChecked(form.premultiply, true),
-      linearRGB: inputFieldChecked(form.linearRGB, true),
+      // These fields are absent while their option is hidden, so they fall back
+      // to the current value rather than the default - otherwise switching
+      // method away from Lanczos (or to Nearest neighbour) and back would reset
+      // them.
+      premultiply: inputFieldChecked(form.premultiply, premultiply),
+      linearRGB: inputFieldChecked(form.linearRGB, linearRGB),
+      lanczosRadius: inputFieldValueAsNumber(form.lanczosRadius, lanczosRadius),
+      centeringX: inputFieldValueAsNumber(form.centeringX, centeringX),
+      centeringY: inputFieldValueAsNumber(form.centeringY, centeringY),
       // Casting, as the formfield only returns the correct values.
       fitMethod: inputFieldValue(
         form.fitMethod,
@@ -225,6 +219,14 @@ export class Options extends Component<Props, State> {
   };
 
   render({ options, isVector }: Props, { maintainAspect }: State) {
+    // Cast: these only exist on the worker options, and settings persisted
+    // before they were added won't have them at all.
+    const {
+      lanczosRadius = defaultOptions.lanczosRadius,
+      centeringX = defaultOptions.centeringX,
+      centeringY = defaultOptions.centeringY,
+    } = options as WorkerResizeOptions;
+
     return (
       <form
         ref={linkRef(this, 'form')}
@@ -239,17 +241,31 @@ export class Options extends Component<Props, State> {
             onChange={this.onChange}
           >
             {isVector && <option value="vector">Vector</option>}
-            <option value="lanczos3">Lanczos3</option>
+            <option value="lanczos3">Lanczos</option>
             <option value="mitchell">Mitchell</option>
             <option value="catrom">Catmull-Rom</option>
+            <option value="hamming">Hamming</option>
             <option value="triangle">Triangle (bilinear)</option>
+            <option value="box">Box (area average)</option>
             <option value="hqx">hqx (pixel art)</option>
-            <option value="browser-pixelated">Browser pixelated</option>
-            <option value="browser-low">Browser low quality</option>
-            <option value="browser-medium">Browser medium quality</option>
-            <option value="browser-high">Browser high quality</option>
+            <option value="nearest">Nearest neighbour</option>
           </Select>
         </label>
+        <Expander>
+          {options.method === 'lanczos3' ? (
+            <div class={style.optionOneCell}>
+              <Range
+                name="lanczosRadius"
+                min="1"
+                max="10"
+                value={lanczosRadius}
+                onInput={this.onChange}
+              >
+                Lanczos radius:
+              </Range>
+            </div>
+          ) : null}
+        </Expander>
         <label class={style.optionTextFirst}>
           Preset:
           <Select value={this.getPreset()} onChange={this.onPresetChange}>
@@ -283,8 +299,10 @@ export class Options extends Component<Props, State> {
             onInput={this.onHeightInput}
           />
         </label>
+        {/* Nearest neighbour copies pixels rather than blending them, so
+            there's nothing for either of these to change. */}
         <Expander>
-          {isWorkerOptions(options) ? (
+          {isWorkerOptions(options) && options.method !== 'nearest' ? (
             <label class={style.optionToggle}>
               Premultiply alpha channel
               <Checkbox
@@ -294,7 +312,7 @@ export class Options extends Component<Props, State> {
               />
             </label>
           ) : null}
-          {isWorkerOptions(options) ? (
+          {isWorkerOptions(options) && options.method !== 'nearest' ? (
             <label class={style.optionToggle}>
               Linear RGB
               <Checkbox
@@ -315,17 +333,49 @@ export class Options extends Component<Props, State> {
         </label>
         <Expander>
           {maintainAspect ? null : (
-            <label class={style.optionTextFirst}>
-              Fit method:
-              <Select
-                name="fitMethod"
-                value={options.fitMethod}
-                onChange={this.onChange}
-              >
-                <option value="stretch">Stretch</option>
-                <option value="contain">Contain</option>
-              </Select>
-            </label>
+            <div>
+              <label class={style.optionTextFirst}>
+                Fit method:
+                <Select
+                  name="fitMethod"
+                  value={options.fitMethod}
+                  onChange={this.onChange}
+                >
+                  <option value="stretch">Stretch</option>
+                  <option value="contain">Contain</option>
+                </Select>
+              </label>
+              <Expander>
+                {options.fitMethod === 'contain' ? (
+                  <div>
+                    <label class={style.optionTextFirst}>
+                      Horizontal align:
+                      <Select
+                        name="centeringX"
+                        value={'' + centeringX}
+                        onChange={this.onChange}
+                      >
+                        <option value="0">Left</option>
+                        <option value="0.5">Centre</option>
+                        <option value="1">Right</option>
+                      </Select>
+                    </label>
+                    <label class={style.optionTextFirst}>
+                      Vertical align:
+                      <Select
+                        name="centeringY"
+                        value={'' + centeringY}
+                        onChange={this.onChange}
+                      >
+                        <option value="0">Top</option>
+                        <option value="0.5">Middle</option>
+                        <option value="1">Bottom</option>
+                      </Select>
+                    </label>
+                  </div>
+                ) : null}
+              </Expander>
+            </div>
           )}
         </Expander>
       </form>

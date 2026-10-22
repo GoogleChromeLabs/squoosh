@@ -14,6 +14,15 @@ interface Props {
   downloadUrl?: string;
   flipSide: boolean;
   typeLabel: string;
+  /**
+   * The size to present for the source, and for this side's output, in bytes.
+   * Not simply `source.file.size` / `imageFile.size`: a vector source is
+   * presented at its brotli size. See `presentedSize` in ../index.tsx.
+   */
+  sourceSize?: number;
+  outputSize?: number;
+  /** Whether the presented sizes are brotli sizes rather than sizes on disk. */
+  brotli?: boolean;
 }
 
 interface State {
@@ -47,8 +56,8 @@ export default class Results extends Component<Props, State> {
   private onDownload = () => {
     // GA can’t do floats. So we round to ints. We're deliberately rounding to nearest kilobyte to
     // avoid cases where exact image sizes leak something interesting about the user.
-    const before = Math.round(this.props.source!.file.size / 1024);
-    const after = Math.round(this.props.imageFile!.size / 1024);
+    const before = Math.round(this.props.sourceSize! / 1024);
+    const after = Math.round(this.props.outputSize! / 1024);
     const change = Math.round((after / before) * 1000);
 
     ga('send', 'event', 'compression', 'download', {
@@ -59,16 +68,25 @@ export default class Results extends Component<Props, State> {
   };
 
   render(
-    { source, imageFile, downloadUrl, flipSide, typeLabel }: Props,
+    {
+      source,
+      imageFile,
+      downloadUrl,
+      flipSide,
+      typeLabel,
+      sourceSize,
+      outputSize,
+      brotli,
+    }: Props,
     { showLoadingState }: State,
   ) {
-    const prettySize = imageFile && prettyBytes(imageFile.size);
+    const prettySize = outputSize !== undefined && prettyBytes(outputSize);
     const isOriginal = !source || !imageFile || source.file === imageFile;
     let diff;
     let percent;
 
-    if (source && imageFile) {
-      diff = imageFile.size / source.file.size;
+    if (sourceSize !== undefined && outputSize !== undefined) {
+      diff = outputSize / sourceSize;
       const absolutePercent = Math.round(Math.abs(diff) * 100);
       percent = diff > 1 ? absolutePercent - 100 : 100 - absolutePercent;
     }

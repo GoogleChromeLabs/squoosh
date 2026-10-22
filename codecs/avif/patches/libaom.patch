@@ -1,0 +1,182 @@
+diff --git a/aom/aomcx.h b/aom/aomcx.h
+index d1aa4ae..145ac13 100644
+--- a/aom/aomcx.h
++++ b/aom/aomcx.h
+@@ -1675,7 +1675,11 @@ typedef enum aom_scaling_mode_1d {
+   AOME_ONEEIGHT = 5,
+   AOME_ONETWO = 6,
+   AOME_TWOTHREE = 7,
+-  AOME_ONETHREE = 8
++  AOME_ONETHREE = 8,
++  // Squoosh: for heavily reduced progressive base layers. AV1 allows a frame
++  // to reference one up to 16x smaller, so a full-size layer can still predict
++  // from it (libaom rounds scaled sizes up, so it never falls short).
++  AOME_ONESIXTEEN = 9
+ } AOM_SCALING_MODE;
+ 
+ /*!\brief Max number of segments
+diff --git a/av1/av1_cx_iface.c b/av1/av1_cx_iface.c
+index b43c96d..7be3a1f 100644
+--- a/av1/av1_cx_iface.c
++++ b/av1/av1_cx_iface.c
+@@ -47,6 +47,7 @@
+ #include "av1/encoder/external_partition.h"
+ #include "av1/encoder/firstpass.h"
+ #include "av1/encoder/lookahead.h"
++#include "av1/encoder/pickrst.h"
+ #include "av1/encoder/rc_utils.h"
+ #include "av1/arg_defs.h"
+ 
+@@ -1282,8 +1283,12 @@ static void set_encoder_config(AV1EncoderConfig *oxcf,
+   // Set Toolset related configuration.
+   tool_cfg->bit_depth = cfg->g_bit_depth;
+   tool_cfg->cdef_control = (CDEF_CONTROL)extra_cfg->enable_cdef;
++  // Squoosh: realtime usage normally can't use loop restoration, but a forced
++  // blur skips the costly search, so allow it then.
+   tool_cfg->enable_restoration =
+-      (cfg->g_usage == AOM_USAGE_REALTIME) ? 0 : extra_cfg->enable_restoration;
++      (cfg->g_usage == AOM_USAGE_REALTIME && !av1_squoosh_lr_blur_active())
++          ? 0
++          : extra_cfg->enable_restoration;
+   tool_cfg->force_video_mode = extra_cfg->force_video_mode;
+   tool_cfg->enable_palette = extra_cfg->enable_palette;
+   // FIXME(debargha): Should this be:
+diff --git a/av1/encoder/encoder.c b/av1/encoder/encoder.c
+index 3842190..1c32cc6 100644
+--- a/av1/encoder/encoder.c
++++ b/av1/encoder/encoder.c
+@@ -147,6 +147,10 @@ static inline void Scale2Ratio(AOM_SCALING_MODE mode, int *hr, int *hs) {
+       *hr = 1;
+       *hs = 3;
+       break;
++    case AOME_ONESIXTEEN:
++      *hr = 1;
++      *hs = 16;
++      break;
+     default:
+       *hr = 1;
+       *hs = 1;
+@@ -5845,7 +5849,7 @@ int av1_set_internal_size(AV1EncoderConfig *const oxcf,
+   int hr = 0, hs = 0, vr = 0, vs = 0;
+ 
+   // Checks for invalid AOM_SCALING_MODE values.
+-  if (horiz_mode > AOME_ONETHREE || vert_mode > AOME_ONETHREE) return -1;
++  if (horiz_mode > AOME_ONESIXTEEN || vert_mode > AOME_ONESIXTEEN) return -1;
+ 
+   Scale2Ratio(horiz_mode, &hr, &hs);
+   Scale2Ratio(vert_mode, &vr, &vs);
+diff --git a/av1/encoder/pickrst.c b/av1/encoder/pickrst.c
+index cd79ed9..4907ccf 100644
+--- a/av1/encoder/pickrst.c
++++ b/av1/encoder/pickrst.c
+@@ -2037,7 +2037,64 @@ static void set_restoration_unit_size(AV1_COMMON *cm, RestorationInfo *rsi,
+   rsi->vert_units = vert_units;
+ }
+ 
++static int squoosh_lr_blur_tap1 = 0;
++static int squoosh_lr_blur_tap2 = 0;
++
++void av1_squoosh_set_lr_blur(int tap1, int tap2) {
++  squoosh_lr_blur_tap1 =
++      clamp(tap1, WIENER_FILT_TAP1_MINV, WIENER_FILT_TAP1_MAXV);
++  squoosh_lr_blur_tap2 =
++      clamp(tap2, WIENER_FILT_TAP2_MINV, WIENER_FILT_TAP2_MAXV);
++}
++
++int av1_squoosh_lr_blur_active(void) {
++  return squoosh_lr_blur_tap1 != 0 || squoosh_lr_blur_tap2 != 0;
++}
++
++static void squoosh_set_blur_taps(InterpKernel f) {
++  f[0] = f[WIENER_WIN - 1] = 0;
++  f[1] = f[WIENER_WIN - 2] = (int16_t)squoosh_lr_blur_tap1;
++  f[2] = f[WIENER_WIN - 3] = (int16_t)squoosh_lr_blur_tap2;
++  // The centre tap has an implicit +WIENER_FILT_STEP (128), so this makes the
++  // taps sum to 1.
++  f[3] = (int16_t)(-2 * (squoosh_lr_blur_tap1 + squoosh_lr_blur_tap2));
++  f[WIENER_WIN] = 0;
++}
++
++// Applies the forced blur: one Wiener filter per plane, using the largest
++// unit size so the taps are signalled as few times as possible.
++static void squoosh_apply_lr_blur(AV1_COMMON *cm) {
++  const int num_planes = av1_num_planes(cm);
++  for (int plane = 0; plane < num_planes; ++plane) {
++    RestorationInfo *rsi = &cm->rst_info[plane];
++    const int is_uv = plane > 0;
++    int plane_w, plane_h;
++    av1_get_upsampled_plane_size(cm, is_uv, &plane_w, &plane_h);
++    const int num_units =
++        av1_lr_count_units(RESTORATION_UNITSIZE_MAX, plane_w) *
++        av1_lr_count_units(RESTORATION_UNITSIZE_MAX, plane_h);
++    aom_free(rsi->unit_info);
++    CHECK_MEM_ERROR(cm, rsi->unit_info,
++                    (RestorationUnitInfo *)aom_memalign(
++                        16, sizeof(*rsi->unit_info) * num_units));
++    memset(rsi->unit_info, 0, sizeof(*rsi->unit_info) * num_units);
++    set_restoration_unit_size(cm, rsi, is_uv, RESTORATION_UNITSIZE_MAX);
++    rsi->frame_restoration_type = RESTORE_WIENER;
++    for (int u = 0; u < rsi->num_rest_units; ++u) {
++      RestorationUnitInfo *rui = &rsi->unit_info[u];
++      rui->restoration_type = RESTORE_WIENER;
++      squoosh_set_blur_taps(rui->wiener_info.vfilter);
++      squoosh_set_blur_taps(rui->wiener_info.hfilter);
++    }
++  }
++}
++
+ void av1_pick_filter_restoration(const YV12_BUFFER_CONFIG *src, AV1_COMP *cpi) {
++  if (av1_squoosh_lr_blur_active()) {
++    squoosh_apply_lr_blur(&cpi->common);
++    return;
++  }
++
+   AV1_COMMON *const cm = &cpi->common;
+   MACROBLOCK *const x = &cpi->td.mb;
+   const SequenceHeader *const seq_params = cm->seq_params;
+diff --git a/av1/encoder/pickrst.h b/av1/encoder/pickrst.h
+index 22bb000..b00ffbd 100644
+--- a/av1/encoder/pickrst.h
++++ b/av1/encoder/pickrst.h
+@@ -119,6 +119,16 @@ static inline uint16_t find_average_highbd(const uint16_t *src, int h_start,
+  */
+ void av1_pick_filter_restoration(const YV12_BUFFER_CONFIG *sd, AV1_COMP *cpi);
+ 
++// Squoosh: while set, av1_pick_filter_restoration() skips its search and
++// applies a fixed, symmetric low-pass Wiener filter to every plane instead,
++// turning loop restoration into a decoder-side blur. tap1 and tap2 are the
++// two outer taps (in 1/128ths) either side of the implied centre tap; the
++// outermost 7-tap coefficient is left at 0 so the same kernel is valid for
++// chroma. Pass 0, 0 to go back to normal restoration. This is process-global
++// state, so it's only safe while one encoder is encoding frames at a time.
++void av1_squoosh_set_lr_blur(int tap1, int tap2);
++int av1_squoosh_lr_blur_active(void);
++
+ #ifdef __cplusplus
+ }  // extern "C"
+ #endif
+diff --git a/av1/encoder/speed_features.c b/av1/encoder/speed_features.c
+index ef673c0..cc8184b 100644
+--- a/av1/encoder/speed_features.c
++++ b/av1/encoder/speed_features.c
+@@ -15,6 +15,7 @@
+ 
+ #include "av1/encoder/encoder.h"
+ #include "av1/encoder/speed_features.h"
++#include "av1/encoder/pickrst.h"
+ #include "av1/encoder/rdopt.h"
+ 
+ #include "aom_dsp/aom_dsp_common.h"
+@@ -2769,8 +2770,11 @@ void av1_set_speed_features_framesize_independent(AV1_COMP *cpi, int speed) {
+         !sf->interp_sf.disable_dual_filter;
+     // Set the flag 'enable_restoration', if one the Loop restoration filters
+     // (i.e., Wiener or Self-guided) is enabled.
++    // Squoosh: keep it when a forced blur is requested, as that bypasses the
++    // (disabled) search.
+     cpi->common.seq_params->enable_restoration &=
+-        (!sf->lpf_sf.disable_wiener_filter || !sf->lpf_sf.disable_sgr_filter);
++        (!sf->lpf_sf.disable_wiener_filter || !sf->lpf_sf.disable_sgr_filter ||
++         av1_squoosh_lr_blur_active());
+ 
+     cpi->common.seq_params->enable_interintra_compound &=
+         (sf->inter_sf.disable_interintra_wedge_var_thresh != UINT_MAX);

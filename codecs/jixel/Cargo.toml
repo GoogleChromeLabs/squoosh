@@ -1,0 +1,22 @@
+[package]
+name = "squoosh-jixel"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+# "wasm" is jixel's hand-written SIMD128 kernels, and only compiles in when
+# +simd128 is on (see Makefile). The x86/ARM backends are irrelevant here.
+jixel = { version = "0.4.2", default-features = false, features = ["wasm", "splines"] }
+
+[profile.release]
+lto = true
+opt-level = 3
+codegen-units = 1
+# A panic aborts the wasm instance rather than unwinding, which keeps the
+# emscripten exception ABI out of the picture. jixel reports bad input through
+# Result, so a panic here is a bug either way.
+panic = "abort"

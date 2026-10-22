@@ -14,15 +14,10 @@ import type { WebPModule } from 'codecs/webp/enc/webp_enc';
 import type { EncodeOptions } from '../shared/meta';
 
 import { initEmscriptenModule } from 'features/worker-utils';
-import { simd } from 'wasm-feature-detect';
 
 let emscriptenModule: Promise<WebPModule>;
 
 async function init() {
-  if (await simd()) {
-    const webpEncoder = await import('codecs/webp/enc/webp_enc_simd');
-    return initEmscriptenModule(webpEncoder.default);
-  }
   const webpEncoder = await import('codecs/webp/enc/webp_enc');
   return initEmscriptenModule(webpEncoder.default);
 }

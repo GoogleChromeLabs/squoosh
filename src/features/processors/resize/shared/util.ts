@@ -11,22 +11,27 @@
  * limitations under the License.
  */
 
+/**
+ * The source rect to take when fitting an sw x sh image into dw x dh without
+ * distorting it. `centeringX`/`centeringY` choose which part survives the crop:
+ * 0 keeps the left/top edge, 0.5 the middle, 1 the right/bottom edge.
+ */
 export function getContainOffsets(
   sw: number,
   sh: number,
   dw: number,
   dh: number,
+  centeringX = 0.5,
+  centeringY = 0.5,
 ) {
   const currentAspect = sw / sh;
   const endAspect = dw / dh;
 
   if (endAspect > currentAspect) {
     const newSh = sw / endAspect;
-    const newSy = (sh - newSh) / 2;
-    return { sw, sh: newSh, sx: 0, sy: newSy };
+    return { sw, sh: newSh, sx: 0, sy: (sh - newSh) * centeringY };
   }
 
   const newSw = sh * endAspect;
-  const newSx = (sw - newSw) / 2;
-  return { sh, sw: newSw, sx: newSx, sy: 0 };
+  return { sh, sw: newSw, sx: (sw - newSw) * centeringX, sy: 0 };
 }

@@ -1,0 +1,13 @@
+diff --git a/src/codec_aom.c b/src/codec_aom.c
+index bc6bd55..b5c50ed 100644
+--- a/src/codec_aom.c
++++ b/src/codec_aom.c
+@@ -575,6 +575,8 @@ struct aomScalingModeMapList
+ static const struct aomScalingModeMapList scalingModeMap[] = {
+     { { 1, 1 }, AOME_NORMAL },    { { 1, 2 }, AOME_ONETWO },    { { 1, 4 }, AOME_ONEFOUR },  { { 1, 8 }, AOME_ONEEIGHT },
+     { { 3, 4 }, AOME_THREEFOUR }, { { 3, 5 }, AOME_THREEFIVE }, { { 4, 5 }, AOME_FOURFIVE },
++    // Squoosh: added to libaom by patches/libaom.patch.
++    { { 1, 16 }, AOME_ONESIXTEEN },
+ };
+ 
+ static const int scalingModeMapSize = sizeof(scalingModeMap) / sizeof(scalingModeMap[0]);

@@ -1,0 +1,6 @@
+{
+  "name": "jixel",
+  "scripts": {
+    "build": "../build-rust-emscripten.sh"
+  }
+}
