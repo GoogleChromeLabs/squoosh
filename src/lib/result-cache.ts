@@ -1,20 +1,18 @@
-import { EncoderState, ProcessorState } from '../feature-meta';
-import { shallowEqual } from '../util';
-
-interface CacheResult {
+export interface CacheResult {
   processed: ImageData;
   data: ImageData;
   file: File;
 }
 
 interface CacheEntry extends CacheResult {
-  processorState: ProcessorState;
-  encoderState: EncoderState;
   preprocessed: ImageData;
+  /** Serialized processor and encoder settings, see `useCompressor`. */
+  settingsKey: string;
 }
 
 const SIZE = 5;
 
+/** A small LRU cache of encode results, keyed by source and settings. */
 export default class ResultCache {
   private readonly _entries: CacheEntry[] = [];
 
@@ -25,35 +23,12 @@ export default class ResultCache {
     if (this._entries.length > SIZE) this._entries.pop();
   }
 
-  match(
-    preprocessed: ImageData,
-    processorState: ProcessorState,
-    encoderState: EncoderState,
-  ): CacheResult | undefined {
-    const matchingIndex = this._entries.findIndex((entry) => {
-      // Check for quick exits:
-      if (entry.preprocessed !== preprocessed) return false;
-      if (entry.encoderState.type !== encoderState.type) return false;
-
-      // Check that each set of options in the preprocessor are the same
-      for (const prop in processorState) {
-        if (
-          !shallowEqual(
-            (processorState as any)[prop],
-            (entry.processorState as any)[prop],
-          )
-        ) {
-          return false;
-        }
-      }
-
-      // Check detailed encoder options
-      if (!shallowEqual(encoderState.options, entry.encoderState.options)) {
-        return false;
-      }
-
-      return true;
-    });
+  match(preprocessed: ImageData, settingsKey: string): CacheResult | undefined {
+    const matchingIndex = this._entries.findIndex(
+      (entry) =>
+        entry.preprocessed === preprocessed &&
+        entry.settingsKey === settingsKey,
+    );
 
     if (matchingIndex === -1) return undefined;
 
@@ -65,6 +40,7 @@ export default class ResultCache {
       this._entries.unshift(matchingEntry);
     }
 
-    return { ...matchingEntry };
+    const { processed, data, file } = matchingEntry;
+    return { processed, data, file };
   }
 }

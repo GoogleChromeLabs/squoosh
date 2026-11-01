@@ -257,25 +257,29 @@ actions }) → Promise<action>`).
 
 ### 8. Verification
 
-The yardstick is squoosh.app itself. On the "logo" demo (`squoosh.svg`), the
-production build of the old code gave exactly these sizes, matching
-squoosh.app. The new app should match them too:
+The yardstick is squoosh.app itself, opened in the **same browser on the same
+OS**. The sizes depend on the platform: Chrome rasterizes the SVG differently
+on Windows and macOS, so even the lossless encoders differ. On the "logo" demo
+(`squoosh.svg`) with default options:
 
-| Encoder      | Size    |
-| ------------ | ------- |
-| OxiPNG       | 45.1 kB |
-| AVIF         | 8.27 kB |
-| JPEG XL      | 19.9 kB |
-| WebP v2      | 9.54 kB |
-| WebP         | 14.1 kB |
-| MozJPEG      | 18.8 kB |
-| QOI          | 51.1 kB |
-| Browser PNG  | 80.9 kB |
-| Browser JPEG | 23.0 kB |
+| Encoder      | Windows | macOS (browser pane) |
+| ------------ | ------- | -------------------- |
+| OxiPNG       | 45.1 kB | 29.3 kB              |
+| AVIF         | 8.27 kB | 8.46 kB              |
+| JPEG XL      | 19.9 kB | 20.3 kB              |
+| WebP v2      | 9.54 kB | 9.76 kB              |
+| WebP         | 14.1 kB | 14.2 kB              |
+| MozJPEG      | 18.8 kB | 18.8 kB              |
+| QOI          | 51.1 kB | 40.6 kB              |
+| Browser PNG  | 80.9 kB | 61.7 kB              |
+| Browser JPEG | 23.0 kB | 23.1 kB              |
 
-Processors: OxiPNG + reduce palette gave 21.5 kB. Resize to 50 % with
-Lanczos3 gave 17.8 kB, and with hqx 15.6 kB (those last two include
-quantize).
+Processors on OxiPNG: reduce palette gave 21.5 kB (Windows) / 17.6 kB
+(macOS). Adding resize to 50 % with Lanczos3 gave 17.8 / 17.6 kB, and with
+hqx 15.6 / 14.9 kB.
+
+The `useCompressor` pipeline already matched every macOS number above in a
+test page (before any UI existed); the finished app still needs checking.
 
 Also check: the intro page, demos, paste, drag & drop, split slider and keys
 1/2/3, zoom/pan/wheel, rotate, mobile layout (multi-panel), copy, save and
