@@ -1,0 +1,82 @@
+<script setup lang="ts">
+defineOptions({ inheritAttrs: false });
+const checked = defineModel<boolean>({ default: false });
+</script>
+
+<template>
+  <div class="checkbox">
+    <input
+      v-model="checked"
+      class="real-checkbox"
+      type="checkbox"
+      v-bind="$attrs"
+    />
+    <div class="track">
+      <div class="thumb-track">
+        <div class="thumb"></div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.checkbox {
+  display: inline-block;
+  position: relative;
+}
+
+.track {
+  --thumb-size: 14px;
+  background: var(--black);
+  border-radius: 1000px;
+  width: 24px;
+  padding: 3px calc(var(--thumb-size) / 2 + 3px);
+}
+
+.checkbox:focus-within .track {
+  outline: white solid 2px;
+}
+
+.thumb {
+  position: relative;
+  width: var(--thumb-size);
+  height: var(--thumb-size);
+  background: var(--less-light-gray);
+  border-radius: 100%;
+  transform: translateX(calc(var(--thumb-size) / -2));
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--main-theme-color);
+    opacity: 0;
+    transition: opacity 200ms ease;
+  }
+}
+
+.thumb-track {
+  transition: transform 200ms ease;
+}
+
+.real-checkbox {
+  top: 0;
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+
+  &:checked + .track {
+    .thumb-track {
+      transform: translateX(100%);
+    }
+
+    .thumb::before {
+      opacity: 1;
+    }
+  }
+}
+</style>

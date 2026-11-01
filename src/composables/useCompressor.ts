@@ -18,6 +18,7 @@ import {
   sniffMimeType,
 } from '@/lib/util';
 import { drawableToImageData } from '@/lib/canvas';
+import type { ShowSnack } from './useSnackbar';
 import ResultCache from '@/lib/result-cache';
 import WorkerBridge from '@/worker/bridge';
 import {
@@ -32,11 +33,6 @@ import {
   type ProcessorState,
 } from '@/features/registry';
 import { resize } from '@/features/processors/resize/client';
-
-export type ShowSnack = (
-  message: string,
-  options?: { timeout?: number; actions?: string[] },
-) => Promise<string>;
 
 export type OutputType = EncoderType | 'identity';
 

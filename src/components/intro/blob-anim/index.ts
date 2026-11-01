@@ -1,4 +1,3 @@
-import * as style from '../style.css';
 import { startBlobs } from './meta';
 
 /**
@@ -307,12 +306,15 @@ class BackgroundBlobs {
 
 const deltaMultiplierStep = 0.01;
 
-export function startBlobAnim(canvas: HTMLCanvasElement) {
+/**
+ * Animates blobs on the canvas, with the central ones around `loadImgEl`.
+ * Stops by itself once the canvas is removed from the document.
+ */
+export function startBlobAnim(canvas: HTMLCanvasElement, loadImgEl: Element) {
   let lastTime: number;
   const ctx = canvas.getContext('2d')!;
   const centralBlobs = new CentralBlobs();
   let backgroundBlobs: BackgroundBlobs;
-  const loadImgEl = document.querySelector('.' + style.loadImg)!;
   let hasFocus = document.hasFocus();
   let deltaMultiplier = hasFocus ? 1 : 0;
   let animating = true;
