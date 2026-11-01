@@ -1,0 +1,26 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "squoosh-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev"],
+      "port": 5000
+    },
+    {
+      "name": "squoosh-build",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "x",
+        "serve",
+        "--config",
+        "../serve.json",
+        "--listen",
+        "5050",
+        "build"
+      ],
+      "port": 5050,
+      "autoPort": false
+    }
+  ]
+}

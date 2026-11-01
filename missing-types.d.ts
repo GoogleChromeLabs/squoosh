@@ -34,6 +34,8 @@ declare module 'omt:*' {
   export default value;
 }
 
+declare module 'add-css:*' {}
+
 declare module 'css:*' {
   const source: string;
   export default source;

@@ -1,3 +1,5 @@
+/// <reference path="../../../emscripten-types.d.ts" />
+
 export interface EncodeOptions {
   effort: number;
   quality: number;
@@ -15,7 +17,7 @@ export interface JXLModule extends EmscriptenWasm.Module {
     width: number,
     height: number,
     options: EncodeOptions,
-  ): Uint8Array | null;
+  ): Uint8Array<ArrayBuffer> | null;
 }
 
 declare var moduleFactory: EmscriptenWasm.ModuleFactory<JXLModule>;

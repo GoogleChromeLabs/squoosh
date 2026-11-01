@@ -3,7 +3,7 @@ import * as style from './style.css';
 import 'add-css:./style.css';
 import { UncheckedIcon, CheckedIcon } from '../../../icons';
 
-interface Props extends preact.JSX.HTMLAttributes {}
+interface Props extends preact.JSX.AllHTMLAttributes {}
 interface State {}
 
 export default class Checkbox extends Component<Props, State> {

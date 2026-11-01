@@ -12,7 +12,6 @@
  */
 import * as path from 'path';
 import { promises as fsp } from 'fs';
-import del from 'del';
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import terser from '@rollup/plugin-terser';
@@ -37,6 +36,15 @@ import dedent from 'dedent';
 
 function resolveFileUrl({ fileName }) {
   return JSON.stringify(fileNameToURL(fileName));
+}
+
+// importMetaAssets replaces `new URL('./asset', import.meta.url)` with the
+// file URL alone, so assets need absolute URLs. JS chunks (workers) must stay
+// plain strings so OMT can still rewrite `new Worker(new URL(url, module.uri))`.
+function resolveClientFileUrl({ fileName }) {
+  const url = resolveFileUrl({ fileName });
+  if (fileName.endsWith('.js')) return url;
+  return `new URL(${url}, location.href).href`;
 }
 
 function resolveImportMetaUrlInStaticBuild(property, { moduleId }) {
@@ -65,11 +73,11 @@ function jsFileName(chunkInfo) {
 
 export default async function ({ watch }) {
   const omtLoaderPromise = fsp.readFile(
-    path.join(__dirname, 'lib', 'omt.ejs'),
+    path.join(import.meta.dirname, 'lib', 'omt.ejs'),
     'utf-8',
   );
 
-  await del('.tmp/build');
+  await fsp.rm('.tmp/build', { recursive: true, force: true });
 
   const isProduction = !watch;
 
@@ -98,9 +106,10 @@ export default async function ({ watch }) {
     input: 'src/static-build/index.tsx',
     output: {
       dir,
-      format: 'cjs',
+      format: 'es',
       assetFileNames: staticPath,
       exports: 'named',
+      preserveModules: true,
     },
     watch: {
       clearScreen: false,
@@ -111,23 +120,28 @@ export default async function ({ watch }) {
       // although we may need to change this number over time.
       buildDelay: 250,
     },
-    preserveModules: true,
     plugins: [
       { resolveFileUrl, resolveImportMeta: resolveImportMetaUrlInStaticBuild },
       clientBundlePlugin(
         {
           external: ['worker_threads'],
           plugins: [
-            { resolveFileUrl },
+            { resolveFileUrl: resolveClientFileUrl },
             OMT({ loader: await omtLoaderPromise }),
             importMetaAssets(),
             serviceWorkerPlugin({
               output: 'static/serviceworker.js',
             }),
             ...commonPlugins(),
-            commonjs(),
+            // Only node_modules may be CommonJS. Otherwise the plugin loads
+            // modules while resolving them, which deadlocks on self-spawning
+            // workers such as the one in wasm-bindgen-rayon.
+            commonjs({ include: /node_modules/ }),
             resolve(),
-            replace({ __PRERENDER__: false, __PRODUCTION__: isProduction }),
+            replace({
+              preventAssignment: true,
+              values: { __PRERENDER__: false, __PRODUCTION__: isProduction },
+            }),
             entryDataPlugin(),
             isProduction ? terser({ module: true }) : {},
           ],
@@ -140,15 +154,21 @@ export default async function ({ watch }) {
           entryFileNames: jsFileName,
           // This is needed because emscripten's workers use 'this', so they trigger all kinds of interop things,
           // such as double-wrapping objects in { default }.
-          interop: false,
+          interop: 'esModule',
         },
         resolveFileUrl,
       ),
       ...commonPlugins(),
-      emitFiles({ include: '**/*', root: path.join(__dirname, 'src', 'copy') }),
+      emitFiles({
+        include: '**/*',
+        root: path.join(import.meta.dirname, 'src', 'copy'),
+      }),
       nodeExternalPlugin(),
       featurePlugin(),
-      replace({ __PRERENDER__: true, __PRODUCTION__: isProduction }),
+      replace({
+        preventAssignment: true,
+        values: { __PRERENDER__: true, __PRODUCTION__: isProduction },
+      }),
       initialCssPlugin(),
       runScript(dir + '/static-build/index.js'),
     ],

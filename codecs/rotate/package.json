@@ -2,7 +2,7 @@
   "name": "rotate",
   "scripts": {
     "build": "../build-rust.sh ./build.sh",
-    "benchmark": "echo File size after gzip && npm run benchmark:filesize && echo Optimizing && npm run -s benchmark:optimizing",
+    "benchmark": "echo File size after gzip && bun run benchmark:filesize && echo Optimizing && bun run --silent benchmark:optimizing",
     "benchmark:baseline": "v8 --liftoff --no-wasm-tier-up --no-opt ./benchmark.js",
     "benchmark:optimizing": "v8 --no-liftoff --no-wasm-tier-up ./benchmark.js",
     "benchmark:filesize": "cat rotate.wasm | gzip -c9n | wc -c"

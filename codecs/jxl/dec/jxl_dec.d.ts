@@ -1,3 +1,5 @@
+/// <reference path="../../../emscripten-types.d.ts" />
+
 export interface JXLModule extends EmscriptenWasm.Module {
   decode(data: BufferSource): ImageData | null;
 }

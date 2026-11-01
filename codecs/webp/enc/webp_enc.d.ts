@@ -1,3 +1,5 @@
+/// <reference path="../../../emscripten-types.d.ts" />
+
 export interface EncodeOptions {
   quality: number;
   target_size: number;
@@ -34,7 +36,7 @@ export interface WebPModule extends EmscriptenWasm.Module {
     width: number,
     height: number,
     options: EncodeOptions,
-  ): Uint8Array | null;
+  ): Uint8Array<ArrayBuffer> | null;
 }
 
 declare var moduleFactory: EmscriptenWasm.ModuleFactory<WebPModule>;

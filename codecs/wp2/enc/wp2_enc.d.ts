@@ -1,3 +1,5 @@
+/// <reference path="../../../emscripten-types.d.ts" />
+
 export interface EncodeOptions {
   quality: number;
   alpha_quality: number;
@@ -30,7 +32,7 @@ export interface WP2Module extends EmscriptenWasm.Module {
     width: number,
     height: number,
     options: EncodeOptions,
-  ): Uint8Array | null;
+  ): Uint8Array<ArrayBuffer> | null;
 }
 
 declare var moduleFactory: EmscriptenWasm.ModuleFactory<WP2Module>;

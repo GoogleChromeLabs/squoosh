@@ -1,24 +1,27 @@
 {
   "compilerOptions": {
     "target": "ES2019",
-    "downlevelIteration": true,
     "module": "esnext",
     "jsx": "react",
     "jsxFactory": "h",
     "strict": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "composite": true,
     "declarationMap": true,
-    "baseUrl": "./",
     "rootDir": "./",
     "outDir": ".tmp/ts",
     "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
     "paths": {
-      "static-build/*": ["src/static-build/*"],
-      "client/*": ["src/client/*"],
-      "shared/*": ["src/shared/*"],
-      "features/*": ["src/features/*"],
-      "worker-shared/*": ["src/worker-shared/*"]
+      "static-build/*": ["./src/static-build/*"],
+      "client/*": ["./src/client/*"],
+      "shared/*": ["./src/shared/*"],
+      "features/*": ["./src/features/*"],
+      "worker-shared/*": ["./src/worker-shared/*"],
+      "codecs/*": ["./codecs/*"],
+      // These packages ship types that their "exports" maps don't expose.
+      "linkstate": ["./node_modules/linkstate/src/index.d.ts"],
+      "pointer-tracker": ["./node_modules/pointer-tracker/dist/index.d.ts"]
     }
   }
 }

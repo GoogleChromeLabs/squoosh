@@ -17,19 +17,21 @@ However, Squoosh utilizes Google Analytics to collect the following:
 
 To develop for Squoosh:
 
+1. Install [Bun](https://bun.sh) (1.3 or later)
 1. Clone the repository
-1. To install node packages, run:
+1. To install dependencies, run:
    ```sh
-   npm install
+   bun install
    ```
 1. Then build the app by running:
    ```sh
-   npm run build
+   bun run build
    ```
 1. After building, start the development server by running:
    ```sh
-   npm run dev
+   bun run dev
    ```
+   It serves on port 5000 by default. Set `DEV_PORT` to use another port.
 
 # Contributing
 

@@ -3,7 +3,7 @@ import * as style from './style.css';
 import 'add-css:./style.css';
 import { Arrow } from 'client/lazy-app/icons';
 
-interface Props extends preact.JSX.HTMLAttributes {
+interface Props extends preact.JSX.AllHTMLAttributes {
   large?: boolean;
 }
 interface State {}

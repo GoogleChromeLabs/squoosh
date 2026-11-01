@@ -17,6 +17,4 @@ interface Navigator {
   readonly standalone: boolean;
 }
 
-declare module 'add-css:*' {}
-
 declare module 'preact/debug' {}

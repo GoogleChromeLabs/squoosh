@@ -1,8 +1,7 @@
 ---
 name: Bug report
 about: Something is not working as expected
-labels: 
-
+labels:
 ---
 
 **Before you start**
@@ -13,6 +12,7 @@ A clear and concise description of what the bug is.
 
 **To Reproduce**
 Steps to reproduce the behavior:
+
 1. Go to '...'
 2. Click on '....'
 3. Scroll down to '....'
@@ -22,14 +22,15 @@ Steps to reproduce the behavior:
 A clear and concise description of what you expected to happen.
 
 **Version:**
- - OS w/ version: [e.g. iOS 12]
- - Browser w/ version [e.g. Chrome 70]
- - Node version: [e.g. 10.11.0]
- - npm version: [e.g. 6.4.1]
+
+- OS w/ version: [e.g. iOS 12]
+- Browser w/ version [e.g. Chrome 70]
+- Bun version (if building locally): [e.g. 1.3.0]
 
 **Is your issue related to the quality of image compression?**
-Please attach original and output images (you can drag & drop to attach). 
-- Original image 
+Please attach original and output images (you can drag & drop to attach).
+
+- Original image
 - Output image from Squoosh
 
 **Additional context, screenshots, screencasts**

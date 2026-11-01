@@ -5,7 +5,7 @@ import RangeInputElement from './custom-els/RangeInput';
 import './custom-els/RangeInput';
 import { linkRef } from 'shared/prerendered-app/util';
 
-interface Props extends preact.JSX.HTMLAttributes {}
+interface Props extends preact.JSX.InputHTMLAttributes {}
 interface State {
   textFocused: boolean;
 }

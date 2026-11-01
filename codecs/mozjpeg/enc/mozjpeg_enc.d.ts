@@ -1,3 +1,5 @@
+/// <reference path="../../../emscripten-types.d.ts" />
+
 export const enum MozJpegColorSpace {
   GRAYSCALE = 1,
   RGB,
@@ -29,7 +31,7 @@ export interface MozJPEGModule extends EmscriptenWasm.Module {
     width: number,
     height: number,
     options: EncodeOptions,
-  ): Uint8Array;
+  ): Uint8Array<ArrayBuffer>;
 }
 
 declare var moduleFactory: EmscriptenWasm.ModuleFactory<MozJPEGModule>;

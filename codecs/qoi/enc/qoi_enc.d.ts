@@ -1,3 +1,5 @@
+/// <reference path="../../../emscripten-types.d.ts" />
+
 export interface EncodeOptions {}
 
 export interface QoiModule extends EmscriptenWasm.Module {
@@ -6,7 +8,7 @@ export interface QoiModule extends EmscriptenWasm.Module {
         width: number,
         height: number,
         options: EncodeOptions,
-    ): Uint8Array;
+    ): Uint8Array<ArrayBuffer>;
 }
 
 declare var moduleFactory: EmscriptenWasm.ModuleFactory<QoiModule>;

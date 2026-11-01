@@ -1,3 +1,5 @@
+/// <reference path="../../../emscripten-types.d.ts" />
+
 export const enum AVIFTune {
   auto,
   psnr,
@@ -24,7 +26,7 @@ export interface AVIFModule extends EmscriptenWasm.Module {
     width: number,
     height: number,
     options: EncodeOptions,
-  ): Uint8Array | null;
+  ): Uint8Array<ArrayBuffer> | null;
 }
 
 declare var moduleFactory: EmscriptenWasm.ModuleFactory<AVIFModule>;

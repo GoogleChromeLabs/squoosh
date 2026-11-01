@@ -25,9 +25,8 @@ async function initMT() {
 }
 
 async function initST() {
-  const { default: init, optimise } = await import(
-    'codecs/oxipng/pkg/squoosh_oxipng'
-  );
+  const { default: init, optimise } =
+    await import('codecs/oxipng/pkg/squoosh_oxipng');
   await init();
   return optimise;
 }
@@ -45,11 +44,12 @@ export default async function encode(
   }
 
   const optimise = await wasmReady;
+  // wasm-bindgen copies the result out of wasm memory into a plain ArrayBuffer.
   return optimise(
     data.data,
     data.width,
     data.height,
     options.level,
     options.interlace,
-  ).buffer;
+  ).buffer as ArrayBuffer;
 }
