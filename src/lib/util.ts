@@ -106,7 +106,7 @@ const magicNumberMapInput = [
   [/^qoif/, 'image/qoi'],
 ] as const;
 
-export type ImageMimeTypes = typeof magicNumberMapInput[number][1];
+export type ImageMimeTypes = (typeof magicNumberMapInput)[number][1];
 
 const magicNumberToMimeType = new Map<RegExp, ImageMimeTypes>(
   magicNumberMapInput,

@@ -1,0 +1,14 @@
+{
+  "extends": "@vue/tsconfig/tsconfig.dom.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "types": ["vite/client", "vite-plugin-pwa/client"],
+    "paths": {
+      "@/*": ["./src/*"],
+      "codecs/*": ["./codecs/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.vue", "emscripten-types.d.ts"],
+  "exclude": ["src/sw.ts"]
+}

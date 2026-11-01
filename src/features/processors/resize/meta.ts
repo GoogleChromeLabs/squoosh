@@ -12,16 +12,9 @@
  */
 
 type BrowserResizeMethods =
-  | 'browser-pixelated'
-  | 'browser-low'
-  | 'browser-medium'
-  | 'browser-high';
+  'browser-pixelated' | 'browser-low' | 'browser-medium' | 'browser-high';
 type WorkerResizeMethods =
-  | 'triangle'
-  | 'catrom'
-  | 'mitchell'
-  | 'lanczos3'
-  | 'hqx';
+  'triangle' | 'catrom' | 'mitchell' | 'lanczos3' | 'hqx';
 
 export const workerResizeMethods: WorkerResizeMethods[] = [
   'triangle',
@@ -32,9 +25,7 @@ export const workerResizeMethods: WorkerResizeMethods[] = [
 ];
 
 export type Options =
-  | BrowserResizeOptions
-  | WorkerResizeOptions
-  | VectorResizeOptions;
+  BrowserResizeOptions | WorkerResizeOptions | VectorResizeOptions;
 
 export interface ResizeOptionsCommon {
   width: number;
