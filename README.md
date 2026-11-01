@@ -6,12 +6,7 @@
 
 Squoosh does not send your image to a server. All image compression processes locally.
 
-However, Squoosh utilizes Google Analytics to collect the following:
-
-- [Basic visitor data](https://support.google.com/analytics/answer/6004245?ref_topic=2919631).
-- The before and after image size value.
-- If Squoosh PWA, the type of Squoosh installation.
-- If Squoosh PWA, the installation time and date.
+Squoosh does not use analytics or collect any data about you.
 
 # Developing
 
@@ -23,15 +18,21 @@ To develop for Squoosh:
    ```sh
    bun install
    ```
-1. Then build the app by running:
-   ```sh
-   bun run build
-   ```
-1. After building, start the development server by running:
+1. Start the development server by running:
    ```sh
    bun run dev
    ```
-   It serves on port 5000 by default. Set `DEV_PORT` to use another port.
+   It serves on port 5000 (`--port` picks another one).
+
+Other scripts:
+
+- `bun run build` type-checks and builds the app into `dist`.
+- `bun run preview` serves that build, including the service worker.
+- `bun run typecheck` only type-checks.
+
+The app is Vue 3 + Vite. The codecs in `codecs` are prebuilt and run in a
+web worker; see [src/features/README.md](/src/features/README.md) for how
+they plug into the UI.
 
 # Contributing
 

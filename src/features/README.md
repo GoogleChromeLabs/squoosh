@@ -1,65 +1,30 @@
-# Feature types
+# Features
 
-- **decoders** - decode images.
-- **encoders** - encode images.
-- **processors** - change images, generally in a way that potentially aids compression.
-- **preprocessors** - prepares the image for handling.
+- **decoders** decode images the browser can't decode itself.
+- **encoders** encode images.
+- **processors** change images, generally in a way that potentially aids compression.
+- **preprocessors** prepare the image for handling.
 
-The key difference between preprocessors and processors is each 'side' in Squoosh can process differently, whereas a preprocessor happens to both sides.
+Each side of the editor processes and encodes on its own, whereas preprocessors
+(rotation) apply to both sides.
 
-# Adding code to the worker
+## Files
 
-Any feature can have a `worker` folder. Any script in that folder will have its default export bundled into the worker, using the name of the file.
+Within a feature folder:
 
-So, `processors/shout/worker/shout.ts`:
+- `meta.ts` holds the options type and defaults (and, for encoders, `label`,
+  `mimeType` and `extension`). Both the UI and the worker import it.
+- `worker.ts` default-exports the function that runs in the web worker. It
+  should import its codec with `await import()`, so the worker only loads the
+  codecs it uses.
+- `Options.vue` is the settings panel, bound with `v-model` to the options.
+- `client.ts` holds any main-thread code (only resize has one).
 
-```ts
-export default function () {
-  console.log('OI YOU');
-}
-```
+## Adding an encoder
 
-…will be bundled into the worker and exposed via comlink as `shout()`.
-
-# Folders
-
-Within a feature, files in the:
-
-- `client` folder will be part of the client project.
-- `worker` folder will be part of the worker project.
-- `shared` folder will be part of the shared project. Both the client and worker projects can access the shared project.
-
-# Encoder format
-
-Encoders must have the following:
-
-`shared/meta.ts` which exposes the following:
-
-- `label` - The name of the codec as displayed to the user.
-- `mimeType` - The mime type to be used when generating the output file.
-- `extension` - The file extension to be used when generating the output file.
-- `EncodeOptions` - An interface for the codec's options.
-- `defaultOptions` - An object of type `EncodeOptions`.
-
-`client/index.ts` which exposes the following:
-
-- `encode` - A method which takes args:
-  - `AbortSignal`
-  - `WorkerBridge`
-  - `ImageData`
-  - `EncodeOptions`
-
-And returns (a promise for) an `ArrayBuffer`.
-
-Optionally it may export a method `featureTest`, which returns a boolean indicating support for this decoder.
-
-Optionally it may export a component, `Options`, with the following props:
-
-```ts
-interface Props {
-  options: EncodeOptions;
-  onChange(newOptions: EncodeOptions): void;
-}
-```
-
-…where `EncodeOptions` are the options for that encoder.
+1. Add `meta.ts`, `worker.ts` and, if it has settings, `Options.vue`.
+2. Expose the worker function in `src/worker/index.ts`, and add its name to
+   `methodNames` in `src/worker/bridge.ts` (the build fails if you forget).
+3. Add it to `encoderMap` in `registry.ts`, and its panel to
+   `options-components.ts`. The `encoderMap` key is stored in saved side
+   settings, so don't rename existing ones.

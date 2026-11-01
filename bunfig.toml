@@ -1,3 +1,0 @@
-[run]
-# Run package binaries (rollup, tsc, serve, ...) with Bun even if Node is installed.
-bun = true

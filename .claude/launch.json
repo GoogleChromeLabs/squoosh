@@ -2,37 +2,16 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "vite-dev",
-      "runtimeExecutable": "bunx",
-      "runtimeArgs": ["vite"],
-      "port": 5000
-    },
-    {
-      "name": "vite-preview",
-      "runtimeExecutable": "bunx",
-      "runtimeArgs": ["vite", "preview"],
-      "port": 5000
-    },
-    {
-      "name": "squoosh-dev",
+      "name": "dev",
       "runtimeExecutable": "bun",
       "runtimeArgs": ["run", "dev"],
       "port": 5000
     },
     {
-      "name": "squoosh-build",
+      "name": "preview",
       "runtimeExecutable": "bun",
-      "runtimeArgs": [
-        "x",
-        "serve",
-        "--config",
-        "../serve.json",
-        "--listen",
-        "5050",
-        "build"
-      ],
-      "port": 5050,
-      "autoPort": false
+      "runtimeArgs": ["run", "preview"],
+      "port": 5000
     }
   ]
 }

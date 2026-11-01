@@ -1,0 +1,6 @@
+# Multithreaded codecs need SharedArrayBuffer, which needs cross-origin
+# isolation. vite.config.ts sends the same headers in dev and preview.
+/*
+  Cross-Origin-Embedder-Policy: require-corp
+  Cross-Origin-Opener-Policy: same-origin
+  Cache-Control: no-cache
