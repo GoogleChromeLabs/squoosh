@@ -1,8 +1,6 @@
 import { expose } from 'comlink';
-import avifDecode from '@/features/decoders/avif/worker';
 import jxlDecode from '@/features/decoders/jxl/worker';
 import qoiDecode from '@/features/decoders/qoi/worker';
-import webpDecode from '@/features/decoders/webp/worker';
 import wp2Decode from '@/features/decoders/wp2/worker';
 import avifEncode from '@/features/encoders/avif/worker';
 import jxlEncode from '@/features/encoders/jxl/worker';
@@ -27,10 +25,8 @@ function timed<A extends unknown[], R>(
 }
 
 const api = {
-  avifDecode: timed('avifDecode', avifDecode),
   jxlDecode: timed('jxlDecode', jxlDecode),
   qoiDecode: timed('qoiDecode', qoiDecode),
-  webpDecode: timed('webpDecode', webpDecode),
   wp2Decode: timed('wp2Decode', wp2Decode),
   avifEncode: timed('avifEncode', avifEncode),
   jxlEncode: timed('jxlEncode', jxlEncode),

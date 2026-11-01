@@ -1,8 +1,10 @@
 import type WorkerBridge from '@/worker/bridge';
-import { canvasEncode } from '@/lib/canvas';
+import { canvasCanEncode, canvasEncode } from '@/lib/canvas';
 import * as avif from './encoders/avif/meta';
+import * as browserAVIF from './encoders/browserAVIF/meta';
 import * as browserJPEG from './encoders/browserJPEG/meta';
 import * as browserPNG from './encoders/browserPNG/meta';
+import * as browserWebP from './encoders/browserWebP/meta';
 import * as jxl from './encoders/jxl/meta';
 import * as mozJPEG from './encoders/mozJPEG/meta';
 import * as oxiPNG from './encoders/oxiPNG/meta';
@@ -28,6 +30,8 @@ interface Encoder<Options> {
     imageData: ImageData,
     options: Options,
   ): Promise<ArrayBuffer | Blob>;
+  /** Whether this browser can use the encoder. Missing means always. */
+  isSupported?(): boolean;
 }
 
 function defineEncoder<Options>(
@@ -35,6 +39,18 @@ function defineEncoder<Options>(
   encode: Encoder<Options>['encode'],
 ): Encoder<Options> {
   return { meta, encode };
+}
+
+/** An encoder built into the browser, offered only where it works. */
+function defineBrowserEncoder<Options extends { quality?: number }>(
+  meta: EncoderMeta<Options>,
+): Encoder<Options> {
+  return {
+    meta,
+    encode: (_signal, _bridge, data, options) =>
+      canvasEncode(data, meta.mimeType, options.quality),
+    isSupported: () => canvasCanEncode(meta.mimeType),
+  };
 }
 
 /**
@@ -45,12 +61,10 @@ export const encoderMap = {
   avif: defineEncoder(avif, (signal, bridge, data, options) =>
     bridge.avifEncode(signal, data, options),
   ),
-  browserJPEG: defineEncoder(browserJPEG, (_signal, _bridge, data, options) =>
-    canvasEncode(data, browserJPEG.mimeType, options.quality),
-  ),
-  browserPNG: defineEncoder(browserPNG, (_signal, _bridge, data) =>
-    canvasEncode(data, browserPNG.mimeType),
-  ),
+  browserAVIF: defineBrowserEncoder(browserAVIF),
+  browserJPEG: defineBrowserEncoder(browserJPEG),
+  browserPNG: defineBrowserEncoder(browserPNG),
+  browserWebP: defineBrowserEncoder(browserWebP),
   jxl: defineEncoder(jxl, (signal, bridge, data, options) =>
     bridge.jxlEncode(signal, data, options),
   ),
@@ -72,6 +86,15 @@ export const encoderMap = {
 };
 
 export type EncoderType = keyof typeof encoderMap;
+
+/** Whether this browser can use an encoder (some browser ones it can't). */
+export function isEncoderSupported(type: EncoderType): boolean {
+  const { isSupported } = encoderMap[type] as Pick<
+    Encoder<unknown>,
+    'isSupported'
+  >;
+  return isSupported?.() ?? true;
+}
 
 type EncoderOptionsMap = {
   [K in EncoderType]: (typeof encoderMap)[K]['meta']['defaultOptions'];

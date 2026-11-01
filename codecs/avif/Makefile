@@ -24,18 +24,15 @@ OUT_ENC_JS = enc/avif_enc.js
 OUT_NODE_ENC_JS = enc/avif_node_enc.js
 OUT_ENC_MT_JS = enc/avif_enc_mt.js
 OUT_NODE_ENC_MT_JS = enc/avif_node_enc_mt.js
-OUT_DEC_JS = dec/avif_dec.js
-OUT_NODE_DEC_JS = dec/avif_node_dec.js
 
 OUT_ENC_CPP = enc/avif_enc.cpp
-OUT_DEC_CPP = dec/avif_dec.cpp
 ENVIRONMENT = worker
 
 HELPER_MAKEFLAGS := -f helper.Makefile
 
 .PHONY: all clean
 
-all: $(OUT_ENC_JS) $(OUT_DEC_JS) $(OUT_ENC_MT_JS)
+all: $(OUT_ENC_JS) $(OUT_ENC_MT_JS)
 
 # ST-Encoding
 $(OUT_ENC_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt $(LIBSHARPYUV_ST)
@@ -67,19 +64,6 @@ $(OUT_ENC_MT_JS): $(OUT_ENC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMake
 		ENVIRONMENT=$(ENVIRONMENT) \
 		LIBAVIF_FLAGS="-DAVIF_CODEC_AOM_DECODE=0 -DAVIF_LOCAL_LIBSHARPYUV=ON" \
 		OUT_FLAGS="-pthread"
-
-# Decoding
-$(OUT_DEC_JS): $(OUT_DEC_CPP) $(CODEC_DIR)/CMakeLists.txt $(LIBAOM_DIR)/CMakeLists.txt
-	$(MAKE) \
-		$(HELPER_MAKEFLAGS) \
-		OUT_JS=$@ \
-		OUT_CPP=$< \
-		LIBAOM_FLAGS="\
-			-DCONFIG_AV1_ENCODER=0 \
-			-DCONFIG_MULTITHREAD=0 \
-		" \
-		ENVIRONMENT=$(ENVIRONMENT) \
-		LIBAVIF_FLAGS="-DAVIF_CODEC_AOM_ENCODE=0"
 
 # LIBAOM EXTRACTION SECTION
 
@@ -157,5 +141,3 @@ clean:
 	$(MAKE) $(HELPER_MAKEFLAGS) OUT_JS=$(OUT_ENC_MT_JS) clean
 	$(MAKE) $(HELPER_MAKEFLAGS) OUT_JS=$(OUT_ENC_NODE_JS) clean
 	$(MAKE) $(HELPER_MAKEFLAGS) OUT_JS=$(OUT_ENC_NODE_MT_JS) clean
-	$(MAKE) $(HELPER_MAKEFLAGS) OUT_JS=$(OUT_DEC_JS) clean
-	$(MAKE) $(HELPER_MAKEFLAGS) OUT_JS=$(OUT_DEV_NODE_JS) clean

@@ -11,7 +11,11 @@ import type {
   SourceImage,
 } from '@/composables/useCompressor';
 import { encoderOptionsComponents } from '@/features/options-components';
-import { encoderMap } from '@/features/registry';
+import {
+  encoderMap,
+  isEncoderSupported,
+  type EncoderType,
+} from '@/features/registry';
 import QuantizeOptions from '@/features/processors/quantize/Options.vue';
 import ResizeOptions from '@/features/processors/resize/Options.vue';
 
@@ -30,6 +34,11 @@ const emit = defineEmits<{
 }>();
 
 const settings = computed(() => props.side.latestSettings);
+
+/** The encoders this browser can use, in menu order. */
+const supportedEncoders = (Object.keys(encoderMap) as EncoderType[])
+  .filter(isEncoderSupported)
+  .map((type) => ({ type, label: encoderMap[type].meta.label }));
 
 const encoderType = computed({
   get: (): OutputType => settings.value.encoderState?.type ?? 'identity',
@@ -113,8 +122,12 @@ const encoderOptionsComponent = computed(
         <option value="identity">
           Original Image {{ source ? `(${source.file.name})` : '' }}
         </option>
-        <option v-for="(encoder, type) in encoderMap" :key="type" :value="type">
-          {{ encoder.meta.label }}
+        <option
+          v-for="encoder in supportedEncoders"
+          :key="encoder.type"
+          :value="encoder.type"
+        >
+          {{ encoder.label }}
         </option>
       </Select>
     </section>

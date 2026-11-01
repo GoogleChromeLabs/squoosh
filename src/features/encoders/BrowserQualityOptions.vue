@@ -1,8 +1,8 @@
+<!-- Options for the browser's own encoders, which only take a quality. -->
 <script setup lang="ts">
 import Range from '@/components/controls/Range.vue';
-import type { EncodeOptions } from './meta';
 
-const options = defineModel<EncodeOptions>({ required: true });
+const options = defineModel<{ quality: number }>({ required: true });
 </script>
 
 <template>

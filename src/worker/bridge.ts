@@ -6,10 +6,8 @@ import { abortable } from '@/lib/util';
 const workerTimeout = 10_000;
 
 const methodNames = [
-  'avifDecode',
   'jxlDecode',
   'qoiDecode',
-  'webpDecode',
   'wp2Decode',
   'avifEncode',
   'jxlEncode',

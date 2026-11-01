@@ -1,7 +1,7 @@
 import type { Component } from 'vue';
 import type { EncoderType } from './registry';
 import AvifOptions from './encoders/avif/Options.vue';
-import BrowserJpegOptions from './encoders/browserJPEG/Options.vue';
+import BrowserQualityOptions from './encoders/BrowserQualityOptions.vue';
 import JxlOptions from './encoders/jxl/Options.vue';
 import MozJpegOptions from './encoders/mozJPEG/Options.vue';
 import OxiPngOptions from './encoders/oxiPNG/Options.vue';
@@ -15,7 +15,9 @@ import Wp2Options from './encoders/wp2/Options.vue';
 export const encoderOptionsComponents: Partial<Record<EncoderType, Component>> =
   {
     avif: AvifOptions,
-    browserJPEG: BrowserJpegOptions,
+    browserAVIF: BrowserQualityOptions,
+    browserJPEG: BrowserQualityOptions,
+    browserWebP: BrowserQualityOptions,
     jxl: JxlOptions,
     mozJPEG: MozJpegOptions,
     oxiPNG: OxiPngOptions,

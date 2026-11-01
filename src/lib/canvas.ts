@@ -25,32 +25,14 @@ export async function canvasEncode(
   if (!ctx) throw Error('Canvas not initialized');
   ctx.putImageData(data, 0, 0);
 
-  let blob: Blob | null;
-
-  if ('toBlob' in canvas) {
-    blob = await new Promise<Blob | null>((r) =>
-      canvas.toBlob(r, type, quality),
-    );
-  } else {
-    // Welcome to Edge.
-    // TypeScript thinks `canvas` is 'never', so it needs casting.
-    const dataUrl = (canvas as HTMLCanvasElement).toDataURL(type, quality);
-    const result = /data:([^;]+);base64,(.*)$/.exec(dataUrl);
-
-    if (!result) throw Error('Data URL reading failed');
-
-    const outputType = result[1];
-    const binaryStr = atob(result[2]);
-    const data = new Uint8Array(binaryStr.length);
-
-    for (let i = 0; i < data.length; i += 1) {
-      data[i] = binaryStr.charCodeAt(i);
-    }
-
-    blob = new Blob([data], { type: outputType });
-  }
+  const blob = await new Promise<Blob | null>((resolve) =>
+    canvas.toBlob(resolve, type, quality),
+  );
 
   if (!blob) throw Error('Encoding failed');
+  // Browsers fall back to another format (PNG, or JPEG in Safari) instead of
+  // failing when they can't encode the requested one.
+  if (blob.type !== type) throw Error(`This browser can't encode ${type}`);
   return blob;
 }
 
@@ -120,17 +102,21 @@ export function builtinResize(
   return ctx.getImageData(0, 0, dw, dh);
 }
 
+/** Caches results from canvasCanEncode */
+const canEncodeCache = new Map<string, boolean>();
+
 /**
- * Test whether <canvas> can encode to a particular type.
+ * Tests whether the browser's canvas can encode a mime type. Unsupported
+ * types silently come out as another format, so this checks what comes out.
  */
-export async function canvasEncodeTest(mimeType: string): Promise<boolean> {
-  try {
-    const blob = await canvasEncode(new ImageData(1, 1), mimeType);
-    // According to the spec, the blob should be null if the format isn't supported…
-    if (!blob) return false;
-    // …but Safari & Firefox fall back to PNG, so we need to check the mime type.
-    return blob.type === mimeType;
-  } catch (err) {
-    return false;
+export function canvasCanEncode(type: string): boolean {
+  if (!canEncodeCache.has(type)) {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 1;
+    canEncodeCache.set(
+      type,
+      canvas.toDataURL(type).startsWith(`data:${type};`),
+    );
   }
+  return canEncodeCache.get(type)!;
 }

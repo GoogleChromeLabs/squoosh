@@ -26,6 +26,7 @@ import {
   defaultPreprocessorState,
   defaultProcessorState,
   encoderMap,
+  isEncoderSupported,
   isEncoderType,
   type EncoderState,
   type EncoderType,
@@ -99,13 +100,9 @@ async function decodeImage(
   const canDecode = await abortable(signal, canDecodeImageType(mimeType));
 
   try {
+    // Every supported browser decodes AVIF and WebP itself, so only formats
+    // that aren't universal yet have wasm fallbacks.
     if (!canDecode) {
-      if (mimeType === 'image/avif') {
-        return await workerBridge.avifDecode(signal, blob);
-      }
-      if (mimeType === 'image/webp') {
-        return await workerBridge.webpDecode(signal, blob);
-      }
       if (mimeType === 'image/jxl') {
         return await workerBridge.jxlDecode(signal, blob);
       }
@@ -265,15 +262,16 @@ function sanitizeSideSettings(stored: unknown): SideSettings | undefined {
       resize: { ...defaults.resize, ...processorState?.resize },
       quantize: { ...defaults.quantize, ...processorState?.quantize },
     },
-    encoderState: isEncoderType(encoderState?.type)
-      ? ({
-          type: encoderState.type,
-          options: {
-            ...defaultEncoderState(encoderState.type).options,
-            ...encoderState.options,
-          },
-        } as EncoderState)
-      : undefined,
+    encoderState:
+      isEncoderType(encoderState?.type) && isEncoderSupported(encoderState.type)
+        ? ({
+            type: encoderState.type,
+            options: {
+              ...defaultEncoderState(encoderState.type).options,
+              ...encoderState.options,
+            },
+          } as EncoderState)
+        : undefined,
   };
 }
 
