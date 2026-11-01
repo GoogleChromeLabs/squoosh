@@ -1,11 +1,12 @@
 <!-- The editor: the image comparison, and the options and results for each
      side. -->
 <script setup lang="ts">
-import { computed, toRef } from 'vue';
+import { computed, onMounted, toRef } from 'vue';
 import { useCompressor, type Side } from '@/composables/useCompressor';
 import { useMediaQuery } from '@/composables/useMediaQuery';
 import { showSnack } from '@/composables/useSnackbar';
 import { encoderMap } from '@/features/registry';
+import { cacheAllCodecs } from '@/lib/sw-bridge';
 import ImageOutput from './ImageOutput.vue';
 import MultiPanel from './MultiPanel.vue';
 import OptionsPanel from './OptionsPanel.vue';
@@ -17,6 +18,9 @@ const emit = defineEmits<{ back: [] }>();
 const compressor = useCompressor(toRef(props, 'file'), showSnack);
 const { source, loading, preprocessorState, sides, hasSavedSettings } =
   compressor;
+
+// Using the editor is a good sign the codecs are worth keeping offline.
+onMounted(cacheAllCodecs);
 
 const mobileView = useMediaQuery('(max-width: 599px)');
 

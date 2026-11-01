@@ -10,12 +10,19 @@ import LoadingSpinner from '@/components/LoadingSpinner.vue';
 import SnackBar from '@/components/SnackBar.vue';
 import IntroPage from '@/components/intro/IntroPage.vue';
 import { showSnack } from '@/composables/useSnackbar';
+import {
+  getSharedImage,
+  isShareTarget,
+  registerServiceWorker,
+} from '@/lib/sw-bridge';
 
 const ROUTE_EDITOR = '/editor';
 
 const file = shallowRef<File>();
 const isEditorOpen = ref(false);
 const dropValid = ref(false);
+/** Opened by sharing an image to the app, which the service worker hands over. */
+const awaitingShareTarget = ref(isShareTarget());
 
 // Start loading the editor straight away.
 const CompressView = shallowRef<Component>();
@@ -99,7 +106,17 @@ function preventGesture(event: Event) {
   event.preventDefault();
 }
 
+async function receiveSharedImage() {
+  const sharedFile = await getSharedImage();
+  // Remove the ?share-target from the URL
+  history.replaceState(null, '', '/');
+  awaitingShareTarget.value = false;
+  openFile(sharedFile);
+}
+
 onMounted(() => {
+  registerServiceWorker(showSnack);
+  if (awaitingShareTarget.value) receiveSharedImage();
   document.body.addEventListener('gesturestart', preventGesture);
   window.addEventListener('popstate', onPopState);
   window.addEventListener('paste', onPaste);
@@ -122,7 +139,8 @@ onBeforeUnmount(() => {
       @dragover.prevent
       @drop="onDrop"
     >
-      <template v-if="isEditorOpen && file">
+      <LoadingSpinner v-if="awaitingShareTarget" class="app-loader" />
+      <template v-else-if="isEditorOpen && file">
         <component
           :is="CompressView"
           v-if="CompressView"

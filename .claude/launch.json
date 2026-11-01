@@ -8,6 +8,12 @@
       "port": 5000
     },
     {
+      "name": "vite-preview",
+      "runtimeExecutable": "bunx",
+      "runtimeArgs": ["vite", "preview"],
+      "port": 5000
+    },
+    {
       "name": "squoosh-dev",
       "runtimeExecutable": "bun",
       "runtimeArgs": ["run", "dev"],
