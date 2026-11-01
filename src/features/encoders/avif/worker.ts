@@ -11,9 +11,9 @@
  * limitations under the License.
  */
 import type { AVIFModule } from 'codecs/avif/enc/avif_enc';
-import type { EncodeOptions } from '../shared/meta';
-import { initEmscriptenModule } from 'features/worker-utils';
-import checkThreadsSupport from 'worker-shared/supports-wasm-threads';
+import type { EncodeOptions } from './meta';
+import { initEmscriptenModule } from '@/features/worker-utils';
+import checkThreadsSupport from '@/features/supports-wasm-threads';
 
 let emscriptenModule: Promise<AVIFModule>;
 

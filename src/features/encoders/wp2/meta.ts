@@ -10,10 +10,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import type { EncodeOptions } from 'codecs/wp2/enc/wp2_enc';
-import { UVMode, Csp } from 'codecs/wp2/enc/wp2_enc';
+import type {
+  EncodeOptions,
+  UVMode as UVModeValue,
+  Csp as CspValue,
+} from 'codecs/wp2/enc/wp2_enc';
 
-export { EncodeOptions, UVMode, Csp };
+export type { EncodeOptions };
+export type UVMode = UVModeValue;
+export const UVMode = {
+  UVModeAdapt: 0,
+  UVMode420: 1,
+  UVMode444: 2,
+  UVModeAuto: 3,
+} as const satisfies Record<string, UVMode>;
+export type Csp = CspValue;
+export const Csp = {
+  kYCoCg: 0,
+  kYCbCr: 1,
+  kCustom: 2,
+  kYIQ: 3,
+} as const satisfies Record<string, Csp>;
 
 export const label = 'WebP v2 (unstable)';
 export const mimeType = 'image/webp2';

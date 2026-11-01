@@ -10,9 +10,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import imagequant, { QuantizerModule } from 'codecs/imagequant/imagequant';
-import { initEmscriptenModule } from 'features/worker-utils';
-import { Options } from '../shared/meta';
+import type { QuantizerModule } from 'codecs/imagequant/imagequant';
+import { initEmscriptenModule } from '@/features/worker-utils';
+import type { Options } from './meta';
 
 let emscriptenModule: Promise<QuantizerModule>;
 
@@ -21,7 +21,8 @@ export default async function process(
   opts: Options,
 ): Promise<ImageData> {
   if (!emscriptenModule) {
-    emscriptenModule = initEmscriptenModule(imagequant);
+    const imagequant = await import('codecs/imagequant/imagequant');
+    emscriptenModule = initEmscriptenModule(imagequant.default);
   }
 
   const module = await emscriptenModule;

@@ -12,7 +12,7 @@
  */
 import type { EncodeOptions } from 'codecs/jxl/enc/jxl_enc';
 
-export { EncodeOptions };
+export type { EncodeOptions };
 
 export const label = 'JPEG XL (beta)';
 export const mimeType = 'image/jxl';

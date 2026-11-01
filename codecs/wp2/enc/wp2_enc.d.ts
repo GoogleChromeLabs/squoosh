@@ -12,19 +12,12 @@ export interface EncodeOptions {
   use_random_matrix: boolean;
 }
 
-export const enum UVMode {
-  UVModeAdapt = 0, // Mix of 420 and 444 (per block)
-  UVMode420, // All blocks 420
-  UVMode444, // All blocks 444
-  UVModeAuto, // Choose any of the above automatically
-}
+// 0 = adapt (mix of 420 and 444 per block), 1 = all blocks 420,
+// 2 = all blocks 444, 3 = auto (choose any of the above)
+export type UVMode = 0 | 1 | 2 | 3;
 
-export const enum Csp {
-  kYCoCg,
-  kYCbCr,
-  kCustom,
-  kYIQ,
-}
+// 0 = YCoCg, 1 = YCbCr, 2 = custom, 3 = YIQ
+export type Csp = 0 | 1 | 2 | 3;
 
 export interface WP2Module extends EmscriptenWasm.Module {
   encode(

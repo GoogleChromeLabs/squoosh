@@ -11,11 +11,11 @@
  * limitations under the License.
  */
 import type { JXLModule } from 'codecs/jxl/enc/jxl_enc';
-import type { EncodeOptions } from '../shared/meta';
+import type { EncodeOptions } from './meta';
 
-import { initEmscriptenModule } from 'features/worker-utils';
+import { initEmscriptenModule } from '@/features/worker-utils';
 import { simd } from 'wasm-feature-detect';
-import checkThreadsSupport from 'worker-shared/supports-wasm-threads';
+import checkThreadsSupport from '@/features/supports-wasm-threads';
 
 let emscriptenModule: Promise<JXLModule>;
 

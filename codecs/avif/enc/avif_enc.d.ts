@@ -1,10 +1,7 @@
 /// <reference path="../../../emscripten-types.d.ts" />
 
-export const enum AVIFTune {
-  auto,
-  psnr,
-  ssim,
-}
+// 0 = auto, 1 = psnr, 2 = ssim
+export type AVIFTune = 0 | 1 | 2;
 
 export interface EncodeOptions {
   quality: number;

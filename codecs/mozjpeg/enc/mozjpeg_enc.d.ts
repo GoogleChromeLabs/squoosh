@@ -1,10 +1,7 @@
 /// <reference path="../../../emscripten-types.d.ts" />
 
-export const enum MozJpegColorSpace {
-  GRAYSCALE = 1,
-  RGB,
-  YCbCr,
-}
+// 1 = grayscale, 2 = RGB, 3 = YCbCr
+export type MozJpegColorSpace = 1 | 2 | 3;
 
 export interface EncodeOptions {
   quality: number;

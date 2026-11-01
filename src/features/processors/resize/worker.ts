@@ -1,7 +1,5 @@
-import type { WorkerResizeOptions } from '../shared/meta';
-import { getContainOffsets } from '../shared/util';
-import initResizeWasm, { resize as wasmResize } from 'codecs/resize/pkg';
-import initHqxWasm, { resize as wasmHqx } from 'codecs/hqx/pkg';
+import type { WorkerResizeOptions } from './meta';
+import { getContainOffsets } from './util';
 
 interface HqxResizeOptions extends WorkerResizeOptions {
   method: 'hqx';
@@ -53,8 +51,20 @@ const resizeMethods: WorkerResizeOptions['method'][] = [
   'lanczos3',
 ];
 
-let resizeWasmReady: Promise<unknown>;
-let hqxWasmReady: Promise<unknown>;
+async function initResizeWasm() {
+  const { default: init, resize } = await import('codecs/resize/pkg');
+  await init();
+  return resize;
+}
+
+async function initHqxWasm() {
+  const { default: init, resize } = await import('codecs/hqx/pkg');
+  await init();
+  return resize;
+}
+
+let resizeWasmReady: ReturnType<typeof initResizeWasm>;
+let hqxWasmReady: ReturnType<typeof initHqxWasm>;
 
 async function hqx(
   input: ImageData,
@@ -64,7 +74,7 @@ async function hqx(
     hqxWasmReady = initHqxWasm();
   }
 
-  await hqxWasmReady;
+  const wasmHqx = await hqxWasmReady;
 
   const widthRatio = opts.width / input.width;
   const heightRatio = opts.height / input.height;
@@ -103,7 +113,7 @@ export default async function resize(
     opts = { ...opts, method: 'catrom' };
   }
 
-  await resizeWasmReady;
+  const wasmResize = await resizeWasmReady;
 
   if (opts.fitMethod === 'contain') {
     const { sx, sy, sw, sh } = getContainOffsets(

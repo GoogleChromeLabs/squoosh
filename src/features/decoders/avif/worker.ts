@@ -11,7 +11,10 @@
  * limitations under the License.
  */
 import type { AVIFModule } from 'codecs/avif/dec/avif_dec';
-import { initEmscriptenModule, blobToArrayBuffer } from 'features/worker-utils';
+import {
+  initEmscriptenModule,
+  blobToArrayBuffer,
+} from '@/features/worker-utils';
 
 let emscriptenModule: Promise<AVIFModule>;
 

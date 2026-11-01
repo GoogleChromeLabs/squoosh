@@ -10,8 +10,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import wasmUrl from 'url:codecs/rotate/rotate.wasm';
-import { Options } from '../shared/meta';
+import wasmUrl from 'codecs/rotate/rotate.wasm?url';
+import type { Options } from './meta';
 
 export interface RotateModuleInstance {
   exports: {
@@ -24,14 +24,17 @@ export interface RotateModuleInstance {
 // `instantiateStreaming` probably takes longer to load than the time we save by
 // using `instantiateStreaming` in the first place. So let’s just use
 // `ArrayBuffer`s here.
-const instancePromise = fetch(wasmUrl)
-  .then((r) => r.arrayBuffer())
-  .then((buf) => WebAssembly.instantiate(buf));
+let instancePromise: Promise<WebAssembly.WebAssemblyInstantiatedSource>;
 
 export default async function rotate(
   data: ImageData,
   opts: Options,
 ): Promise<ImageData> {
+  if (!instancePromise) {
+    instancePromise = fetch(wasmUrl)
+      .then((r) => r.arrayBuffer())
+      .then((buf) => WebAssembly.instantiate(buf));
+  }
   const instance = (await instancePromise).instance as RotateModuleInstance;
 
   // Number of wasm memory pages (á 64KiB) needed to store the image twice.

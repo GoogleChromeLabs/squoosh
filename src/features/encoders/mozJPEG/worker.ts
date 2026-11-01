@@ -10,9 +10,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import mozjpeg_enc, { MozJPEGModule } from 'codecs/mozjpeg/enc/mozjpeg_enc';
-import { EncodeOptions } from '../shared/meta';
-import { initEmscriptenModule } from 'features/worker-utils';
+import type { MozJPEGModule } from 'codecs/mozjpeg/enc/mozjpeg_enc';
+import type { EncodeOptions } from './meta';
+import { initEmscriptenModule } from '@/features/worker-utils';
 
 let emscriptenModule: Promise<MozJPEGModule>;
 
@@ -21,7 +21,8 @@ export default async function encode(
   options: EncodeOptions,
 ): Promise<ArrayBuffer> {
   if (!emscriptenModule) {
-    emscriptenModule = initEmscriptenModule(mozjpeg_enc);
+    const mozjpegEncoder = await import('codecs/mozjpeg/enc/mozjpeg_enc');
+    emscriptenModule = initEmscriptenModule(mozjpegEncoder.default);
   }
 
   const module = await emscriptenModule;

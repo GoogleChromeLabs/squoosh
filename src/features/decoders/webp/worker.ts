@@ -11,7 +11,10 @@
  * limitations under the License.
  */
 import type { WebPModule } from 'codecs/webp/dec/webp_dec';
-import { initEmscriptenModule, blobToArrayBuffer } from 'features/worker-utils';
+import {
+  initEmscriptenModule,
+  blobToArrayBuffer,
+} from '@/features/worker-utils';
 
 let emscriptenModule: Promise<WebPModule>;
 

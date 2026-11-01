@@ -10,8 +10,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { EncodeOptions } from '../shared/meta';
-import checkThreadsSupport from 'worker-shared/supports-wasm-threads';
+import type { EncodeOptions } from './meta';
+import checkThreadsSupport from '@/features/supports-wasm-threads';
 
 async function initMT() {
   const {

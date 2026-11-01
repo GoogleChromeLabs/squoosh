@@ -11,9 +11,9 @@
  * limitations under the License.
  */
 import type { WebPModule } from 'codecs/webp/enc/webp_enc';
-import type { EncodeOptions } from '../shared/meta';
+import type { EncodeOptions } from './meta';
 
-import { initEmscriptenModule } from 'features/worker-utils';
+import { initEmscriptenModule } from '@/features/worker-utils';
 import { simd } from 'wasm-feature-detect';
 
 let emscriptenModule: Promise<WebPModule>;
