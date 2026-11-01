@@ -116,9 +116,10 @@ export default async function resize(
   const wasmResize = await resizeWasmReady;
 
   if (opts.fitMethod === 'contain') {
+    // Use the size of what's being cropped, which hqx may have scaled up.
     const { sx, sy, sw, sh } = getContainOffsets(
-      data.width,
-      data.height,
+      input.width,
+      input.height,
       opts.width,
       opts.height,
     );
