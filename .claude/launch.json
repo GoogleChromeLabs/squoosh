@@ -2,6 +2,12 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "vite-dev",
+      "runtimeExecutable": "bunx",
+      "runtimeArgs": ["vite"],
+      "port": 5000
+    },
+    {
       "name": "squoosh-dev",
       "runtimeExecutable": "bun",
       "runtimeArgs": ["run", "dev"],

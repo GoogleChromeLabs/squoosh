@@ -1,12 +1,44 @@
-import { wrap } from 'comlink';
-import { BridgeMethods, methodNames } from './meta';
-import workerURL from 'omt:../../../features-worker';
-import type { ProcessorWorkerApi } from '../../../features-worker';
-import { abortable } from '../util';
+import { wrap, type Remote } from 'comlink';
+import type { WorkerApi } from './index';
+import { abortable } from '@/lib/util';
 
 /** How long the worker should be idle before terminating. */
 const workerTimeout = 10_000;
 
+const methodNames = [
+  'avifDecode',
+  'jxlDecode',
+  'qoiDecode',
+  'webpDecode',
+  'wp2Decode',
+  'avifEncode',
+  'jxlEncode',
+  'mozjpegEncode',
+  'oxipngEncode',
+  'qoiEncode',
+  'webpEncode',
+  'wp2Encode',
+  'rotate',
+  'quantize',
+  'resize',
+] as const satisfies readonly (keyof WorkerApi)[];
+
+// Fails to compile if a worker method is missing from methodNames.
+const allMethodsListed: [
+  Exclude<keyof WorkerApi, (typeof methodNames)[number]>,
+] extends [never]
+  ? true
+  : never = true;
+void allMethodsListed;
+
+type BridgeMethods = {
+  [K in keyof WorkerApi]: (
+    signal: AbortSignal,
+    ...args: Parameters<WorkerApi[K]>
+  ) => ReturnType<WorkerApi[K]>;
+};
+
+// Merges with the class below; the methods are added to its prototype.
 interface WorkerBridge extends BridgeMethods {}
 
 class WorkerBridge {
@@ -14,7 +46,7 @@ class WorkerBridge {
   /** Worker instance associated with this processor. */
   protected _worker?: Worker;
   /** Comlinked worker API. */
-  protected _workerApi?: ProcessorWorkerApi;
+  protected _workerApi?: Remote<WorkerApi>;
   /** ID from setTimeout */
   protected _workerTimeout?: number;
 
@@ -26,8 +58,10 @@ class WorkerBridge {
   }
 
   protected _startWorker() {
-    this._worker = new Worker(workerURL);
-    this._workerApi = wrap<ProcessorWorkerApi>(this._worker);
+    this._worker = new Worker(new URL('./index.ts', import.meta.url), {
+      type: 'module',
+    });
+    this._workerApi = wrap<WorkerApi>(this._worker);
   }
 }
 
@@ -35,7 +69,7 @@ for (const methodName of methodNames) {
   WorkerBridge.prototype[methodName] = function (
     this: WorkerBridge,
     signal: AbortSignal,
-    ...args: any
+    ...args: unknown[]
   ) {
     this._queue = this._queue
       // Ignore any errors in the queue
@@ -49,16 +83,16 @@ for (const methodName of methodNames) {
         const onAbort = () => this._terminateWorker();
         signal.addEventListener('abort', onAbort);
 
-        return abortable(
-          signal,
-          // @ts-ignore - TypeScript can't figure this out
-          this._workerApi![methodName](...args),
-        ).finally(() => {
+        const method = this._workerApi![methodName] as (
+          ...args: unknown[]
+        ) => Promise<unknown>;
+
+        return abortable(signal, method(...args)).finally(() => {
           // No longer care about aborting - this task is complete.
           signal.removeEventListener('abort', onAbort);
 
           // Start a timer to clear up the worker.
-          this._workerTimeout = setTimeout(() => {
+          this._workerTimeout = self.setTimeout(() => {
             this._terminateWorker();
           }, workerTimeout);
         });
