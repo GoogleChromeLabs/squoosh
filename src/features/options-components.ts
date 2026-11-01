@@ -6,7 +6,6 @@ import JxlOptions from './encoders/jxl/Options.vue';
 import MozJpegOptions from './encoders/mozJPEG/Options.vue';
 import OxiPngOptions from './encoders/oxiPNG/Options.vue';
 import WebPOptions from './encoders/webP/Options.vue';
-import Wp2Options from './encoders/wp2/Options.vue';
 
 /**
  * Options panel for each encoder, used with `v-model` on the encoder's
@@ -22,5 +21,4 @@ export const encoderOptionsComponents: Partial<Record<EncoderType, Component>> =
     mozJPEG: MozJpegOptions,
     oxiPNG: OxiPngOptions,
     webP: WebPOptions,
-    wp2: Wp2Options,
   };

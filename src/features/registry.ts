@@ -10,7 +10,6 @@ import * as mozJPEG from './encoders/mozJPEG/meta';
 import * as oxiPNG from './encoders/oxiPNG/meta';
 import * as qoi from './encoders/qoi/meta';
 import * as webP from './encoders/webP/meta';
-import * as wp2 from './encoders/wp2/meta';
 import * as resize from './processors/resize/meta';
 import * as quantize from './processors/quantize/meta';
 import * as rotate from './preprocessors/rotate/meta';
@@ -79,9 +78,6 @@ export const encoderMap = {
   ),
   webP: defineEncoder(webP, (signal, bridge, data, options) =>
     bridge.webpEncode(signal, data, options),
-  ),
-  wp2: defineEncoder(wp2, (signal, bridge, data, options) =>
-    bridge.wp2Encode(signal, data, options),
   ),
 };
 

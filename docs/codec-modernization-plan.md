@@ -1,6 +1,7 @@
 # Codec modernization plan
 
-Status: written 2026-11-01. Phase 1 is done; phases 2–4 are open.
+Status: written 2026-11-01. Phases 1 and 2 are done (the app now ships 16 wasm
+files, ~12 MB); phases 3 and 4 are open.
 
 ## Summary
 
@@ -77,7 +78,7 @@ Other APIs:
 Each step is its own PR, and each codec upgrade is verified the same way (see
 "Verification" below).
 
-### Phase 1: Use native where it's equivalent (small, no codec builds)
+### Phase 1: Use native where it's equivalent (done)
 
 1. **Remove the wasm AVIF and WebP decoders.** Every supported browser decodes
    both. Drop `features/decoders/{avif,webp}`, their worker methods, and
@@ -93,7 +94,7 @@ Each step is its own PR, and each codec upgrade is verified the same way (see
    `featureTest` again, run once at startup. Useful to compare what browsers
    produce, and cheap to keep.
 
-### Phase 2: Drop what isn't worth keeping
+### Phase 2: Drop what isn't worth keeping (done)
 
 4. **Remove WebP v2** (encoder, decoder, `codecs/wp2`). It's experimental, has
    no browser support and saves 3.4 MB. Saved side settings that use `wp2`

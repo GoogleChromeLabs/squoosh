@@ -1,6 +1,0 @@
-{
-  "name": "oxipng",
-  "scripts": {
-    "build": "../build-rust.sh"
-  }
-}
