@@ -1,5 +1,6 @@
 {
   "name": "squooshhqx",
+  "type": "module",
   "collaborators": [
     "Surma <surma@surma.link>"
   ],
@@ -9,7 +10,9 @@
     "squooshhqx.js",
     "squooshhqx.d.ts"
   ],
-  "module": "squooshhqx.js",
+  "main": "squooshhqx.js",
   "types": "squooshhqx.d.ts",
-  "sideEffects": false
+  "sideEffects": [
+    "./snippets/*"
+  ]
 }

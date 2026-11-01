@@ -1,11 +1,10 @@
 CODEC_URL = https://github.com/webmproject/libwebp/archive/d2e245ea9e959a5a79e1db0ed2085206947e98f2.tar.gz
 CODEC_DIR = node_modules/libwebp
 CODEC_BUILD_ROOT := $(CODEC_DIR)/build
-CODEC_BASELINE_BUILD_DIR := $(CODEC_BUILD_ROOT)/baseline
 CODEC_SIMD_BUILD_DIR := $(CODEC_BUILD_ROOT)/simd
 ENVIRONMENT = worker
 
-OUT_JS = enc/webp_enc.js enc/webp_enc_simd.js enc/webp_node_enc.js
+OUT_JS = enc/webp_enc.js
 OUT_WASM := $(OUT_JS:.js=.wasm)
 
 .PHONY: all clean
@@ -14,10 +13,7 @@ all: $(OUT_JS)
 
 # Define dependencies for all variations of build artifacts.
 $(filter enc/%,$(OUT_JS)): enc/webp_enc.o
-enc/webp_node_enc.js: ENVIRONMENT = node
-enc/webp_node_enc.js: $(CODEC_BASELINE_BUILD_DIR)/libwebp.a
-enc/webp_enc.js: $(CODEC_BASELINE_BUILD_DIR)/libwebp.a
-enc/webp_enc_simd.js: $(CODEC_SIMD_BUILD_DIR)/libwebp.a
+enc/webp_enc.js: $(CODEC_SIMD_BUILD_DIR)/libwebp.a
 
 $(OUT_JS):
 	$(LD) \
@@ -38,8 +34,12 @@ $(OUT_JS):
 %/libwebp.a: %/Makefile
 	$(MAKE) -C $(@D)
 
-# Enable SIMD on a SIMD build.
+# Every supported browser has Wasm SIMD, so there is only a SIMD build.
+# Everything is compiled and linked with it (libwebp uses it through its SSE
+# code), otherwise link-time optimization drops the SIMD code paths.
 $(CODEC_SIMD_BUILD_DIR)/Makefile: CMAKE_FLAGS+=-DWEBP_ENABLE_SIMD=1
+$(CODEC_SIMD_BUILD_DIR)/Makefile: CFLAGS+=-msimd128 -msse4.1
+enc/webp_enc.js: LDFLAGS+=-msimd128
 
 %/Makefile: $(CODEC_DIR)/CMakeLists.txt
 	emcmake cmake \
@@ -63,5 +63,4 @@ $(CODEC_DIR)/CMakeLists.txt:
 
 clean:
 	$(RM) $(OUT_JS) $(OUT_WASM)
-	$(MAKE) -C $(CODEC_BASELINE_BUILD_DIR) clean
 	$(MAKE) -C $(CODEC_SIMD_BUILD_DIR) clean

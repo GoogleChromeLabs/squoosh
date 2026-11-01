@@ -2,7 +2,7 @@ CODEC_URL := https://github.com/ImageOptim/libimagequant/archive/2.12.1.tar.gz
 CODEC_DIR := node_modules/libimagequant
 CODEC_OUT_RELATIVE := libimagequant.a
 CODEC_OUT := $(addprefix $(CODEC_DIR)/, $(CODEC_OUT_RELATIVE))
-OUT_JS := imagequant.js imagequant_node.js
+OUT_JS := imagequant.js
 OUT_WASM := $(OUT_JS:.js=.wasm)
 ENVIRONMENT = worker
 
@@ -10,7 +10,6 @@ ENVIRONMENT = worker
 
 all: $(OUT_JS)
 
-imagequant_node.js: ENVIRONMENT=node
 $(OUT_JS): $(CODEC_OUT)
 	$(CXX) \
 		-I $(CODEC_DIR) \

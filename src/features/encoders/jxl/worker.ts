@@ -14,17 +14,12 @@ import type { JXLModule } from 'codecs/jxl/enc/jxl_enc';
 import type { EncodeOptions } from './meta';
 
 import { initEmscriptenModule } from '@/features/worker-utils';
-import { simd } from 'wasm-feature-detect';
 import checkThreadsSupport from '@/features/supports-wasm-threads';
 
 let emscriptenModule: Promise<JXLModule>;
 
 async function init() {
   if (await checkThreadsSupport()) {
-    if (await simd()) {
-      const jxlEncoder = await import('codecs/jxl/enc/jxl_enc_mt_simd');
-      return initEmscriptenModule(jxlEncoder.default);
-    }
     const jxlEncoder = await import('codecs/jxl/enc/jxl_enc_mt');
     return initEmscriptenModule(jxlEncoder.default);
   }

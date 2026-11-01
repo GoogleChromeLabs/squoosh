@@ -1,5 +1,6 @@
 {
   "name": "squoosh-resize",
+  "type": "module",
   "collaborators": [
     "Surma <surma@surma.link>"
   ],
@@ -9,7 +10,9 @@
     "squoosh_resize.js",
     "squoosh_resize.d.ts"
   ],
-  "module": "squoosh_resize.js",
+  "main": "squoosh_resize.js",
   "types": "squoosh_resize.d.ts",
-  "sideEffects": false
+  "sideEffects": [
+    "./snippets/*"
+  ]
 }

@@ -1,10 +1,5 @@
-set -e
-
-if [ ! -z "$RUST_IMG" ]
-then
-  # Get part after ":" (https://stackoverflow.com/a/15149278/439965).
-  IMG_SUFFIX=-${RUST_IMG#*:}
-fi
-IMG_NAME=squoosh-rust$IMG_SUFFIX
-docker build -t $IMG_NAME --build-arg RUST_IMG - < ../rust.Dockerfile
-docker run -it --rm -v $PWD:/src $IMG_NAME "$@"
+#!/bin/sh -e
+docker build -t squoosh-rust - < ../rust.Dockerfile
+# Only attach a terminal when there is one (not in CI or scripts).
+if [ -t 0 ]; then TTY_FLAGS=-it; fi
+docker run $TTY_FLAGS --rm -v "$PWD":/src squoosh-rust "$@"

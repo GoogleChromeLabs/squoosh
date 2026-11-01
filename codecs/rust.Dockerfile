@@ -1,19 +1,24 @@
-ARG RUST_IMG=rust:1.47
+FROM emscripten/emsdk:6.0.13 AS wasm-tools
 
-FROM emscripten/emsdk:2.0.8 AS wasm-tools
-WORKDIR /opt/wasm-tools
-RUN wget -qO- https://github.com/rustwasm/wasm-pack/releases/download/v0.12.1/wasm-pack-v0.12.1-x86_64-unknown-linux-musl.tar.gz | tar -xzf - --strip 1
-
-FROM $RUST_IMG AS rust
-ARG RUST_IMG
+# Trixie, because the clang copied from the (Ubuntu 24.04) emsdk image needs
+# a recent glibc.
+FROM rust:1.99-slim-trixie
+RUN apt-get update && apt-get install -qqy curl ca-certificates
 RUN rustup target add wasm32-unknown-unknown
-RUN case $RUST_IMG in rustlang/rust@*) rustup component add rust-src; esac
-COPY --from=wasm-tools /emsdk/upstream/bin/wasm-opt /emsdk/upstream/bin/clang /usr/local/bin/
-COPY --from=wasm-tools /emsdk/upstream/lib/ /usr/local/lib/
-COPY --from=wasm-tools /emsdk/upstream/emscripten/system/include/libc/ /wasm32/include/
-COPY --from=wasm-tools /emsdk/upstream/emscripten/system/lib/libc/musl/arch/emscripten/bits/ /wasm32/include/bits/
-COPY --from=wasm-tools /opt/wasm-tools/wasm-pack /usr/local/cargo/bin/
+# The threaded OxiPNG build rebuilds std with atomics, which needs nightly.
+# Keep in sync with oxipng/rust-toolchain.
+RUN rustup toolchain install nightly-2026-10-01 --profile minimal \
+  --target wasm32-unknown-unknown --component rust-src
 
+# clang and libc headers, for crates that compile C to wasm.
+COPY --from=wasm-tools /emsdk/upstream/bin/wasm-opt /emsdk/upstream/bin/clang-24 /usr/local/bin/
+RUN ln -s clang-24 /usr/local/bin/clang
+COPY --from=wasm-tools /emsdk/upstream/lib/ /usr/local/lib/
+COPY --from=wasm-tools /emsdk/upstream/emscripten/cache/sysroot/include/ /wasm32/include/
 ENV CPATH="/wasm32/include"
+
+RUN curl -sL https://github.com/wasm-bindgen/wasm-pack/releases/download/v0.15.0/wasm-pack-v0.15.0-$(uname -m)-unknown-linux-musl.tar.gz \
+  | tar -xzf - --strip 1 -C /usr/local/cargo/bin --wildcards '*/wasm-pack'
+
 WORKDIR /src
 CMD ["sh", "-c", "rm -rf pkg && wasm-pack build --target web -- --verbose --locked && rm pkg/.gitignore"]

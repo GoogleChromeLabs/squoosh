@@ -4,7 +4,7 @@ CODEC_OUT_RELATIVE := .libs/libjpeg.a rdswitch.o
 CODEC_OUT := $(addprefix $(CODEC_DIR)/, $(CODEC_OUT_RELATIVE))
 ENVIRONMENT = worker
 
-OUT_JS := enc/mozjpeg_enc.js enc/mozjpeg_node_enc.js dec/mozjpeg_node_dec.js
+OUT_JS := enc/mozjpeg_enc.js
 OUT_WASM := $(OUT_JS:.js=.wasm)
 
 .PHONY: all clean
@@ -13,9 +13,6 @@ all: $(OUT_JS)
 
 # Define dependencies for all variations of build artifacts.
 $(filter enc/%,$(OUT_JS)): enc/mozjpeg_enc.cpp
-$(filter dec/%,$(OUT_JS)): dec/mozjpeg_dec.cpp
-
-enc/mozjpeg_node_enc.js dec/mozjpeg_node_dec.js: ENVIRONMENT = node
 
 %.js: $(CODEC_OUT)
 	$(CXX) \
@@ -37,7 +34,8 @@ $(CODEC_DIR)/rdswitch.o: $(CODEC_DIR)/Makefile
 	$(MAKE) -C $(CODEC_DIR) rdswitch.o
 
 $(CODEC_DIR)/Makefile: $(CODEC_DIR)/configure
-	cd $(CODEC_DIR) && ./configure \
+	cd $(CODEC_DIR) && emconfigure ./configure \
+		--host=wasm32-unknown-emscripten \
 		--disable-shared \
 		--without-turbojpeg \
 		--without-simd \

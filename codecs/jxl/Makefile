@@ -2,11 +2,10 @@ CODEC_URL = https://github.com/libjxl/libjxl.git
 CODEC_VERSION = 9f544641ec83f6abd9da598bdd08178ee8a003e0
 CODEC_DIR = node_modules/jxl
 CODEC_BUILD_ROOT := $(CODEC_DIR)/build
-CODEC_MT_BUILD_DIR := $(CODEC_BUILD_ROOT)/mt
 CODEC_MT_SIMD_BUILD_DIR := $(CODEC_BUILD_ROOT)/mt-simd
 ENVIRONMENT = worker
 
-OUT_JS = enc/jxl_enc.js enc/jxl_enc_mt.js enc/jxl_enc_mt_simd.js dec/jxl_dec.js enc/jxl_node_enc.js dec/jxl_node_dec.js
+OUT_JS = enc/jxl_enc.js enc/jxl_enc_mt.js dec/jxl_dec.js
 OUT_WASM = $(OUT_JS:.js=.wasm)
 OUT_WORKER = $(OUT_JS:.js=.worker.js)
 
@@ -18,22 +17,22 @@ all: $(OUT_JS)
 $(filter enc/%,$(OUT_JS)): enc/jxl_enc.cpp
 $(filter dec/%,$(OUT_JS)): dec/jxl_dec.cpp
 
-enc/jxl_node_enc.js dec/jxl_node_dec.js: ENVIRONMENT = node
+# Every supported browser has Wasm SIMD, so there is one SIMD build of the
+# libraries. They are compiled with threads enabled; the single-threaded
+# outputs just don't use them nor link them in.
+CODEC_BUILD_DIR := $(CODEC_MT_SIMD_BUILD_DIR)
 
-# For single-threaded build, we compile with threads enabled, but then just don't use them nor link them in.
-enc/jxl_enc.js enc/jxl_node_enc.js enc/jxl_enc_mt.js dec/jxl_dec.js dec/jxl_node_dec.js: CODEC_BUILD_DIR:=$(CODEC_MT_BUILD_DIR)
-enc/jxl_enc_mt_simd.js: CODEC_BUILD_DIR:=$(CODEC_MT_SIMD_BUILD_DIR)
-
-enc/jxl_node_enc.js dec/jxl_node_dec.js enc/jxl_enc.js dec/jxl_dec.js: $(CODEC_MT_BUILD_DIR)/lib/libjxl.a
-enc/jxl_enc_mt.js: $(CODEC_MT_BUILD_DIR)/lib/libjxl.a $(CODEC_MT_BUILD_DIR)/lib/libjxl_threads.a
-enc/jxl_enc_mt_simd.js: $(CODEC_MT_SIMD_BUILD_DIR)/lib/libjxl.a $(CODEC_MT_SIMD_BUILD_DIR)/lib/libjxl_threads.a
+enc/jxl_enc.js dec/jxl_dec.js: $(CODEC_MT_SIMD_BUILD_DIR)/lib/libjxl.a
+enc/jxl_enc_mt.js: $(CODEC_MT_SIMD_BUILD_DIR)/lib/libjxl.a $(CODEC_MT_SIMD_BUILD_DIR)/lib/libjxl_threads.a
 
 # Disable errors on deprecated SIMD intrinsics.
 # JPEG-XL & Highway need to catch up, once they do, we can remove this suppression.
 export CXXFLAGS += -Wno-deprecated-declarations
 
 # Compile multithreaded wrappers with -pthread.
-enc/jxl_enc_mt.js enc/jxl_enc_mt_simd.js: CXXFLAGS+=-pthread
+enc/jxl_enc_mt.js: CXXFLAGS+=-pthread
+# Compile and link everything with SIMD, so link-time optimization keeps it.
+$(OUT_JS): CXXFLAGS+=-msimd128
 
 $(OUT_JS):
 	$(CXX) \
@@ -76,7 +75,7 @@ $(CODEC_MT_SIMD_BUILD_DIR)/Makefile: CXXFLAGS+=-msimd128
 	-B $(@D) \
 	$(<D)
 	emcc -Wall -O3 -o $(CODEC_DIR)/third_party/skcms/skcms.cc.o -I$(CODEC_DIR)/third_party/skcms -c $(CODEC_DIR)/third_party/skcms/skcms.cc
-	llvm-ar rc $(CODEC_BUILD_DIR)/third_party/libskcms.a $(CODEC_DIR)/third_party/skcms/skcms.cc.o
+	$(AR) rc $(CODEC_BUILD_DIR)/third_party/libskcms.a $(CODEC_DIR)/third_party/skcms/skcms.cc.o
 	rm $(CODEC_DIR)/third_party/skcms/skcms.cc.o
 
 $(CODEC_DIR)/CMakeLists.txt:
@@ -89,5 +88,4 @@ $(CODEC_DIR)/CMakeLists.txt:
 clean:
 	$(RM) $(OUT_JS) $(OUT_WASM) $(OUT_WORKER)
 	$(MAKE) -C $(CODEC_BUILD_DIR) clean
-	$(MAKE) -C $(CODEC_MT_BUILD_DIR) clean
 	$(MAKE) -C $(CODEC_MT_SIMD_BUILD_DIR) clean

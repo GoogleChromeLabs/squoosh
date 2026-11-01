@@ -1,7 +1,7 @@
 # Codec modernization plan
 
-Status: written 2026-11-01. Phases 1 and 2 are done (the app now ships 16 wasm
-files, ~12 MB); phases 3 and 4 are open.
+Status: written 2026-11-01. Phases 1–3 are done (the app now ships 14 wasm
+files, ~11 MB); phase 4 is open.
 
 ## Summary
 
@@ -101,20 +101,36 @@ Each step is its own PR, and each codec upgrade is verified the same way (see
    already fall back to "Original image".
 5. **Delete `codecs/png` and `codecs/visdif`**, which nothing imports.
 
-### Phase 3: Modernize the toolchain
+### Phase 3: Modernize the toolchain (done)
 
-6. **Update the Docker build images:** current Emscripten (4.x) and current
-   stable Rust with a current wasm-bindgen and wasm-bindgen-rayon. Rebuild
-   every codec once at its current pinned version, and check the output
-   sizes still match. That separates toolchain effects from codec changes.
-   The new wasm-bindgen glue is also the first thing to try for the
-   unreproduced `RangeError: offset is out of bounds` in the resize worker.
-7. **Ship SIMD-only builds.** Wasm SIMD works in every supported browser
-   (Chrome 91, Firefox 89, Safari 16.4). Keep the threaded/single-threaded
-   split, because threads need cross-origin isolation, which some hosts
-   (like GitHub Pages) can't provide. Variants per encoder become `simd` and
-   `mt_simd`. Removes `webp_enc` and `jxl_enc_mt`, and adds a single-threaded
-   SIMD JXL build.
+6. **Update the Docker build images.** Done: Emscripten 6.0.13, Rust 1.99
+   (plus nightly-2026-10-01 for threaded OxiPNG), wasm-bindgen 0.2.129 and
+   wasm-pack 0.15.0, all on native arm64 images. Every codec was rebuilt at
+   its pinned version, and all encoders, palette reduction and both resize
+   paths give byte-identical output on the logo demo. The unused Node.js
+   builds were dropped. The codecs need Docker; on macOS, Colima
+   (`brew install colima docker && colima start`) works.
+7. **Ship SIMD-only builds.** Done: WebP has one SIMD build; JPEG XL builds
+   its libraries once (SIMD, threads compiled in) and links `jxl_enc`,
+   `jxl_enc_mt` and `jxl_dec` from them. The threaded/single-threaded split
+   stays, because threads need cross-origin isolation.
+
+Things the new toolchain needs, which phase 4 will run into again:
+
+- `-s DEFAULT_TO_CXX`, because the Makefiles link with `emcc`.
+- `-s STACK_SIZE=5MB -s DEFAULT_PTHREAD_STACK_SIZE=2MB` (the old defaults).
+  With the new 64 KB default, libaom overflows its stack, which shows up as
+  an `unwind` exception in the threaded AVIF encoder.
+- SIMD builds must compile **and link** with `-msimd128`, otherwise
+  link-time optimization silently drops the SIMD code. Check with
+  `wasm-dis --all-features x.wasm | grep -c v128`.
+- autoconf projects (MozJPEG) need `emconfigure ./configure
+--host=wasm32-unknown-emscripten`.
+- Threaded Rust needs explicit shared-memory link args (see
+  `codecs/oxipng/build.sh`), or the thread pool fails with "Memory could not
+  be cloned".
+- Threaded Emscripten modules no longer have a separate `.worker.js`; they
+  start their threads from their own file, which Vite bundles fine.
 
 ### Phase 4: Upgrade the codecs (one PR each)
 

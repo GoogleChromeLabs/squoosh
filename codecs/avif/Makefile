@@ -21,9 +21,7 @@ LIBSHARPYUV_MT := $(LIBWEBP_DIR)/build_mt/libsharpyuv.a
 export LIBSHARPYUV := $(LIBWEBP_DIR)/build/libsharpyuv.a
 
 OUT_ENC_JS = enc/avif_enc.js
-OUT_NODE_ENC_JS = enc/avif_node_enc.js
 OUT_ENC_MT_JS = enc/avif_enc_mt.js
-OUT_NODE_ENC_MT_JS = enc/avif_node_enc_mt.js
 
 OUT_ENC_CPP = enc/avif_enc.cpp
 ENVIRONMENT = worker
@@ -139,5 +137,3 @@ $(LIBSHARPYUV_MT): $(LIBWEBP_DIR)/CMakeLists.txt
 clean:
 	$(MAKE) $(HELPER_MAKEFLAGS) OUT_JS=$(OUT_ENC_JS) clean
 	$(MAKE) $(HELPER_MAKEFLAGS) OUT_JS=$(OUT_ENC_MT_JS) clean
-	$(MAKE) $(HELPER_MAKEFLAGS) OUT_JS=$(OUT_ENC_NODE_JS) clean
-	$(MAKE) $(HELPER_MAKEFLAGS) OUT_JS=$(OUT_ENC_NODE_MT_JS) clean
